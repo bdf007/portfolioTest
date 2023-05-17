@@ -1,7 +1,7 @@
-require("dotenv").config();
 const express = require("express");
 const app = express();
 const connection = require("./config/db");
+require("dotenv").config();
 const UserModel = require("./models/Users");
 // get the route of user
 const userRoute = require("./routes/userRoutes");
