@@ -1,11 +1,11 @@
 import "./App.css";
 import User from "./component/user";
+import NavBarre from "./component/navBarre";
 
 function App() {
-  // add the user component
-
   return (
     <div className="App">
+      <NavBarre />
       <User />
     </div>
   );

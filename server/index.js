@@ -1,6 +1,7 @@
+require("dotenv").config();
 const express = require("express");
 const app = express();
-const mongoose = require("mongoose");
+const connection = require("./config/db");
 const UserModel = require("./models/Users");
 // get the route of user
 const userRoute = require("./routes/userRoutes");
@@ -10,9 +11,7 @@ const cors = require("cors");
 app.use(express.json());
 app.use(cors());
 
-mongoose.connect(
-  "mongodb+srv://bdf007:Sheriff007Cm@portfolio.rjriqrm.mongodb.net/MyPortfolio?retryWrites=true&w=majority"
-);
+connection();
 
 // use the route of user
 app.use("/user", userRoute);
@@ -36,7 +35,7 @@ app.use("/user", userRoute);
 //     console.log(err);
 //   }
 // });
-
+const port = process.env.PORT || 5000;
 app.listen(5000, () => {
   console.log("Server listening on port 5000");
 });

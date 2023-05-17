@@ -1,3 +1,4 @@
+import React from "react";
 import { useState, useEffect } from "react";
 import axios from "axios";
 
@@ -22,6 +23,7 @@ function User() {
       })
       .then((response) => {
         alert("User added successfully");
+        console.log("user added successfully");
         setListOfUsers([
           ...listOfUsers,
           { _id: response.data._id, name: name, age: age, username: username },
@@ -30,13 +32,17 @@ function User() {
   };
 
   const deleteUser = (id) => {
-    axios.delete(`http://localhost:5000/user/deleteUser/${id}`).then(() => {
-      setListOfUsers(
-        listOfUsers.filter((val) => {
-          return val._id !== id;
-        })
-      );
-    });
+    axios
+      .delete(`http://localhost:5000/user/deleteUser/${id}`)
+      .then((response) => {
+        alert("User deleted successfully");
+        console.log("user deleted successfully");
+        setListOfUsers(
+          listOfUsers.filter((val) => {
+            return val._id !== id;
+          })
+        );
+      });
   };
 
   return (
