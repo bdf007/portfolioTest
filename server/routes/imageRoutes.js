@@ -2,6 +2,7 @@ const express = require("express");
 const multer = require("multer");
 const ImageModel = require("../models/Images");
 const upload = require("./multerConfig");
+const fs = require("fs");
 
 const router = express.Router();
 
@@ -13,7 +14,7 @@ router.get("/getImages", async (req, res) => {
       _id: image._id,
       description: image.metadata ? image.metadata.description : "",
       filename: image.filename,
-      previewUrl: `/imageUpload/${image.filename}`,
+      url: `http://localhost:8000/imageUpload/${image.filename}`,
     }));
     res.json(mappedImages);
   } catch (error) {

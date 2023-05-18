@@ -6,25 +6,13 @@ const ImageUploader = () => {
   const [previewUrl, setPreviewUrl] = useState(null);
   const [description, setDescription] = useState("");
   const [listOfimages, setListOfimages] = useState([]);
-  const [image, setImage] = useState(null);
 
   // get all the images from the server
   useEffect(() => {
-    axios.get("http://localhost:5000/image/getImages").then((response) => {
+    axios.get("http://localhost:8000/image/getImages").then((response) => {
       setListOfimages(response.data);
-      console.log(response.data);
     });
-  }, []);
-
-  // get the image with the id 6465e714e672131c3eaae308
-  useEffect(() => {
-    axios
-      .get("http://localhost:5000/image/getImage/6465e714e672131c3eaae308")
-      .then((response) => {
-        setImage(response.data);
-        console.log(response.data);
-      });
-  }, []);
+  }, [listOfimages]);
 
   const handleFileInputChange = (event) => {
     const file = event.target.files[0];
@@ -43,7 +31,7 @@ const ImageUploader = () => {
       formData.append("description", description);
 
       const response = await axios.post(
-        "http://localhost:5000/image/upload",
+        "http://localhost:8000/image/upload",
         formData,
         {
           headers: {
@@ -51,19 +39,32 @@ const ImageUploader = () => {
           },
         }
       );
-
-      console.log(response.data.file.filename); // Access the filename property
-
       // Do something with the response, e.g., display success message or trigger further actions
+      alert("Image uploaded successfully");
+      setListOfimages([
+        ...listOfimages,
+        {
+          _id: response.data.file._id,
+          description: description,
+          url: response.data.file.url,
+        },
+      ]);
+      // reset the value
+      setDescription("");
+      setSelectedFile(null);
+      setPreviewUrl(null);
+      // clear the input field
+      document.getElementById("description").value = "";
+      document.getElementById("file").value = "";
     } catch (error) {
-      console.log(error);
       // Handle error, e.g., display error message to the user
+      console.log(error);
     }
   };
 
   const deleteImage = (id) => {
     axios
-      .delete(`http://localhost:5000/image/deleteImage/${id}`)
+      .delete(`http://localhost:8000/image/deleteImage/${id}`)
       .then((response) => {
         alert("Image deleted successfully");
         console.log("image deleted successfully");
@@ -88,8 +89,9 @@ const ImageUploader = () => {
                 </h1>
               </div>
               <img
-                src={`http://localhost:5000/${image.url}`}
+                src={`${image.url}?${Date.now()}`}
                 alt={image.description || ""}
+                style={{ maxWidth: "100%", maxHeight: "200px" }}
               />
               <button
                 className="deleteButton"
@@ -102,19 +104,15 @@ const ImageUploader = () => {
             </div>
           );
         })}
-        {image && (
-          <div className="image" key={image._id}>
-            <div className="imageInfo">
-              <h1 className="imageDescription">
-                Description: {image.description || ""}
-              </h1>
-              <img src={image.url} alt={image.description || ""} />
-            </div>
-          </div>
-        )}
       </div>
+
       <div>
-        <input type="file" accept="image/*" onChange={handleFileInputChange} />
+        <input
+          type="file"
+          id="file"
+          accept="image/*"
+          onChange={handleFileInputChange}
+        />
         {selectedFile && (
           <div>
             <img
@@ -124,6 +122,7 @@ const ImageUploader = () => {
             />
             <input
               type="text"
+              id="description"
               value={description}
               onChange={handleDescriptionChange}
               placeholder="Description"
