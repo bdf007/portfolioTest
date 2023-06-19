@@ -12,7 +12,7 @@ function User() {
     axios.get("http://localhost:8000/user/getUsers").then((response) => {
       setListOfUsers(response.data);
     });
-  }, []);
+  }, [listOfUsers]);
 
   const addUser = () => {
     axios
