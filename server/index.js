@@ -8,8 +8,6 @@ require("dotenv").config();
 const cookieParser = require("cookie-parser");
 const expressValidator = require("express-validator");
 
-// get the route of user to test the api
-// const userRoute = require("./routes/userRoutes");
 // get the image route
 const imageRoute = require("./routes/imageRoutes");
 
@@ -33,18 +31,11 @@ app.use(
   express.static(path.join(__dirname, "imageUpload"), { maxAge: 0 })
 );
 
-// say hello
-app.get("/", (req, res) => {
-  res.send("Hello World!");
-});
-
 // get imageUpload folder
 app.get("/imageUpload", (req, res) => {
   res.send("Hello World!");
 });
 
-// use the route of user to test the api
-// app.use("/user", userRoute);
 // use the route of image
 app.use("/image", imageRoute);
 
