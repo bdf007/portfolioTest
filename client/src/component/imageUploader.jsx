@@ -80,30 +80,33 @@ const ImageUploader = () => {
     <div>
       <h1>Image Uploader</h1>
       <div className="imagesDisplay">
-        {listOfimages.map((image) => {
-          return (
-            <div className="image" key={image._id}>
-              <div className="imageInfo">
-                <h1 className="imageDescription">
-                  Description: {image.description || ""}
-                </h1>
+        <div className="row">
+          {listOfimages.map((image) => {
+            return (
+              <div className="col-sm-2 w-auto" key={image._id}>
+                <div className="card">
+                  <div className="card-body">
+                    <img
+                      className="card-img-top"
+                      src={`${image.url}?${Date.now()}`}
+                      alt={image.description || ""}
+                      style={{ maxWidth: "100%", maxHeight: "200px" }}
+                    />
+                    <h5 className="card-title">{image.description || ""}</h5>
+                    <button
+                      className="btn btn-primary"
+                      onClick={() => {
+                        deleteImage(image._id);
+                      }}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
               </div>
-              <img
-                src={`${image.url}?${Date.now()}`}
-                alt={image.description || ""}
-                style={{ maxWidth: "100%", maxHeight: "200px" }}
-              />
-              <button
-                className="deleteButton"
-                onClick={() => {
-                  deleteImage(image._id);
-                }}
-              >
-                Delete
-              </button>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
 
       <div>
