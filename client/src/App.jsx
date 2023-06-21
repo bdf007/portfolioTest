@@ -57,7 +57,7 @@ function App() {
         </UserContext.Provider>
       </Router>
       {/* <User /> */}
-      {/* <ImageUploader /> */}
+      <ImageUploader />
     </div>
   );
 }
