@@ -9,14 +9,14 @@ function User() {
   const [username, setUsername] = useState("");
 
   useEffect(() => {
-    axios.get("http://localhost:5000/user/getUsers").then((response) => {
+    axios.get("http://localhost:8000/user/getUsers").then((response) => {
       setListOfUsers(response.data);
     });
-  }, []);
+  }, [listOfUsers]);
 
   const addUser = () => {
     axios
-      .post("http://localhost:5000/user/addUser", {
+      .post("http://localhost:8000/user/addUser", {
         name: name,
         age: age,
         username: username,
@@ -28,12 +28,20 @@ function User() {
           ...listOfUsers,
           { _id: response.data._id, name: name, age: age, username: username },
         ]);
+        // reset the value
+        setName("");
+        setAge(0);
+        setUsername("");
+        // clear the input field
+        document.getElementById("name").value = "";
+        document.getElementById("age").value = "";
+        document.getElementById("username").value = "";
       });
   };
 
   const deleteUser = (id) => {
     axios
-      .delete(`http://localhost:5000/user/deleteUser/${id}`)
+      .delete(`http://localhost:8000/user/deleteUser/${id}`)
       .then((response) => {
         alert("User deleted successfully");
         console.log("user deleted successfully");
@@ -72,6 +80,7 @@ function User() {
       <div>
         <input
           type="text"
+          id="name"
           placeholder="Name..."
           onChange={(e) => {
             setName(e.target.value);
@@ -79,6 +88,7 @@ function User() {
         />
         <input
           type="number"
+          id="age"
           placeholder="Age..."
           onChange={(e) => {
             setAge(e.target.value);
@@ -86,6 +96,7 @@ function User() {
         />
         <input
           type="text"
+          id="username"
           placeholder="Username..."
           onChange={(e) => setUsername(e.target.value)}
         />

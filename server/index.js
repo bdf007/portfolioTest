@@ -1,41 +1,51 @@
 const express = require("express");
+const { json, urlencoded } = express;
 const app = express();
 const connection = require("./config/db");
-require("dotenv").config();
-const UserModel = require("./models/Users");
-// get the route of user
-const userRoute = require("./routes/userRoutes");
-
+const path = require("path");
 const cors = require("cors");
+require("dotenv").config();
+const cookieParser = require("cookie-parser");
+const expressValidator = require("express-validator");
 
-app.use(express.json());
-app.use(cors());
+// get the image route
+const imageRoute = require("./routes/imageRoutes");
 
+// get the user routes for connection
+const userRoutes = require("./routes/userlogin");
+
+// middleware
+app.use(json());
+app.use(cors({ origin: true, credentials: true }));
+app.use(urlencoded({ extended: false }));
+app.use(cookieParser());
+app.use(expressValidator());
+
+//db connection
 connection();
 
-// use the route of user
-app.use("/user", userRoute);
+// routes
+// Serve static files from the "imageUpload" directory
+app.use(
+  "/imageUpload",
+  express.static(path.join(__dirname, "imageUpload"), { maxAge: 0 })
+);
 
-// app.get("/getUsers", async (req, res) => {
-//   try {
-//     const users = await UserModel.find({});
-//     res.json(users);
-//   } catch (err) {
-//     console.log(err);
-//   }
-// });
+// get imageUpload folder
+app.get("/imageUpload", (req, res) => {
+  res.send("Hello World!");
+});
 
-// app.post("/addUser", async (req, res) => {
-//   try {
-//     const user = req.body;
-//     const newUser = new UserModel(user);
-//     await newUser.save();
-//     res.json(user);
-//   } catch (err) {
-//     console.log(err);
-//   }
-// });
-const port = process.env.PORT || 5000;
-app.listen(5000, () => {
-  console.log("Server listening on port 5000");
+// use the route of image
+app.use("/image", imageRoute);
+
+// use the user routes for connection
+app.use("/", userRoutes);
+
+// Port
+const port = process.env.PORT || 8000;
+
+// listen to port
+app.listen(port, () => {
+  console.log(`Server listening on port ${port}`);
 });
