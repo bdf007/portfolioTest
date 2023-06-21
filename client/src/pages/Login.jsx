@@ -1,4 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
+import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
+import { UserContext } from "../context/UserContext";
 
 // design
 import {
@@ -13,11 +16,33 @@ import {
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 
+// API functions
+import { login } from "../api/user";
+
 const Login = () => {
+  const navigate = useNavigate();
+  const { setUser } = useContext(UserContext);
   // form states
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await login({ email, password });
+      if (res.error) toast.error(res.error);
+      else {
+        toast.success(res.message);
+        // set user in context
+        setUser(res.username);
+        // redirect to home page
+        navigate("/");
+      }
+    } catch (err) {
+      toast.error(err);
+    }
+  };
 
   return (
     <div className="container mt-5 mb-5 col-10 col-sm-8 col-md-6 col-lg-5">
@@ -64,6 +89,7 @@ const Login = () => {
           variant="contained"
           color="primary"
           disabled={!email || !password}
+          onClick={handleLogin}
         >
           Submit
         </Button>

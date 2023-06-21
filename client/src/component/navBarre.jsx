@@ -1,7 +1,28 @@
-import React from "react";
+import React, { useContext } from "react";
 import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import { UserContext } from "../context/UserContext";
+
+// API functions
+import { logout } from "../api/user";
 
 const NavBarre = () => {
+  const navigate = useNavigate();
+  const { user, setUser } = useContext(UserContext);
+
+  const handleLogout = async (e) => {
+    e.preventDefault();
+    logout()
+      .then((res) => {
+        toast.success(res.message);
+        // set user to null
+        setUser(null);
+        // redirect to login page
+        navigate("/login");
+      })
+      .catch((err) => console.log(err));
+  };
   return (
     <nav className="navbar navbar-expand-lg navbar-dark bg-primary">
       <div className="container-fluid">
@@ -21,16 +42,30 @@ const NavBarre = () => {
         </button>
         <div className="collapse navbar-collapse" id="navbarNav">
           <ul className="navbar-nav ms-auto">
-            <li className="nav-item">
-              <Link className="nav-link" to="/signup">
-                Sign Up
-              </Link>
-            </li>
-            <li className="nav-item">
-              <Link className="nav-link" to="/login">
-                Login
-              </Link>
-            </li>
+            {!user ? (
+              <>
+                <li className="nav-item">
+                  <Link className="nav-link" to="/signup">
+                    Sign Up
+                  </Link>
+                </li>
+                <li className="nav-item">
+                  <Link className="nav-link" to="/login">
+                    Login
+                  </Link>
+                </li>
+              </>
+            ) : (
+              <li className="nav-item">
+                <span
+                  className="nav-link"
+                  style={{ cursor: "pointer" }}
+                  onClick={handleLogout}
+                >
+                  Logout
+                </span>
+              </li>
+            )}
           </ul>
         </div>
       </div>

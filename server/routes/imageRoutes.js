@@ -14,7 +14,7 @@ router.get("/getImages", async (req, res) => {
       _id: image._id,
       description: image.metadata ? image.metadata.description : "",
       filename: image.filename,
-      url: `http://localhost:8000/imageUpload/${image.filename}`,
+      url: `${process.env.BACKEND_URL}/imageUpload/${image.filename}`,
     }));
     res.json(mappedImages);
   } catch (error) {
