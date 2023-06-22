@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const aboutSchema = new mongoose.Schema(
+const experienceSchema = new mongoose.Schema(
   {
     title: {
       type: String,
@@ -17,4 +17,4 @@ const aboutSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-module.exports = mongoose.model("About", aboutSchema);
+module.exports = mongoose.model("Experience", experienceSchema);

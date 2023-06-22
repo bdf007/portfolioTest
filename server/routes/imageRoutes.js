@@ -1,7 +1,6 @@
 const express = require("express");
-const multer = require("multer");
 const ImageModel = require("../models/Images");
-const upload = require("./multerConfig");
+const upload = require("../config/multerConfig");
 const fs = require("fs");
 
 const router = express.Router();

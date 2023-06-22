@@ -1,10 +1,10 @@
-const About = require("../models/about");
+const Experience = require("../models/experience");
 const mongoose = require("mongoose");
 
-exports.getAbout = async (req, res) => {
+exports.getExperience = async (req, res) => {
   try {
-    const about = await About.find({});
-    res.json(about);
+    const experience = await Experience.find({});
+    res.json(experience);
   } catch (error) {
     console.error(error);
     res.status(500).json({
@@ -13,18 +13,18 @@ exports.getAbout = async (req, res) => {
   }
 };
 
-exports.postAbout = async (req, res) => {
+exports.postExperience = async (req, res) => {
   try {
-    // check if title about already exists
-    const titleExists = await About.findOne({ title: req.body.title });
+    // check if title experience already exists
+    const titleExists = await Experience.findOne({ title: req.body.title });
     if (titleExists) {
       return res.status(403).json({
         error: "Title is already taken",
       });
     }
-    const about = new About(req.body);
-    await about.save();
-    await res.json(about);
+    const experience = new Experience(req.body);
+    await experience.save();
+    await res.json(experience);
   } catch (error) {
     console.error(error);
     res.status(500).json({
@@ -33,7 +33,7 @@ exports.postAbout = async (req, res) => {
   }
 };
 
-exports.getAboutById = async (req, res) => {
+exports.getExperienceById = async (req, res) => {
   try {
     const id = req.params.id;
 
@@ -43,14 +43,14 @@ exports.getAboutById = async (req, res) => {
         error: "Invalid ID format",
       });
     }
-    // Check if the aboutId exists
-    const about = await About.findById(id);
-    if (!about) {
+    // Check if the experience Id exists
+    const experience = await Experience.findById(id);
+    if (!experience) {
       return res.status(404).json({
         error: "ID does not exist",
       });
     }
-    res.json(about);
+    res.json(experience);
   } catch (error) {
     console.error(error);
     res.status(500).json({
@@ -59,7 +59,7 @@ exports.getAboutById = async (req, res) => {
   }
 };
 
-exports.updateAboutById = async (req, res) => {
+exports.updateExperienceById = async (req, res) => {
   try {
     const id = req.params.id;
 
@@ -69,20 +69,20 @@ exports.updateAboutById = async (req, res) => {
         error: "Invalid ID format",
       });
     }
-    // Check if the aboutId exists
-    const about = await About.findById(id);
-    if (!about) {
+    // Check if the experience Id exists
+    const experience = await Experience.findById(id);
+    if (!experience) {
       return res.status(404).json({
         error: "ID does not exist",
       });
     }
-    // if aboutId exists, update the about
-    const updatedAbout = await About.findByIdAndUpdate(
+    // // if experience Id exists, update the experience
+    const updatedExperience = await Experience.findByIdAndUpdate(
       id,
       { $set: req.body },
       { new: true }
     );
-    res.json(updatedAbout);
+    res.json(updatedExperience);
   } catch (error) {
     console.error(error);
     res.status(500).json({
@@ -91,19 +91,19 @@ exports.updateAboutById = async (req, res) => {
   }
 };
 
-exports.deleteAboutById = async (req, res) => {
+exports.deleteExperienceById = async (req, res) => {
   try {
     const id = req.params.id;
-    // Check if the aboutId exists
-    const about = await About.findById(id);
-    if (!about) {
+    // Check if the experience Id exists
+    const experience = await Experience.findById(id);
+    if (!experience) {
       return res.status(404).json({
         error: "ID does not exist",
       });
     }
-    // if aboutId exists, delete the about
-    const deletedAbout = await About.findByIdAndRemove(id);
-    res.json({ message: "About deleted successfully" });
+    // if experience id exists, delete the experience
+    const deletedExperience = await Experience.findByIdAndRemove(id);
+    res.json({ message: "Experience deleted successfully" });
   } catch (error) {
     console.error(error);
     res.status(500).json({

@@ -17,6 +17,12 @@ const userRoutes = require("./routes/userlogin");
 // get the about routes
 const aboutRoutes = require("./routes/about");
 
+// get the education routes
+const educationRoutes = require("./routes/education");
+
+// get the experience routes
+const experienceRoutes = require("./routes/experience");
+
 // middleware
 app.use(json());
 app.use(cors({ origin: true, credentials: true }));
@@ -47,6 +53,12 @@ app.use("/", userRoutes);
 
 // use the about routes
 app.use("/", aboutRoutes);
+
+// use the education routes
+app.use("/", educationRoutes);
+
+// use the experience routes
+app.use("/", experienceRoutes);
 
 // Port
 const port = process.env.PORT || 8000;
