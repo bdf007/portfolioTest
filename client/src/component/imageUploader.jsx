@@ -11,6 +11,7 @@ const ImageUploader = () => {
   useEffect(() => {
     axios.get("http://localhost:8000/image/getImages").then((response) => {
       setListOfimages(response.data);
+      console.log(response.data); // this is the array of images
     });
   }, [listOfimages]);
 
@@ -39,6 +40,7 @@ const ImageUploader = () => {
           },
         }
       );
+      console.log(response.data.file._id);
       // Do something with the response, e.g., display success message or trigger further actions
       alert("Image uploaded successfully");
       setListOfimages([

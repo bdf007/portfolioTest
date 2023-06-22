@@ -76,7 +76,7 @@ exports.updateExperienceById = async (req, res) => {
         error: "ID does not exist",
       });
     }
-    // // if experience Id exists, update the experience
+    // if experience Id exists, update the experience
     const updatedExperience = await Experience.findByIdAndUpdate(
       id,
       { $set: req.body },

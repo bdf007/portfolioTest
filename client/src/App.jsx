@@ -12,6 +12,7 @@ import "react-toastify/dist/ReactToastify.css";
 import User from "./component/user";
 import NavBarre from "./component/navBarre";
 import ImageUploader from "./component/imageUploader";
+import ProjectUploader from "./component/projectUploader";
 
 // components
 import Home from "./pages/Home";
@@ -58,6 +59,7 @@ function App() {
       </Router>
       {/* <User /> */}
       <ImageUploader />
+      <ProjectUploader />
     </div>
   );
 }

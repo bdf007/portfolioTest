@@ -13,14 +13,8 @@ const projectWithimageSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
-    image: {
-      filename: String,
-      description: String,
-      url: String,
-      contentType: String,
-      metadata: Object,
-      uploadDate: Date,
-      chunkSize: Number,
+    imageID: {
+      type: String,
     },
     link: {
       type: String,

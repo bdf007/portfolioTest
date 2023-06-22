@@ -1,9 +1,32 @@
+const ProjectWithImage = require("../models/projectWithimage");
+
 exports.getProjectWithImage = async (req, res) => {
-  await res.send("projectWithImage get page by controller");
+  try {
+    const projectWithImages = await ProjectWithImage.find({});
+    res.json(projectWithImages);
+  } catch (error) {
+    console.error("Error retrieving projectWithImages:", error);
+    res.status(500).json({ error: "Something went wrong" });
+  }
 };
 
 exports.postProjectWithImage = async (req, res) => {
-  await res.send("projectWithImage post page by controller");
+  try {
+    const projectWithImage = new ProjectWithImage({
+      title: req.body.title,
+      description: req.body.description,
+      imageID: req.body.imageID,
+      link: req.body.link,
+    });
+
+    await projectWithImage.save();
+
+    res.json({ file: projectWithImage });
+    console.log({ file: projectWithImage });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Something went wrong" });
+  }
 };
 
 exports.getProjectWithImageById = async (req, res) => {
