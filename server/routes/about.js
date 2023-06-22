@@ -2,33 +2,30 @@ const express = require("express");
 const router = express.Router();
 
 // import controllers
+const {
+  getAbout,
+  postAbout,
+  getAboutById,
+  updateAboutById,
+  deleteAboutById,
+} = require("../controllers/about");
 
 // import middlewares
 
 // api routes
 // get about page
-router.get("/about", (req, res) => {
-  res.send("About page");
-});
+router.get("/about", getAbout);
 
 // post about page
-router.post("/about", (req, res) => {
-  res.send("About page post");
-});
+router.post("/about", postAbout);
 
 // get specific user by id
-router.get("/about/:id", (req, res) => {
-  res.send(`About page get specific user by id`);
-});
+router.get("/about/:id", getAboutById);
 
-// update specific user by id
-router.put("/about/update/:id", (req, res) => {
-  res.send("About page update specific user by id");
-});
+// update specific about by id
+router.put("/about/update/:id", updateAboutById);
 
-//  delete specific user by id
-router.delete("/about/:id", (req, res) => {
-  res.send("About page delete specific user by id");
-});
+//  delete specific about by id
+router.delete("/about/:id", deleteAboutById);
 
 module.exports = router;
