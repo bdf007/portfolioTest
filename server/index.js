@@ -23,6 +23,9 @@ const educationRoutes = require("./routes/education");
 // get the experience routes
 const experienceRoutes = require("./routes/experience");
 
+// get the projectWithImage routes
+const projectWithImageRoutes = require("./routes/projectWithImage");
+
 // middleware
 app.use(json());
 app.use(cors({ origin: true, credentials: true }));
@@ -59,6 +62,9 @@ app.use("/", educationRoutes);
 
 // use the experience routes
 app.use("/", experienceRoutes);
+
+// use the projectWithImage routes
+app.use("/", projectWithImageRoutes);
 
 // Port
 const port = process.env.PORT || 8000;

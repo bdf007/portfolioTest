@@ -1,0 +1,31 @@
+const express = require("express");
+const router = express.Router();
+
+// import controllers
+const {
+  getProjectWithImage,
+  postProjectWithImage,
+  getProjectWithImageById,
+  updateProjectWithImageById,
+  deleteProjectWithImageById,
+} = require("../controllers/projectWithImage");
+
+// import middlewares
+
+// api routes
+// get projectWithImage page
+router.get("/projectWithImage", getProjectWithImage);
+
+// post projectWithImage page
+router.post("/projectWithImage", postProjectWithImage);
+
+// get specific projectWithImage by id
+router.get("/projectWithImage/:id", getProjectWithImageById);
+
+// update specific projectWithImage by id
+router.put("/projectWithImage/update/:id", updateProjectWithImageById);
+
+//  delete specific projectWithImage by id
+router.delete("/projectWithImage/:id", deleteProjectWithImageById);
+
+module.exports = router;
