@@ -14,6 +14,9 @@ const imageRoute = require("./routes/imageRoutes");
 // get the user routes for connection
 const userRoutes = require("./routes/userlogin");
 
+// get the about routes
+const aboutRoutes = require("./routes/about");
+
 // middleware
 app.use(json());
 app.use(cors({ origin: true, credentials: true }));
@@ -41,6 +44,9 @@ app.use("/image", imageRoute);
 
 // use the user routes for connection
 app.use("/", userRoutes);
+
+// use the about routes
+app.use("/", aboutRoutes);
 
 // Port
 const port = process.env.PORT || 8000;
