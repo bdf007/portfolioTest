@@ -7,7 +7,7 @@ const AboutUploader = () => {
   const [listOfAbout, setListOfAbout] = useState([]);
 
   useEffect(() => {
-    axios.get("http://localhost:8000/about").then((res) => {
+    axios.get(`${process.env.REACT_APP_API_URL}/about`).then((res) => {
       setListOfAbout(res.data);
     });
   }, [listOfAbout]);
@@ -22,7 +22,7 @@ const AboutUploader = () => {
 
   const handleUpload = () => {
     axios
-      .post("http://localhost:8000/about", {
+      .post(`${process.env.REACT_APP_API_URL}/about`, {
         title: title,
         description: description,
       })
@@ -46,7 +46,7 @@ const AboutUploader = () => {
   };
 
   const deleteAbout = (id) => {
-    axios.delete(`http://localhost:8000/about/${id}`).then(() => {
+    axios.delete(`${process.env.REACT_APP_API_URL}/about/${id}`).then(() => {
       alert("About deleted");
       setListOfAbout(
         listOfAbout.filter((val) => {

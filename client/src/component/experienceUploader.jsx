@@ -7,7 +7,7 @@ const ExperienceUploader = () => {
   const [listOfExperience, setListOfExperience] = useState([]);
 
   useEffect(() => {
-    axios.get("http://localhost:8000/experience").then((res) => {
+    axios.get(`${process.env.REACT_APP_API_URL}/experience`).then((res) => {
       setListOfExperience(res.data);
     });
   }, [listOfExperience]);
@@ -22,7 +22,7 @@ const ExperienceUploader = () => {
 
   const handleUpload = () => {
     axios
-      .post("http://localhost:8000/experience", {
+      .post(`${process.env.REACT_APP_API_URL}/experience`, {
         title: title,
         description: description,
       })
@@ -46,14 +46,16 @@ const ExperienceUploader = () => {
   };
 
   const deleteExperience = (id) => {
-    axios.delete(`http://localhost:8000/experience/${id}`).then(() => {
-      alert("Experience deleted");
-      setListOfExperience(
-        listOfExperience.filter((val) => {
-          return val._id !== id;
-        })
-      );
-    });
+    axios
+      .delete(`${process.env.REACT_APP_API_URL}/experience/${id}`)
+      .then(() => {
+        alert("Experience deleted");
+        setListOfExperience(
+          listOfExperience.filter((val) => {
+            return val._id !== id;
+          })
+        );
+      });
   };
 
   return (

@@ -7,7 +7,7 @@ const EducationUploader = () => {
   const [listOfEducation, setListOfEducation] = useState([]);
 
   useEffect(() => {
-    axios.get("http://localhost:8000/education").then((res) => {
+    axios.get(`${process.env.REACT_APP_API_URL}/education`).then((res) => {
       setListOfEducation(res.data);
     });
   }, [listOfEducation]);
@@ -22,7 +22,7 @@ const EducationUploader = () => {
 
   const handleUpload = () => {
     axios
-      .post("http://localhost:8000/education", {
+      .post(`${process.env.REACT_APP_API_URL}/education`, {
         title: title,
         description: description,
       })
@@ -46,14 +46,16 @@ const EducationUploader = () => {
   };
 
   const deleteEducation = (id) => {
-    axios.delete(`http://localhost:8000/education/${id}`).then(() => {
-      alert("Education deleted");
-      setListOfEducation(
-        listOfEducation.filter((val) => {
-          return val._id !== id;
-        })
-      );
-    });
+    axios
+      .delete(`${process.env.REACT_APP_API_URL}/education/${id}`)
+      .then(() => {
+        alert("Education deleted");
+        setListOfEducation(
+          listOfEducation.filter((val) => {
+            return val._id !== id;
+          })
+        );
+      });
   };
 
   return (

@@ -9,14 +9,16 @@ function User() {
   const [username, setUsername] = useState("");
 
   useEffect(() => {
-    axios.get("http://localhost:8000/user/getUsers").then((response) => {
-      setListOfUsers(response.data);
-    });
+    axios
+      .get(`${process.env.REACT_APP_API_URL}/user/getUsers`)
+      .then((response) => {
+        setListOfUsers(response.data);
+      });
   }, [listOfUsers]);
 
   const addUser = () => {
     axios
-      .post("http://localhost:8000/user/addUser", {
+      .post(`${process.env.REACT_APP_API_URL}/user/addUser`, {
         name: name,
         age: age,
         username: username,
@@ -41,7 +43,7 @@ function User() {
 
   const deleteUser = (id) => {
     axios
-      .delete(`http://localhost:8000/user/deleteUser/${id}`)
+      .delete(`${process.env.REACT_APP_API_URL}/user/deleteUser/${id}`)
       .then((response) => {
         alert("User deleted successfully");
         console.log("user deleted successfully");

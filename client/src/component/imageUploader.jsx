@@ -9,10 +9,12 @@ const ImageUploader = () => {
 
   // get all the images from the server
   useEffect(() => {
-    axios.get("http://localhost:8000/image/getImages").then((response) => {
-      setListOfimages(response.data);
-      console.log(response.data); // this is the array of images
-    });
+    axios
+      .get(`${process.env.REACT_APP_API_URL}/image/getImages`)
+      .then((response) => {
+        setListOfimages(response.data);
+        console.log(response.data); // this is the array of images
+      });
   }, [listOfimages]);
 
   const handleFileInputChange = (event) => {
@@ -32,7 +34,7 @@ const ImageUploader = () => {
       formData.append("description", description);
 
       const response = await axios.post(
-        "http://localhost:8000/image/upload",
+        `${process.env.REACT_APP_API_URL}/image/upload`,
         formData,
         {
           headers: {
@@ -66,7 +68,7 @@ const ImageUploader = () => {
 
   const deleteImage = (id) => {
     axios
-      .delete(`http://localhost:8000/image/deleteImage/${id}`)
+      .delete(`${process.env.REACT_APP_API_URL}/image/deleteImage/${id}`)
       .then((response) => {
         alert("Image deleted successfully");
         console.log("image deleted successfully");
