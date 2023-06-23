@@ -11,13 +11,13 @@ import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import User from "./component/user";
 import NavBarre from "./component/navBarre";
-import ImageUploader from "./component/imageUploader";
 import ProjectUploader from "./component/projectUploader";
 
 // components
 import Home from "./pages/Home";
 import Signup from "./pages/Signup";
 import Login from "./pages/Login";
+import Admin from "./pages/Admin";
 
 // API functions
 import { getUser } from "./api/user";
@@ -50,7 +50,7 @@ function App() {
               </>
             ) : (
               <>
-                <Route exact path="/" element={<Home />} />
+                <Route exact path="/" element={<Admin />} />
                 <Route path="*" element={<Navigate to="/" />} />
               </>
             )}
@@ -58,8 +58,6 @@ function App() {
         </UserContext.Provider>
       </Router>
       {/* <User /> */}
-      <ImageUploader />
-      <ProjectUploader />
     </div>
   );
 }

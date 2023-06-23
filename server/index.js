@@ -64,7 +64,7 @@ app.use("/", educationRoutes);
 app.use("/", experienceRoutes);
 
 // use the projectWithImage routes
-app.use("/", projectWithImageRoutes);
+app.use("/project", projectWithImageRoutes);
 
 // Port
 const port = process.env.PORT || 8000;

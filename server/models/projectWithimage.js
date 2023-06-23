@@ -1,27 +1,28 @@
+// ImageModel.js
 const mongoose = require("mongoose");
 
-const projectWithimageSchema = new mongoose.Schema(
-  {
-    title: {
-      type: String,
-      required: true,
-      trim: true,
-      unique: true,
-    },
-    description: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-    imageID: {
-      type: String,
-    },
-    link: {
-      type: String,
-      trim: true,
-    },
+const projectSchema = new mongoose.Schema({
+  title: {
+    type: String,
+    required: true,
+    trim: true,
   },
-  { timestamps: true }
-);
+  textProject: {
+    type: String,
+    trim: true,
+  },
+  linkToProject: {
+    type: String,
+    trim: true,
+  },
+  filename: String,
+  description: String,
+  url: String,
+  contentType: String,
+  metadata: Object,
+  uploadDate: Date,
+  chunkSize: Number,
+});
 
-module.exports = mongoose.model("ProjectWithimage", projectWithimageSchema);
+const ProjectModel = mongoose.model("Project", projectSchema, "uploads");
+module.exports = ProjectModel;

@@ -1,4 +1,5 @@
 const express = require("express");
+const upload = require("../config/multerConfig");
 const router = express.Router();
 
 // import controllers
@@ -17,7 +18,7 @@ const {
 router.get("/projectWithImage", getProjectWithImage);
 
 // post projectWithImage page
-router.post("/projectWithImage", postProjectWithImage);
+router.post("/upload", upload.single("file"), postProjectWithImage);
 
 // get specific projectWithImage by id
 router.get("/projectWithImage/:id", getProjectWithImageById);
@@ -26,6 +27,6 @@ router.get("/projectWithImage/:id", getProjectWithImageById);
 router.put("/projectWithImage/update/:id", updateProjectWithImageById);
 
 //  delete specific projectWithImage by id
-router.delete("/projectWithImage/:id", deleteProjectWithImageById);
+router.delete("/deleteProject/:id", deleteProjectWithImageById);
 
 module.exports = router;
