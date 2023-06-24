@@ -45,6 +45,31 @@ const NavBarre = () => {
             {!user ? (
               <>
                 <li className="nav-item">
+                  <Link className="nav-link" to="/About">
+                    About
+                  </Link>
+                </li>
+                <li className="nav-item">
+                  <Link className="nav-link" to="/Education">
+                    Education
+                  </Link>
+                </li>
+                <li className="nav-item">
+                  <Link className="nav-link" to="/Experience">
+                    Experience
+                  </Link>
+                </li>
+                <li className="nav-item">
+                  <Link className="nav-link" to="/Project">
+                    Project
+                  </Link>
+                </li>
+                <li className="nav-item">
+                  <Link className="nav-link" to="/Contact">
+                    Contact
+                  </Link>
+                </li>
+                <li className="nav-item">
                   <Link className="nav-link" to="/signup">
                     Sign Up
                   </Link>

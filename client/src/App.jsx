@@ -18,6 +18,11 @@ import Home from "./pages/Home";
 import Signup from "./pages/Signup";
 import Login from "./pages/Login";
 import Admin from "./pages/Admin";
+import About from "./pages/About";
+import Education from "./pages/Education";
+import Experience from "./pages/Experience";
+import Project from "./pages/Project";
+import Contact from "./pages/Contact";
 
 // API functions
 import { getUser } from "./api/user";
@@ -45,6 +50,11 @@ function App() {
             {!user ? (
               <>
                 <Route exact path="/" element={<Home />} />
+                <Route exact path="/About" element={<About />} />
+                <Route exact path="/Education" element={<Education />} />
+                <Route exact path="/Experience" element={<Experience />} />
+                <Route exact path="/Project" element={<Project />} />
+                <Route exact path="/Contact" element={<Contact />} />
                 <Route exact path="/signup" element={<Signup />} />
                 <Route exact path="/login" element={<Login />} />{" "}
               </>
