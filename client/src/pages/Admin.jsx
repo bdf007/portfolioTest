@@ -4,6 +4,8 @@ import ProjectUploader from "../component/projectUploader";
 import AboutUploader from "../component/aboutUploader";
 import EducationUploader from "../component/educationUploader";
 import ExperienceUploader from "../component/experienceUploader";
+import TechnologieUploader from "../component/tecchnologieUploader";
+import CertificateUploader from "../component/certificateUploader";
 
 const Admin = () => {
   const { user } = useContext(UserContext);
@@ -30,6 +32,10 @@ const Admin = () => {
       <EducationUploader />
       <h2>Experience</h2>
       <ExperienceUploader />
+      <h2>Technologie</h2>
+      <TechnologieUploader />
+      <h2>Certificates</h2>
+      <CertificateUploader />
     </div>
   );
 };

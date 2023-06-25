@@ -1,23 +1,22 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 
-const ProjectUploader = () => {
+const CertificateUploader = () => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [title, setTitle] = useState("");
-  const [textProject, setTextProject] = useState("");
-  const [linkProject, setLinkProject] = useState("");
+  const [link, setLink] = useState("");
   const [description, setDescription] = useState("");
-  const [listOfprojects, setListOfprojects] = useState([]);
+  const [listOfcertificates, setListOfcertificates] = useState([]);
 
   // get all the projects from the server
   useEffect(() => {
     axios
-      .get(`${process.env.REACT_APP_API_URL}/project/projectWithImage`)
+      .get(`${process.env.REACT_APP_API_URL}/certificate/getCertificates`)
       .then((response) => {
-        setListOfprojects(response.data);
+        setListOfcertificates(response.data);
       });
-  }, [listOfprojects]);
+  }, [listOfcertificates]);
 
   const handleFileInputChange = (event) => {
     const file = event.target.files[0];
@@ -29,12 +28,8 @@ const ProjectUploader = () => {
     setTitle(event.target.value);
   };
 
-  const handleTextProjectChange = (event) => {
-    setTextProject(event.target.value);
-  };
-
-  const handleLinkProjectChange = (event) => {
-    setLinkProject(event.target.value);
+  const handleLinkChange = (event) => {
+    setLink(event.target.value);
   };
 
   const handleDescriptionChange = (event) => {
@@ -45,13 +40,12 @@ const ProjectUploader = () => {
     try {
       const formData = new FormData();
       formData.append("title", title);
-      formData.append("textProject", textProject);
-      formData.append("linkProject", linkProject);
+      formData.append("link", link);
       formData.append("file", selectedFile);
       formData.append("description", description);
 
       const response = await axios.post(
-        `${process.env.REACT_APP_API_URL}/project/upload`,
+        `${process.env.REACT_APP_API_URL}/certificate/upload`,
         formData,
         {
           headers: {
@@ -60,29 +54,26 @@ const ProjectUploader = () => {
         }
       );
       // Do something with the response, e.g., display success message or trigger further actions
-      alert("Project uploaded successfully");
-      setListOfprojects([
-        ...listOfprojects,
+      alert("Certificate uploaded successfully");
+      setListOfcertificates([
+        ...listOfcertificates,
         {
           _id: response.data.file._id,
           title: title,
-          textProject: textProject,
-          linkProject: linkProject,
+          link: link,
           description: description,
           url: response.data.file.url,
         },
       ]);
       // reset the value
       setTitle("");
-      setTextProject("");
-      setLinkProject("");
+      setLink("");
       setDescription("");
       setSelectedFile(null);
       setPreviewUrl(null);
       // clear the input field
       document.getElementById("title").value = "";
-      document.getElementById("textProject").value = "";
-      document.getElementById("linkProject").value = "";
+      document.getElementById("link").value = "";
       document.getElementById("description").value = "";
       document.getElementById("file").value = "";
     } catch (error) {
@@ -91,14 +82,16 @@ const ProjectUploader = () => {
     }
   };
 
-  const deleteProject = (id) => {
+  const deleteCertificate = (id) => {
     axios
-      .delete(`${process.env.REACT_APP_API_URL}/project/deleteProject/${id}`)
+      .delete(
+        `${process.env.REACT_APP_API_URL}/certificate/deleteCertificate/${id}`
+      )
       .then((response) => {
-        alert("Project deleted successfully");
-        console.log("project deleted successfully");
-        setListOfprojects(
-          listOfprojects.filter((val) => {
+        alert("Certificate deleted successfully");
+        console.log("certificate deleted successfully");
+        setListOfcertificates(
+          listOfcertificates.filter((val) => {
             return val._id !== id;
           })
         );
@@ -107,32 +100,32 @@ const ProjectUploader = () => {
 
   return (
     <div>
-      <h1>project Uploader</h1>
+      <h1>certificate Uploader</h1>
       <div className="imagesDisplay">
         <div className="row">
-          {listOfprojects.map((project) => {
+          {listOfcertificates.map((certificate) => {
             return (
-              <div className="col-sm-2 w-auto" key={project._id}>
+              <div className="col-sm-2 w-auto" key={certificate._id}>
                 <div className="card">
                   <div className="card-body">
                     <img
                       className="card-img-top"
-                      src={`${project.url}?${Date.now()}`}
-                      alt={project.description || ""}
+                      src={`${certificate.url}?${Date.now()}`}
+                      alt={certificate.description || ""}
                       style={{ maxWidth: "100%", maxHeight: "200px" }}
                     />
-                    <h5 className="card-title">{project.title || ""}</h5>
-                    <p className="card-text">{project.textProject || ""}</p>
-                    {project.linkProject && (
-                      <a href={project.linkProject} className="btn btn-primary">
+                    <h5 className="card-title">{certificate.title || ""}</h5>
+                    {certificate.link && (
+                      <a href={certificate.link} className="btn btn-primary">
                         {" "}
-                        Link to the project
+                        Link to the certificate
                       </a>
                     )}
+
                     <button
                       className="btn btn-primary"
                       onClick={() => {
-                        deleteProject(project._id);
+                        deleteCertificate(certificate._id);
                       }}
                     >
                       Delete
@@ -166,21 +159,12 @@ const ProjectUploader = () => {
               onChange={handleTitleChange}
               placeholder="Title"
             />
-            <textarea
-              type="text"
-              id="textProject"
-              value={textProject}
-              onChange={handleTextProjectChange}
-              placeholder="Text Project"
-            >
-              {" "}
-            </textarea>
             <input
               type="text"
-              id="linkProject"
-              value={linkProject}
-              onChange={handleLinkProjectChange}
-              placeholder="Link Project"
+              id="link"
+              value={link}
+              onChange={handleLinkChange}
+              placeholder="Link "
             />
             <input
               type="text"
@@ -197,4 +181,4 @@ const ProjectUploader = () => {
   );
 };
 
-export default ProjectUploader;
+export default CertificateUploader;

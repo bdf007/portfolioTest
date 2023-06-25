@@ -8,8 +8,8 @@ require("dotenv").config();
 const cookieParser = require("cookie-parser");
 const expressValidator = require("express-validator");
 
-// get the image route
-const imageRoute = require("./routes/imageRoutes");
+// get the technologie route
+const technologieRoute = require("./routes/technologieRoutes");
 
 // get the user routes for connection
 const userRoutes = require("./routes/userlogin");
@@ -25,6 +25,9 @@ const experienceRoutes = require("./routes/experience");
 
 // get the projectWithImage routes
 const projectWithImageRoutes = require("./routes/projectWithImage");
+
+// get the certificate routes
+const certificateRoutes = require("./routes/certificateRoutes");
 
 // middleware
 app.use(json());
@@ -48,8 +51,8 @@ app.get("/imageUpload", (req, res) => {
   res.send("Hello World!");
 });
 
-// use the route of image
-app.use("/image", imageRoute);
+// use the route of technologie
+app.use("/technologie", technologieRoute);
 
 // use the user routes for connection
 app.use("/", userRoutes);
@@ -65,6 +68,9 @@ app.use("/", experienceRoutes);
 
 // use the projectWithImage routes
 app.use("/project", projectWithImageRoutes);
+
+// use the certificate routes
+app.use("/certificate", certificateRoutes);
 
 // Port
 const port = process.env.PORT || 8000;
