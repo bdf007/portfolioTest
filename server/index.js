@@ -32,6 +32,9 @@ const certificateRoutes = require("./routes/certificateRoutes");
 // get comment routes
 const commentRoutes = require("./routes/comment");
 
+// get the contact routes
+const contactRoutes = require("./routes/contact");
+
 // middleware
 app.use(json());
 app.use(cors({ origin: true, credentials: true }));
@@ -77,6 +80,9 @@ app.use("/certificate", certificateRoutes);
 
 // use the comment routes
 app.use("/", commentRoutes);
+
+// use the contact routes
+app.use("/", contactRoutes);
 
 // Port
 const port = process.env.PORT || 8000;

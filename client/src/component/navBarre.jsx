@@ -69,16 +69,12 @@ const NavBarre = () => {
                     Contact
                   </Link>
                 </li>
-                <li className="nav-item">
-                  <Link className="nav-link" to="/Comment">
-                    Comment
-                  </Link>
-                </li>
-                <li className="nav-item">
+
+                {/* <li className="nav-item">
                   <Link className="nav-link" to="/signup">
                     Sign Up
                   </Link>
-                </li>
+                </li> */}
                 <li className="nav-item">
                   <Link className="nav-link" to="/login">
                     Login
@@ -108,8 +104,8 @@ const NavBarre = () => {
                   </Link>
                 </li>
                 <li className="nav-item">
-                  <Link className="nav-link" to="/comment">
-                    Comment
+                  <Link className="nav-link" to="/Contact">
+                    Contact
                   </Link>
                 </li>
                 <li className="nav-item">

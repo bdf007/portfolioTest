@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useContext } from "react";
 import axios from "axios";
 import { UserContext } from "../context/UserContext";
+import { toast } from "react-toastify";
 
 const CertificateUploader = () => {
   const [selectedFile, setSelectedFile] = useState(null);
@@ -56,7 +57,7 @@ const CertificateUploader = () => {
         }
       );
       // Do something with the response, e.g., display success message or trigger further actions
-      alert("Certificate uploaded successfully");
+      toast.success("Certificate uploaded successfully");
       setListOfcertificates([
         ...listOfcertificates,
         {
@@ -80,7 +81,7 @@ const CertificateUploader = () => {
       document.getElementById("file").value = "";
     } catch (error) {
       // Handle error, e.g., display error message to the user
-      console.log(error);
+      toast.error(error.response.data.message);
     }
   };
 
@@ -90,8 +91,7 @@ const CertificateUploader = () => {
         `${process.env.REACT_APP_API_URL}/certificate/deleteCertificate/${id}`
       )
       .then((response) => {
-        alert("Certificate deleted successfully");
-        console.log("certificate deleted successfully");
+        toast.success("Certificate deleted successfully");
         setListOfcertificates(
           listOfcertificates.filter((val) => {
             return val._id !== id;
@@ -148,17 +148,24 @@ const CertificateUploader = () => {
         </>
       )}
       <div className="imagesDisplay">
-        <div className="row">
+        <h1 className="text-center">Diploma and Certificate</h1>
+        <div className="row d-flex justify-content-center">
+          {listOfcertificates.length === 0 && <h1>No certificates</h1>}
           {listOfcertificates.map((certificate) => {
             return (
-              <div className="col-sm-2 w-auto" key={certificate._id}>
-                <div className="card">
+              <div
+                className="container mt-0 mb-0 ms-0 me-0 col-20 col-sm-15 col-md-10 col-lg-5"
+                key={certificate._id}
+              >
+                <div className="card border-0 bg-info">
                   <div className="card-body">
-                    <h5 className="card-title">{certificate.title || ""}</h5>
+                    <h5 className="card-title d-flex justify-content-center">
+                      {certificate.title || ""}
+                    </h5>
                     {certificate.link ? (
                       <a
                         href={certificate.link}
-                        className="btn btn-primary"
+                        className="btn"
                         target="_blank"
                         rel="noreferrer"
                       >
@@ -166,7 +173,7 @@ const CertificateUploader = () => {
                           className="card-img-top"
                           src={`${certificate.url}?${Date.now()}`}
                           alt={certificate.description || ""}
-                          style={{ maxWidth: "50%", maxHeight: "200px" }}
+                          style={{ maxWidth: "100%", maxHeight: "100%" }}
                         />
                       </a>
                     ) : (
@@ -174,12 +181,12 @@ const CertificateUploader = () => {
                         className="card-img-top"
                         src={`${certificate.url}?${Date.now()}`}
                         alt={certificate.description || ""}
-                        style={{ maxWidth: "50%", maxHeight: "200px" }}
+                        style={{ maxWidth: "100%", maxHeight: "100%" }}
                       />
                     )}
                     {user && (
                       <button
-                        className="btn btn-primary"
+                        className="btn btn-danger"
                         onClick={() => {
                           deleteCertificate(certificate._id);
                         }}

@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useContext } from "react";
 import axios from "axios";
 import { UserContext } from "../context/UserContext";
+import { toast } from "react-toastify";
 
 const ProjectUploader = () => {
   const [selectedFile, setSelectedFile] = useState(null);
@@ -14,11 +15,15 @@ const ProjectUploader = () => {
 
   // get all the projects from the server
   useEffect(() => {
-    axios
-      .get(`${process.env.REACT_APP_API_URL}/project/projectWithImage`)
-      .then((response) => {
-        setListOfprojects(response.data);
-      });
+    try {
+      axios
+        .get(`${process.env.REACT_APP_API_URL}/project/projectWithImage`)
+        .then((response) => {
+          setListOfprojects(response.data);
+        });
+    } catch (error) {
+      console.log(error);
+    }
   }, [listOfprojects]);
 
   const handleFileInputChange = (event) => {
@@ -62,7 +67,7 @@ const ProjectUploader = () => {
         }
       );
       // Do something with the response, e.g., display success message or trigger further actions
-      alert("Project uploaded successfully");
+      toast.success("Project uploaded successfully");
       setListOfprojects([
         ...listOfprojects,
         {
@@ -89,7 +94,7 @@ const ProjectUploader = () => {
       document.getElementById("file").value = "";
     } catch (error) {
       // Handle error, e.g., display error message to the user
-      console.log(error);
+      toast.error(error.response.data.msg);
     }
   };
 
@@ -97,7 +102,7 @@ const ProjectUploader = () => {
     axios
       .delete(`${process.env.REACT_APP_API_URL}/project/deleteProject/${id}`)
       .then((response) => {
-        alert("Project deleted successfully");
+        toast.success("Project deleted successfully");
         console.log("project deleted successfully");
         setListOfprojects(
           listOfprojects.filter((val) => {
@@ -164,12 +169,15 @@ const ProjectUploader = () => {
       )}
       <div className="imagesDisplay">
         <div className="row">
+          {listOfprojects.length === 0 && <h1 className="mb-0">No project</h1>}
           {listOfprojects.map((project) => {
             return (
               <div className="col-sm-2 w-auto" key={project._id}>
-                <div className="card">
+                <div className="card border-0 bg-info">
                   <div className="card-body">
-                    <h5 className="card-title">{project.title || ""}</h5>
+                    <h5 className="card-title d-flex justify-content-center">
+                      {project.title || ""}
+                    </h5>
                     <p className="card-text">{project.textProject || ""}</p>
                     {project.linkToProject ? (
                       <a
@@ -182,7 +190,7 @@ const ProjectUploader = () => {
                           className="card-img-top"
                           src={`${project.url}?${Date.now()}`}
                           alt={project.description || ""}
-                          style={{ maxWidth: "100%", maxHeight: "200px" }}
+                          style={{ maxWidth: "100%", maxHeight: "100%" }}
                         />
                       </a>
                     ) : (
@@ -190,12 +198,12 @@ const ProjectUploader = () => {
                         className="card-img-top"
                         src={`${project.url}?${Date.now()}`}
                         alt={project.description || ""}
-                        style={{ maxWidth: "100%", maxHeight: "200px" }}
+                        style={{ maxWidth: "100%", maxHeight: "100%" }}
                       />
                     )}
                     {user && (
                       <button
-                        className="btn btn-primary"
+                        className="btn btn-danger"
                         onClick={() => {
                           deleteProject(project._id);
                         }}

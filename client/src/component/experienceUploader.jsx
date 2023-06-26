@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useContext } from "react";
 import axios from "axios";
 import { UserContext } from "../context/UserContext";
+import { toast } from "react-toastify";
 
 const ExperienceUploader = () => {
   const [title, setTitle] = useState("");
@@ -23,35 +24,39 @@ const ExperienceUploader = () => {
   };
 
   const handleUpload = () => {
-    axios
-      .post(`${process.env.REACT_APP_API_URL}/experience`, {
-        title: title,
-        description: description,
-      })
-      .then((response) => {
-        alert("Experience uploaded");
-        setListOfExperience([
-          ...listOfExperience,
-          {
-            _id: response.data._id,
-            title: title,
-            description: description,
-          },
-        ]);
-        // reset the form
-        setTitle("");
-        setDescription("");
-        // clear the input field
-        document.getElementById("title").value = "";
-        document.getElementById("description").value = "";
-      });
+    try {
+      axios
+        .post(`${process.env.REACT_APP_API_URL}/experience`, {
+          title: title,
+          description: description,
+        })
+        .then((response) => {
+          toast.success("Experience uploaded");
+          setListOfExperience([
+            ...listOfExperience,
+            {
+              _id: response.data._id,
+              title: title,
+              description: description,
+            },
+          ]);
+          // reset the form
+          setTitle("");
+          setDescription("");
+          // clear the input field
+          document.getElementById("title").value = "";
+          document.getElementById("description").value = "";
+        });
+    } catch (error) {
+      toast.error(error.response.data.msg);
+    }
   };
 
   const deleteExperience = (id) => {
     axios
       .delete(`${process.env.REACT_APP_API_URL}/experience/${id}`)
       .then(() => {
-        alert("Experience deleted");
+        toast.success("Experience deleted");
         setListOfExperience(
           listOfExperience.filter((val) => {
             return val._id !== id;
@@ -94,6 +99,7 @@ const ExperienceUploader = () => {
         </>
       )}
       <div>
+        {listOfExperience.length === 0 && <h1>No Experience</h1>}
         {listOfExperience.map((experience) => {
           return (
             <div key={experience._id}>

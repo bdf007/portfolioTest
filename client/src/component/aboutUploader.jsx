@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useContext } from "react";
 import axios from "axios";
 import { UserContext } from "../context/UserContext";
+import { toast } from "react-toastify";
 
 const AboutUploader = () => {
   const [title, setTitle] = useState("");
@@ -23,33 +24,37 @@ const AboutUploader = () => {
   };
 
   const handleUpload = () => {
-    axios
-      .post(`${process.env.REACT_APP_API_URL}/about`, {
-        title: title,
-        description: description,
-      })
-      .then((response) => {
-        alert("About uploaded");
-        setListOfAbout([
-          ...listOfAbout,
-          {
-            _id: response.data._id,
-            title: title,
-            description: description,
-          },
-        ]);
-        // reset the form
-        setTitle("");
-        setDescription("");
-        // clear the input field
-        document.getElementById("title").value = "";
-        document.getElementById("description").value = "";
-      });
+    try {
+      axios
+        .post(`${process.env.REACT_APP_API_URL}/about`, {
+          title: title,
+          description: description,
+        })
+        .then((response) => {
+          toast.success("About uploaded");
+          setListOfAbout([
+            ...listOfAbout,
+            {
+              _id: response.data._id,
+              title: title,
+              description: description,
+            },
+          ]);
+          // reset the form
+          setTitle("");
+          setDescription("");
+          // clear the input field
+          document.getElementById("title").value = "";
+          document.getElementById("description").value = "";
+        });
+    } catch (error) {
+      toast.error(error.response.data.msg);
+    }
   };
 
   const deleteAbout = (id) => {
     axios.delete(`${process.env.REACT_APP_API_URL}/about/${id}`).then(() => {
-      alert("About deleted");
+      toast.success("About deleted");
       setListOfAbout(
         listOfAbout.filter((val) => {
           return val._id !== id;
@@ -92,6 +97,7 @@ const AboutUploader = () => {
         </>
       )}
       <div>
+        {listOfAbout.length === 0 && <h1 className="mb-0">No About</h1>}
         {listOfAbout.map((about) => {
           return (
             <div key={about._id}>

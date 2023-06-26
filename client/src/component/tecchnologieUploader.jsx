@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useContext } from "react";
 import axios from "axios";
 import { UserContext } from "../context/UserContext";
+import { toast } from "react-toastify";
 
 const TechnologieUploader = () => {
   const [selectedFile, setSelectedFile] = useState(null);
@@ -56,7 +57,7 @@ const TechnologieUploader = () => {
         }
       );
       // Do something with the response, e.g., display success message or trigger further actions
-      alert("Technologie uploaded successfully");
+      toast.success("Technologie uploaded successfully");
       setListOftechnologies([
         ...listOftechnologies,
         {
@@ -80,7 +81,7 @@ const TechnologieUploader = () => {
       document.getElementById("file").value = "";
     } catch (error) {
       // Handle error, e.g., display error message to the user
-      console.log(error);
+      toast.error("Something went wrong");
     }
   };
 
@@ -90,8 +91,7 @@ const TechnologieUploader = () => {
         `${process.env.REACT_APP_API_URL}/technologie/deleteTechnologie/${id}`
       )
       .then((response) => {
-        alert("Technologie deleted successfully");
-        console.log("technologie deleted successfully");
+        toast.success("Technologie deleted successfully");
         setListOftechnologies(
           listOftechnologies.filter((val) => {
             return val._id !== id;
@@ -148,17 +148,23 @@ const TechnologieUploader = () => {
         </>
       )}
       <div className="imagesDisplay">
-        <div className="row">
+        <div className="row d-flex justify-content-center">
+          {listOftechnologies.length === 0 && <h1>No technologie</h1>}
           {listOftechnologies.map((technologie) => {
             return (
-              <div className="col-sm-2 w-auto" key={technologie._id}>
-                <div className="card">
-                  <div className="card-body">
-                    <h5 className="card-title">{technologie.title || ""}</h5>
+              <div
+                className="container mt-0 mb-0 ms-0 me-0 col-8 col-sm-6 col-md-4 col-lg-2"
+                key={technologie._id}
+              >
+                <div className="card border-0 bg-info">
+                  <div className="card-body ">
+                    <h5 className="card-title d-flex justify-content-center">
+                      {technologie.title || ""}
+                    </h5>
                     {technologie.link ? (
                       <a
                         href={technologie.link}
-                        className="btn btn-primary"
+                        className="btn btn-primary d-flex justify-content-center"
                         target="_blank"
                         rel="noreferrer"
                       >
@@ -166,20 +172,20 @@ const TechnologieUploader = () => {
                           className="card-img-top"
                           src={`${technologie.url}?${Date.now()}`}
                           alt={technologie.description || ""}
-                          style={{ maxWidth: "20%", maxHeight: "20%" }}
+                          style={{ maxWidth: "50%", maxHeight: "50%" }}
                         />
                       </a>
                     ) : (
                       <img
-                        className="card-img-top"
+                        className="card-img-top d-flex justify-content-center"
                         src={`${technologie.url}?${Date.now()}`}
                         alt={technologie.description || ""}
-                        style={{ maxWidth: "20%", maxHeight: "20%" }}
+                        style={{ maxWidth: "50%", maxHeight: "50%" }}
                       />
                     )}
                     {user && (
                       <button
-                        className="btn btn-primary"
+                        className="btn btn-danger"
                         onClick={() => {
                           deleteTechnologie(technologie._id);
                         }}

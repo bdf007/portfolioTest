@@ -1,6 +1,8 @@
 import React, { useEffect, useState, useContext } from "react";
 import axios from "axios";
 import { UserContext } from "../context/UserContext";
+import { toast } from "react-toastify";
+import { Button } from "@mui/material";
 
 const CommentUploader = () => {
   const [name, setName] = useState("");
@@ -36,7 +38,7 @@ const CommentUploader = () => {
         comment: comment,
       })
       .then((response) => {
-        alert("Comment uploaded");
+        toast.success("Comment added");
         setListOfComment([
           ...listOfComment,
           {
@@ -60,7 +62,7 @@ const CommentUploader = () => {
 
   const deleteComment = (id) => {
     axios.delete(`${process.env.REACT_APP_API_URL}/comment/${id}`).then(() => {
-      alert("Comment deleted");
+      toast.success("Comment deleted");
       setListOfComment(
         listOfComment.filter((val) => {
           return val._id !== id;
@@ -80,8 +82,8 @@ const CommentUploader = () => {
               id="name"
               size="small"
               className="form-control mb-3"
-              placeholder="Name"
-              label="Name"
+              placeholder="Name*"
+              label="Name*"
               onChange={handleNameChange}
             />
           </div>
@@ -102,26 +104,34 @@ const CommentUploader = () => {
               id="comment"
               size="small"
               className="form-control mb-3"
-              placeholder="Comment"
-              label="Comment"
+              placeholder="Comment*"
+              label="Comment*"
               onChange={handleCommentChange}
             >
               {" "}
             </textarea>
-            <button onClick={handleUpload}>Upload</button>
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={handleUpload}
+              disabled={!name || !comment}
+            >
+              Send Comment
+            </Button>
           </div>
         </>
       )}
       <div>
+        {listOfComment.length === 0 && <h1>No Comment</h1>}
         {listOfComment.map((comment) => {
           return (
             <div key={comment._id}>
               <h1>{comment.name}</h1>
-              <p>{comment.Date.slice(0, 10)}</p>
+              {comment.Date && <p>{comment.Date.slice(0, 10)}</p>}
               <p>{comment.comment}</p>
               {user && (
                 <div>
-                  <p>{comment.email}</p>
+                  {comment.email ? <p>{comment.email}</p> : <p> No email</p>}
                   <button
                     className="btn btn-danger"
                     onClick={() => deleteComment(comment._id)}

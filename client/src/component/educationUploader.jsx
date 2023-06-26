@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useContext } from "react";
 import axios from "axios";
 import { UserContext } from "../context/UserContext";
+import { toast } from "react-toastify";
 
 const EducationUploader = () => {
   const [title, setTitle] = useState("");
@@ -23,35 +24,39 @@ const EducationUploader = () => {
   };
 
   const handleUpload = () => {
-    axios
-      .post(`${process.env.REACT_APP_API_URL}/education`, {
-        title: title,
-        description: description,
-      })
-      .then((response) => {
-        alert("Education uploaded");
-        setListOfEducation([
-          ...listOfEducation,
-          {
-            _id: response.data._id,
-            title: title,
-            description: description,
-          },
-        ]);
-        // reset the form
-        setTitle("");
-        setDescription("");
-        // clear the input field
-        document.getElementById("title").value = "";
-        document.getElementById("description").value = "";
-      });
+    try {
+      axios
+        .post(`${process.env.REACT_APP_API_URL}/education`, {
+          title: title,
+          description: description,
+        })
+        .then((response) => {
+          toast.success("Education uploaded");
+          setListOfEducation([
+            ...listOfEducation,
+            {
+              _id: response.data._id,
+              title: title,
+              description: description,
+            },
+          ]);
+          // reset the form
+          setTitle("");
+          setDescription("");
+          // clear the input field
+          document.getElementById("title").value = "";
+          document.getElementById("description").value = "";
+        });
+    } catch (error) {
+      toast.error(error.response.data.msg);
+    }
   };
 
   const deleteEducation = (id) => {
     axios
       .delete(`${process.env.REACT_APP_API_URL}/education/${id}`)
       .then(() => {
-        alert("Education deleted");
+        toast.success("Education deleted");
         setListOfEducation(
           listOfEducation.filter((val) => {
             return val._id !== id;
@@ -94,6 +99,7 @@ const EducationUploader = () => {
         </>
       )}
       <div>
+        {listOfEducation.length === 0 && <h1>No Education</h1>}
         {listOfEducation.map((education) => {
           return (
             <div key={education._id}>

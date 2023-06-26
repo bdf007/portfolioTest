@@ -1,6 +1,5 @@
 import React, { useContext } from "react";
 import { UserContext } from "../context/UserContext";
-import TechnologieUploader from "../component/tecchnologieUploader";
 
 const Admin = () => {
   const { user } = useContext(UserContext);
@@ -18,10 +17,6 @@ const Admin = () => {
           <span className="text-success">{user}'s</span> Admin
         </h1>
       </div>
-      <h1>Autheniticate with MERN</h1>
-
-      <h2>Technologie</h2>
-      <TechnologieUploader />
     </div>
   );
 };
