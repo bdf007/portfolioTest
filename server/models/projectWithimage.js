@@ -24,5 +24,5 @@ const projectSchema = new mongoose.Schema({
   chunkSize: Number,
 });
 
-const ProjectModel = mongoose.model("Project", projectSchema, "uploads");
+const ProjectModel = mongoose.model("Project", projectSchema);
 module.exports = ProjectModel;

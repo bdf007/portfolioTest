@@ -1,10 +1,12 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import axios from "axios";
+import { UserContext } from "../context/UserContext";
 
 const ExperienceUploader = () => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [listOfExperience, setListOfExperience] = useState([]);
+  const { user } = useContext(UserContext);
 
   useEffect(() => {
     axios.get(`${process.env.REACT_APP_API_URL}/experience`).then((res) => {
@@ -60,47 +62,54 @@ const ExperienceUploader = () => {
 
   return (
     <div>
-      <h1>Experience Uploader</h1>
+      {user && (
+        <>
+          <h1>Experience Uploader</h1>
+
+          <div className="form-group">
+            <input
+              value={title}
+              id="title"
+              size="small"
+              className="form-control mb-3"
+              placeholder="Title"
+              label="Title"
+              onChange={handleTitleChange}
+            />
+          </div>
+          <div className="form-group">
+            <textarea
+              value={description}
+              id="description"
+              size="small"
+              className="form-control mb-3"
+              placeholder="Description"
+              label="Description"
+              onChange={handleDescriptionChange}
+            >
+              {" "}
+            </textarea>
+            <button onClick={handleUpload}>Upload</button>
+          </div>
+        </>
+      )}
       <div>
         {listOfExperience.map((experience) => {
           return (
             <div key={experience._id}>
               <h1>{experience.title}</h1>
               <p>{experience.description}</p>
-              <button
-                className="btn btn-danger"
-                onClick={() => deleteExperience(experience._id)}
-              >
-                Delete Experience
-              </button>
+              {user && (
+                <button
+                  className="btn btn-danger"
+                  onClick={() => deleteExperience(experience._id)}
+                >
+                  Delete Experience
+                </button>
+              )}
             </div>
           );
         })}
-      </div>
-      <div className="form-group">
-        <input
-          value={title}
-          id="title"
-          size="small"
-          className="form-control mb-3"
-          placeholder="Title"
-          label="Title"
-          onChange={handleTitleChange}
-        />
-      </div>
-      <div className="form-group">
-        <textarea
-          value={description}
-          id="description"
-          size="small"
-          className="form-control mb-3"
-          placeholder="Description"
-          label="Description"
-          onChange={handleDescriptionChange}
-        >
-          {" "}
-        </textarea>
-        <button onClick={handleUpload}>Upload</button>
       </div>
     </div>
   );

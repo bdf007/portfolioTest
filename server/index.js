@@ -29,6 +29,9 @@ const projectWithImageRoutes = require("./routes/projectWithImage");
 // get the certificate routes
 const certificateRoutes = require("./routes/certificateRoutes");
 
+// get comment routes
+const commentRoutes = require("./routes/comment");
+
 // middleware
 app.use(json());
 app.use(cors({ origin: true, credentials: true }));
@@ -71,6 +74,9 @@ app.use("/project", projectWithImageRoutes);
 
 // use the certificate routes
 app.use("/certificate", certificateRoutes);
+
+// use the comment routes
+app.use("/", commentRoutes);
 
 // Port
 const port = process.env.PORT || 8000;

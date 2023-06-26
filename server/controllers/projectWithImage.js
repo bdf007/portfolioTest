@@ -9,7 +9,7 @@ exports.getProjectWithImage = async (req, res) => {
       _id: project._id,
       title: project.title,
       textProject: project.textProject,
-      linkProject: project.linkProject,
+      linkToProject: project.linkToProject,
       filename: project.filename,
       description: project.metadata ? project.metadata.description : "",
       url: `${process.env.BACKEND_URL}/imageUpload/${project.filename}`,
@@ -28,7 +28,7 @@ exports.postProjectWithImage = async (req, res) => {
     const project = new Project({
       title: req.body.title,
       textProject: req.body.textProject,
-      linkProject: req.body.linkProject,
+      linkToProject: req.body.linkToProject,
       filename: filename,
       description: req.body.description,
       url: `/imageUpload/${filename}`,

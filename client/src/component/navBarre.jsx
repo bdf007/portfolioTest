@@ -70,6 +70,11 @@ const NavBarre = () => {
                   </Link>
                 </li>
                 <li className="nav-item">
+                  <Link className="nav-link" to="/Comment">
+                    Comment
+                  </Link>
+                </li>
+                <li className="nav-item">
                   <Link className="nav-link" to="/signup">
                     Sign Up
                   </Link>
@@ -81,15 +86,42 @@ const NavBarre = () => {
                 </li>
               </>
             ) : (
-              <li className="nav-item">
-                <span
-                  className="nav-link"
-                  style={{ cursor: "pointer" }}
-                  onClick={handleLogout}
-                >
-                  Logout
-                </span>
-              </li>
+              <>
+                <li className="nav-item">
+                  <Link className="nav-link" to="/About">
+                    About
+                  </Link>
+                </li>
+                <li className="nav-item">
+                  <Link className="nav-link" to="/Education">
+                    Education
+                  </Link>
+                </li>
+                <li className="nav-item">
+                  <Link className="nav-link" to="/Experience">
+                    Experience
+                  </Link>
+                </li>
+                <li className="nav-item">
+                  <Link className="nav-link" to="/Project">
+                    Project
+                  </Link>
+                </li>
+                <li className="nav-item">
+                  <Link className="nav-link" to="/comment">
+                    Comment
+                  </Link>
+                </li>
+                <li className="nav-item">
+                  <span
+                    className="nav-link"
+                    style={{ cursor: "pointer" }}
+                    onClick={handleLogout}
+                  >
+                    Logout
+                  </span>
+                </li>
+              </>
             )}
           </ul>
         </div>

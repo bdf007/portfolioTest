@@ -1,10 +1,12 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import axios from "axios";
+import { UserContext } from "../context/UserContext";
 
 const AboutUploader = () => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [listOfAbout, setListOfAbout] = useState([]);
+  const { user } = useContext(UserContext);
 
   useEffect(() => {
     axios.get(`${process.env.REACT_APP_API_URL}/about`).then((res) => {
@@ -58,47 +60,54 @@ const AboutUploader = () => {
 
   return (
     <div>
-      <h1>About Uploader</h1>
+      {user && (
+        <>
+          <h1>About Uploader</h1>
+
+          <div className="form-group">
+            <input
+              value={title}
+              id="title"
+              size="small"
+              className="form-control mb-3"
+              placeholder="Title"
+              label="Title"
+              onChange={handleTitleChange}
+            />
+          </div>
+          <div className="form-group">
+            <textarea
+              value={description}
+              id="description"
+              size="small"
+              className="form-control mb-3"
+              placeholder="Description"
+              label="Description"
+              onChange={handleDescriptionChange}
+            >
+              {" "}
+            </textarea>
+            <button onClick={handleUpload}>Upload</button>
+          </div>
+        </>
+      )}
       <div>
         {listOfAbout.map((about) => {
           return (
             <div key={about._id}>
               <h1>{about.title}</h1>
               <p>{about.description}</p>
-              <button
-                className="btn btn-danger"
-                onClick={() => deleteAbout(about._id)}
-              >
-                Delete About
-              </button>
+              {user && (
+                <button
+                  className="btn btn-danger"
+                  onClick={() => deleteAbout(about._id)}
+                >
+                  Delete About
+                </button>
+              )}
             </div>
           );
         })}
-      </div>
-      <div className="form-group">
-        <input
-          value={title}
-          id="title"
-          size="small"
-          className="form-control mb-3"
-          placeholder="Title"
-          label="Title"
-          onChange={handleTitleChange}
-        />
-      </div>
-      <div className="form-group">
-        <textarea
-          value={description}
-          id="description"
-          size="small"
-          className="form-control mb-3"
-          placeholder="Description"
-          label="Description"
-          onChange={handleDescriptionChange}
-        >
-          {" "}
-        </textarea>
-        <button onClick={handleUpload}>Upload</button>
       </div>
     </div>
   );

@@ -23,6 +23,7 @@ import Education from "./pages/Education";
 import Experience from "./pages/Experience";
 import Project from "./pages/Project";
 import Contact from "./pages/Contact";
+import Comment from "./pages/Comment";
 
 // API functions
 import { getUser } from "./api/user";
@@ -57,10 +58,16 @@ function App() {
                 <Route exact path="/Contact" element={<Contact />} />
                 <Route exact path="/signup" element={<Signup />} />
                 <Route exact path="/login" element={<Login />} />{" "}
+                <Route exact path="/comment" element={<Comment />} />
               </>
             ) : (
               <>
                 <Route exact path="/" element={<Admin />} />
+                <Route exact path="/About" element={<About />} />
+                <Route exact path="/Education" element={<Education />} />
+                <Route exact path="/Experience" element={<Experience />} />
+                <Route exact path="/Project" element={<Project />} />
+                <Route exact path="/comment" element={<Comment />} />
                 <Route path="*" element={<Navigate to="/" />} />
               </>
             )}

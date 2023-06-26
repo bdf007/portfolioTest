@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import axios from "axios";
+import { UserContext } from "../context/UserContext";
 
 const TechnologieUploader = () => {
   const [selectedFile, setSelectedFile] = useState(null);
@@ -8,6 +9,7 @@ const TechnologieUploader = () => {
   const [link, setLink] = useState("");
   const [description, setDescription] = useState("");
   const [listOftechnologies, setListOftechnologies] = useState([]);
+  const { user } = useContext(UserContext);
 
   // get all the projects from the server
   useEffect(() => {
@@ -100,7 +102,51 @@ const TechnologieUploader = () => {
 
   return (
     <div>
-      <h1>technologie Uploader</h1>
+      {user && (
+        <>
+          <h1>technologie Uploader</h1>
+
+          <div>
+            <input
+              type="file"
+              id="file"
+              accept="image/*"
+              onChange={handleFileInputChange}
+            />
+            {selectedFile && (
+              <div>
+                <img
+                  src={previewUrl}
+                  alt="Preview"
+                  style={{ maxWidth: "100%", maxHeight: "200px" }}
+                />
+                <input
+                  type="text"
+                  id="title"
+                  value={title}
+                  onChange={handleTitleChange}
+                  placeholder="Title"
+                />
+                <input
+                  type="text"
+                  id="link"
+                  value={link}
+                  onChange={handleLinkChange}
+                  placeholder="Link "
+                />
+                <input
+                  type="text"
+                  id="description"
+                  value={description}
+                  onChange={handleDescriptionChange}
+                  placeholder="Description"
+                />
+                <button onClick={handleUpload}>Upload</button>
+              </div>
+            )}
+          </div>
+        </>
+      )}
       <div className="imagesDisplay">
         <div className="row">
           {listOftechnologies.map((technologie) => {
@@ -108,74 +154,45 @@ const TechnologieUploader = () => {
               <div className="col-sm-2 w-auto" key={technologie._id}>
                 <div className="card">
                   <div className="card-body">
-                    <img
-                      className="card-img-top"
-                      src={`${technologie.url}?${Date.now()}`}
-                      alt={technologie.description || ""}
-                      style={{ maxWidth: "100%", maxHeight: "200px" }}
-                    />
                     <h5 className="card-title">{technologie.title || ""}</h5>
-                    {technologie.link && (
-                      <a href={technologie.link} className="btn btn-primary">
-                        {" "}
-                        Link to the technologie
+                    {technologie.link ? (
+                      <a
+                        href={technologie.link}
+                        className="btn btn-primary"
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        <img
+                          className="card-img-top"
+                          src={`${technologie.url}?${Date.now()}`}
+                          alt={technologie.description || ""}
+                          style={{ maxWidth: "20%", maxHeight: "20%" }}
+                        />
                       </a>
+                    ) : (
+                      <img
+                        className="card-img-top"
+                        src={`${technologie.url}?${Date.now()}`}
+                        alt={technologie.description || ""}
+                        style={{ maxWidth: "20%", maxHeight: "20%" }}
+                      />
                     )}
-
-                    <button
-                      className="btn btn-primary"
-                      onClick={() => {
-                        deleteTechnologie(technologie._id);
-                      }}
-                    >
-                      Delete
-                    </button>
+                    {user && (
+                      <button
+                        className="btn btn-primary"
+                        onClick={() => {
+                          deleteTechnologie(technologie._id);
+                        }}
+                      >
+                        Delete
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
             );
           })}
         </div>
-      </div>
-
-      <div>
-        <input
-          type="file"
-          id="file"
-          accept="image/*"
-          onChange={handleFileInputChange}
-        />
-        {selectedFile && (
-          <div>
-            <img
-              src={previewUrl}
-              alt="Preview"
-              style={{ maxWidth: "100%", maxHeight: "200px" }}
-            />
-            <input
-              type="text"
-              id="title"
-              value={title}
-              onChange={handleTitleChange}
-              placeholder="Title"
-            />
-            <input
-              type="text"
-              id="link"
-              value={link}
-              onChange={handleLinkChange}
-              placeholder="Link "
-            />
-            <input
-              type="text"
-              id="description"
-              value={description}
-              onChange={handleDescriptionChange}
-              placeholder="Description"
-            />
-            <button onClick={handleUpload}>Upload</button>
-          </div>
-        )}
       </div>
     </div>
   );

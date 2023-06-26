@@ -1,10 +1,12 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import axios from "axios";
+import { UserContext } from "../context/UserContext";
 
 const EducationUploader = () => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [listOfEducation, setListOfEducation] = useState([]);
+  const { user } = useContext(UserContext);
 
   useEffect(() => {
     axios.get(`${process.env.REACT_APP_API_URL}/education`).then((res) => {
@@ -60,47 +62,54 @@ const EducationUploader = () => {
 
   return (
     <div>
-      <h1>Education Uploader</h1>
+      {user && (
+        <>
+          <h1>Education Uploader</h1>
+
+          <div className="form-group">
+            <input
+              value={title}
+              id="title"
+              size="small"
+              className="form-control mb-3"
+              placeholder="Title"
+              label="Title"
+              onChange={handleTitleChange}
+            />
+          </div>
+          <div className="form-group">
+            <textarea
+              value={description}
+              id="description"
+              size="small"
+              className="form-control mb-3"
+              placeholder="Description"
+              label="Description"
+              onChange={handleDescriptionChange}
+            >
+              {" "}
+            </textarea>
+            <button onClick={handleUpload}>Upload</button>
+          </div>
+        </>
+      )}
       <div>
         {listOfEducation.map((education) => {
           return (
             <div key={education._id}>
               <h1>{education.title}</h1>
               <p>{education.description}</p>
-              <button
-                className="btn btn-danger"
-                onClick={() => deleteEducation(education._id)}
-              >
-                Delete Education
-              </button>
+              {user && (
+                <button
+                  className="btn btn-danger"
+                  onClick={() => deleteEducation(education._id)}
+                >
+                  Delete Education
+                </button>
+              )}
             </div>
           );
         })}
-      </div>
-      <div className="form-group">
-        <input
-          value={title}
-          id="title"
-          size="small"
-          className="form-control mb-3"
-          placeholder="Title"
-          label="Title"
-          onChange={handleTitleChange}
-        />
-      </div>
-      <div className="form-group">
-        <textarea
-          value={description}
-          id="description"
-          size="small"
-          className="form-control mb-3"
-          placeholder="Description"
-          label="Description"
-          onChange={handleDescriptionChange}
-        >
-          {" "}
-        </textarea>
-        <button onClick={handleUpload}>Upload</button>
       </div>
     </div>
   );

@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import axios from "axios";
+import { UserContext } from "../context/UserContext";
 
 const CertificateUploader = () => {
   const [selectedFile, setSelectedFile] = useState(null);
@@ -8,6 +9,7 @@ const CertificateUploader = () => {
   const [link, setLink] = useState("");
   const [description, setDescription] = useState("");
   const [listOfcertificates, setListOfcertificates] = useState([]);
+  const { user } = useContext(UserContext);
 
   // get all the projects from the server
   useEffect(() => {
@@ -100,7 +102,51 @@ const CertificateUploader = () => {
 
   return (
     <div>
-      <h1>certificate Uploader</h1>
+      {user && (
+        <>
+          <h1>certificate Uploader</h1>
+
+          <div>
+            <input
+              type="file"
+              id="file"
+              accept="image/*"
+              onChange={handleFileInputChange}
+            />
+            {selectedFile && (
+              <div>
+                <img
+                  src={previewUrl}
+                  alt="Preview"
+                  style={{ maxWidth: "100%", maxHeight: "200px" }}
+                />
+                <input
+                  type="text"
+                  id="title"
+                  value={title}
+                  onChange={handleTitleChange}
+                  placeholder="Title"
+                />
+                <input
+                  type="text"
+                  id="link"
+                  value={link}
+                  onChange={handleLinkChange}
+                  placeholder="Link "
+                />
+                <input
+                  type="text"
+                  id="description"
+                  value={description}
+                  onChange={handleDescriptionChange}
+                  placeholder="Description"
+                />
+                <button onClick={handleUpload}>Upload</button>
+              </div>
+            )}
+          </div>
+        </>
+      )}
       <div className="imagesDisplay">
         <div className="row">
           {listOfcertificates.map((certificate) => {
@@ -108,74 +154,45 @@ const CertificateUploader = () => {
               <div className="col-sm-2 w-auto" key={certificate._id}>
                 <div className="card">
                   <div className="card-body">
-                    <img
-                      className="card-img-top"
-                      src={`${certificate.url}?${Date.now()}`}
-                      alt={certificate.description || ""}
-                      style={{ maxWidth: "100%", maxHeight: "200px" }}
-                    />
                     <h5 className="card-title">{certificate.title || ""}</h5>
-                    {certificate.link && (
-                      <a href={certificate.link} className="btn btn-primary">
-                        {" "}
-                        Link to the certificate
+                    {certificate.link ? (
+                      <a
+                        href={certificate.link}
+                        className="btn btn-primary"
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        <img
+                          className="card-img-top"
+                          src={`${certificate.url}?${Date.now()}`}
+                          alt={certificate.description || ""}
+                          style={{ maxWidth: "50%", maxHeight: "200px" }}
+                        />
                       </a>
+                    ) : (
+                      <img
+                        className="card-img-top"
+                        src={`${certificate.url}?${Date.now()}`}
+                        alt={certificate.description || ""}
+                        style={{ maxWidth: "50%", maxHeight: "200px" }}
+                      />
                     )}
-
-                    <button
-                      className="btn btn-primary"
-                      onClick={() => {
-                        deleteCertificate(certificate._id);
-                      }}
-                    >
-                      Delete
-                    </button>
+                    {user && (
+                      <button
+                        className="btn btn-primary"
+                        onClick={() => {
+                          deleteCertificate(certificate._id);
+                        }}
+                      >
+                        Delete
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
             );
           })}
         </div>
-      </div>
-
-      <div>
-        <input
-          type="file"
-          id="file"
-          accept="image/*"
-          onChange={handleFileInputChange}
-        />
-        {selectedFile && (
-          <div>
-            <img
-              src={previewUrl}
-              alt="Preview"
-              style={{ maxWidth: "100%", maxHeight: "200px" }}
-            />
-            <input
-              type="text"
-              id="title"
-              value={title}
-              onChange={handleTitleChange}
-              placeholder="Title"
-            />
-            <input
-              type="text"
-              id="link"
-              value={link}
-              onChange={handleLinkChange}
-              placeholder="Link "
-            />
-            <input
-              type="text"
-              id="description"
-              value={description}
-              onChange={handleDescriptionChange}
-              placeholder="Description"
-            />
-            <button onClick={handleUpload}>Upload</button>
-          </div>
-        )}
       </div>
     </div>
   );
