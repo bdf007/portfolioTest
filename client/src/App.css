@@ -1,4 +1,4 @@
-.App {
+/* .App {
   text-align: center;
 }
 
@@ -35,4 +35,18 @@
   to {
     transform: rotate(360deg);
   }
+} */
+
+body {
+  position: relative;
+}
+main {
+  margin-bottom: 220px;
+}
+.footer-bs {
+  position: absolute;
+  width: 100%;
+  left: 0;
+  height: fit-content;
+  color: white;
 }

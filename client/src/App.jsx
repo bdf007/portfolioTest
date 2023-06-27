@@ -9,14 +9,23 @@ import {
 import { UserContext } from "./context/UserContext";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import User from "./component/user";
 import NavBarre from "./component/navBarre";
-import ImageUploader from "./component/imageUploader";
+
+// css
+import "./App.css";
 
 // components
 import Home from "./pages/Home";
 import Signup from "./pages/Signup";
 import Login from "./pages/Login";
+import Admin from "./pages/Admin";
+import About from "./pages/About";
+import Education from "./pages/Education";
+import Experience from "./pages/Experience";
+import Project from "./pages/Project";
+import Contact from "./pages/Contact";
+import Comment from "./pages/Comment";
+import Footer from "./component/footer";
 
 // API functions
 import { getUser } from "./api/user";
@@ -35,7 +44,7 @@ function App() {
     return () => unsubscribe;
   }, []);
   return (
-    <div>
+    <div className="bg-info">
       <Router>
         <UserContext.Provider value={{ user, setUser }}>
           <ToastContainer />
@@ -44,20 +53,33 @@ function App() {
             {!user ? (
               <>
                 <Route exact path="/" element={<Home />} />
+                <Route exact path="/About" element={<About />} />
+                <Route exact path="/Education" element={<Education />} />
+                <Route exact path="/Experience" element={<Experience />} />
+                <Route exact path="/Project" element={<Project />} />
+                <Route exact path="/Contact" element={<Contact />} />
                 <Route exact path="/signup" element={<Signup />} />
                 <Route exact path="/login" element={<Login />} />{" "}
+                <Route exact path="/comment" element={<Comment />} />
+                <Route path="*" element={<Navigate to="/" />} />
               </>
             ) : (
               <>
-                <Route exact path="/" element={<Home />} />
+                <Route exact path="/" element={<Admin />} />
+                <Route exact path="/About" element={<About />} />
+                <Route exact path="/Education" element={<Education />} />
+                <Route exact path="/Experience" element={<Experience />} />
+                <Route exact path="/Project" element={<Project />} />
+                <Route exact path="/comment" element={<Comment />} />
+                <Route exact path="/Contact" element={<Contact />} />
+
                 <Route path="*" element={<Navigate to="/" />} />
               </>
             )}
           </Routes>
         </UserContext.Provider>
+        <Footer />
       </Router>
-      {/* <User /> */}
-      <ImageUploader />
     </div>
   );
 }

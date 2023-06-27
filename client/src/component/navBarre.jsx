@@ -45,10 +45,36 @@ const NavBarre = () => {
             {!user ? (
               <>
                 <li className="nav-item">
+                  <Link className="nav-link" to="/About">
+                    About
+                  </Link>
+                </li>
+                <li className="nav-item">
+                  <Link className="nav-link" to="/Education">
+                    Education
+                  </Link>
+                </li>
+                <li className="nav-item">
+                  <Link className="nav-link" to="/Experience">
+                    Experience
+                  </Link>
+                </li>
+                <li className="nav-item">
+                  <Link className="nav-link" to="/Project">
+                    Project
+                  </Link>
+                </li>
+                <li className="nav-item">
+                  <Link className="nav-link" to="/Contact">
+                    Contact
+                  </Link>
+                </li>
+
+                {/* <li className="nav-item">
                   <Link className="nav-link" to="/signup">
                     Sign Up
                   </Link>
-                </li>
+                </li> */}
                 <li className="nav-item">
                   <Link className="nav-link" to="/login">
                     Login
@@ -56,15 +82,42 @@ const NavBarre = () => {
                 </li>
               </>
             ) : (
-              <li className="nav-item">
-                <span
-                  className="nav-link"
-                  style={{ cursor: "pointer" }}
-                  onClick={handleLogout}
-                >
-                  Logout
-                </span>
-              </li>
+              <>
+                <li className="nav-item">
+                  <Link className="nav-link" to="/About">
+                    About
+                  </Link>
+                </li>
+                <li className="nav-item">
+                  <Link className="nav-link" to="/Education">
+                    Education
+                  </Link>
+                </li>
+                <li className="nav-item">
+                  <Link className="nav-link" to="/Experience">
+                    Experience
+                  </Link>
+                </li>
+                <li className="nav-item">
+                  <Link className="nav-link" to="/Project">
+                    Project
+                  </Link>
+                </li>
+                <li className="nav-item">
+                  <Link className="nav-link" to="/Contact">
+                    Contact
+                  </Link>
+                </li>
+                <li className="nav-item">
+                  <span
+                    className="nav-link"
+                    style={{ cursor: "pointer" }}
+                    onClick={handleLogout}
+                  >
+                    Logout
+                  </span>
+                </li>
+              </>
             )}
           </ul>
         </div>
