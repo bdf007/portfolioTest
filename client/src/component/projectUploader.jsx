@@ -113,7 +113,7 @@ const ProjectUploader = () => {
   };
 
   return (
-    <div>
+    <div className="d-flex">
       {user && (
         <>
           <h1>project Uploader</h1>

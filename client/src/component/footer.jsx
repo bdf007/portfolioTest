@@ -39,7 +39,7 @@ const Footer = () => {
               </Link>
             </li>
           </ul>
-          <p>© 2045 Bootstrap, All rights reserved</p>
+          <p>© 2023, All rights reserved</p>
         </div>
       </div>
     </footer>

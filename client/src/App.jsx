@@ -44,7 +44,7 @@ function App() {
     return () => unsubscribe;
   }, []);
   return (
-    <div className="bg-info ">
+    <div className="bg-info">
       <Router>
         <UserContext.Provider value={{ user, setUser }}>
           <ToastContainer />
@@ -61,6 +61,7 @@ function App() {
                 <Route exact path="/signup" element={<Signup />} />
                 <Route exact path="/login" element={<Login />} />{" "}
                 <Route exact path="/comment" element={<Comment />} />
+                <Route path="*" element={<Navigate to="/" />} />
               </>
             ) : (
               <>
