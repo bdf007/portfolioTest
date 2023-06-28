@@ -147,29 +147,22 @@ const TechnologieUploader = () => {
           </div>
         </>
       )}
-      <div className="imagesDisplay">
-        <div className="row d-flex justify-content-center">
+      <div>
+        <div className="row row-cols-1 row-cols-md-6 g-4">
           {listOftechnologies.length === 0 && <h1>No technologie</h1>}
           {listOftechnologies.map((technologie) => {
             return (
-              <div
-                className="container mt-0 mb-0 ms-0 me-0 col-8 col-sm-6 col-md-4 col-lg-2"
-                key={technologie._id}
-              >
-                <div className="card border-0 bg-info">
-                  <div className="card-body ">
-                    <h5 className="card-title d-flex justify-content-center">
-                      {technologie.title || ""}
-                    </h5>
+              <div key={technologie._id}>
+                <div className="col">
+                  <div className="card border-0">
                     {technologie.link ? (
                       <a
                         href={technologie.link}
-                        className="btn btn-primary d-flex justify-content-center"
                         target="_blank"
                         rel="noreferrer"
                       >
                         <img
-                          className="card-img-top"
+                          className="rounded mx-auto d-block img-thumbnail"
                           src={`${technologie.url}?${Date.now()}`}
                           alt={technologie.description || ""}
                           style={{ maxWidth: "50%", maxHeight: "50%" }}
@@ -177,22 +170,29 @@ const TechnologieUploader = () => {
                       </a>
                     ) : (
                       <img
-                        className="card-img-top d-flex justify-content-center"
+                        className="rounded mx-auto d-block img-thumbnail"
                         src={`${technologie.url}?${Date.now()}`}
                         alt={technologie.description || ""}
                         style={{ maxWidth: "50%", maxHeight: "50%" }}
                       />
                     )}
-                    {user && (
-                      <button
-                        className="btn btn-danger"
-                        onClick={() => {
-                          deleteTechnologie(technologie._id);
-                        }}
-                      >
-                        Delete
-                      </button>
-                    )}
+                    <div className="card-body">
+                      <h5 className="card-title text-center">
+                        {technologie.title || ""}
+                      </h5>
+                      {user && (
+                        <div className="card-footer d-grid gap-2 col-6 mx-auto">
+                          <button
+                            className="btn btn-danger"
+                            onClick={() => {
+                              deleteTechnologie(technologie._id);
+                            }}
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>

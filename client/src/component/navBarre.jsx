@@ -24,7 +24,7 @@ const NavBarre = () => {
       .catch((err) => console.log(err));
   };
   return (
-    <nav className="navbar navbar-expand-lg navbar-dark bg-primary">
+    <nav className="navbar navbar-expand-lg navbar-dark bg-black">
       <div className="container-fluid">
         <Link className="navbar-brand" to="/">
           Christophe Midelet

@@ -44,7 +44,7 @@ function App() {
     return () => unsubscribe;
   }, []);
   return (
-    <div className="bg-info">
+    <div>
       <Router>
         <UserContext.Provider value={{ user, setUser }}>
           <ToastContainer />

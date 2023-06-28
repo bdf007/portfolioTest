@@ -113,7 +113,7 @@ const ProjectUploader = () => {
   };
 
   return (
-    <div className="d-flex">
+    <div>
       {user && (
         <>
           <h1>project Uploader</h1>
@@ -167,30 +167,24 @@ const ProjectUploader = () => {
           </div>
         </>
       )}
-      <div className="imagesDisplay">
-        <div className="row">
-          {listOfprojects.length === 0 && <h1 className="mb-0">No project</h1>}
+      <div>
+        <div className="row row-cols-1 row-cols-md-4 g-4">
+          {listOfprojects.length === 0 && <h1>No project</h1>}
           {listOfprojects.map((project) => {
             return (
-              <div className="col-sm-2 w-auto" key={project._id}>
-                <div className="card border-0 bg-info">
-                  <div className="card-body">
-                    <h5 className="card-title d-flex justify-content-center">
-                      {project.title || ""}
-                    </h5>
-                    <p className="card-text">{project.textProject || ""}</p>
+              <div key={project._id}>
+                <div className="col">
+                  <div className="card ">
                     {project.linkToProject ? (
                       <a
                         href={project.linkToProject}
-                        className="btn btn-primary"
                         target="_blank"
                         rel="noreferrer"
                       >
                         <img
-                          className="card-img-top"
+                          className="card-img-top "
                           src={`${project.url}?${Date.now()}`}
                           alt={project.description || ""}
-                          style={{ maxWidth: "100%", maxHeight: "100%" }}
                         />
                       </a>
                     ) : (
@@ -198,18 +192,25 @@ const ProjectUploader = () => {
                         className="card-img-top"
                         src={`${project.url}?${Date.now()}`}
                         alt={project.description || ""}
-                        style={{ maxWidth: "100%", maxHeight: "100%" }}
                       />
                     )}
+                  </div>
+                  <div className="card-body">
+                    <h5 className="card-title text-center">
+                      {project.title || ""}
+                    </h5>
+                    <p className="card-text">{project.textProject || ""}</p>
                     {user && (
-                      <button
-                        className="btn btn-danger"
-                        onClick={() => {
-                          deleteProject(project._id);
-                        }}
-                      >
-                        Delete
-                      </button>
+                      <div className="card-footer d-grid gap-2 col-6 mx-auto">
+                        <button
+                          className="btn btn-danger"
+                          onClick={() => {
+                            deleteProject(project._id);
+                          }}
+                        >
+                          Delete
+                        </button>
+                      </div>
                     )}
                   </div>
                 </div>
