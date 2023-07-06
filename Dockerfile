@@ -33,9 +33,9 @@ COPY ./ /usr/src/app
 RUN npm install -g npm
 # Create front app
 RUN cd ./client && npm i && npm run build
-RUN mkdir -p ./client/dist/src && cp -r ./client/src/assets ./client/dist/src
-RUN cp ./client/robots.txt ./client/dist/
-RUN cp ./client/sitemap.xml ./client/dist/
+# RUN mkdir -p ./client/dist/src && cp -r ./client/src/assets ./client/dist/src
+# RUN cp ./client/robots.txt ./client/dist/
+# RUN cp ./client/sitemap.xml ./client/dist/
 # Create back app
 RUN cd ./server && npm i --prod
 
