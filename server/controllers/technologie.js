@@ -11,7 +11,7 @@ exports.getTechnologie = async (req, res) => {
       link: technologie.link,
       description: technologie.metadata ? technologie.metadata.description : "",
       filename: technologie.filename,
-      url: `${process.env.BACKEND_URL}/imageUpload/${technologie.filename}`,
+      url: `${process.env.BACKEND_IMAGE_URL}/${technologie.filename}`,
     }));
     res.json(mappedTechnologies);
   } catch (error) {

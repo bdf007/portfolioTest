@@ -11,7 +11,7 @@ exports.getCertificate = async (req, res) => {
       link: certificate.link,
       description: certificate.metadata ? certificate.metadata.description : "",
       filename: certificate.filename,
-      url: `${process.env.BACKEND_URL}/imageUpload/${certificate.filename}`,
+      url: `${process.env.BACKEND_IMAGE_URL}/${certificate.filename}`,
     }));
     res.json(mappedCertificates);
   } catch (error) {

@@ -4,9 +4,7 @@ const aboutSchema = new mongoose.Schema(
   {
     title: {
       type: String,
-      required: true,
-      trim: true,
-      unique: true,
+      default: null,
     },
     description: {
       type: String,
