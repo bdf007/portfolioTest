@@ -50,13 +50,11 @@ app.use(expressValidator());
 //db connection
 connection();
 
-app.use(express.static(path.join(__dirname, "..", "..", "client", "dist")));
+app.use(express.static(path.join(__dirname, "..", "client", "build")));
 
 // Redirect all requests to the REACT app
 app.get("*", (req, res) => {
-  res.sendFile(
-    path.join(__dirname, "..", "..", "client", "dist", "index.html")
-  );
+  res.sendFile(path.join(__dirname, "..", "client", "build", "index.html"));
 });
 
 // routes
