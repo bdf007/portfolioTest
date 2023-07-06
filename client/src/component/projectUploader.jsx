@@ -24,7 +24,7 @@ const ProjectUploader = () => {
     } catch (error) {
       console.log(error);
     }
-  }, [listOfprojects]);
+  }, []);
 
   const handleFileInputChange = (event) => {
     const file = event.target.files[0];

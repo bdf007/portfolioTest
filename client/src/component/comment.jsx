@@ -16,7 +16,7 @@ const CommentUploader = () => {
     axios.get(`${process.env.REACT_APP_API_URL}/api/comment`).then((res) => {
       setListOfComment(res.data);
     });
-  }, [listOfComment]);
+  }, []);
 
   const handleNameChange = (e) => {
     setName(e.target.value);

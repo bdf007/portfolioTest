@@ -19,7 +19,7 @@ const CertificateUploader = () => {
       .then((response) => {
         setListOfcertificates(response.data);
       });
-  }, [listOfcertificates]);
+  }, []);
 
   const handleFileInputChange = (event) => {
     const file = event.target.files[0];

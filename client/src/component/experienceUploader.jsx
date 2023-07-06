@@ -13,7 +13,7 @@ const ExperienceUploader = () => {
     axios.get(`${process.env.REACT_APP_API_URL}/api/experience`).then((res) => {
       setListOfExperience(res.data);
     });
-  }, [listOfExperience]);
+  }, []);
 
   const handleTitleChange = (e) => {
     setTitle(e.target.value);

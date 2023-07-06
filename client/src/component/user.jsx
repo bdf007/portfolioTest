@@ -14,7 +14,7 @@ function User() {
       .then((response) => {
         setListOfUsers(response.data);
       });
-  }, [listOfUsers]);
+  }, []);
 
   const addUser = () => {
     axios

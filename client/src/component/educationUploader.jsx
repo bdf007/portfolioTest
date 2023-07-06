@@ -13,7 +13,7 @@ const EducationUploader = () => {
     axios.get(`${process.env.REACT_APP_API_URL}/api/education`).then((res) => {
       setListOfEducation(res.data);
     });
-  }, [listOfEducation]);
+  }, []);
 
   const handleTitleChange = (e) => {
     setTitle(e.target.value);

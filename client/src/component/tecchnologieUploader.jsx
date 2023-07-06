@@ -19,7 +19,7 @@ const TechnologieUploader = () => {
       .then((response) => {
         setListOftechnologies(response.data);
       });
-  }, [listOftechnologies]);
+  }, []);
 
   const handleFileInputChange = (event) => {
     const file = event.target.files[0];
