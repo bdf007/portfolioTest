@@ -1,5 +1,5 @@
 # production environment
-FROM node:16.14.1
+FROM node:18.16.1
 # Create app directory
 RUN mkdir /usr/src/app
 WORKDIR /usr/src/app
