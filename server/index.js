@@ -54,10 +54,7 @@ app.use(express.static(path.join(__dirname, "..", "client", "build")));
 
 // routes
 // Serve static files from the "imageUpload" directory
-app.use(
-  "/imageUpload",
-  express.static(path.join(__dirname, "imageUpload"), { maxAge: 0 })
-);
+app.use("/imageUpload", express.static(path.join(__dirname, "imageUpload")));
 
 // get imageUpload folder
 app.get("/api/imageUpload", (req, res) => {
