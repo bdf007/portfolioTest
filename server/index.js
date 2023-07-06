@@ -52,6 +52,13 @@ connection();
 
 app.use(express.static(path.join(__dirname, "..", "..", "client", "dist")));
 
+// Redirect all requests to the REACT app
+app.get("*", (req, res) => {
+  res.sendFile(
+    path.join(__dirname, "..", "..", "client", "dist", "index.html")
+  );
+});
+
 // routes
 // Serve static files from the "imageUpload" directory
 app.use(
