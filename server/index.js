@@ -50,6 +50,8 @@ app.use(expressValidator());
 //db connection
 connection();
 
+app.use(express.static(path.join(__dirname, "..", "..", "client", "dist")));
+
 // routes
 // Serve static files from the "imageUpload" directory
 app.use(
