@@ -41,4 +41,4 @@ RUN cd ./server && npm i --prod
 
 # expose full app on APP_PORT
 EXPOSE ${PORT}
-CMD ["node", "backend/index.js"]
+CMD ["node", "server/index.js"]
