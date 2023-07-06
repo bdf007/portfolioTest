@@ -30,14 +30,14 @@ ENV FRONTEND_URL=${FRONTEND_URL}
 ARG FRONTEND_URL=${FRONTEND_URL}
 
 COPY ./ /usr/src/app
-RUN npm install -g pnpm
+RUN npm install -g npm
 # Create front app
-RUN cd ./frontend && pnpm i && pnpm build
+RUN cd ./frontend && npm i && npm build
 RUN mkdir -p ./frontend/dist/src && cp -r ./frontend/src/assets ./frontend/dist/src
 RUN cp ./frontend/robots.txt ./frontend/dist/
 RUN cp ./frontend/sitemap.xml ./frontend/dist/
 # Create back app
-RUN cd ./backend && pnpm i --prod
+RUN cd ./backend && npm i --prod
 
 # expose full app on APP_PORT
 EXPOSE ${PORT}
