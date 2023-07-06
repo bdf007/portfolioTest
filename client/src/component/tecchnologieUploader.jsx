@@ -15,7 +15,7 @@ const TechnologieUploader = () => {
   // get all the projects from the server
   useEffect(() => {
     axios
-      .get(`${process.env.REACT_APP_API_URL}/technologie/getTechnologies`)
+      .get(`${process.env.REACT_APP_API_URL}/api/technologie/getTechnologies`)
       .then((response) => {
         setListOftechnologies(response.data);
       });
@@ -48,7 +48,7 @@ const TechnologieUploader = () => {
       formData.append("description", description);
 
       const response = await axios.post(
-        `${process.env.REACT_APP_API_URL}/technologie/upload`,
+        `${process.env.REACT_APP_API_URL}/api/technologie/upload`,
         formData,
         {
           headers: {
@@ -88,7 +88,7 @@ const TechnologieUploader = () => {
   const deleteTechnologie = (id) => {
     axios
       .delete(
-        `${process.env.REACT_APP_API_URL}/technologie/deleteTechnologie/${id}`
+        `${process.env.REACT_APP_API_URL}/api/technologie/deleteTechnologie/${id}`
       )
       .then((response) => {
         toast.success("Technologie deleted successfully");

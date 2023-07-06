@@ -10,7 +10,7 @@ const ExperienceUploader = () => {
   const { user } = useContext(UserContext);
 
   useEffect(() => {
-    axios.get(`${process.env.REACT_APP_API_URL}/experience`).then((res) => {
+    axios.get(`${process.env.REACT_APP_API_URL}/api/experience`).then((res) => {
       setListOfExperience(res.data);
     });
   }, [listOfExperience]);
@@ -26,7 +26,7 @@ const ExperienceUploader = () => {
   const handleUpload = () => {
     try {
       axios
-        .post(`${process.env.REACT_APP_API_URL}/experience`, {
+        .post(`${process.env.REACT_APP_API_URL}/api/experience`, {
           title: title,
           description: description,
         })
@@ -54,7 +54,7 @@ const ExperienceUploader = () => {
 
   const deleteExperience = (id) => {
     axios
-      .delete(`${process.env.REACT_APP_API_URL}/experience/${id}`)
+      .delete(`${process.env.REACT_APP_API_URL}/api/experience/${id}`)
       .then(() => {
         toast.success("Experience deleted");
         setListOfExperience(

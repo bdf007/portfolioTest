@@ -10,10 +10,11 @@ const AboutUploader = () => {
   const { user } = useContext(UserContext);
 
   useEffect(() => {
-    axios.get(`${process.env.REACT_APP_API_URL}/about`).then((res) => {
+    axios.get(`${process.env.REACT_APP_API_URL}/api/about`).then((res) => {
       setListOfAbout(res.data);
+      console.log(`${process.env.REACT_APP_API_URL}/api/about`);
     });
-  }, [listOfAbout]);
+  }, []);
 
   const handleTitleChange = (e) => {
     setTitle(e.target.value);
@@ -26,7 +27,7 @@ const AboutUploader = () => {
   const handleUpload = () => {
     try {
       axios
-        .post(`${process.env.REACT_APP_API_URL}/about`, {
+        .post(`${process.env.REACT_APP_API_URL}/api/about`, {
           title: title,
           description: description,
         })
@@ -53,14 +54,16 @@ const AboutUploader = () => {
   };
 
   const deleteAbout = (id) => {
-    axios.delete(`${process.env.REACT_APP_API_URL}/about/${id}`).then(() => {
-      toast.success("About deleted");
-      setListOfAbout(
-        listOfAbout.filter((val) => {
-          return val._id !== id;
-        })
-      );
-    });
+    axios
+      .delete(`${process.env.REACT_APP_API_URL}/api/about/${id}`)
+      .then(() => {
+        toast.success("About deleted");
+        setListOfAbout(
+          listOfAbout.filter((val) => {
+            return val._id !== id;
+          })
+        );
+      });
   };
 
   console.log(listOfAbout);

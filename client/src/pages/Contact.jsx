@@ -14,7 +14,7 @@ const Contact = () => {
   const { user } = useContext(UserContext);
 
   useEffect(() => {
-    axios.get(`${process.env.REACT_APP_API_URL}/contact`).then((res) => {
+    axios.get(`${process.env.REACT_APP_API_URL}/api/contact`).then((res) => {
       setListOfContact(res.data);
     });
   }, [listOfContact]);
@@ -39,7 +39,7 @@ const Contact = () => {
     e.preventDefault();
     try {
       axios
-        .post(`${process.env.REACT_APP_API_URL}/contact`, {
+        .post(`${process.env.REACT_APP_API_URL}/api/contact`, {
           firstname: firstname,
           lastname: lastname,
           email: email,
@@ -76,14 +76,16 @@ const Contact = () => {
   };
 
   const handleDelete = (id) => {
-    axios.delete(`${process.env.REACT_APP_API_URL}/contact/${id}`).then(() => {
-      toast.success("Message deleted");
-      setListOfContact(
-        listOfContact.filter((value) => {
-          return value._id !== id;
-        })
-      );
-    });
+    axios
+      .delete(`${process.env.REACT_APP_API_URL}/api/contact/${id}`)
+      .then(() => {
+        toast.success("Message deleted");
+        setListOfContact(
+          listOfContact.filter((value) => {
+            return value._id !== id;
+          })
+        );
+      });
   };
 
   return (

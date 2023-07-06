@@ -17,7 +17,7 @@ const ProjectUploader = () => {
   useEffect(() => {
     try {
       axios
-        .get(`${process.env.REACT_APP_API_URL}/project/projectWithImage`)
+        .get(`${process.env.REACT_APP_API_URL}/api/project/projectWithImage`)
         .then((response) => {
           setListOfprojects(response.data);
         });
@@ -58,7 +58,7 @@ const ProjectUploader = () => {
       formData.append("description", description);
 
       const response = await axios.post(
-        `${process.env.REACT_APP_API_URL}/project/upload`,
+        `${process.env.REACT_APP_API_URL}/api/project/upload`,
         formData,
         {
           headers: {
@@ -100,7 +100,9 @@ const ProjectUploader = () => {
 
   const deleteProject = (id) => {
     axios
-      .delete(`${process.env.REACT_APP_API_URL}/project/deleteProject/${id}`)
+      .delete(
+        `${process.env.REACT_APP_API_URL}/api/project/deleteProject/${id}`
+      )
       .then((response) => {
         toast.success("Project deleted successfully");
         console.log("project deleted successfully");

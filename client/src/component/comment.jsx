@@ -13,7 +13,7 @@ const CommentUploader = () => {
   const [listOfComment, setListOfComment] = useState([]);
 
   useEffect(() => {
-    axios.get(`${process.env.REACT_APP_API_URL}/comment`).then((res) => {
+    axios.get(`${process.env.REACT_APP_API_URL}/api/comment`).then((res) => {
       setListOfComment(res.data);
     });
   }, [listOfComment]);
@@ -32,7 +32,7 @@ const CommentUploader = () => {
 
   const handleUpload = () => {
     axios
-      .post(`${process.env.REACT_APP_API_URL}/comment`, {
+      .post(`${process.env.REACT_APP_API_URL}/api/comment`, {
         name: name,
         email: email,
         comment: comment,
@@ -61,14 +61,16 @@ const CommentUploader = () => {
   };
 
   const deleteComment = (id) => {
-    axios.delete(`${process.env.REACT_APP_API_URL}/comment/${id}`).then(() => {
-      toast.success("Comment deleted");
-      setListOfComment(
-        listOfComment.filter((val) => {
-          return val._id !== id;
-        })
-      );
-    });
+    axios
+      .delete(`${process.env.REACT_APP_API_URL}/api/comment/${id}`)
+      .then(() => {
+        toast.success("Comment deleted");
+        setListOfComment(
+          listOfComment.filter((val) => {
+            return val._id !== id;
+          })
+        );
+      });
   };
 
   return (

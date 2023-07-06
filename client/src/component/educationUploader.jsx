@@ -10,7 +10,7 @@ const EducationUploader = () => {
   const { user } = useContext(UserContext);
 
   useEffect(() => {
-    axios.get(`${process.env.REACT_APP_API_URL}/education`).then((res) => {
+    axios.get(`${process.env.REACT_APP_API_URL}/api/education`).then((res) => {
       setListOfEducation(res.data);
     });
   }, [listOfEducation]);
@@ -26,7 +26,7 @@ const EducationUploader = () => {
   const handleUpload = () => {
     try {
       axios
-        .post(`${process.env.REACT_APP_API_URL}/education`, {
+        .post(`${process.env.REACT_APP_API_URL}/api/education`, {
           title: title,
           description: description,
         })
@@ -54,7 +54,7 @@ const EducationUploader = () => {
 
   const deleteEducation = (id) => {
     axios
-      .delete(`${process.env.REACT_APP_API_URL}/education/${id}`)
+      .delete(`${process.env.REACT_APP_API_URL}/api/education/${id}`)
       .then(() => {
         toast.success("Education deleted");
         setListOfEducation(

@@ -10,7 +10,7 @@ function User() {
 
   useEffect(() => {
     axios
-      .get(`${process.env.REACT_APP_API_URL}/user/getUsers`)
+      .get(`${process.env.REACT_APP_API_URL}/api/user/getUsers`)
       .then((response) => {
         setListOfUsers(response.data);
       });
@@ -18,7 +18,7 @@ function User() {
 
   const addUser = () => {
     axios
-      .post(`${process.env.REACT_APP_API_URL}/user/addUser`, {
+      .post(`${process.env.REACT_APP_API_URL}/api/user/addUser`, {
         name: name,
         age: age,
         username: username,
@@ -43,7 +43,7 @@ function User() {
 
   const deleteUser = (id) => {
     axios
-      .delete(`${process.env.REACT_APP_API_URL}/user/deleteUser/${id}`)
+      .delete(`${process.env.REACT_APP_API_URL}/api/user/deleteUser/${id}`)
       .then((response) => {
         alert("User deleted successfully");
         console.log("user deleted successfully");

@@ -15,7 +15,7 @@ const CertificateUploader = () => {
   // get all the projects from the server
   useEffect(() => {
     axios
-      .get(`${process.env.REACT_APP_API_URL}/certificate/getCertificates`)
+      .get(`${process.env.REACT_APP_API_URL}/api/certificate/getCertificates`)
       .then((response) => {
         setListOfcertificates(response.data);
       });
@@ -48,7 +48,7 @@ const CertificateUploader = () => {
       formData.append("description", description);
 
       const response = await axios.post(
-        `${process.env.REACT_APP_API_URL}/certificate/upload`,
+        `${process.env.REACT_APP_API_URL}/api/certificate/upload`,
         formData,
         {
           headers: {
@@ -88,7 +88,7 @@ const CertificateUploader = () => {
   const deleteCertificate = (id) => {
     axios
       .delete(
-        `${process.env.REACT_APP_API_URL}/certificate/deleteCertificate/${id}`
+        `${process.env.REACT_APP_API_URL}/api/certificate/deleteCertificate/${id}`
       )
       .then((response) => {
         toast.success("Certificate deleted successfully");
