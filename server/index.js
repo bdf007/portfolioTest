@@ -37,7 +37,12 @@ const contactRoutes = require("./routes/contact");
 
 // middleware
 app.use(json());
-app.use(cors({ origin: true, credentials: true }));
+app.use(
+  cors({
+    origin: process.env.FRONTEND_URL.split(",") ?? "http://localhost:3000",
+    credentials: true,
+  })
+);
 app.use(urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(expressValidator());

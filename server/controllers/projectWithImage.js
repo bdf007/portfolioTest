@@ -12,7 +12,7 @@ exports.getProjectWithImage = async (req, res) => {
       linkToProject: project.linkToProject,
       filename: project.filename,
       description: project.metadata ? project.metadata.description : "",
-      url: `${process.env.BACKEND_URL}/imageUpload/${project.filename}`,
+      url: `${process.env.BACKEND_IMAGE_URL}/${project.filename}`,
     }));
     res.json(mappedProjects);
   } catch (error) {

@@ -147,25 +147,18 @@ const CertificateUploader = () => {
           </div>
         </>
       )}
-      <div className="imagesDisplay">
-        <h1 className="text-center">Diploma and Certificate</h1>
-        <div className="row d-flex justify-content-center">
+      <div>
+        <h1>Diploma and Certificate</h1>
+        <div className="row row-cols-1 row-cols-md-4 g-4">
           {listOfcertificates.length === 0 && <h1>No certificates</h1>}
           {listOfcertificates.map((certificate) => {
             return (
-              <div
-                className="container mt-0 mb-0 ms-0 me-0 col-20 col-sm-15 col-md-10 col-lg-5"
-                key={certificate._id}
-              >
-                <div className="card border-0 bg-info">
-                  <div className="card-body">
-                    <h5 className="card-title d-flex justify-content-center">
-                      {certificate.title || ""}
-                    </h5>
+              <div key={certificate._id}>
+                <div className="col">
+                  <div className="card">
                     {certificate.link ? (
                       <a
                         href={certificate.link}
-                        className="btn"
                         target="_blank"
                         rel="noreferrer"
                       >
@@ -184,16 +177,23 @@ const CertificateUploader = () => {
                         style={{ maxWidth: "100%", maxHeight: "100%" }}
                       />
                     )}
-                    {user && (
-                      <button
-                        className="btn btn-danger"
-                        onClick={() => {
-                          deleteCertificate(certificate._id);
-                        }}
-                      >
-                        Delete
-                      </button>
-                    )}
+                    <div className="card-body">
+                      <h5 className="card-title text-center">
+                        {certificate.title || ""}
+                      </h5>
+                      {user && (
+                        <div className="card-footer d-grid gap-2 col-6 mx-auto">
+                          <button
+                            className="btn btn-danger"
+                            onClick={() => {
+                              deleteCertificate(certificate._id);
+                            }}
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>

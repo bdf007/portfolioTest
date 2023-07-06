@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 2,
+  "dockerfilePath": "./Dockerfile",
+  "services": {
+    "db": {
+      "image": "mongo",
+      "restart": "always",
+      "ports": [
+        "27017:27017"
+      ]
+    },
+    "app": {
+      "buildPath": ".",
+      "port": 3000,
+      "envVars": {
+        "MONGO_URI": "mongodb://db:27017/portfolioDocker"
+      }
+    }
+  }
+}

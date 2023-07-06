@@ -15,13 +15,13 @@ exports.getAbout = async (req, res) => {
 
 exports.postAbout = async (req, res) => {
   try {
-    // check if title about already exists
-    const titleExists = await About.findOne({ title: req.body.title });
-    if (titleExists) {
-      return res.status(403).json({
-        error: "Title is already taken",
-      });
-    }
+    // // check if title about already exists
+    // const titleExists = await About.findOne({ title: req.body.title });
+    // if (titleExists) {
+    //   return res.status(403).json({
+    //     error: "Title is already taken",
+    //   });
+    // }
     const about = new About(req.body);
     await about.save();
     await res.json(about);
