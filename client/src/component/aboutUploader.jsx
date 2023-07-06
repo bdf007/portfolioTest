@@ -63,6 +63,8 @@ const AboutUploader = () => {
     });
   };
 
+  console.log(listOfAbout);
+
   return (
     <div>
       {user && (
@@ -97,23 +99,26 @@ const AboutUploader = () => {
         </>
       )}
       <div>
-        {listOfAbout.length === 0 && <h1 className="mb-0">No About</h1>}
-        {listOfAbout.map((about) => {
-          return (
-            <div key={about._id}>
-              <h1>{about.title}</h1>
-              <p>{about.description}</p>
-              {user && (
-                <button
-                  className="btn btn-danger"
-                  onClick={() => deleteAbout(about._id)}
-                >
-                  Delete About
-                </button>
-              )}
-            </div>
-          );
-        })}
+        {listOfAbout.length === 0 ? (
+          <h1 className="mb-0">No About</h1>
+        ) : (
+          listOfAbout?.map((about) => {
+            return (
+              <div key={about._id}>
+                <h1>{about.title}</h1>
+                <p>{about.description}</p>
+                {user && (
+                  <button
+                    className="btn btn-danger"
+                    onClick={() => deleteAbout(about._id)}
+                  >
+                    Delete About
+                  </button>
+                )}
+              </div>
+            );
+          })
+        )}
       </div>
     </div>
   );

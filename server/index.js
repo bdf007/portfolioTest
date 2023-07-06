@@ -52,11 +52,6 @@ connection();
 
 app.use(express.static(path.join(__dirname, "..", "client", "build")));
 
-// Redirect all requests to the REACT app
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "..", "client", "build", "index.html"));
-});
-
 // routes
 // Serve static files from the "imageUpload" directory
 app.use(
@@ -65,36 +60,41 @@ app.use(
 );
 
 // get imageUpload folder
-app.get("/imageUpload", (req, res) => {
+app.get("/api/imageUpload", (req, res) => {
   res.send("Hello World!");
 });
 
 // use the route of technologie
-app.use("/technologie", technologieRoute);
+app.use("/api/technologie", technologieRoute);
 
 // use the user routes for connection
-app.use("/", userRoutes);
+app.use("/api/", userRoutes);
 
 // use the about routes
-app.use("/", aboutRoutes);
+app.use("/api/", aboutRoutes);
 
 // use the education routes
-app.use("/", educationRoutes);
+app.use("/api/", educationRoutes);
 
 // use the experience routes
-app.use("/", experienceRoutes);
+app.use("/api/", experienceRoutes);
 
 // use the projectWithImage routes
-app.use("/project", projectWithImageRoutes);
+app.use("/api/project", projectWithImageRoutes);
 
 // use the certificate routes
-app.use("/certificate", certificateRoutes);
+app.use("/api/certificate", certificateRoutes);
 
 // use the comment routes
-app.use("/", commentRoutes);
+app.use("/api/", commentRoutes);
 
 // use the contact routes
-app.use("/", contactRoutes);
+app.use("/api/", contactRoutes);
+
+// Redirect all requests to the REACT app
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "..", "client", "build", "index.html"));
+});
 
 // Port
 const port = process.env.PORT || 8000;
