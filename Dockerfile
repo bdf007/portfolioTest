@@ -32,12 +32,12 @@ ARG FRONTEND_URL=${FRONTEND_URL}
 COPY ./ /usr/src/app
 RUN npm install -g npm
 # Create front app
-RUN cd ./frontend && npm i && npm build
-RUN mkdir -p ./frontend/dist/src && cp -r ./frontend/src/assets ./frontend/dist/src
-RUN cp ./frontend/robots.txt ./frontend/dist/
-RUN cp ./frontend/sitemap.xml ./frontend/dist/
+RUN cd ./client && npm i && npm build
+RUN mkdir -p ./client/dist/src && cp -r ./client/src/assets ./client/dist/src
+RUN cp ./client/robots.txt ./client/dist/
+RUN cp ./client/sitemap.xml ./client/dist/
 # Create back app
-RUN cd ./backend && npm i --prod
+RUN cd ./server && npm i --prod
 
 # expose full app on APP_PORT
 EXPOSE ${PORT}
