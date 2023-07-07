@@ -59,7 +59,7 @@ function App() {
                 <Route exact path="/Contact" element={<Contact />} />
                 <Route exact path="/signup" element={<Signup />} />
                 <Route exact path="/login" element={<Login />} />{" "}
-                <Route path="*" element={<Navigate to="/" />} />
+                {/* <Route path="*" element={<Home />} /> */}
               </>
             ) : (
               <>
@@ -70,7 +70,7 @@ function App() {
                 <Route exact path="/Project" element={<Project />} />
                 <Route exact path="/Contact" element={<Contact />} />
 
-                <Route path="*" element={<Navigate to="/" />} />
+                {/* <Route path="*" element={<Home />} /> */}
               </>
             )}
           </Routes>
