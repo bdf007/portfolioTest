@@ -9,7 +9,6 @@
   box-sizing: border-box;
 }
 
-/*.App-logo{height:40vminpointer-events:none}@media(prefers-reduced-motion:no-preference){.App-logo{animation:App-logo-spininfinite20slinear}}.App-header{background-color:#282c34min-height:100vhdisplay:flexflex-direction:columnalign-items:centerjustify-content:centerfont-size:calc(10px+2vmin)color:white}.App-link{color:#61dafb}@keyframesApp-logo-spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}*/
 body {
   position: relative;
 }
@@ -30,4 +29,7 @@ main {
   margin-right: 0;
   padding-left: 0;
   overflow: hidden;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
 }
