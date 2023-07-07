@@ -2,6 +2,7 @@ import React, { useEffect, useState, useContext } from "react";
 import axios from "axios";
 import { UserContext } from "../context/UserContext";
 import { toast } from "react-toastify";
+import WIP from "../assets/WIP.png";
 
 const CertificateUploader = () => {
   const [selectedFile, setSelectedFile] = useState(null);
@@ -150,7 +151,13 @@ const CertificateUploader = () => {
       <div className="home">
         <h1>Diploma and Certificate</h1>
         <div className="row row-cols-1 row-cols-md-4 g-3 home">
-          {listOfcertificates.length === 0 && <h1>No certificates</h1>}
+          {listOfcertificates.length === 0 && (
+            <img
+              src={WIP}
+              alt="WIP"
+              style={{ maxWidth: "100%", maxHeight: "100%" }}
+            />
+          )}
           {listOfcertificates.map((certificate) => {
             return (
               <div key={certificate._id}>

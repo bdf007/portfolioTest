@@ -2,6 +2,7 @@ import React, { useEffect, useState, useContext } from "react";
 import axios from "axios";
 import { UserContext } from "../context/UserContext";
 import { toast } from "react-toastify";
+import WIP from "../assets/WIP.png";
 
 const TechnologieUploader = () => {
   const [selectedFile, setSelectedFile] = useState(null);
@@ -149,7 +150,13 @@ const TechnologieUploader = () => {
       )}
       <div>
         <div className="row row-cols-1 row-cols-md-6 g-3 home">
-          {listOftechnologies.length === 0 && <h1>No technologie</h1>}
+          {listOftechnologies.length === 0 && (
+            <img
+              src={WIP}
+              alt="WIP"
+              style={{ maxWidth: "100%", maxHeight: "100%" }}
+            />
+          )}
           {listOftechnologies.map((technologie) => {
             return (
               <div key={technologie._id}>
