@@ -14,7 +14,11 @@ const Home = () => {
         ) : (
           <div className="text-center">
             <h1>Welcome to my portfolio</h1>
-            <img src={profil} alt="profil" className="img-thumbnail" />
+            <img
+              src={profil}
+              alt="profil"
+              className="img-thumbnail rounded-circle"
+            />
             <p>Christophe Midelet</p>
             <p>Email : christophemidelet650@gmail.com</p>
             <p>Téléphone : +33 81 29 75 80</p>
