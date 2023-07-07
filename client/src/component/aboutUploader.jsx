@@ -106,7 +106,9 @@ const AboutUploader = () => {
             return (
               <div key={about._id}>
                 <h1>{about.title}</h1>
-                <p>{about.description}</p>
+                <pre>
+                  <p>{about.description}</p>
+                </pre>
                 {user && (
                   <button
                     className="btn btn-danger"

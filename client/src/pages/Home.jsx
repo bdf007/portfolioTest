@@ -29,7 +29,7 @@ const Home = () => {
             <img
               src={profil}
               alt="profil"
-              className="img-thumbnail rounded-circle"
+              className="rounded-circle border border-secondary "
             />
             <h2>Christophe Midelet</h2>
             <h5>Développeur web fullstack</h5>
