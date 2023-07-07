@@ -3,6 +3,7 @@ import axios from "axios";
 import { UserContext } from "../context/UserContext";
 import { toast } from "react-toastify";
 import WIP from "../assets/WIP.png";
+import "../App.css";
 
 const ProjectUploader = () => {
   const [selectedFile, setSelectedFile] = useState(null);
@@ -147,9 +148,8 @@ const ProjectUploader = () => {
                   value={textProject}
                   onChange={handleTextProjectChange}
                   placeholder="Text Project"
-                >
-                  {" "}
-                </textarea>
+                />
+
                 <input
                   type="text"
                   id="linkToProject"
@@ -208,7 +208,11 @@ const ProjectUploader = () => {
                     <h5 className="card-title text-center">
                       {project.title || ""}
                     </h5>
-                    <p className="card-text">{project.textProject || ""}</p>
+                    <pre>
+                      <p className="card-text description text-start">
+                        {project.textProject || ""}
+                      </p>
+                    </pre>
                     {user && (
                       <div className="card-footer d-grid gap-2 col-6 mx-auto">
                         <button

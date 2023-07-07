@@ -77,15 +77,15 @@ const CommentUploader = () => {
     <div>
       {!user && (
         <>
-          <h2>Leave a comment</h2>
+          <h2>Laissez moi un commentaire</h2>
           <div className="form-group">
             <input
               value={name}
               id="name"
               size="small"
               className="form-control mb-3"
-              placeholder="Name*"
-              label="Name*"
+              placeholder="Nom*"
+              label="Nom*"
               onChange={handleNameChange}
             />
           </div>
@@ -106,8 +106,8 @@ const CommentUploader = () => {
               id="comment"
               size="small"
               className="form-control mb-3"
-              placeholder="Comment*"
-              label="Comment*"
+              placeholder="Commentaire*"
+              label="Commentaire*"
               onChange={handleCommentChange}
             >
               {" "}
@@ -118,13 +118,15 @@ const CommentUploader = () => {
               onClick={handleUpload}
               disabled={!name || !comment}
             >
-              Send Comment
+              Envoyer
             </Button>
           </div>
         </>
       )}
       <div>
-        {listOfComment.length === 0 && <h1>No Comment</h1>}
+        {listOfComment.length === 0 && (
+          <h1>Aucun Commentaire pour le moment</h1>
+        )}
         {listOfComment.map((comment) => {
           return (
             <div key={comment._id}>

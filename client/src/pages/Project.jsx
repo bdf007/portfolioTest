@@ -4,7 +4,7 @@ import ProjectUploader from "../component/projectUploader";
 const Project = () => {
   return (
     <div className="home">
-      <h1 className="text-center">My Projects</h1>
+      <h1 className="text-center">Mes Projets</h1>
       <ProjectUploader />
     </div>
   );

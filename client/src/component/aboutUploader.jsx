@@ -2,6 +2,7 @@ import React, { useEffect, useState, useContext } from "react";
 import axios from "axios";
 import { UserContext } from "../context/UserContext";
 import { toast } from "react-toastify";
+import "../App.css";
 
 const AboutUploader = () => {
   const [title, setTitle] = useState("");
@@ -107,7 +108,7 @@ const AboutUploader = () => {
               <div key={about._id}>
                 <h1>{about.title}</h1>
                 <pre>
-                  <p>{about.description}</p>
+                  <p className="description">{about.description}</p>
                 </pre>
                 {user && (
                   <button

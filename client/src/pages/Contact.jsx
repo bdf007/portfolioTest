@@ -92,7 +92,7 @@ const Contact = () => {
     <div className="home">
       <div className=" row d-flex justify-content-around">
         <div className="container mt-5 mb-5 col-10 col-sm-8 col-md-6 col-lg-5 g-2">
-          <h1>Contact page</h1>
+          <h1>Contactez moi</h1>
           {user ? (
             <div>
               {listOfContact.length === 0 && <h1>No message</h1>}
@@ -127,26 +127,26 @@ const Contact = () => {
           ) : (
             <form onSubmit={handleUpload}>
               <div className="form-group">
-                <label htmlFor="firstname">First name</label>
+                <label htmlFor="firstname">Prénom*</label>
                 <input
                   value={firstname}
                   id="firstname"
                   size="small"
                   className="form-control mb-3"
-                  placeholder="First name"
-                  label="First name"
+                  placeholder="Prénom"
+                  label="Prénom"
                   onChange={handleFirstnameChange}
                 />
               </div>
               <div className="form-group">
-                <label htmlFor="lastname">Last name</label>
+                <label htmlFor="lastname">Nom*</label>
                 <input
                   value={lastname}
                   id="lastname"
                   size="small"
                   className="form-control mb-3"
-                  placeholder="Last name"
-                  label="Last name"
+                  placeholder="Nom"
+                  label="Nom"
                   onChange={handleLastnameChange}
                 />
               </div>
@@ -181,7 +181,7 @@ const Contact = () => {
                   disabled={!firstname || !lastname || !email || !message}
                   onClick={handleUpload}
                 >
-                  Send
+                  Envoyer
                 </Button>
               </div>
             </form>

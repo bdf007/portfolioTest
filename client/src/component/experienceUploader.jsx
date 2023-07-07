@@ -99,7 +99,7 @@ const ExperienceUploader = () => {
         </>
       )}
       <div>
-        {listOfExperience.length === 0 && <h1>No Experience</h1>}
+        {listOfExperience.length === 0 && <h1>Work in Progress</h1>}
         {listOfExperience.map((experience) => {
           return (
             <div key={experience._id}>

@@ -46,7 +46,7 @@ const NavBarre = () => {
               <>
                 <li className="nav-item">
                   <Link className="nav-link" to="/About">
-                    About
+                    A propos
                   </Link>
                 </li>
                 <li className="nav-item">
@@ -56,12 +56,12 @@ const NavBarre = () => {
                 </li>
                 <li className="nav-item">
                   <Link className="nav-link" to="/Experience">
-                    Experience
+                    Expérience
                   </Link>
                 </li>
                 <li className="nav-item">
                   <Link className="nav-link" to="/Project">
-                    Project
+                    Projet
                   </Link>
                 </li>
                 <li className="nav-item">

@@ -34,3 +34,14 @@ main {
   justify-content: center;
   text-align: center;
 }
+.description {
+  font-size: 2rem;
+  white-space: pre-line;
+}
+
+@media screen and (max-width: 768px) {
+  .description {
+    font-size: 1.5rem;
+    white-space: pre-line;
+  }
+}

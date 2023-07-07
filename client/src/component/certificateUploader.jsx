@@ -149,7 +149,7 @@ const CertificateUploader = () => {
         </>
       )}
       <div className="home">
-        <h1>Diploma and Certificate</h1>
+        <h1>Diplome et Certificat</h1>
         <div className="row row-cols-1 row-cols-md-4 g-3 home">
           {listOfcertificates.length === 0 && (
             <img

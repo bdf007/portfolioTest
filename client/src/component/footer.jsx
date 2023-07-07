@@ -15,7 +15,7 @@ const Footer = () => {
             </li>
             <li className="list-inline-item">
               <Link className="nav-link" to="/About">
-                About
+                A propos
               </Link>
             </li>
             <li className="list-inline-item">
@@ -25,12 +25,12 @@ const Footer = () => {
             </li>
             <li className="list-inline-item">
               <Link className="nav-link" to="/Experience">
-                Experience
+                Expérience
               </Link>
             </li>
             <li className="list-inline-item">
               <Link className="nav-link" to="/Project">
-                Project
+                Projet
               </Link>
             </li>
             <li className="list-inline-item">

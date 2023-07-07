@@ -25,7 +25,7 @@ const Home = () => {
           </div>
         ) : (
           <div className="text-center">
-            <h1>Welcome to my portfolio</h1>
+            <h1>Bienvenue sur mon portfolio</h1>
             <img
               src={profil}
               alt="profil"
