@@ -7,7 +7,6 @@
 }
 * {
   box-sizing: border-box;
-  border: 1px solid red;
 }
 
 /*.App-logo{height:40vminpointer-events:none}@media(prefers-reduced-motion:no-preference){.App-logo{animation:App-logo-spininfinite20slinear}}.App-header{background-color:#282c34min-height:100vhdisplay:flexflex-direction:columnalign-items:centerjustify-content:centerfont-size:calc(10px+2vmin)color:white}.App-link{color:#61dafb}@keyframesApp-logo-spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}*/
