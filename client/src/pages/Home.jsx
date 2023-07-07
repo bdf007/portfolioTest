@@ -1,5 +1,6 @@
 import React, { useContext } from "react";
 import { UserContext } from "../context/UserContext";
+import { Helmet } from "react-helmet";
 import profil from "../assets/profil.png";
 
 const Home = () => {
@@ -7,6 +8,17 @@ const Home = () => {
   return (
     <>
       <div className="home">
+        <Helmet>
+          <meta
+            name="description"
+            content="Bienvenue sur mon portfolio - Christophe Midelet"
+          />
+          <meta
+            name="keyword"
+            content="portfolio, développeur web, fullstack, react, nodejs, express, mongodb, christophe midelet"
+          />
+        </Helmet>
+
         {user ? (
           <div>
             <h1>{user && <span>{user}'s</span>} Home</h1>
@@ -19,7 +31,8 @@ const Home = () => {
               alt="profil"
               className="img-thumbnail rounded-circle"
             />
-            <p>Christophe Midelet</p>
+            <h2>Christophe Midelet</h2>
+            <h5>Développeur web fullstack</h5>
             <p>Email : christophemidelet650@gmail.com</p>
             <p>Téléphone : +33 81 29 75 80</p>
             <p>

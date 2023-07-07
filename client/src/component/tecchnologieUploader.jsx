@@ -148,7 +148,7 @@ const TechnologieUploader = () => {
         </>
       )}
       <div>
-        <div className="row row-cols-1 row-cols-md-6 g-3">
+        <div className="row row-cols-1 row-cols-md-6 g-3 home">
           {listOftechnologies.length === 0 && <h1>No technologie</h1>}
           {listOftechnologies.map((technologie) => {
             return (

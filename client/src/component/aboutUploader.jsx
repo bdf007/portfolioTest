@@ -12,7 +12,6 @@ const AboutUploader = () => {
   useEffect(() => {
     axios.get(`${process.env.REACT_APP_API_URL}/api/about`).then((res) => {
       setListOfAbout(res.data);
-      console.log(`${process.env.REACT_APP_API_URL}/api/about`);
     });
   }, []);
 
@@ -66,8 +65,6 @@ const AboutUploader = () => {
       });
   };
 
-  console.log(listOfAbout);
-
   return (
     <div>
       {user && (
@@ -101,7 +98,7 @@ const AboutUploader = () => {
           </div>
         </>
       )}
-      <div>
+      <div className="mx-auto text-wrap" style={{ maxWidth: "75%" }}>
         {listOfAbout.length === 0 ? (
           <h1 className="mb-0">No About</h1>
         ) : (

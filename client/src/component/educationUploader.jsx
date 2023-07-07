@@ -98,7 +98,7 @@ const EducationUploader = () => {
           </div>
         </>
       )}
-      <div>
+      <div className="home">
         {listOfEducation.length === 0 && <h1>No Education</h1>}
         {listOfEducation.map((education) => {
           return (

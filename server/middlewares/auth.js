@@ -4,7 +4,7 @@ exports.verifyToken = (req, res, next) => {
   let accessToken = req.cookies.jwt;
   // if there is no token stored in cookies, the request is unauthorized
   if (!accessToken) {
-    return res.status(403).json({ error: "Unauthorized" });
+    return res.sendStatus(403);
   }
   let payload;
   try {

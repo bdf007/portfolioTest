@@ -115,7 +115,7 @@ const ProjectUploader = () => {
   };
 
   return (
-    <div>
+    <div className="home">
       {user && (
         <>
           <h1>project Uploader</h1>
@@ -170,7 +170,7 @@ const ProjectUploader = () => {
         </>
       )}
       <div>
-        <div className="row row-cols-1 row-cols-md-4 g-2">
+        <div className="row row-cols-1 row-cols-md-4 g-2 home">
           {listOfprojects.length === 0 && <h1>No project</h1>}
           {listOfprojects.map((project) => {
             return (
