@@ -45,55 +45,57 @@ const Login = () => {
   };
 
   return (
-    <div className="container mt-5 col-10 col-sm-8 col-md-6 col-lg-5">
-      <div className="text-center mb-5 alert alert-primary">
-        <label htmlFor="" className="h2">
-          Login
-        </label>
-      </div>
-      <div className="form-group mb-3">
-        <TextField
-          size="small"
-          variant="outlined"
-          className="form-control"
-          label="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
-      </div>
-      <div className="form-group mb-3">
-        <FormControl variant="outlined" size="small" className="form-control">
-          <InputLabel htmlFor="outlined-adornment-password">
-            Password
-          </InputLabel>
-          <OutlinedInput
-            label="Password"
-            type={showPassword ? "text" : "password"}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            endAdornment={
-              <InputAdornment>
-                <IconButton
-                  edge="end"
-                  onClick={() => setShowPassword(!showPassword)}
-                >
-                  {showPassword ? <VisibilityIcon /> : <VisibilityOffIcon />}
-                </IconButton>
-              </InputAdornment>
-            }
+    <div className="home">
+      <div className="container mt-5 col-10 col-sm-8 col-md-6 col-lg-5">
+        <div className="text-center mb-5 alert alert-primary">
+          <label htmlFor="" className="h2">
+            Login
+          </label>
+        </div>
+        <div className="form-group mb-3">
+          <TextField
+            size="small"
+            variant="outlined"
+            className="form-control"
+            label="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
           />
-        </FormControl>
-      </div>
-      <div className="text-center mt-4">
-        <Button
-          className="mb-4"
-          variant="contained"
-          color="primary"
-          disabled={!email || !password}
-          onClick={handleLogin}
-        >
-          Submit
-        </Button>
+        </div>
+        <div className="form-group mb-3">
+          <FormControl variant="outlined" size="small" className="form-control">
+            <InputLabel htmlFor="outlined-adornment-password">
+              Password
+            </InputLabel>
+            <OutlinedInput
+              label="Password"
+              type={showPassword ? "text" : "password"}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              endAdornment={
+                <InputAdornment>
+                  <IconButton
+                    edge="end"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? <VisibilityIcon /> : <VisibilityOffIcon />}
+                  </IconButton>
+                </InputAdornment>
+              }
+            />
+          </FormControl>
+        </div>
+        <div className="text-center mt-4">
+          <Button
+            className="mb-4"
+            variant="contained"
+            color="primary"
+            disabled={!email || !password}
+            onClick={handleLogin}
+          >
+            Submit
+          </Button>
+        </div>
       </div>
     </div>
   );

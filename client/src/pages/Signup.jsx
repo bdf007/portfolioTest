@@ -53,162 +53,166 @@ const Signup = () => {
   };
 
   return (
-    <div className="container mt-5 col-10 col-sm-8 col-md-6 col-lg-5">
-      <div className="text-center mb-5 alert alert-primary">
-        <label htmlFor="" className="h2">
-          Sign Up
-        </label>
-      </div>
-      <div className="form-group">
-        <TextField
-          size="small"
-          variant="outlined"
-          className="form-control mb-3"
-          label="Username"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-        />
-      </div>
-      <div className="form-group">
-        <TextField
-          size="small"
-          variant="outlined"
-          className="form-control mb-3"
-          label="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
-      </div>
-
-      <div className="form-group">
-        <FormControl
-          variant="outlined"
-          size="small"
-          className="form-control mb-3"
-        >
-          <InputLabel htmlFor="outlined-adornment-password">
-            Password
-          </InputLabel>
-          <OutlinedInput
-            label="Password"
-            type={showPassword ? "text" : "password"}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            endAdornment={
-              <InputAdornment>
-                <IconButton
-                  edge="end"
-                  onClick={() => setShowPassword(!showPassword)}
-                >
-                  {showPassword ? <VisibilityIcon /> : <VisibilityOffIcon />}
-                </IconButton>
-              </InputAdornment>
-            }
+    <div className="home">
+      <div className="container mt-5 col-10 col-sm-8 col-md-6 col-lg-5">
+        <div className="text-center mb-5 alert alert-primary">
+          <label htmlFor="" className="h2">
+            Sign Up
+          </label>
+        </div>
+        <div className="form-group">
+          <TextField
+            size="small"
+            variant="outlined"
+            className="form-control mb-3"
+            label="Username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
           />
-        </FormControl>
-        {password && (
-          <div className="ml-1 mb-3" style={{ columns: 2 }}>
-            <div>
-              {hasSixChar ? (
-                <span className="text-success">
-                  <CheckCircleIcon className="mr-1" fontSize="small" />
-                  <small>at least 6 characters</small>
-                </span>
+        </div>
+        <div className="form-group">
+          <TextField
+            size="small"
+            variant="outlined"
+            className="form-control mb-3"
+            label="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+        </div>
+
+        <div className="form-group">
+          <FormControl
+            variant="outlined"
+            size="small"
+            className="form-control mb-3"
+          >
+            <InputLabel htmlFor="outlined-adornment-password">
+              Password
+            </InputLabel>
+            <OutlinedInput
+              label="Password"
+              type={showPassword ? "text" : "password"}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              endAdornment={
+                <InputAdornment>
+                  <IconButton
+                    edge="end"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? <VisibilityIcon /> : <VisibilityOffIcon />}
+                  </IconButton>
+                </InputAdornment>
+              }
+            />
+          </FormControl>
+          {password && (
+            <div className="ml-1 mb-3" style={{ columns: 2 }}>
+              <div>
+                {hasSixChar ? (
+                  <span className="text-success">
+                    <CheckCircleIcon className="mr-1" fontSize="small" />
+                    <small>at least 6 characters</small>
+                  </span>
+                ) : (
+                  <span className="text-danger">
+                    <CancelIcon className="mr-1" fontSize="small" />
+                    <small>at least 6 characters</small>
+                  </span>
+                )}
+              </div>
+              <div>
+                <small
+                  className={hasLowerChar ? "text-success" : "text-danger"}
+                >
+                  at least one lowercase character
+                </small>
+              </div>
+              <div>
+                {hasUpperChar ? (
+                  <span className="text-success">
+                    <CheckCircleIcon className="mr-1" fontSize="small" />
+                    <small>at least one uppercase character</small>
+                  </span>
+                ) : (
+                  <span className="text-danger">
+                    <CancelIcon className="mr-1" fontSize="small" />
+                    <small>at least one uppercase character</small>
+                  </span>
+                )}
+              </div>
+              <div>
+                {hasNumber ? (
+                  <span className="text-success">
+                    <CheckCircleIcon className="mr-1" fontSize="small" />
+                    <small>at least one number</small>
+                  </span>
+                ) : (
+                  <span className="text-danger">
+                    <CancelIcon className="mr-1" fontSize="small" />
+                    <small>at least one number</small>
+                  </span>
+                )}
+              </div>
+              <div>
+                {hasSpecialChar ? (
+                  <span className="text-success">
+                    <CheckCircleIcon className="mr-1" fontSize="small" />
+                    <small>at least one special character</small>
+                  </span>
+                ) : (
+                  <span className="text-danger">
+                    <CancelIcon className="mr-1" fontSize="small" />
+                    <small>at least one special character</small>
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+        <div className="form-group">
+          <TextField
+            size="small"
+            variant="outlined"
+            className="form-control"
+            label="Confirm Password"
+            type="password"
+            value={confirmpassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+          />
+          {password && confirmpassword && (
+            <FormHelperText className="ml-1 mt-1">
+              {password === confirmpassword ? (
+                <span className="text-success">Password does match</span>
               ) : (
-                <span className="text-danger">
-                  <CancelIcon className="mr-1" fontSize="small" />
-                  <small>at least 6 characters</small>
-                </span>
+                <span className="text-danger">Password does not match</span>
               )}
-            </div>
-            <div>
-              <small className={hasLowerChar ? "text-success" : "text-danger"}>
-                at least one lowercase character
-              </small>
-            </div>
-            <div>
-              {hasUpperChar ? (
-                <span className="text-success">
-                  <CheckCircleIcon className="mr-1" fontSize="small" />
-                  <small>at least one uppercase character</small>
-                </span>
-              ) : (
-                <span className="text-danger">
-                  <CancelIcon className="mr-1" fontSize="small" />
-                  <small>at least one uppercase character</small>
-                </span>
-              )}
-            </div>
-            <div>
-              {hasNumber ? (
-                <span className="text-success">
-                  <CheckCircleIcon className="mr-1" fontSize="small" />
-                  <small>at least one number</small>
-                </span>
-              ) : (
-                <span className="text-danger">
-                  <CancelIcon className="mr-1" fontSize="small" />
-                  <small>at least one number</small>
-                </span>
-              )}
-            </div>
-            <div>
-              {hasSpecialChar ? (
-                <span className="text-success">
-                  <CheckCircleIcon className="mr-1" fontSize="small" />
-                  <small>at least one special character</small>
-                </span>
-              ) : (
-                <span className="text-danger">
-                  <CancelIcon className="mr-1" fontSize="small" />
-                  <small>at least one special character</small>
-                </span>
-              )}
-            </div>
-          </div>
-        )}
-      </div>
-      <div className="form-group">
-        <TextField
-          size="small"
-          variant="outlined"
-          className="form-control"
-          label="Confirm Password"
-          type="password"
-          value={confirmpassword}
-          onChange={(e) => setConfirmPassword(e.target.value)}
-        />
-        {password && confirmpassword && (
-          <FormHelperText className="ml-1 mt-1">
-            {password === confirmpassword ? (
-              <span className="text-success">Password does match</span>
-            ) : (
-              <span className="text-danger">Password does not match</span>
-            )}
-          </FormHelperText>
-        )}
-      </div>
-      <div className="text-center mt-4">
-        <Button
-          className="mb-4"
-          variant="contained"
-          color="primary"
-          disabled={
-            !email ||
-            !password ||
-            !confirmpassword ||
-            !username ||
-            password !== confirmpassword ||
-            !hasSixChar ||
-            !hasLowerChar ||
-            !hasUpperChar ||
-            !hasNumber ||
-            !hasSpecialChar
-          }
-          onClick={handleRegister}
-        >
-          Submit
-        </Button>
+            </FormHelperText>
+          )}
+        </div>
+        <div className="text-center mt-4">
+          <Button
+            className="mb-4"
+            variant="contained"
+            color="primary"
+            disabled={
+              !email ||
+              !password ||
+              !confirmpassword ||
+              !username ||
+              password !== confirmpassword ||
+              !hasSixChar ||
+              !hasLowerChar ||
+              !hasUpperChar ||
+              !hasNumber ||
+              !hasSpecialChar
+            }
+            onClick={handleRegister}
+          >
+            Submit
+          </Button>
+        </div>
       </div>
     </div>
   );

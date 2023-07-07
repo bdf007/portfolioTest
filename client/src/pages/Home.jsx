@@ -5,7 +5,7 @@ const Home = () => {
   const { user } = useContext(UserContext);
   return (
     <>
-      <div>
+      <div className="home">
         {user ? (
           <div>
             <h1>{user && <span>{user}'s</span>} Home</h1>

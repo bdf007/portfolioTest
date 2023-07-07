@@ -170,7 +170,7 @@ const ProjectUploader = () => {
         </>
       )}
       <div>
-        <div className="row row-cols-1 row-cols-md-4 g-4">
+        <div className="row row-cols-1 row-cols-md-4 g-2">
           {listOfprojects.length === 0 && <h1>No project</h1>}
           {listOfprojects.map((project) => {
             return (

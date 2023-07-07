@@ -4,7 +4,7 @@ import TechnologieUploader from "../component/tecchnologieUploader";
 
 const Experience = () => {
   return (
-    <div>
+    <div className="home">
       <div>
         <ExperienceUploader />
       </div>

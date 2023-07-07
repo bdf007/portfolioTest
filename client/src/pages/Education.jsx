@@ -4,7 +4,7 @@ import CertificateUploader from "../component/certificateUploader";
 
 const Education = () => {
   return (
-    <div>
+    <div className="home">
       <div>
         <EducationUploader />
       </div>
