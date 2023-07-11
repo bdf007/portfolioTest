@@ -1,9 +1,18 @@
-import React, { useContext } from "react";
+import React, { useContext, useState } from "react";
 import { UserContext } from "../context/UserContext";
 import { Helmet } from "react-helmet";
 import profil from "../assets/profil.png";
 
+// design
+import { IconButton } from "@mui/material";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
+
 const Home = () => {
+  const [showEmail, setShowEmail] = useState(false);
+  const [showTel, setShowTel] = useState(false);
+  const [showAddress, setShowAddress] = useState(false);
+
   const { user } = useContext(UserContext);
   return (
     <>
@@ -33,12 +42,70 @@ const Home = () => {
             />
             <h2>Christophe Midelet</h2>
             <h5>Développeur web fullstack</h5>
-            <p>Email : christophemidelet650@gmail.com</p>
-            <p>Téléphone : +33 81 29 75 80</p>
-            <p>
-              Adresse : 5 rue du pont de l'arche, Le luat, 28190
-              Mittainvilliers-Vérigny, France
-            </p>
+            {showEmail ? (
+              <p>
+                Email : christophemidelet650@gmail.com{" "}
+                <IconButton
+                  onClick={() => setShowEmail(!showEmail)}
+                  aria-label="Toggle Email"
+                >
+                  {showEmail ? <VisibilityOffIcon /> : <VisibilityIcon />}
+                </IconButton>
+              </p>
+            ) : (
+              <p>
+                Email :{" "}
+                <IconButton
+                  onClick={() => setShowEmail(!showEmail)}
+                  aria-label="Toggle Email"
+                >
+                  {showEmail ? <VisibilityOffIcon /> : <VisibilityIcon />}
+                </IconButton>
+              </p>
+            )}
+            {showTel ? (
+              <p>
+                Téléphone : +33 81 29 75 80{" "}
+                <IconButton
+                  onClick={() => setShowTel(!showTel)}
+                  aria-label="Toggle Telephone"
+                >
+                  {showTel ? <VisibilityOffIcon /> : <VisibilityIcon />}
+                </IconButton>
+              </p>
+            ) : (
+              <p>
+                Téléphone :{" "}
+                <IconButton
+                  onClick={() => setShowTel(!showTel)}
+                  aria-label="Toggle Telephone"
+                >
+                  {showTel ? <VisibilityOffIcon /> : <VisibilityIcon />}
+                </IconButton>
+              </p>
+            )}
+            {showAddress ? (
+              <p>
+                Adresse : 5 rue du pont de l'arche, Le Luat,
+                Mittainvilliers-Vérigny 28190{" "}
+                <IconButton
+                  onClick={() => setShowAddress(!showAddress)}
+                  aria-label="Toggle Address"
+                >
+                  {showAddress ? <VisibilityOffIcon /> : <VisibilityIcon />}
+                </IconButton>
+              </p>
+            ) : (
+              <p>
+                Adresse :{" "}
+                <IconButton
+                  onClick={() => setShowAddress(!showAddress)}
+                  aria-label="Toggle Address"
+                >
+                  {showAddress ? <VisibilityOffIcon /> : <VisibilityIcon />}
+                </IconButton>
+              </p>
+            )}
           </div>
         )}
       </div>
