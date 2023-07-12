@@ -34,14 +34,14 @@ const Home = () => {
           </div>
         ) : (
           <div className="text-center">
-            <h1 className="red">Bienvenue sur mon portfolio</h1>
+            <h1 className="text-danger">Bienvenue sur mon portfolio</h1>
             <img
               src={profil}
               alt="profil"
               className="rounded-circle border border-secondary "
             />
-            <h2 className="blue">Christophe Midelet</h2>
-            <h5 className="green">Développeur web fullstack</h5>
+            <h2 className="text-primary">Christophe Midelet</h2>
+            <h5 className="text-success">Développeur web fullstack</h5>
             {showEmail ? (
               <p>
                 Email : christophemidelet650@gmail.com{" "}

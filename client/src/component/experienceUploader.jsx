@@ -106,7 +106,7 @@ const ExperienceUploader = () => {
 
   return (
     <div>
-      <h1 className="red">Mon expérience</h1>
+      <h1 className="text-danger">Mon expérience</h1>
       {user && (
         <>
           <h3>Experience Uploader</h3>
@@ -146,7 +146,7 @@ const ExperienceUploader = () => {
         {listOfExperience.map((experience) => {
           return (
             <div key={experience._id}>
-              <h3>{experience.title}</h3>
+              <h3 className="text-primary">{experience.title}</h3>
               <p>{experience.description}</p>
               {user && (
                 <>

@@ -154,7 +154,7 @@ const TechnologieUploader = () => {
 
   return (
     <div>
-      <h1 className="red">Technologies utilisées</h1>
+      <h1 className="text-danger">Technologies utilisées</h1>
       {user && (
         <>
           <h3>technologie Uploader</h3>
