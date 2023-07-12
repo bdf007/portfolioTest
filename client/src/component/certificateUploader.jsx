@@ -17,12 +17,19 @@ const CertificateUploader = () => {
   const { user } = useContext(UserContext);
 
   // get all the projects from the server
+  const fetchcertificates = async () => {
+    try {
+      const response = await axios.get(
+        `${process.env.REACT_APP_API_URL}/api/certificate/getCertificates`
+      );
+      setListOfcertificates(response.data);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   useEffect(() => {
-    axios
-      .get(`${process.env.REACT_APP_API_URL}/api/certificate/getCertificates`)
-      .then((response) => {
-        setListOfcertificates(response.data);
-      });
+    fetchcertificates();
   }, []);
 
   const handleFileInputChange = (event) => {
@@ -45,70 +52,68 @@ const CertificateUploader = () => {
 
   const handleUpload = async () => {
     try {
-      const formData = new FormData();
-      formData.append("title", title);
-      formData.append("link", link);
-      formData.append("file", selectedFile);
-      formData.append("description", description);
+      const fileReader = new FileReader();
+      fileReader.readAsDataURL(selectedFile);
 
-      const response = await axios.post(
-        `${process.env.REACT_APP_API_URL}/api/certificate/upload`,
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
-      // Do something with the response, e.g., display success message or trigger further actions
-      toast.success("Certificate uploaded successfully");
-      setListOfcertificates([
-        ...listOfcertificates,
-        {
-          _id: response.data.file._id,
-          title: title,
-          link: link,
-          description: description,
-          url: response.data.file.url,
-        },
-      ]);
-      // reset the value
-      setTitle("");
-      setLink("");
-      setDescription("");
-      setSelectedFile(null);
-      setPreviewUrl(null);
-      // clear the input field
-      document.getElementById("title").value = "";
-      document.getElementById("link").value = "";
-      document.getElementById("description").value = "";
-      document.getElementById("file").value = "";
+      fileReader.onloadend = async () => {
+        const base64data = fileReader.result;
+
+        const certificateData = {
+          title,
+          link,
+          description,
+          imageData: base64data,
+        };
+
+        const response = await axios.post(
+          `${process.env.REACT_APP_API_URL}/api/certificate/upload`,
+          certificateData
+        );
+
+        toast.success("Certificate uploaded successfully");
+        setListOfcertificates((prevCertificates) => [
+          ...prevCertificates,
+          response.data.certificate,
+        ]);
+        resetForm();
+      };
     } catch (error) {
-      // Handle error, e.g., display error message to the user
-      toast.error(error.response.data.message);
+      toast.error("Something went wrong");
     }
   };
 
-  const deleteCertificate = (id) => {
-    axios
-      .delete(
+  const deleteCertificate = async (id) => {
+    try {
+      await axios.delete(
         `${process.env.REACT_APP_API_URL}/api/certificate/deleteCertificate/${id}`
-      )
-      .then((response) => {
-        toast.success("Certificate deleted successfully");
-        setListOfcertificates(
-          listOfcertificates.filter((val) => {
-            return val._id !== id;
-          })
-        );
-      });
+      );
+      toast.success("Certificate deleted successfully");
+      setListOfcertificates((prevCertificates) =>
+        prevCertificates.filter((certificate) => certificate._id !== id)
+      );
+    } catch (error) {
+      toast.error("Something went wrong");
+    }
+  };
+
+  const resetForm = () => {
+    setTitle("");
+    setLink("");
+    setDescription("");
+    setSelectedFile(null);
+    setPreviewUrl(null);
+    // clear the input field
+    document.getElementById("title").value = "";
+    document.getElementById("link").value = "";
+    document.getElementById("description").value = "";
+    document.getElementById("file").value = "";
   };
 
   return (
     <div>
       {user && (
         <>
-          <h1>certificate Uploader</h1>
+          <h3>certificate Uploader</h3>
 
           <div>
             <input
@@ -152,7 +157,7 @@ const CertificateUploader = () => {
         </>
       )}
       <div className="home">
-        <h1>Diplome et Certificat</h1>
+        <h3>Diplome et Certificat</h3>
         <div className="row g-3 home">
           {listOfcertificates.length === 0 && (
             <div className="container">
@@ -242,54 +247,58 @@ const CertificateUploader = () => {
               </div>
             </div>
           )}
-          {listOfcertificates.map((certificate) => {
-            return (
-              <div key={certificate._id}>
-                <div className="col">
-                  <div className="card">
-                    {certificate.link ? (
-                      <a
-                        href={certificate.link}
-                        target="_blank"
-                        rel="noreferrer"
-                      >
-                        <img
-                          className="card-img-top"
-                          src={`${certificate.url}?${Date.now()}`}
-                          alt={certificate.description || ""}
-                          style={{ maxWidth: "100%", maxHeight: "100%" }}
-                        />
-                      </a>
-                    ) : (
-                      <img
-                        className="card-img-top"
-                        src={`${certificate.url}?${Date.now()}`}
-                        alt={certificate.description || ""}
-                        style={{ maxWidth: "100%", maxHeight: "100%" }}
-                      />
-                    )}
-                    <div className="card-body">
-                      <h5 className="card-title text-center">
-                        {certificate.title || ""}
-                      </h5>
-                      {user && (
-                        <div className="card-footer d-grid gap-2 col-6 mx-auto">
-                          <button
-                            className="btn btn-danger"
-                            onClick={() => {
-                              deleteCertificate(certificate._id);
-                            }}
+          <div className="container">
+            <div className="row justify-content-center">
+              {listOfcertificates.map((certificate) => {
+                return (
+                  <div key={certificate._id}>
+                    <div className="col-5">
+                      <div className="card">
+                        {certificate.link ? (
+                          <a
+                            href={certificate.link}
+                            target="_blank"
+                            rel="noreferrer"
                           >
-                            Delete
-                          </button>
+                            <img
+                              className="card-img-top"
+                              src={certificate.imageData}
+                              alt={certificate.description || ""}
+                              style={{ maxWidth: "100%", maxHeight: "100%" }}
+                            />
+                          </a>
+                        ) : (
+                          <img
+                            className="card-img-top"
+                            src={certificate.imageData}
+                            alt={certificate.description || ""}
+                            style={{ maxWidth: "100%", maxHeight: "100%" }}
+                          />
+                        )}
+                        <div className="card-body">
+                          <h5 className="card-title text-center">
+                            {certificate.title || ""}
+                          </h5>
+                          {user && (
+                            <div className="card-footer d-grid gap-2 col-6 mx-auto">
+                              <button
+                                className="btn btn-danger"
+                                onClick={() => {
+                                  deleteCertificate(certificate._id);
+                                }}
+                              >
+                                Delete
+                              </button>
+                            </div>
+                          )}
                         </div>
-                      )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              </div>
-            );
-          })}
+                );
+              })}
+            </div>
+          </div>
         </div>
       </div>
     </div>

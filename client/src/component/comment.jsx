@@ -125,12 +125,12 @@ const CommentUploader = () => {
       )}
       <div>
         {listOfComment.length === 0 && (
-          <h1>Aucun Commentaire pour le moment</h1>
+          <h3>Aucun Commentaire pour le moment</h3>
         )}
         {listOfComment.map((comment) => {
           return (
             <div key={comment._id}>
-              <h1>{comment.name}</h1>
+              <h3>{comment.name}</h3>
               {comment.Date && <p>{comment.Date.slice(0, 10)}</p>}
               <p>{comment.comment}</p>
               {user && (

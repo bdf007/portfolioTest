@@ -69,7 +69,7 @@ const EducationUploader = () => {
     <div>
       {user && (
         <>
-          <h1>Education Uploader</h1>
+          <h3>Education Uploader</h3>
 
           <div className="form-group">
             <input
@@ -99,11 +99,11 @@ const EducationUploader = () => {
         </>
       )}
       <div className="home">
-        {listOfEducation.length === 0 && <h1>Work in Progress</h1>}
+        {listOfEducation.length === 0 && <h3>Work in Progress</h3>}
         {listOfEducation.map((education) => {
           return (
             <div key={education._id}>
-              <h1>{education.title}</h1>
+              <h3>{education.title}</h3>
               <p>{education.description}</p>
               {user && (
                 <button

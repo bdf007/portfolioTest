@@ -69,7 +69,7 @@ const ExperienceUploader = () => {
     <div>
       {user && (
         <>
-          <h1>Experience Uploader</h1>
+          <h3>Experience Uploader</h3>
 
           <div className="form-group">
             <input
@@ -99,11 +99,11 @@ const ExperienceUploader = () => {
         </>
       )}
       <div>
-        {listOfExperience.length === 0 && <h1>Work in Progress</h1>}
+        {listOfExperience.length === 0 && <h3>Work in Progress</h3>}
         {listOfExperience.map((experience) => {
           return (
             <div key={experience._id}>
-              <h1>{experience.title}</h1>
+              <h3>{experience.title}</h3>
               <p>{experience.description}</p>
               {user && (
                 <button

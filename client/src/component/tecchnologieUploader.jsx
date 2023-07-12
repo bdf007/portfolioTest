@@ -14,12 +14,19 @@ const TechnologieUploader = () => {
   const { user } = useContext(UserContext);
 
   // get all the projects from the server
+  const fetchtechnologies = async () => {
+    try {
+      const response = await axios.get(
+        `${process.env.REACT_APP_API_URL}/api/technologie/getTechnologies`
+      );
+      setListOftechnologies(response.data);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   useEffect(() => {
-    axios
-      .get(`${process.env.REACT_APP_API_URL}/api/technologie/getTechnologies`)
-      .then((response) => {
-        setListOftechnologies(response.data);
-      });
+    fetchtechnologies();
   }, []);
 
   const handleFileInputChange = (event) => {
@@ -42,70 +49,68 @@ const TechnologieUploader = () => {
 
   const handleUpload = async () => {
     try {
-      const formData = new FormData();
-      formData.append("title", title);
-      formData.append("link", link);
-      formData.append("file", selectedFile);
-      formData.append("description", description);
+      const fileReader = new FileReader();
+      fileReader.readAsDataURL(selectedFile);
 
-      const response = await axios.post(
-        `${process.env.REACT_APP_API_URL}/api/technologie/upload`,
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
-      // Do something with the response, e.g., display success message or trigger further actions
-      toast.success("Technologie uploaded successfully");
-      setListOftechnologies([
-        ...listOftechnologies,
-        {
-          _id: response.data.file._id,
-          title: title,
-          link: link,
-          description: description,
-          url: response.data.file.url,
-        },
-      ]);
-      // reset the value
-      setTitle("");
-      setLink("");
-      setDescription("");
-      setSelectedFile(null);
-      setPreviewUrl(null);
-      // clear the input field
-      document.getElementById("title").value = "";
-      document.getElementById("link").value = "";
-      document.getElementById("description").value = "";
-      document.getElementById("file").value = "";
+      fileReader.onloadend = async () => {
+        const base64data = fileReader.result;
+
+        const technologieData = {
+          title,
+          link,
+          description,
+          imageData: base64data,
+        };
+
+        const response = await axios.post(
+          `${process.env.REACT_APP_API_URL}/api/technologie/upload`,
+          technologieData
+        );
+
+        toast.success("Technologie uploaded successfully");
+        setListOftechnologies((prevTechnologies) => [
+          ...prevTechnologies,
+          response.data.technologie,
+        ]);
+        resetForm();
+      };
     } catch (error) {
-      // Handle error, e.g., display error message to the user
       toast.error("Something went wrong");
     }
   };
 
-  const deleteTechnologie = (id) => {
-    axios
-      .delete(
+  const deleteTechnologie = async (id) => {
+    try {
+      await axios.delete(
         `${process.env.REACT_APP_API_URL}/api/technologie/deleteTechnologie/${id}`
-      )
-      .then((response) => {
-        toast.success("Technologie deleted successfully");
-        setListOftechnologies(
-          listOftechnologies.filter((val) => {
-            return val._id !== id;
-          })
-        );
-      });
+      );
+      toast.success("Technologie deleted successfully");
+      setListOftechnologies((prevTechnologies) =>
+        prevTechnologies.filter((technologie) => technologie._id !== id)
+      );
+    } catch (error) {
+      toast.error("Something went wrong");
+    }
+  };
+
+  const resetForm = () => {
+    setTitle("");
+    setLink("");
+    setDescription("");
+    setSelectedFile(null);
+    setPreviewUrl(null);
+    // clear the input field
+    document.getElementById("title").value = "";
+    document.getElementById("link").value = "";
+    document.getElementById("description").value = "";
+    document.getElementById("file").value = "";
   };
 
   return (
     <div>
       {user && (
         <>
-          <h1>technologie Uploader</h1>
+          <h3>technologie Uploader</h3>
 
           <div>
             <input
@@ -170,7 +175,7 @@ const TechnologieUploader = () => {
                       >
                         <img
                           className="rounded mx-auto d-block img-thumbnail"
-                          src={`${technologie.url}?${Date.now()}`}
+                          src={technologie.imageData}
                           alt={technologie.description || ""}
                           style={{ maxWidth: "50%", maxHeight: "50%" }}
                         />
@@ -178,7 +183,7 @@ const TechnologieUploader = () => {
                     ) : (
                       <img
                         className="rounded mx-auto d-block img-thumbnail"
-                        src={`${technologie.url}?${Date.now()}`}
+                        src={technologie.imageData}
                         alt={technologie.description || ""}
                         style={{ maxWidth: "50%", maxHeight: "50%" }}
                       />
