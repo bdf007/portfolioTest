@@ -106,6 +106,7 @@ const ExperienceUploader = () => {
 
   return (
     <div>
+      <h1 className="red">Mon expérience</h1>
       {user && (
         <>
           <h3>Experience Uploader</h3>

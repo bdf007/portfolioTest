@@ -34,14 +34,14 @@ const Home = () => {
           </div>
         ) : (
           <div className="text-center">
-            <h1>Bienvenue sur mon portfolio</h1>
+            <h1 className="red">Bienvenue sur mon portfolio</h1>
             <img
               src={profil}
               alt="profil"
               className="rounded-circle border border-secondary "
             />
-            <h2>Christophe Midelet</h2>
-            <h5>Développeur web fullstack</h5>
+            <h2 className="blue">Christophe Midelet</h2>
+            <h5 className="green">Développeur web fullstack</h5>
             {showEmail ? (
               <p>
                 Email : christophemidelet650@gmail.com{" "}
@@ -65,7 +65,7 @@ const Home = () => {
             )}
             {showTel ? (
               <p>
-                Téléphone : +33 81 29 75 80{" "}
+                Téléphone : +33 6 81 29 75 80{" "}
                 <IconButton
                   onClick={() => setShowTel(!showTel)}
                   aria-label="Toggle Telephone"

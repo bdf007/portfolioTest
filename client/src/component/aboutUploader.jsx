@@ -139,7 +139,7 @@ const AboutUploader = () => {
           listOfAbout?.map((about) => {
             return (
               <div key={about._id}>
-                <h3>{about.title}</h3>
+                <h3 className="red">{about.title}</h3>
                 <pre>
                   <p className="description">{about.description}</p>
                 </pre>
