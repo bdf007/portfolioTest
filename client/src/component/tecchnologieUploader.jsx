@@ -3,6 +3,7 @@ import axios from "axios";
 import { UserContext } from "../context/UserContext";
 import { toast } from "react-toastify";
 import WIP from "../assets/WIP.png";
+import "../App.css";
 
 const TechnologieUploader = () => {
   const [selectedFile, setSelectedFile] = useState(null);
@@ -164,47 +165,31 @@ const TechnologieUploader = () => {
           )}
           {listOftechnologies.map((technologie) => {
             return (
-              <div key={technologie._id}>
-                <div className="col">
-                  <div className="card border-0">
-                    {technologie.link ? (
-                      <a
-                        href={technologie.link}
-                        target="_blank"
-                        rel="noreferrer"
-                      >
-                        <img
-                          className="rounded mx-auto d-block img-thumbnail"
-                          src={technologie.imageData}
-                          alt={technologie.description || ""}
-                          style={{ maxWidth: "50%", maxHeight: "50%" }}
-                        />
-                      </a>
-                    ) : (
-                      <img
-                        className="rounded mx-auto d-block img-thumbnail"
-                        src={technologie.imageData}
-                        alt={technologie.description || ""}
-                        style={{ maxWidth: "50%", maxHeight: "50%" }}
-                      />
+              <div className="col" key={technologie._id}>
+                <div className="card techno border-0 pt-5">
+                  <img
+                    className="rounded mx-auto d-block "
+                    src={technologie.imageData}
+                    alt={technologie.description || ""}
+                    style={{ maxWidth: "50%", maxHeight: "50%" }}
+                  />
+
+                  <div className="card-body">
+                    <h5 className="card-title text-center">
+                      {technologie.title || ""}
+                    </h5>
+                    {user && (
+                      <div className="card-footer d-grid gap-2 col-6 mx-auto">
+                        <button
+                          className="btn btn-danger"
+                          onClick={() => {
+                            deleteTechnologie(technologie._id);
+                          }}
+                        >
+                          Delete
+                        </button>
+                      </div>
                     )}
-                    <div className="card-body">
-                      <h5 className="card-title text-center">
-                        {technologie.title || ""}
-                      </h5>
-                      {user && (
-                        <div className="card-footer d-grid gap-2 col-6 mx-auto">
-                          <button
-                            className="btn btn-danger"
-                            onClick={() => {
-                              deleteTechnologie(technologie._id);
-                            }}
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      )}
-                    </div>
                   </div>
                 </div>
               </div>

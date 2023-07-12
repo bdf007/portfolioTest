@@ -251,47 +251,45 @@ const CertificateUploader = () => {
             <div className="row justify-content-center">
               {listOfcertificates.map((certificate) => {
                 return (
-                  <div key={certificate._id}>
-                    <div className="col-5">
-                      <div className="card">
-                        {certificate.link ? (
-                          <a
-                            href={certificate.link}
-                            target="_blank"
-                            rel="noreferrer"
-                          >
-                            <img
-                              className="card-img-top"
-                              src={certificate.imageData}
-                              alt={certificate.description || ""}
-                              style={{ maxWidth: "100%", maxHeight: "100%" }}
-                            />
-                          </a>
-                        ) : (
+                  <div className="col-5" key={certificate._id}>
+                    <div className="card">
+                      {certificate.link ? (
+                        <a
+                          href={certificate.link}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
                           <img
                             className="card-img-top"
                             src={certificate.imageData}
                             alt={certificate.description || ""}
                             style={{ maxWidth: "100%", maxHeight: "100%" }}
                           />
+                        </a>
+                      ) : (
+                        <img
+                          className="card-img-top"
+                          src={certificate.imageData}
+                          alt={certificate.description || ""}
+                          style={{ maxWidth: "100%", maxHeight: "100%" }}
+                        />
+                      )}
+                      <div className="card-body">
+                        <h5 className="card-title text-center">
+                          {certificate.title || ""}
+                        </h5>
+                        {user && (
+                          <div className="card-footer d-grid gap-2 col-6 mx-auto">
+                            <button
+                              className="btn btn-danger"
+                              onClick={() => {
+                                deleteCertificate(certificate._id);
+                              }}
+                            >
+                              Delete
+                            </button>
+                          </div>
                         )}
-                        <div className="card-body">
-                          <h5 className="card-title text-center">
-                            {certificate.title || ""}
-                          </h5>
-                          {user && (
-                            <div className="card-footer d-grid gap-2 col-6 mx-auto">
-                              <button
-                                className="btn btn-danger"
-                                onClick={() => {
-                                  deleteCertificate(certificate._id);
-                                }}
-                              >
-                                Delete
-                              </button>
-                            </div>
-                          )}
-                        </div>
                       </div>
                     </div>
                   </div>
