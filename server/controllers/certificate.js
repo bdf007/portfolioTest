@@ -1,4 +1,5 @@
 const Certificate = require("../models/certificate");
+const mongoose = require("mongoose");
 require("dotenv").config();
 
 exports.getCertificate = async (req, res) => {

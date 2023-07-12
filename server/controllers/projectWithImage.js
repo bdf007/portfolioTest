@@ -1,5 +1,5 @@
 const Project = require("../models/projectWithimage");
-require("dotenv").config();
+const mongoose = require("mongoose");
 
 exports.getProjectWithImage = async (req, res) => {
   try {

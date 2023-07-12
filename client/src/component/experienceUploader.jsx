@@ -7,6 +7,8 @@ const ExperienceUploader = () => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [listOfExperience, setListOfExperience] = useState([]);
+  const [editingExperience, setEditingExperience] = useState(null);
+  const [isEditing, setIsEditing] = useState(false); // New state
   const { user } = useContext(UserContext);
 
   useEffect(() => {
@@ -25,28 +27,58 @@ const ExperienceUploader = () => {
 
   const handleUpload = () => {
     try {
-      axios
-        .post(`${process.env.REACT_APP_API_URL}/api/experience`, {
-          title: title,
-          description: description,
-        })
-        .then((response) => {
-          toast.success("Experience uploaded");
-          setListOfExperience([
-            ...listOfExperience,
+      if (isEditing && editingExperience) {
+        axios
+          .put(
+            `${process.env.REACT_APP_API_URL}/api/experience/update/${editingExperience._id}`,
             {
-              _id: response.data._id,
               title: title,
               description: description,
-            },
-          ]);
-          // reset the form
-          setTitle("");
-          setDescription("");
-          // clear the input field
-          document.getElementById("title").value = "";
-          document.getElementById("description").value = "";
-        });
+            }
+          )
+          .then((response) => {
+            toast.success("Experience updated");
+            setListOfExperience((prevList) => {
+              const updatedList = prevList.map((experience) => {
+                if (experience._id === response.data._id) {
+                  return {
+                    _id: response.data._id,
+                    title: title,
+                    description: description,
+                  };
+                }
+                return experience;
+              });
+              return updatedList;
+            });
+            setIsEditing(false); // Reset the isEditing state
+            setEditingExperience(null);
+          });
+      } else {
+        axios
+          .post(`${process.env.REACT_APP_API_URL}/api/experience`, {
+            title: title,
+            description: description,
+          })
+          .then((response) => {
+            toast.success("Experience uploaded");
+            setListOfExperience([
+              ...listOfExperience,
+              {
+                _id: response.data._id,
+                title: title,
+                description: description,
+              },
+            ]);
+          });
+      }
+
+      // reset the form
+      setTitle("");
+      setDescription("");
+      // clear the input field
+      document.getElementById("title").value = "";
+      document.getElementById("description").value = "";
     } catch (error) {
       toast.error(error.response.data.msg);
     }
@@ -65,37 +97,47 @@ const ExperienceUploader = () => {
       });
   };
 
+  const editExperience = (experience) => {
+    setIsEditing(true); // Set the isEditing state
+    setEditingExperience(experience);
+    setTitle(experience.title);
+    setDescription(experience.description);
+  };
+
   return (
     <div>
       {user && (
         <>
           <h3>Experience Uploader</h3>
-
-          <div className="form-group">
-            <input
-              value={title}
-              id="title"
-              size="small"
-              className="form-control mb-3"
-              placeholder="Title"
-              label="Title"
-              onChange={handleTitleChange}
-            />
-          </div>
-          <div className="form-group">
-            <textarea
-              value={description}
-              id="description"
-              size="small"
-              className="form-control mb-3"
-              placeholder="Description"
-              label="Description"
-              onChange={handleDescriptionChange}
-            >
-              {" "}
-            </textarea>
-            <button onClick={handleUpload}>Upload</button>
-          </div>
+          <form>
+            <div className="form-group">
+              <input
+                value={title}
+                id="title"
+                size="small"
+                className="form-control mb-3"
+                placeholder="Title"
+                label="Title"
+                onChange={handleTitleChange}
+              />
+            </div>
+            <div className="form-group">
+              <textarea
+                value={description}
+                id="description"
+                size="small"
+                className="form-control mb-3"
+                placeholder="Description"
+                label="Description"
+                onChange={handleDescriptionChange}
+              >
+                {" "}
+              </textarea>
+            </div>
+            <button onClick={handleUpload}>
+              {isEditing ? "Update" : "Upload"}
+            </button>
+          </form>
         </>
       )}
       <div>
@@ -106,12 +148,20 @@ const ExperienceUploader = () => {
               <h3>{experience.title}</h3>
               <p>{experience.description}</p>
               {user && (
-                <button
-                  className="btn btn-danger"
-                  onClick={() => deleteExperience(experience._id)}
-                >
-                  Delete Experience
-                </button>
+                <>
+                  <button
+                    className="btn btn-primary"
+                    onClick={() => editExperience(experience)}
+                  >
+                    Edit Experience
+                  </button>
+                  <button
+                    className="btn btn-danger"
+                    onClick={() => deleteExperience(experience._id)}
+                  >
+                    Delete Experience
+                  </button>
+                </>
               )}
             </div>
           );

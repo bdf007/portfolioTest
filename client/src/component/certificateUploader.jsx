@@ -14,6 +14,7 @@ const CertificateUploader = () => {
   const [link, setLink] = useState("");
   const [description, setDescription] = useState("");
   const [listOfcertificates, setListOfcertificates] = useState([]);
+  const [editingcertificate, setEditingcertificate] = useState(null);
   const { user } = useContext(UserContext);
 
   // get all the projects from the server
@@ -58,23 +59,60 @@ const CertificateUploader = () => {
       fileReader.onloadend = async () => {
         const base64data = fileReader.result;
 
-        const certificateData = {
-          title,
-          link,
-          description,
-          imageData: base64data,
-        };
+        if (editingcertificate) {
+          // update the certificate
+          const updatedcertificateData = {
+            title,
+            link,
+            description,
+            imageData: selectedFile ? base64data : editingcertificate.imageData,
+          };
 
-        const response = await axios.post(
-          `${process.env.REACT_APP_API_URL}/api/certificate/upload`,
-          certificateData
-        );
+          await axios.put(
+            `${process.env.REACT_APP_API_URL}/api/certificate/updateCertificate/${editingcertificate._id}`,
+            updatedcertificateData
+          );
 
-        toast.success("Certificate uploaded successfully");
-        setListOfcertificates((prevCertificates) => [
-          ...prevCertificates,
-          response.data.certificate,
-        ]);
+          toast.success("Certificate updated successfully");
+          setListOfcertificates((prevCertificates) => {
+            const updatedcertificateData = prevCertificates.map(
+              (certificate) => {
+                if (certificate._id === editingcertificate._id) {
+                  return {
+                    ...certificate,
+                    title,
+                    link,
+                    description,
+                    imageData: selectedFile
+                      ? base64data
+                      : editingcertificate.imageData,
+                  };
+                }
+                return certificate;
+              }
+            );
+            return updatedcertificateData;
+          });
+          setEditingcertificate(null);
+        } else {
+          const certificateData = {
+            title,
+            link,
+            description,
+            imageData: base64data,
+          };
+
+          const response = await axios.post(
+            `${process.env.REACT_APP_API_URL}/api/certificate/upload`,
+            certificateData
+          );
+
+          toast.success("Certificate uploaded successfully");
+          setListOfcertificates((prevCertificates) => [
+            ...prevCertificates,
+            response.data.certificate,
+          ]);
+        }
         resetForm();
       };
     } catch (error) {
@@ -94,6 +132,14 @@ const CertificateUploader = () => {
     } catch (error) {
       toast.error("Something went wrong");
     }
+  };
+
+  const editCertificate = (certificate) => {
+    setEditingcertificate(certificate);
+    setTitle(certificate.title);
+    setLink(certificate.link);
+    setDescription(certificate.description);
+    setPreviewUrl(certificate.imageData);
   };
 
   const resetForm = () => {
@@ -122,13 +168,17 @@ const CertificateUploader = () => {
               accept="image/*"
               onChange={handleFileInputChange}
             />
-            {selectedFile && (
-              <div>
-                <img
-                  src={previewUrl}
-                  alt="Preview"
-                  style={{ maxWidth: "100%", maxHeight: "200px" }}
-                />
+            <form>
+              {selectedFile && (
+                <div className="form-group">
+                  <img
+                    src={previewUrl}
+                    alt="Preview"
+                    style={{ maxWidth: "100%", maxHeight: "200px" }}
+                  />
+                </div>
+              )}
+              <div className="form-group">
                 <input
                   type="text"
                   id="title"
@@ -136,6 +186,8 @@ const CertificateUploader = () => {
                   onChange={handleTitleChange}
                   placeholder="Title"
                 />
+              </div>
+              <div className="form-group">
                 <input
                   type="text"
                   id="link"
@@ -143,6 +195,8 @@ const CertificateUploader = () => {
                   onChange={handleLinkChange}
                   placeholder="Link "
                 />
+              </div>
+              <div className="form-group">
                 <input
                   type="text"
                   id="description"
@@ -150,9 +204,11 @@ const CertificateUploader = () => {
                   onChange={handleDescriptionChange}
                   placeholder="Description"
                 />
-                <button onClick={handleUpload}>Upload</button>
               </div>
-            )}
+              <button onClick={handleUpload}>
+                {editingcertificate ? "Update" : "Upload"}
+              </button>
+            </form>
           </div>
         </>
       )}
@@ -287,6 +343,14 @@ const CertificateUploader = () => {
                               }}
                             >
                               Delete
+                            </button>
+                            <button
+                              className="btn btn-primary"
+                              onClick={() => {
+                                editCertificate(certificate);
+                              }}
+                            >
+                              Edit
                             </button>
                           </div>
                         )}

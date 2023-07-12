@@ -1,5 +1,6 @@
 const Technologie = require("../models/technologies");
 require("dotenv").config();
+const mongoose = require("mongoose");
 
 exports.getTechnologie = async (req, res) => {
   try {
