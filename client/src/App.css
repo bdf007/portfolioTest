@@ -39,6 +39,10 @@ main {
   white-space: pre-line;
 }
 
+.techno {
+  background-color: darkgray;
+}
+
 @media screen and (max-width: 768px) {
   .description {
     font-size: 1.5rem;

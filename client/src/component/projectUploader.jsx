@@ -156,7 +156,7 @@ const ProjectUploader = () => {
         </>
       )}
       <div>
-        <div className="row row-cols-1 row-cols-md-4 g-2 home">
+        <div className="row row-cols-1 row-cols-md-2 g-2 home">
           {listOfProjects.length === 0 && (
             <img
               src={WIP}
@@ -164,57 +164,59 @@ const ProjectUploader = () => {
               style={{ maxWidth: "100%", maxHeight: "100%" }}
             />
           )}
-          {listOfProjects.map((project) => {
-            return (
-              <div key={project._id}>
-                <div className="col">
-                  <div className="card">
-                    {project.linkToProject ? (
-                      <a
-                        href={project.linkToProject}
-                        target="_blank"
-                        rel="noreferrer"
-                      >
+          <div className="container">
+            <div className="row justify-content-center">
+              {listOfProjects.map((project) => {
+                return (
+                  <div className="col-md-auto" key={project._id}>
+                    <div className="card">
+                      {project.linkToProject ? (
+                        <a
+                          href={project.linkToProject}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          <img
+                            className="card-img-top"
+                            src={project.imageData}
+                            alt={project.description || ""}
+                          />
+                        </a>
+                      ) : (
                         <img
                           className="card-img-top"
                           src={project.imageData}
                           alt={project.description || ""}
                         />
-                      </a>
-                    ) : (
-                      <img
-                        className="card-img-top"
-                        src={project.imageData}
-                        alt={project.description || ""}
-                      />
-                    )}
+                      )}
+                    </div>
+                    <div className="card-body">
+                      <h5 className="card-title text-center">
+                        {project.title || ""}
+                      </h5>
+                      <pre>
+                        <p className="card-text description text-start">
+                          {project.textProject || ""}
+                        </p>
+                      </pre>
+                      {user && (
+                        <div className="card-footer d-grid gap-2 col-6 mx-auto">
+                          <button
+                            className="btn btn-danger"
+                            onClick={() => {
+                              deleteProject(project._id);
+                            }}
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <div className="card-body">
-                    <h5 className="card-title text-center">
-                      {project.title || ""}
-                    </h5>
-                    <pre>
-                      <p className="card-text description text-start">
-                        {project.textProject || ""}
-                      </p>
-                    </pre>
-                    {user && (
-                      <div className="card-footer d-grid gap-2 col-6 mx-auto">
-                        <button
-                          className="btn btn-danger"
-                          onClick={() => {
-                            deleteProject(project._id);
-                          }}
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            );
-          })}
+                );
+              })}
+            </div>
+          </div>
         </div>
       </div>
     </div>
