@@ -36,14 +36,14 @@ const commentRoutes = require("./routes/comment");
 const contactRoutes = require("./routes/contact");
 
 // middleware
-app.use(json());
+app.use(json({ limit: "10mb" }));
 app.use(
   cors({
     origin: process.env.FRONTEND_URL.split(",") ?? "http://localhost:3000",
     credentials: true,
   })
 );
-app.use(urlencoded({ extended: false }));
+app.use(urlencoded({ limit: "10mb", extended: false }));
 app.use(cookieParser());
 app.use(expressValidator());
 
@@ -53,14 +53,6 @@ connection();
 app.use(express.static(path.join(__dirname, "..", "client", "build")));
 
 // routes
-// Serve static files from the "imageUpload" directory
-app.use("/imageUpload", express.static(path.join(__dirname, "imageUpload")));
-
-// get imageUpload folder
-app.get("/api/imageUpload", (req, res) => {
-  res.send("Hello World!");
-});
-
 // use the route of technologie
 app.use("/api/technologie", technologieRoute);
 
@@ -88,8 +80,8 @@ app.use("/api/", commentRoutes);
 // use the contact routes
 app.use("/api/", contactRoutes);
 
-// Redirect all requests to the REACT app
-app.get("*", (req, res) => {
+// Serve the React app
+app.get("/*", (req, res) => {
   res.sendFile(path.join(__dirname, "..", "client", "build", "index.html"));
 });
 

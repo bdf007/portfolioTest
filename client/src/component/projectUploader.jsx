@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import axios from "axios";
 import { UserContext } from "../context/UserContext";
 import { toast } from "react-toastify";
@@ -12,22 +12,23 @@ const ProjectUploader = () => {
   const [textProject, setTextProject] = useState("");
   const [linkToProject, setLinkToProject] = useState("");
   const [description, setDescription] = useState("");
-  const [listOfprojects, setListOfprojects] = useState([]);
+  const [listOfProjects, setListOfProjects] = useState([]);
   const { user } = useContext(UserContext);
 
-  // get all the projects from the server
-  useEffect(() => {
+  const fetchProjects = async () => {
     try {
-      axios
-        .get(`${process.env.REACT_APP_API_URL}/api/project/projectWithImage`)
-        .then((response) => {
-          setListOfprojects(response.data);
-        });
+      const response = await axios.get(
+        `${process.env.REACT_APP_API_URL}/api/project/projectWithImage`
+      );
+      setListOfProjects(response.data);
     } catch (error) {
       console.log(error);
     }
-  }, []);
+  };
 
+  useEffect(() => {
+    fetchProjects();
+  }, []);
   const handleFileInputChange = (event) => {
     const file = event.target.files[0];
     setSelectedFile(file);
@@ -52,75 +53,65 @@ const ProjectUploader = () => {
 
   const handleUpload = async () => {
     try {
-      const formData = new FormData();
-      formData.append("title", title);
-      formData.append("textProject", textProject);
-      formData.append("linkToProject", linkToProject);
-      formData.append("file", selectedFile);
-      formData.append("description", description);
+      const fileReader = new FileReader();
+      fileReader.readAsDataURL(selectedFile);
 
-      const response = await axios.post(
-        `${process.env.REACT_APP_API_URL}/api/project/upload`,
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
-      // Do something with the response, e.g., display success message or trigger further actions
-      toast.success("Project uploaded successfully");
-      setListOfprojects([
-        ...listOfprojects,
-        {
-          _id: response.data.file._id,
-          title: title,
-          textProject: textProject,
-          linkToProject: linkToProject,
-          description: description,
-          url: response.data.file.url,
-        },
-      ]);
-      // reset the value
-      setTitle("");
-      setTextProject("");
-      setLinkToProject("");
-      setDescription("");
-      setSelectedFile(null);
-      setPreviewUrl(null);
-      // clear the input field
-      document.getElementById("title").value = "";
-      document.getElementById("textProject").value = "";
-      document.getElementById("linkToProject").value = "";
-      document.getElementById("description").value = "";
-      document.getElementById("file").value = "";
+      fileReader.onloadend = async () => {
+        const base64data = fileReader.result;
+
+        const projectData = {
+          title,
+          textProject,
+          linkToProject,
+          description,
+          imageData: base64data,
+        };
+
+        const response = await axios.post(
+          `${process.env.REACT_APP_API_URL}/api/project/upload`,
+          projectData
+        );
+
+        toast.success("Project uploaded successfully");
+        setListOfProjects((prevProjects) => [
+          ...prevProjects,
+          response.data.project,
+        ]);
+        resetForm();
+      };
     } catch (error) {
-      // Handle error, e.g., display error message to the user
-      toast.error(error.response.data.msg);
+      toast.error("Something went wrong");
     }
   };
 
-  const deleteProject = (id) => {
-    axios
-      .delete(
+  const deleteProject = async (id) => {
+    try {
+      await axios.delete(
         `${process.env.REACT_APP_API_URL}/api/project/deleteProject/${id}`
-      )
-      .then((response) => {
-        toast.success("Project deleted successfully");
-        console.log("project deleted successfully");
-        setListOfprojects(
-          listOfprojects.filter((val) => {
-            return val._id !== id;
-          })
-        );
-      });
+      );
+      toast.success("Project deleted successfully");
+      setListOfProjects((prevProjects) =>
+        prevProjects.filter((project) => project._id !== id)
+      );
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const resetForm = () => {
+    setTitle("");
+    setTextProject("");
+    setLinkToProject("");
+    setDescription("");
+    setSelectedFile(null);
+    setPreviewUrl(null);
   };
 
   return (
     <div className="home">
       {user && (
         <>
-          <h1>project Uploader</h1>
+          <h3>Project Uploader</h3>
           <div>
             <input
               type="file"
@@ -137,29 +128,23 @@ const ProjectUploader = () => {
                 />
                 <input
                   type="text"
-                  id="title"
                   value={title}
                   onChange={handleTitleChange}
                   placeholder="Title"
                 />
                 <textarea
-                  type="text"
-                  id="textProject"
                   value={textProject}
                   onChange={handleTextProjectChange}
                   placeholder="Text Project"
                 />
-
                 <input
                   type="text"
-                  id="linkToProject"
                   value={linkToProject}
                   onChange={handleLinkToProjectChange}
                   placeholder="Link Project"
                 />
                 <input
                   type="text"
-                  id="description"
                   value={description}
                   onChange={handleDescriptionChange}
                   placeholder="Description"
@@ -172,18 +157,18 @@ const ProjectUploader = () => {
       )}
       <div>
         <div className="row row-cols-1 row-cols-md-4 g-2 home">
-          {listOfprojects.length === 0 && (
+          {listOfProjects.length === 0 && (
             <img
               src={WIP}
               alt="WIP"
               style={{ maxWidth: "100%", maxHeight: "100%" }}
             />
           )}
-          {listOfprojects.map((project) => {
+          {listOfProjects.map((project) => {
             return (
               <div key={project._id}>
                 <div className="col">
-                  <div className="card ">
+                  <div className="card">
                     {project.linkToProject ? (
                       <a
                         href={project.linkToProject}
@@ -191,15 +176,15 @@ const ProjectUploader = () => {
                         rel="noreferrer"
                       >
                         <img
-                          className="card-img-top "
-                          src={`${project.url}?${Date.now()}`}
+                          className="card-img-top"
+                          src={project.imageData}
                           alt={project.description || ""}
                         />
                       </a>
                     ) : (
                       <img
                         className="card-img-top"
-                        src={`${project.url}?${Date.now()}`}
+                        src={project.imageData}
                         alt={project.description || ""}
                       />
                     )}

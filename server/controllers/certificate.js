@@ -1,5 +1,4 @@
 const Certificate = require("../models/certificate");
-const fs = require("fs");
 require("dotenv").config();
 
 exports.getCertificate = async (req, res) => {
@@ -9,9 +8,8 @@ exports.getCertificate = async (req, res) => {
       _id: certificate._id,
       title: certificate.title,
       link: certificate.link,
-      description: certificate.metadata ? certificate.metadata.description : "",
-      filename: certificate.filename,
-      url: `${process.env.BACKEND_IMAGE_URL}/${certificate.filename}`,
+      description: certificate.description,
+      imageData: certificate.imageData,
     }));
     res.json(mappedCertificates);
   } catch (error) {
@@ -22,23 +20,18 @@ exports.getCertificate = async (req, res) => {
 
 exports.postCertificate = async (req, res) => {
   try {
-    const { filename, mimetype, buffer } = req.file;
+    const { title, link, description, imageData } = req.body;
 
     const certificate = new Certificate({
-      filename: filename,
-      title: req.body.title,
-      link: req.body.link,
-      description: req.body.description,
-      url: `/imageUpload/${filename}`,
-      contentType: mimetype,
-      metadata: req.body,
-      uploadDate: new Date(),
-      chunkSize: 1024,
+      title,
+      link,
+      description,
+      imageData,
     });
 
     await certificate.save();
 
-    res.json({ file: certificate });
+    res.json({ certificate });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Something went wrong" });
@@ -91,8 +84,6 @@ exports.deleteCertificateById = async (req, res) => {
   try {
     const id = req.params.id;
     const deleteCertificate = await Certificate.findByIdAndDelete(id);
-    // delete the file from the uploads folder
-    fs.unlinkSync(`imageUpload/${deleteCertificate.filename}`);
 
     if (!deleteCertificate) {
       return res.status(404).json({ error: "No certificate found" });

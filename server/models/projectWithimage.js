@@ -15,13 +15,15 @@ const projectSchema = new mongoose.Schema({
     type: String,
     trim: true,
   },
-  filename: String,
+  imageData: {
+    type: String, // Store the image data as a string
+    required: true,
+  },
   description: String,
-  url: String,
-  contentType: String,
-  metadata: Object,
-  uploadDate: Date,
-  chunkSize: Number,
+  uploadDate: {
+    type: Date,
+    default: Date.now,
+  },
 });
 
 const ProjectModel = mongoose.model("Project", projectSchema);

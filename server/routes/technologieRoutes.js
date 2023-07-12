@@ -1,6 +1,4 @@
 const express = require("express");
-const upload = require("../multerConfig");
-
 const router = express.Router();
 
 // import controllers
@@ -19,7 +17,7 @@ router.get("/getTechnologies", getTechnologie);
 router.get("/getTechnologie/:id", getTechnologieById);
 
 // POST route for file upload
-router.post("/upload", upload.single("file"), postTechnologie);
+router.post("/upload", postTechnologie);
 
 // update specific technologie by id
 router.put("/updateTechnologie/:id", updateTechnologieById);

@@ -1,6 +1,4 @@
 const express = require("express");
-const upload = require("../multerConfig");
-
 const router = express.Router();
 
 // import controllers
@@ -19,7 +17,7 @@ router.get("/getCertificates", getCertificate);
 router.get("/getCertificate/:id", getCertificateById);
 
 // POST route for file upload
-router.post("/upload", upload.single("file"), postCertificate);
+router.post("/upload", postCertificate);
 
 // update specific certificate by id
 router.put("/updateCertificate/:id", updateCertificateById);

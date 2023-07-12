@@ -70,7 +70,7 @@ const AboutUploader = () => {
     <div>
       {user && (
         <>
-          <h1>About Uploader</h1>
+          <h3>About Uploader</h3>
 
           <div className="form-group">
             <input
@@ -101,12 +101,12 @@ const AboutUploader = () => {
       )}
       <div className="mx-auto text-wrap" style={{ maxWidth: "75%" }}>
         {listOfAbout.length === 0 ? (
-          <h1 className="mb-0">No About</h1>
+          <h3 className="mb-0">No About</h3>
         ) : (
           listOfAbout?.map((about) => {
             return (
               <div key={about._id}>
-                <h1>{about.title}</h1>
+                <h3>{about.title}</h3>
                 <pre>
                   <p className="description">{about.description}</p>
                 </pre>
