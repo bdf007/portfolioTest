@@ -270,11 +270,11 @@ const ProjectUploader = () => {
                       )}
                     </div>
                     <div className="card-body">
-                      <h5 className="card-title text-center">
+                      <h2 className="card-title text-center blue">
                         {project.title || ""}
-                      </h5>
+                      </h2>
                       <pre>
-                        <p className="card-text description text-start">
+                        <p className="card-text description text-center fs-6">
                           {project.textProject || ""}
                         </p>
                       </pre>

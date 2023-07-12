@@ -77,7 +77,7 @@ const CommentUploader = () => {
     <div>
       {!user && (
         <>
-          <h2>Laissez moi un commentaire</h2>
+          <h2 className="red">Laissez moi un commentaire</h2>
           <div className="form-group">
             <input
               value={name}
@@ -130,8 +130,10 @@ const CommentUploader = () => {
         {listOfComment.map((comment) => {
           return (
             <div key={comment._id}>
-              <h3>{comment.name}</h3>
-              {comment.Date && <p>{comment.Date.slice(0, 10)}</p>}
+              <h3 className="blue">{comment.name}</h3>
+              {comment.Date && (
+                <p className="green">{comment.Date.slice(0, 10)}</p>
+              )}
               <p>{comment.comment}</p>
               {user && (
                 <div>

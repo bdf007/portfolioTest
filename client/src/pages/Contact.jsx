@@ -92,7 +92,7 @@ const Contact = () => {
     <div className="home">
       <div className=" row d-flex justify-content-around">
         <div className="container mt-5 mb-5 col-10 col-sm-8 col-md-6 col-lg-5 g-2">
-          <h1>Contactez moi</h1>
+          <h1 className="red">Contactez moi</h1>
           {user ? (
             <div>
               {listOfContact.length === 0 && <h1>No message</h1>}
