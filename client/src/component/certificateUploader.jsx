@@ -159,7 +159,7 @@ const CertificateUploader = () => {
     <div>
       {user && (
         <>
-          <h3 className="red">certificate Uploader</h3>
+          <h3 className="text-danger">certificate Uploader</h3>
 
           <div>
             <input
@@ -213,7 +213,7 @@ const CertificateUploader = () => {
         </>
       )}
       <div className="home">
-        <h3 className="red">Diplomes et Certificats</h3>
+        <h3 className="text-danger">Diplomes et Certificats</h3>
         <div className="row g-3 home">
           {listOfcertificates.length === 0 && (
             <div className="container">
@@ -331,7 +331,7 @@ const CertificateUploader = () => {
                         />
                       )}
                       <div className="card-body">
-                        <h5 className="card-title text-center">
+                        <h5 className="card-title text-center text-primary">
                           {certificate.title || ""}
                         </h5>
                         {user && (

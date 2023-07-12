@@ -92,7 +92,7 @@ const Contact = () => {
     <div className="home">
       <div className=" row d-flex justify-content-around">
         <div className="container mt-5 mb-5 col-10 col-sm-8 col-md-6 col-lg-5 g-2">
-          <h1 className="red">Contactez moi</h1>
+          <h1 className="text-danger">Contactez moi</h1>
           {user ? (
             <div>
               {listOfContact.length === 0 && <h1>No message</h1>}
@@ -134,7 +134,7 @@ const Contact = () => {
                   size="small"
                   className="form-control mb-3"
                   placeholder="Prénom"
-                  label="Prénom"
+                  label="Prénom*"
                   onChange={handleFirstnameChange}
                 />
               </div>
@@ -146,35 +146,36 @@ const Contact = () => {
                   size="small"
                   className="form-control mb-3"
                   placeholder="Nom"
-                  label="Nom"
+                  label="Nom*"
                   onChange={handleLastnameChange}
                 />
               </div>
               <div className="form-group">
-                <label htmlFor="email">Email</label>
+                <label htmlFor="email">Email*</label>
                 <input
                   value={email}
                   id="email"
                   size="small"
                   className="form-control mb-3"
                   placeholder="Email"
-                  label="Email"
+                  label="Email*"
                   onChange={handleEmailChange}
                 />
               </div>
               <div className="form-group">
-                <label htmlFor="message">Message</label>
+                <label htmlFor="message">Message*</label>
                 <textarea
                   value={message}
                   id="message"
                   size="small"
                   className="form-control mb-3"
                   placeholder="Message"
-                  label="Message"
+                  label="Message*"
                   onChange={handleMessageChange}
                 >
                   {""}
                 </textarea>
+                <p className="fs-6 text-muted">*: champs obligatoire</p>
                 <Button
                   variant="contained"
                   color="primary"

@@ -44,18 +44,6 @@ main {
   background-color: darkgray;
 }
 
-.red {
-  color: red;
-}
-
-.blue {
-  color: blue;
-}
-
-.green {
-  color: green;
-}
-
 @media screen and (max-width: 768px) {
   .description {
     font-size: 1.5rem;

@@ -105,7 +105,7 @@ const EducationUploader = () => {
 
   return (
     <div>
-      <h1 className="red">Mes diplomes et certificats obtenus</h1>
+      <h1 className="text-danger">Mes diplomes et certificats obtenus</h1>
       {user && (
         <>
           <h3>Education Uploader</h3>
@@ -145,7 +145,7 @@ const EducationUploader = () => {
         {listOfEducation.map((education) => {
           return (
             <div key={education._id}>
-              <h3>{education.title}</h3>
+              <h3 className="text-primary">{education.title}</h3>
               <p>{education.description}</p>
               {user && (
                 <>

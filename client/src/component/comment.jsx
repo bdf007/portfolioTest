@@ -77,19 +77,21 @@ const CommentUploader = () => {
     <div>
       {!user && (
         <>
-          <h2 className="red">Laissez moi un commentaire</h2>
+          <h2 className="text-danger">Laissez moi un commentaire</h2>
           <div className="form-group">
+            <label htmlFor="name">Nom, prénom ou surnom*</label>
             <input
               value={name}
               id="name"
               size="small"
               className="form-control mb-3"
-              placeholder="Nom*"
+              placeholder="Nom, prénom ou surnom*"
               label="Nom*"
               onChange={handleNameChange}
             />
           </div>
           <div className="form-group">
+            <label htmlFor="email">Email</label>
             <input
               value={email}
               id="email"
@@ -101,6 +103,7 @@ const CommentUploader = () => {
             />
           </div>
           <div className="form-group">
+            <label htmlFor="comment">Commentaire*</label>
             <textarea
               value={comment}
               id="comment"
@@ -112,6 +115,7 @@ const CommentUploader = () => {
             >
               {" "}
             </textarea>
+            <p className="fs-6 text-muted">*: champs obligatoire</p>
             <Button
               variant="contained"
               color="primary"
@@ -130,9 +134,9 @@ const CommentUploader = () => {
         {listOfComment.map((comment) => {
           return (
             <div key={comment._id}>
-              <h3 className="blue">{comment.name}</h3>
+              <h3 className="text-primary">{comment.name}</h3>
               {comment.Date && (
-                <p className="green">{comment.Date.slice(0, 10)}</p>
+                <p className="text-success">{comment.Date.slice(0, 10)}</p>
               )}
               <p>{comment.comment}</p>
               {user && (
