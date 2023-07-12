@@ -25,6 +25,7 @@ main {
   color: white;
 }
 .home {
+  padding-top: 5rem;
   padding-bottom: 12rem;
   max-width: 100vw;
   margin-right: 0;

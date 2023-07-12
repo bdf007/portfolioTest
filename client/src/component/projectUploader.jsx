@@ -14,6 +14,7 @@ const ProjectUploader = () => {
   const [description, setDescription] = useState("");
   const [listOfProjects, setListOfProjects] = useState([]);
   const { user } = useContext(UserContext);
+  const [editingProject, setEditingProject] = useState(null);
 
   const fetchProjects = async () => {
     try {
@@ -29,6 +30,7 @@ const ProjectUploader = () => {
   useEffect(() => {
     fetchProjects();
   }, []);
+
   const handleFileInputChange = (event) => {
     const file = event.target.files[0];
     setSelectedFile(file);
@@ -59,24 +61,64 @@ const ProjectUploader = () => {
       fileReader.onloadend = async () => {
         const base64data = fileReader.result;
 
-        const projectData = {
-          title,
-          textProject,
-          linkToProject,
-          description,
-          imageData: base64data,
-        };
+        if (editingProject) {
+          // Update existing project
+          const updatedProjectData = {
+            title,
+            textProject,
+            linkToProject,
+            description,
+            imageData: selectedFile ? base64data : editingProject.imageData,
+          };
 
-        const response = await axios.post(
-          `${process.env.REACT_APP_API_URL}/api/project/upload`,
-          projectData
-        );
+          await axios.put(
+            `${process.env.REACT_APP_API_URL}/api/project/projectWithImage/update/${editingProject._id}`,
+            updatedProjectData
+          );
 
-        toast.success("Project uploaded successfully");
-        setListOfProjects((prevProjects) => [
-          ...prevProjects,
-          response.data.project,
-        ]);
+          toast.success("Project updated successfully");
+          setListOfProjects((prevProjects) => {
+            const updatedProjects = prevProjects.map((project) => {
+              if (project._id === editingProject._id) {
+                return {
+                  ...project,
+                  title,
+                  textProject,
+                  linkToProject,
+                  description,
+                  imageData: selectedFile
+                    ? base64data
+                    : editingProject.imageData,
+                };
+              }
+              return project;
+            });
+            return updatedProjects;
+          });
+
+          setEditingProject(null);
+        } else {
+          // Create new project
+          const newProjectData = {
+            title,
+            textProject,
+            linkToProject,
+            description,
+            imageData: base64data,
+          };
+
+          const response = await axios.post(
+            `${process.env.REACT_APP_API_URL}/api/project/upload`,
+            newProjectData
+          );
+
+          toast.success("Project uploaded successfully");
+          setListOfProjects((prevProjects) => [
+            ...prevProjects,
+            response.data.project,
+          ]);
+        }
+
         resetForm();
       };
     } catch (error) {
@@ -98,6 +140,15 @@ const ProjectUploader = () => {
     }
   };
 
+  const editProject = (project) => {
+    setTitle(project.title);
+    setTextProject(project.textProject);
+    setLinkToProject(project.linkToProject);
+    setDescription(project.description);
+    setEditingProject(project);
+    setPreviewUrl(project.imageData);
+  };
+
   const resetForm = () => {
     setTitle("");
     setTextProject("");
@@ -105,6 +156,13 @@ const ProjectUploader = () => {
     setDescription("");
     setSelectedFile(null);
     setPreviewUrl(null);
+    setEditingProject(null);
+    // clear file input
+    document.getElementById("file").value = "";
+    document.getElementById("title").value = "";
+    document.getElementById("textProject").value = "";
+    document.getElementById("linkToProject").value = "";
+    document.getElementById("description").value = "";
   };
 
   return (
@@ -112,47 +170,59 @@ const ProjectUploader = () => {
       {user && (
         <>
           <h3>Project Uploader</h3>
-          <div>
-            <input
-              type="file"
-              id="file"
-              accept="image/*"
-              onChange={handleFileInputChange}
-            />
+          <form>
+            <div className="form-group">
+              <input
+                type="file"
+                id="file"
+                accept="image/*"
+                onChange={handleFileInputChange}
+              />
+            </div>
             {selectedFile && (
-              <div>
+              <div className="form-group">
                 <img
                   src={previewUrl}
                   alt="Preview"
                   style={{ maxWidth: "100%", maxHeight: "200px" }}
                 />
-                <input
-                  type="text"
-                  value={title}
-                  onChange={handleTitleChange}
-                  placeholder="Title"
-                />
-                <textarea
-                  value={textProject}
-                  onChange={handleTextProjectChange}
-                  placeholder="Text Project"
-                />
-                <input
-                  type="text"
-                  value={linkToProject}
-                  onChange={handleLinkToProjectChange}
-                  placeholder="Link Project"
-                />
-                <input
-                  type="text"
-                  value={description}
-                  onChange={handleDescriptionChange}
-                  placeholder="Description"
-                />
-                <button onClick={handleUpload}>Upload</button>
               </div>
             )}
-          </div>
+            <div className="form-group">
+              <input
+                type="text"
+                value={title}
+                onChange={handleTitleChange}
+                placeholder="Title"
+              />
+            </div>
+            <div className="form-group">
+              <textarea
+                value={textProject}
+                onChange={handleTextProjectChange}
+                placeholder="Text Project"
+              />
+            </div>
+            <div className="form-group">
+              <input
+                type="text"
+                value={linkToProject}
+                onChange={handleLinkToProjectChange}
+                placeholder="Link Project"
+              />
+            </div>
+            <div className="form-group">
+              <input
+                type="text"
+                value={description}
+                onChange={handleDescriptionChange}
+                placeholder="Description"
+              />
+            </div>
+            <button onClick={handleUpload}>
+              {editingProject ? "Update" : "Upload"}
+            </button>
+          </form>
         </>
       )}
       <div>
@@ -178,14 +248,23 @@ const ProjectUploader = () => {
                         >
                           <img
                             className="card-img-top"
-                            src={project.imageData}
+                            src={
+                              editingProject &&
+                              editingProject._id === project._id
+                                ? previewUrl || project.imageData
+                                : project.imageData
+                            }
                             alt={project.description || ""}
                           />
                         </a>
                       ) : (
                         <img
                           className="card-img-top"
-                          src={project.imageData}
+                          src={
+                            editingProject && editingProject._id === project._id
+                              ? previewUrl || project.imageData
+                              : project.imageData
+                          }
                           alt={project.description || ""}
                         />
                       )}
@@ -208,6 +287,14 @@ const ProjectUploader = () => {
                             }}
                           >
                             Delete
+                          </button>
+                          <button
+                            className="btn btn-primary"
+                            onClick={() => {
+                              editProject(project);
+                            }}
+                          >
+                            Edit
                           </button>
                         </div>
                       )}

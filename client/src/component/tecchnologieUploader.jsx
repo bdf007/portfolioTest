@@ -12,6 +12,7 @@ const TechnologieUploader = () => {
   const [link, setLink] = useState("");
   const [description, setDescription] = useState("");
   const [listOftechnologies, setListOftechnologies] = useState([]);
+  const [editingtechnologie, setEditingtechnologie] = useState(null);
   const { user } = useContext(UserContext);
 
   // get all the projects from the server
@@ -56,23 +57,59 @@ const TechnologieUploader = () => {
       fileReader.onloadend = async () => {
         const base64data = fileReader.result;
 
-        const technologieData = {
-          title,
-          link,
-          description,
-          imageData: base64data,
-        };
+        if (editingtechnologie) {
+          // update technologie
+          const updatedTechnologieData = {
+            title,
+            link,
+            description,
+            imageData: selectedFile ? base64data : editingtechnologie.imageData,
+          };
 
-        const response = await axios.post(
-          `${process.env.REACT_APP_API_URL}/api/technologie/upload`,
-          technologieData
-        );
+          await axios.put(
+            `${process.env.REACT_APP_API_URL}/api/technologie/updateTechnologie/${editingtechnologie._id}`,
+            updatedTechnologieData
+          );
 
-        toast.success("Technologie uploaded successfully");
-        setListOftechnologies((prevTechnologies) => [
-          ...prevTechnologies,
-          response.data.technologie,
-        ]);
+          toast.success("Technologie updated successfully");
+          setListOftechnologies((prevTechnologies) => {
+            const updatedTechnologies = prevTechnologies.map((technologie) => {
+              if (technologie._id === editingtechnologie._id) {
+                return {
+                  ...technologie,
+                  title,
+                  link,
+                  description,
+                  imageData: selectedFile
+                    ? base64data
+                    : editingtechnologie.imageData,
+                };
+              }
+              return technologie;
+            });
+            return updatedTechnologies;
+          });
+
+          setEditingtechnologie(null);
+        } else {
+          const technologieData = {
+            title,
+            link,
+            description,
+            imageData: base64data,
+          };
+
+          const response = await axios.post(
+            `${process.env.REACT_APP_API_URL}/api/technologie/upload`,
+            technologieData
+          );
+
+          toast.success("Technologie uploaded successfully");
+          setListOftechnologies((prevTechnologies) => [
+            ...prevTechnologies,
+            response.data.technologie,
+          ]);
+        }
         resetForm();
       };
     } catch (error) {
@@ -94,6 +131,14 @@ const TechnologieUploader = () => {
     }
   };
 
+  const editTechnologie = (technologie) => {
+    setEditingtechnologie(technologie);
+    setTitle(technologie.title);
+    setLink(technologie.link);
+    setDescription(technologie.description);
+    setPreviewUrl(technologie.imageData);
+  };
+
   const resetForm = () => {
     setTitle("");
     setLink("");
@@ -113,7 +158,7 @@ const TechnologieUploader = () => {
         <>
           <h3>technologie Uploader</h3>
 
-          <div>
+          <form>
             <input
               type="file"
               id="file"
@@ -121,37 +166,45 @@ const TechnologieUploader = () => {
               onChange={handleFileInputChange}
             />
             {selectedFile && (
-              <div>
+              <div className="form-group">
                 <img
                   src={previewUrl}
                   alt="Preview"
                   style={{ maxWidth: "100%", maxHeight: "200px" }}
                 />
-                <input
-                  type="text"
-                  id="title"
-                  value={title}
-                  onChange={handleTitleChange}
-                  placeholder="Title"
-                />
-                <input
-                  type="text"
-                  id="link"
-                  value={link}
-                  onChange={handleLinkChange}
-                  placeholder="Link "
-                />
-                <input
-                  type="text"
-                  id="description"
-                  value={description}
-                  onChange={handleDescriptionChange}
-                  placeholder="Description"
-                />
-                <button onClick={handleUpload}>Upload</button>
               </div>
             )}
-          </div>
+            <div className="form-group">
+              <input
+                type="text"
+                id="title"
+                value={title}
+                onChange={handleTitleChange}
+                placeholder="Title"
+              />
+            </div>
+            <div className="form-group">
+              <input
+                type="text"
+                id="link"
+                value={link}
+                onChange={handleLinkChange}
+                placeholder="Link "
+              />
+            </div>
+            <div className="form-group">
+              <input
+                type="text"
+                id="description"
+                value={description}
+                onChange={handleDescriptionChange}
+                placeholder="Description"
+              />
+            </div>
+            <button onClick={handleUpload}>
+              {editingtechnologie ? "Update" : "Upload"}
+            </button>
+          </form>
         </>
       )}
       <div>
@@ -187,6 +240,14 @@ const TechnologieUploader = () => {
                           }}
                         >
                           Delete
+                        </button>
+                        <button
+                          className="btn btn-primary"
+                          onClick={() => {
+                            editTechnologie(technologie);
+                          }}
+                        >
+                          Edit
                         </button>
                       </div>
                     )}
