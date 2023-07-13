@@ -209,7 +209,7 @@ const TechnologieUploader = () => {
         </>
       )}
       <div>
-        <div className="row row-cols-1 row-cols-md-6 g-3 home">
+        <div className="row row-cols-1 row-cols-md-4 row-cols-lg-6  g-lg-3  home">
           {listOftechnologies.length === 0 && (
             <img
               src={WIP}
@@ -225,7 +225,7 @@ const TechnologieUploader = () => {
                     className="rounded mx-auto d-block "
                     src={technologie.imageData}
                     alt={technologie.description || ""}
-                    style={{ maxWidth: "50%", maxHeight: "50%" }}
+                    style={{ maxWidth: "25%", maxHeight: "25%" }}
                   />
 
                   <div className="card-body">

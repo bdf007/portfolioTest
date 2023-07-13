@@ -105,7 +105,6 @@ const EducationUploader = () => {
 
   return (
     <div>
-      <h1 className="text-danger">Mes diplomes et certificats obtenus</h1>
       {user && (
         <>
           <h3>Education Uploader</h3>
