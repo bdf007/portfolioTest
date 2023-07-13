@@ -213,7 +213,6 @@ const CertificateUploader = () => {
         </>
       )}
       <div className="home">
-        <h3 className="text-danger">Diplomes et Certificats</h3>
         <div className="row g-3 home">
           {listOfcertificates.length === 0 && (
             <div className="container">

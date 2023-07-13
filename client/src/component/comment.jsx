@@ -134,11 +134,16 @@ const CommentUploader = () => {
         {listOfComment.map((comment) => {
           return (
             <div key={comment._id}>
-              <h3 className="text-primary">{comment.name}</h3>
-              {comment.Date && (
-                <p className="text-success">{comment.Date.slice(0, 10)}</p>
-              )}
-              <p>{comment.comment}</p>
+              <p>
+                <span className="text-primary fs-4">{comment.name}</span>{" "}
+                <span className="fs-5">{comment.comment}</span>
+                {comment.Date && (
+                  <span className="text-success fs-6">
+                    {comment.Date.slice(0, 10)}
+                  </span>
+                )}
+              </p>
+
               {user && (
                 <div>
                   {comment.email ? <p>{comment.email}</p> : <p> No email</p>}
