@@ -6,6 +6,7 @@ import { toast } from "react-toastify";
 const EducationUploader = () => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [orderList, setOrderList] = useState(0); // New state
   const [listOfEducation, setListOfEducation] = useState([]);
   const [editingEducation, setEditingEducation] = useState(null);
   const [isEditing, setIsEditing] = useState(false); // New state
@@ -13,7 +14,11 @@ const EducationUploader = () => {
 
   useEffect(() => {
     axios.get(`${process.env.REACT_APP_API_URL}/api/education`).then((res) => {
-      setListOfEducation(res.data);
+      console.log(res.data);
+      // Sort the data by the orderList property
+      const sortedData = res.data.sort((a, b) => a.orderList - b.orderList);
+
+      setListOfEducation(sortedData);
     });
   }, []);
 
@@ -25,6 +30,10 @@ const EducationUploader = () => {
     setDescription(e.target.value);
   };
 
+  const handleOrderChange = (e) => {
+    setOrderList(e.target.value);
+  };
+
   const handleUpload = () => {
     try {
       if (isEditing && editingEducation) {
@@ -34,6 +43,7 @@ const EducationUploader = () => {
             {
               title: title,
               description: description,
+              orderList: orderList,
             }
           )
           .then((response) => {
@@ -45,6 +55,7 @@ const EducationUploader = () => {
                     _id: response.data._id,
                     title: title,
                     description: description,
+                    orderList: orderList,
                   };
                 }
                 return education;
@@ -59,6 +70,7 @@ const EducationUploader = () => {
           .post(`${process.env.REACT_APP_API_URL}/api/education`, {
             title: title,
             description: description,
+            orderList: orderList,
           })
           .then((response) => {
             toast.success("Education uploaded");
@@ -68,6 +80,7 @@ const EducationUploader = () => {
                 _id: response.data._id,
                 title: title,
                 description: description,
+                orderList: orderList,
               },
             ]);
           });
@@ -78,6 +91,7 @@ const EducationUploader = () => {
       // clear the input field
       document.getElementById("title").value = "";
       document.getElementById("description").value = "";
+      document.getElementById("order").value = "";
     } catch (error) {
       toast.error(error.response.data.msg);
     }
@@ -101,6 +115,7 @@ const EducationUploader = () => {
     setEditingEducation(education);
     setTitle(education.title);
     setDescription(education.description);
+    setOrderList(education.orderList);
   };
 
   return (
@@ -132,6 +147,17 @@ const EducationUploader = () => {
               >
                 {" "}
               </textarea>
+            </div>
+            <div className="form-group">
+              <input
+                value={orderList}
+                id="order"
+                size="small"
+                className="form-control mb-3"
+                placeholder="Order"
+                label="Order"
+                onChange={handleOrderChange}
+              />
             </div>
             <button onClick={handleUpload}>
               {isEditing ? "Update" : "Upload"}

@@ -13,6 +13,10 @@ const educationSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+    orderList: {
+      type: Number,
+      default: 0,
+    },
   },
   { timestamps: true }
 );
