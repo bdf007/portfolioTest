@@ -12,6 +12,7 @@ const ProjectUploader = () => {
   const [textProject, setTextProject] = useState("");
   const [linkToProject, setLinkToProject] = useState("");
   const [description, setDescription] = useState("");
+  const [orderList, setOrderList] = useState(0);
   const [listOfProjects, setListOfProjects] = useState([]);
   const { user } = useContext(UserContext);
   const [editingProject, setEditingProject] = useState(null);
@@ -21,7 +22,10 @@ const ProjectUploader = () => {
       const response = await axios.get(
         `${process.env.REACT_APP_API_URL}/api/project/projectWithImage`
       );
-      setListOfProjects(response.data);
+      const sortedData = response.data.sort(
+        (a, b) => a.orderList - b.orderList
+      );
+      setListOfProjects(sortedData);
     } catch (error) {
       console.log(error);
     }
@@ -53,6 +57,10 @@ const ProjectUploader = () => {
     setDescription(event.target.value);
   };
 
+  const handleOrderChange = (event) => {
+    setOrderList(event.target.value);
+  };
+
   const handleUpload = async () => {
     try {
       const fileReader = new FileReader();
@@ -68,6 +76,7 @@ const ProjectUploader = () => {
             textProject,
             linkToProject,
             description,
+            orderList,
             imageData: selectedFile ? base64data : editingProject.imageData,
           };
 
@@ -86,6 +95,7 @@ const ProjectUploader = () => {
                   textProject,
                   linkToProject,
                   description,
+                  orderList,
                   imageData: selectedFile
                     ? base64data
                     : editingProject.imageData,
@@ -104,6 +114,7 @@ const ProjectUploader = () => {
             textProject,
             linkToProject,
             description,
+            orderList,
             imageData: base64data,
           };
 
@@ -145,8 +156,15 @@ const ProjectUploader = () => {
     setTextProject(project.textProject);
     setLinkToProject(project.linkToProject);
     setDescription(project.description);
+    setOrderList(project.orderList);
     setEditingProject(project);
     setPreviewUrl(project.imageData);
+    // Programmatically trigger the file input
+    const fileInput = document.getElementById("file");
+    if (fileInput) {
+      fileInput.value = ""; // Clear the current selection
+      fileInput.click(); // Simulate a click event
+    }
   };
 
   const resetForm = () => {
@@ -154,6 +172,7 @@ const ProjectUploader = () => {
     setTextProject("");
     setLinkToProject("");
     setDescription("");
+    setOrderList(0);
     setSelectedFile(null);
     setPreviewUrl(null);
     setEditingProject(null);
@@ -163,6 +182,7 @@ const ProjectUploader = () => {
     document.getElementById("textProject").value = "";
     document.getElementById("linkToProject").value = "";
     document.getElementById("description").value = "";
+    document.getElementById("orderList").value = "";
   };
 
   return (
@@ -179,15 +199,25 @@ const ProjectUploader = () => {
                 onChange={handleFileInputChange}
               />
             </div>
-            {selectedFile && (
-              <div className="form-group">
-                <img
-                  src={previewUrl}
-                  alt="Preview"
-                  style={{ maxWidth: "100%", maxHeight: "200px" }}
-                />
-              </div>
-            )}
+            {editingProject
+              ? previewUrl && (
+                  <div className="form-group">
+                    <img
+                      src={previewUrl}
+                      alt="Preview"
+                      style={{ maxWidth: "100%", maxHeight: "200px" }}
+                    />
+                  </div>
+                )
+              : selectedFile && (
+                  <div className="form-group">
+                    <img
+                      src={previewUrl}
+                      alt="Preview"
+                      style={{ maxWidth: "100%", maxHeight: "200px" }}
+                    />
+                  </div>
+                )}
             <div className="form-group">
               <input
                 type="text"
@@ -217,6 +247,14 @@ const ProjectUploader = () => {
                 value={description}
                 onChange={handleDescriptionChange}
                 placeholder="Description"
+              />
+            </div>
+            <div className="form-group">
+              <input
+                type="number"
+                value={orderList}
+                onChange={handleOrderChange}
+                placeholder="Order"
               />
             </div>
             <button onClick={handleUpload}>

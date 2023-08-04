@@ -10,6 +10,7 @@ exports.getProjectWithImage = async (req, res) => {
       textProject: project.textProject,
       linkToProject: project.linkToProject,
       description: project.description,
+      orderList: project.orderList,
       imageData: project.imageData,
     }));
     res.json(mappedProjects);
@@ -21,14 +22,21 @@ exports.getProjectWithImage = async (req, res) => {
 
 exports.postProjectWithImage = async (req, res) => {
   try {
-    const { title, textProject, linkToProject, description, imageData } =
-      req.body;
+    const {
+      title,
+      textProject,
+      linkToProject,
+      description,
+      orderList,
+      imageData,
+    } = req.body;
 
     const project = new Project({
       title,
       textProject,
       linkToProject,
       description,
+      orderList,
       imageData,
     });
 

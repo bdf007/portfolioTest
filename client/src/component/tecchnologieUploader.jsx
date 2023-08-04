@@ -11,6 +11,7 @@ const TechnologieUploader = () => {
   const [title, setTitle] = useState("");
   const [link, setLink] = useState("");
   const [description, setDescription] = useState("");
+  const [orderList, setOrderList] = useState(0); // New state
   const [listOftechnologies, setListOftechnologies] = useState([]);
   const [editingtechnologie, setEditingtechnologie] = useState(null);
   const { user } = useContext(UserContext);
@@ -21,9 +22,12 @@ const TechnologieUploader = () => {
       const response = await axios.get(
         `${process.env.REACT_APP_API_URL}/api/technologie/getTechnologies`
       );
-      setListOftechnologies(response.data);
+      const sortedData = response.data.sort(
+        (a, b) => a.orderList - b.orderList
+      );
+      setListOftechnologies(sortedData);
     } catch (error) {
-      console.log(error);
+      toast.error("Something went wrong");
     }
   };
 
@@ -49,6 +53,10 @@ const TechnologieUploader = () => {
     setDescription(event.target.value);
   };
 
+  const handleOrderChange = (event) => {
+    setOrderList(event.target.value);
+  };
+
   const handleUpload = async () => {
     try {
       const fileReader = new FileReader();
@@ -63,6 +71,7 @@ const TechnologieUploader = () => {
             title,
             link,
             description,
+            orderList,
             imageData: selectedFile ? base64data : editingtechnologie.imageData,
           };
 
@@ -80,6 +89,7 @@ const TechnologieUploader = () => {
                   title,
                   link,
                   description,
+                  orderList,
                   imageData: selectedFile
                     ? base64data
                     : editingtechnologie.imageData,
@@ -96,6 +106,7 @@ const TechnologieUploader = () => {
             title,
             link,
             description,
+            orderList,
             imageData: base64data,
           };
 
@@ -103,7 +114,6 @@ const TechnologieUploader = () => {
             `${process.env.REACT_APP_API_URL}/api/technologie/upload`,
             technologieData
           );
-
           toast.success("Technologie uploaded successfully");
           setListOftechnologies((prevTechnologies) => [
             ...prevTechnologies,
@@ -136,19 +146,28 @@ const TechnologieUploader = () => {
     setTitle(technologie.title);
     setLink(technologie.link);
     setDescription(technologie.description);
+    setOrderList(technologie.orderList);
     setPreviewUrl(technologie.imageData);
+    // Programmatically trigger the file input
+    const fileInput = document.getElementById("file");
+    if (fileInput) {
+      fileInput.value = ""; // Clear the current selection
+      fileInput.click(); // Simulate a click event
+    }
   };
 
   const resetForm = () => {
     setTitle("");
     setLink("");
     setDescription("");
+    setOrderList(0);
     setSelectedFile(null);
     setPreviewUrl(null);
     // clear the input field
     document.getElementById("title").value = "";
     document.getElementById("link").value = "";
     document.getElementById("description").value = "";
+    document.getElementById("orderList").value = "";
     document.getElementById("file").value = "";
   };
 
@@ -166,15 +185,25 @@ const TechnologieUploader = () => {
               accept="image/*"
               onChange={handleFileInputChange}
             />
-            {selectedFile && (
-              <div className="form-group">
-                <img
-                  src={previewUrl}
-                  alt="Preview"
-                  style={{ maxWidth: "100%", maxHeight: "200px" }}
-                />
-              </div>
-            )}
+            {editingtechnologie
+              ? previewUrl && (
+                  <div className="form-group">
+                    <img
+                      src={previewUrl}
+                      alt="Preview"
+                      style={{ maxWidth: "100%", maxHeight: "200px" }}
+                    />
+                  </div>
+                )
+              : selectedFile && (
+                  <div className="form-group">
+                    <img
+                      src={previewUrl}
+                      alt="Preview"
+                      style={{ maxWidth: "100%", maxHeight: "200px" }}
+                    />
+                  </div>
+                )}
             <div className="form-group">
               <input
                 type="text"
@@ -202,8 +231,17 @@ const TechnologieUploader = () => {
                 placeholder="Description"
               />
             </div>
+            <div className="form-group">
+              <input
+                type="number"
+                id="orderList"
+                value={orderList}
+                onChange={handleOrderChange}
+                placeholder="Order"
+              />
+            </div>
             <button onClick={handleUpload}>
-              {editingtechnologie ? "Update" : "Upload"}
+              {editingtechnologie ? "Edit" : "Upload"}
             </button>
           </form>
         </>

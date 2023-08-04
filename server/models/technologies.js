@@ -8,6 +8,10 @@ const technologieSchema = new mongoose.Schema({
     required: true,
   },
   description: String,
+  orderList: {
+    type: Number,
+    default: 0,
+  },
   uploadDate: Date,
 });
 

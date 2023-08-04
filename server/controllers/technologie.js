@@ -10,6 +10,7 @@ exports.getTechnologie = async (req, res) => {
       title: technologie.title,
       link: technologie.link,
       description: technologie.description,
+      orderList: technologie.orderList,
       imageData: technologie.imageData,
     }));
     res.json(mappedTechnologies);
@@ -21,12 +22,13 @@ exports.getTechnologie = async (req, res) => {
 
 exports.postTechnologie = async (req, res) => {
   try {
-    const { title, link, description, imageData } = req.body;
+    const { title, link, description, orderList, imageData } = req.body;
 
     const technologie = new Technologie({
       title,
       link,
       description,
+      orderList,
       imageData,
       uploadDate: new Date(),
     });

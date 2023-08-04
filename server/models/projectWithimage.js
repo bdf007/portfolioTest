@@ -24,6 +24,10 @@ const projectSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+  orderList: {
+    type: Number,
+    default: 0,
+  },
 });
 
 const ProjectModel = mongoose.model("Project", projectSchema);
