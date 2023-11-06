@@ -42,6 +42,24 @@ const Footer = () => {
           <p className="text-center">
             site réalisé avec MongoDB, Express, React, NodeJS
           </p>
+          <p className="text-center">
+            <a
+              className="link-light link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover"
+              href="https://github.com/bdf007"
+              target="_blank"
+              rel="noreferrer"
+            >
+              GitHub
+            </a>{" "}
+            <a
+              className="link-light link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover"
+              href="https://www.linkedin.com/in/christophe-midelet-73626393/"
+              target="_blank"
+              rel="noreferrer"
+            >
+              LinkedIn
+            </a>
+          </p>
 
           <p className="text-center">© 2023, All rights reserved</p>
         </div>
