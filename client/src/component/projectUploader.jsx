@@ -264,14 +264,26 @@ const ProjectUploader = () => {
         </>
       )}
       <div>
+        {listOfProjects.length === 0 && (
+          <div className="container">
+            <div className="row justify-content-center">
+              <div className="col-md-auto">
+                <img
+                  className="card-img-top"
+                  src={WIP}
+                  alt="WIP"
+                  style={{ maxWidth: "100%", maxHeight: "100%" }}
+                />
+                <div className="card-body">
+                  <h2 className="card-title text-center text-primary">
+                    Chargement en cours...
+                  </h2>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
         <div className="row row-cols-1 row-cols-md-2 g-2 home">
-          {listOfProjects.length === 0 && (
-            <img
-              src={WIP}
-              alt="WIP"
-              style={{ maxWidth: "100%", maxHeight: "100%" }}
-            />
-          )}
           <div className="container">
             <div className="row justify-content-center">
               {listOfProjects.map((project) => {
