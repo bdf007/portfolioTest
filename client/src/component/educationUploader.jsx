@@ -14,7 +14,6 @@ const EducationUploader = () => {
 
   useEffect(() => {
     axios.get(`${process.env.REACT_APP_API_URL}/api/education`).then((res) => {
-      console.log(res.data);
       // Sort the data by the orderList property
       const sortedData = res.data.sort((a, b) => a.orderList - b.orderList);
 

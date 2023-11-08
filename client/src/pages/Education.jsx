@@ -6,9 +6,9 @@ const Education = () => {
   return (
     <div className="home accordion accordion-flush" id="accordionExample">
       <div className="accordion-item techno ">
-        <h2 class="accordion-header" id="headingOne">
+        <h2 className="accordion-header" id="headingOne">
           <button
-            class="accordion-button techno"
+            className="accordion-button techno"
             type="button"
             data-bs-toggle="collapse"
             data-bs-target="#collapseOne"
@@ -20,19 +20,19 @@ const Education = () => {
         </h2>
         <div
           id="collapseOne"
-          class="accordion-collapse collapse show"
+          className="accordion-collapse collapse show"
           aria-labelledby="headingOne"
           data-bs-parent="#accordionExample"
         >
-          <div class="accordion-body">
+          <div className="accordion-body">
             <EducationUploader />
           </div>
         </div>
       </div>
       <div className="accordion-item techno">
-        <h2 class="accordion-header" id="headingTwo">
+        <h2 className="accordion-header" id="headingTwo">
           <button
-            class="accordion-button techno"
+            className="accordion-button techno"
             type="button"
             data-bs-toggle="collapse"
             data-bs-target="#collapseTwo"
@@ -44,11 +44,11 @@ const Education = () => {
         </h2>
         <div
           id="collapseTwo"
-          class="accordion-collapse collapse show"
+          className="accordion-collapse collapse show"
           aria-labelledby="headingTwo"
           data-bs-parent="#accordionExample"
         >
-          <div class="accordion-body">
+          <div className="accordion-body">
             <CertificateUploader />
           </div>
         </div>
