@@ -6,6 +6,7 @@ import { toast } from "react-toastify";
 const ExperienceUploader = () => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [linktoProject, setLinktoProject] = useState("");
   const [listOfExperience, setListOfExperience] = useState([]);
   const [editingExperience, setEditingExperience] = useState(null);
   const [isEditing, setIsEditing] = useState(false); // New state
@@ -25,6 +26,10 @@ const ExperienceUploader = () => {
     setDescription(e.target.value);
   };
 
+  const handleLinkToPorjectChange = (e) => {
+    setLinktoProject(e.target.value);
+  };
+
   const handleUpload = () => {
     try {
       if (isEditing && editingExperience) {
@@ -34,6 +39,7 @@ const ExperienceUploader = () => {
             {
               title: title,
               description: description,
+              linktoProject: linktoProject,
             }
           )
           .then((response) => {
@@ -45,6 +51,7 @@ const ExperienceUploader = () => {
                     _id: response.data._id,
                     title: title,
                     description: description,
+                    linktoProject: linktoProject,
                   };
                 }
                 return experience;
@@ -59,6 +66,7 @@ const ExperienceUploader = () => {
           .post(`${process.env.REACT_APP_API_URL}/api/experience`, {
             title: title,
             description: description,
+            linktoProject: linktoProject,
           })
           .then((response) => {
             toast.success("Experience uploaded");
@@ -68,6 +76,7 @@ const ExperienceUploader = () => {
                 _id: response.data._id,
                 title: title,
                 description: description,
+                linktoProject: linktoProject,
               },
             ]);
           });
@@ -76,9 +85,11 @@ const ExperienceUploader = () => {
       // reset the form
       setTitle("");
       setDescription("");
+      setLinktoProject("");
       // clear the input field
       document.getElementById("title").value = "";
       document.getElementById("description").value = "";
+      document.getElementById("linktoProject").value = "";
     } catch (error) {
       toast.error(error.response.data.msg);
     }
@@ -102,6 +113,7 @@ const ExperienceUploader = () => {
     setEditingExperience(experience);
     setTitle(experience.title);
     setDescription(experience.description);
+    setLinktoProject(experience.linktoProject);
   };
 
   return (
@@ -135,6 +147,17 @@ const ExperienceUploader = () => {
                 {" "}
               </textarea>
             </div>
+            <div className="form-group">
+              <input
+                value={linktoProject}
+                id="linktoProject"
+                size="small"
+                className="form-control mb-3"
+                placeholder="Link to Project"
+                label="Link to Project"
+                onChange={handleLinkToPorjectChange}
+              />
+            </div>
             <button onClick={handleUpload}>
               {isEditing ? "Update" : "Upload"}
             </button>
@@ -146,8 +169,11 @@ const ExperienceUploader = () => {
         {listOfExperience.map((experience) => {
           return (
             <div key={experience._id}>
-              <h3 className="text-primary">{experience.title}</h3>
+              <h3 className="text-primary">
+                <a href={experience.linktoProject}>{experience.title}</a>
+              </h3>
               <p>{experience.description}</p>
+
               {user && (
                 <>
                   <button
