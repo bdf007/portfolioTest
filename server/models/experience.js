@@ -13,6 +13,10 @@ const experienceSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+    linktoProject: {
+      type: String,
+      trim: true,
+    },
   },
   { timestamps: true }
 );
