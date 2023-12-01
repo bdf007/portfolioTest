@@ -3,6 +3,7 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import { UserContext } from "../context/UserContext";
 import CommentUploader from "../component/comment";
+import spin from "../assets/Spin.gif";
 
 const Contact = () => {
   const [firstname, setFirstname] = useState("");
@@ -11,6 +12,7 @@ const Contact = () => {
   const [message, setMessage] = useState("");
   const [listOfContact, setListOfContact] = useState([]);
   const { user } = useContext(UserContext);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     axios.get(`${process.env.REACT_APP_API_URL}/api/contact`).then((res) => {
@@ -34,44 +36,40 @@ const Contact = () => {
     setMessage(e.target.value);
   };
 
-  const handleUpload = (e) => {
-    e.preventDefault();
-    try {
-      axios
-        .post(`${process.env.REACT_APP_API_URL}/api/contact`, {
-          firstname: firstname,
-          lastname: lastname,
-          email: email,
-          message: message,
-        })
-        .then((response) => {
-          toast.success("Message sent");
-          setListOfContact([
-            ...listOfContact,
-            {
-              _id: response.data._id,
-              firstname: firstname,
-              lastname: lastname,
-              email: email,
-              message: message,
-            },
-          ]);
+  const handleUpload = () => {
+    setIsLoading(true);
+    axios
+      .post(`${process.env.REACT_APP_API_URL}/api/contact`, {
+        firstname: firstname,
+        lastname: lastname,
+        email: email,
+        message: message,
+      })
+      .then((response) => {
+        toast.success("Message sent");
+        setListOfContact([
+          ...listOfContact,
+          {
+            _id: response.data._id,
+            firstname: firstname,
+            lastname: lastname,
+            email: email,
+            message: message,
+          },
+        ]);
 
-          // reset the form
-          setFirstname("");
-          setLastname("");
-          setEmail("");
-          setMessage("");
+        // reset the form
+        setFirstname("");
+        setLastname("");
+        setEmail("");
+        setMessage("");
 
-          // clear the input field
-          document.getElementById("firstname").value = "";
-          document.getElementById("lastname").value = "";
-          document.getElementById("email").value = "";
-          document.getElementById("message").value = "";
-        });
-    } catch (error) {
-      toast.error(error.response.data.msg);
-    }
+        // clear the input field
+        document.getElementById("firstname").value = "";
+        document.getElementById("lastname").value = "";
+        document.getElementById("email").value = "";
+        document.getElementById("message").value = "";
+      });
   };
 
   const handleDelete = (id) => {
@@ -91,7 +89,6 @@ const Contact = () => {
     <div className="home">
       <div className=" row d-flex justify-content-around">
         <div className="container mt-5 mb-5 col-10 col-sm-8 col-md-6 col-lg-5 g-2">
-          <h1 className="text-danger">Contactez moi</h1>
           {user ? (
             <div>
               {listOfContact.length === 0 && <h1>No message</h1>}
@@ -126,75 +123,81 @@ const Contact = () => {
               })}
             </div>
           ) : (
-            <form
-              onSubmit={handleUpload}
-              action="https://formsubmit.co/bdf007@gmail.com"
-              method="POST"
-            >
-              <div className="form-group">
-                <label htmlFor="firstname">Prénom*</label>
-                <input
-                  value={firstname}
-                  name="firstname"
-                  id="firstname"
-                  size="small"
-                  className="form-control mb-3"
-                  placeholder="Prénom"
-                  label="Prénom*"
-                  onChange={handleFirstnameChange}
-                />
-              </div>
-              <div className="form-group">
-                <label htmlFor="lastname">Nom*</label>
-                <input
-                  value={lastname}
-                  id="lastname"
-                  name="lastname"
-                  size="small"
-                  className="form-control mb-3"
-                  placeholder="Nom"
-                  label="Nom*"
-                  onChange={handleLastnameChange}
-                />
-              </div>
-              <div className="form-group">
-                <label htmlFor="email">Email*</label>
-                <input
-                  value={email}
-                  id="email"
-                  name="email"
-                  size="small"
-                  className="form-control mb-3"
-                  placeholder="Email"
-                  label="Email*"
-                  onChange={handleEmailChange}
-                />
-              </div>
-              <div className="form-group">
-                <label htmlFor="message">Message*</label>
-                <textarea
-                  value={message}
-                  id="message"
-                  name="message"
-                  size="small"
-                  className="form-control mb-3"
-                  placeholder="Message"
-                  label="Message*"
-                  onChange={handleMessageChange}
-                >
-                  {""}
-                </textarea>
-                <p className="fs-6 text-muted">*: champs obligatoire</p>
-                <button
-                  className="btn btn-primary"
-                  type="submit"
-                  disabled={!firstname || !lastname || !email || !message}
-                  onClick={handleUpload}
-                >
-                  Envoyer
-                </button>
-              </div>
-            </form>
+            <>
+              <h2 className="text-danger">Contactez moi</h2>
+
+              <form
+                action="https://formsubmit.co/christophemidelet650@gmail.com"
+                method="POST"
+              >
+                <div className="form-group">
+                  <label htmlFor="firstname">Prénom*</label>
+                  <input
+                    value={firstname}
+                    name="firstname"
+                    id="firstname"
+                    size="small"
+                    className="form-control mb-3"
+                    placeholder="Prénom"
+                    label="Prénom*"
+                    onChange={handleFirstnameChange}
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="lastname">Nom*</label>
+                  <input
+                    value={lastname}
+                    id="lastname"
+                    name="lastname"
+                    size="small"
+                    className="form-control mb-3"
+                    placeholder="Nom"
+                    label="Nom*"
+                    onChange={handleLastnameChange}
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="email">Email*</label>
+                  <input
+                    value={email}
+                    id="email"
+                    name="email"
+                    size="small"
+                    className="form-control mb-3"
+                    placeholder="Email"
+                    label="Email*"
+                    onChange={handleEmailChange}
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="message">Message*</label>
+                  <textarea
+                    value={message}
+                    id="message"
+                    name="message"
+                    size="small"
+                    className="form-control mb-3"
+                    placeholder="Message"
+                    label="Message*"
+                    onChange={handleMessageChange}
+                  >
+                    {""}
+                  </textarea>
+                  <p className="fs-6 text-muted">*: champs obligatoire</p>
+                  <button
+                    className="btn btn-primary"
+                    type="submit"
+                    onClick={handleUpload}
+                    disabled={!firstname || !lastname || !email || !message}
+                  >
+                    Envoyer
+                  </button>
+                </div>
+                <input type="hidden" name="_subject" value="Nouveau Contact" />{" "}
+                {isLoading && <img src={spin} alt="loading" className="spin" />}
+                <input type="hidden" name="_captcha" value="false" />
+              </form>
+            </>
           )}
         </div>
         <div className="container mt-5 mb-5 col-10 col-sm-8 col-md-6 col-lg-5">
