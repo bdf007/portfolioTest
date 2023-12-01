@@ -2,7 +2,6 @@ import React, { useEffect, useState, useContext } from "react";
 import axios from "axios";
 import { UserContext } from "../context/UserContext";
 import { toast } from "react-toastify";
-import { Button } from "@mui/material";
 
 const CommentUploader = () => {
   const [name, setName] = useState("");
@@ -78,53 +77,61 @@ const CommentUploader = () => {
       {!user && (
         <>
           <h2 className="text-danger">Laissez moi un commentaire</h2>
-          <div className="form-group">
-            <label htmlFor="name">Nom, prénom ou surnom*</label>
-            <input
-              value={name}
-              id="name"
-              size="small"
-              className="form-control mb-3"
-              placeholder="Nom, prénom ou surnom*"
-              label="Nom*"
-              onChange={handleNameChange}
-            />
-          </div>
-          <div className="form-group">
-            <label htmlFor="email">Email</label>
-            <input
-              value={email}
-              id="email"
-              size="small"
-              className="form-control mb-3"
-              placeholder="Email"
-              label="Email"
-              onChange={handleEmailChange}
-            />
-          </div>
-          <div className="form-group">
-            <label htmlFor="comment">Commentaire*</label>
-            <textarea
-              value={comment}
-              id="comment"
-              size="small"
-              className="form-control mb-3"
-              placeholder="Commentaire*"
-              label="Commentaire*"
-              onChange={handleCommentChange}
-            >
-              {" "}
-            </textarea>
-            <p className="fs-6 text-muted">*: champs obligatoire</p>
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={handleUpload}
-              disabled={!name || !comment}
-            >
-              Envoyer
-            </Button>
-          </div>
+          <form
+            action="https://formsubmit.co/christophemidelet650@gmail.com"
+            method="POST"
+          >
+            <div className="form-group">
+              <label htmlFor="name">Nom, prénom ou surnom*</label>
+              <input
+                value={name}
+                id="name"
+                name="name"
+                size="small"
+                className="form-control mb-3"
+                placeholder="Nom, prénom ou surnom*"
+                label="Nom*"
+                onChange={handleNameChange}
+              />
+            </div>
+            <div className="form-group">
+              <label htmlFor="email">Email</label>
+              <input
+                value={email}
+                id="email"
+                name="email"
+                size="small"
+                className="form-control mb-3"
+                placeholder="Email"
+                label="Email"
+                onChange={handleEmailChange}
+              />
+            </div>
+            <div className="form-group">
+              <label htmlFor="comment">Commentaire*</label>
+              <textarea
+                value={comment}
+                id="comment"
+                name="comment"
+                size="small"
+                className="form-control mb-3"
+                placeholder="Commentaire*"
+                label="Commentaire*"
+                onChange={handleCommentChange}
+              >
+                {" "}
+              </textarea>
+              <p className="fs-6 text-muted">*: champs obligatoire</p>
+              <button
+                className="btn btn-primary"
+                type="submit"
+                onClick={handleUpload}
+                disabled={!name || !comment}
+              >
+                Envoyer
+              </button>
+            </div>
+          </form>
         </>
       )}
       <div>
