@@ -134,6 +134,7 @@ const Contact = () => {
                 <label htmlFor="firstname">Prénom*</label>
                 <input
                   value={firstname}
+                  name="firstname"
                   id="firstname"
                   size="small"
                   className="form-control mb-3"
@@ -147,6 +148,7 @@ const Contact = () => {
                 <input
                   value={lastname}
                   id="lastname"
+                  name="lastname"
                   size="small"
                   className="form-control mb-3"
                   placeholder="Nom"
@@ -159,6 +161,7 @@ const Contact = () => {
                 <input
                   value={email}
                   id="email"
+                  name="email"
                   size="small"
                   className="form-control mb-3"
                   placeholder="Email"
@@ -171,6 +174,7 @@ const Contact = () => {
                 <textarea
                   value={message}
                   id="message"
+                  name="message"
                   size="small"
                   className="form-control mb-3"
                   placeholder="Message"
