@@ -125,7 +125,11 @@ const Contact = () => {
               })}
             </div>
           ) : (
-            <form onSubmit={handleUpload}>
+            <form
+              onSubmit={handleUpload}
+              action="https://formsubmit.co/bdf007@gmail.com"
+              method="POST"
+            >
               <div className="form-group">
                 <label htmlFor="firstname">Prénom*</label>
                 <input
