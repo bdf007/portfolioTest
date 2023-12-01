@@ -2,12 +2,14 @@ import React, { useEffect, useState, useContext } from "react";
 import axios from "axios";
 import { UserContext } from "../context/UserContext";
 import { toast } from "react-toastify";
+import spin from "../assets/Spin.gif";
 
 const CommentUploader = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [comment, setComment] = useState("");
   const { user } = useContext(UserContext);
+  const [isLoading, setIsLoading] = useState(false);
 
   const [listOfComment, setListOfComment] = useState([]);
 
@@ -38,6 +40,7 @@ const CommentUploader = () => {
       })
       .then((response) => {
         toast.success("Comment added");
+        setIsLoading(true);
         setListOfComment([
           ...listOfComment,
           {
@@ -131,6 +134,17 @@ const CommentUploader = () => {
                 Envoyer
               </button>
             </div>
+
+            <input type="hidden" name="_subject" value="Nouveau message" />
+            {isLoading && (
+              <p>
+                merci de patienter{" "}
+                <span>
+                  <img src={spin} alt="loading" className="spin" />
+                </span>
+              </p>
+            )}
+            <input type="hidden" name="_captcha" value="false" />
           </form>
         </>
       )}
@@ -157,6 +171,7 @@ const CommentUploader = () => {
                   <button
                     className="btn btn-danger"
                     onClick={() => deleteComment(comment._id)}
+                    style={{ marginBottom: "2rem" }}
                   >
                     Delete Comment
                   </button>
