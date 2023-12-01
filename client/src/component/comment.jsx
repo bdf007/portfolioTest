@@ -14,6 +14,7 @@ const CommentUploader = () => {
   const [listOfComment, setListOfComment] = useState([]);
 
   useEffect(() => {
+    setIsLoading(false);
     axios.get(`${process.env.REACT_APP_API_URL}/api/comment`).then((res) => {
       setListOfComment(res.data);
     });
