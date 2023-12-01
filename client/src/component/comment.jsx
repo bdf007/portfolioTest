@@ -81,7 +81,7 @@ const CommentUploader = () => {
       {!user && (
         <>
           <h2 className="text-danger">Laissez moi un commentaire</h2>
-          {!isLoading && (
+          {!isLoading ? (
             <form
               action="https://formsubmit.co/christophemidelet650@gmail.com"
               method="POST"
@@ -144,8 +144,7 @@ const CommentUploader = () => {
                 value="https://christophe-midelet.fr/Contact"
               />
             </form>
-          )}
-          {isLoading && (
+          ) : (
             <p>
               merci de patienter{" "}
               <span>
