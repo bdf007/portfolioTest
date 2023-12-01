@@ -15,6 +15,7 @@ const Contact = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
+    setIsLoading(false);
     axios.get(`${process.env.REACT_APP_API_URL}/api/contact`).then((res) => {
       setListOfContact(res.data);
     });
