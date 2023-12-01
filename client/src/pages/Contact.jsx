@@ -15,7 +15,7 @@ const Contact = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    setIsLoading(false);
+    // setIsLoading(false);
     axios.get(`${process.env.REACT_APP_API_URL}/api/contact`).then((res) => {
       setListOfContact(res.data);
     });
@@ -126,7 +126,7 @@ const Contact = () => {
           ) : (
             <>
               <h2 className="text-danger">Contactez moi</h2>
-              {!isLoading && (
+              {!isLoading ? (
                 <form
                   action="https://formsubmit.co/christophemidelet650@gmail.com"
                   method="POST"
@@ -206,8 +206,7 @@ const Contact = () => {
                     value="https://christophe-midelet.fr/Contact"
                   />
                 </form>
-              )}
-              {isLoading && (
+              ) : (
                 <p>
                   merci de patienter{" "}
                   <span>
