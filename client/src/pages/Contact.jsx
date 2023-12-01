@@ -2,7 +2,6 @@ import React, { useState, useEffect, useContext } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
 import { UserContext } from "../context/UserContext";
-import { Button } from "@mui/material";
 import CommentUploader from "../component/comment";
 
 const Contact = () => {
@@ -106,20 +105,22 @@ const Contact = () => {
                       <h6 className="card-subtitle mb-2 text-muted">
                         {value.email}
                       </h6>
-                      <p className="card-text">{value.message}</p>
                       <p className="card-text">
-                        <small className="text-muted">{value.Date}</small>
+                        <small>
+                          {new Date(value.date).toLocaleDateString("fr-FR")} à{" "}
+                          {new Date(value.date).toLocaleTimeString("fr-FR")}
+                        </small>
                       </p>
+                      <p className="card-text">{value.message}</p>
                     </div>
-                    <Button
-                      variant="contained"
-                      color="error"
+                    <button
+                      className="btn btn-danger"
                       onClick={() => {
                         handleDelete(value._id);
                       }}
                     >
                       Delete
-                    </Button>
+                    </button>
                   </div>
                 );
               })}
@@ -184,14 +185,14 @@ const Contact = () => {
                   {""}
                 </textarea>
                 <p className="fs-6 text-muted">*: champs obligatoire</p>
-                <Button
-                  variant="contained"
-                  color="primary"
+                <button
+                  className="btn btn-primary"
+                  type="submit"
                   disabled={!firstname || !lastname || !email || !message}
                   onClick={handleUpload}
                 >
                   Envoyer
-                </Button>
+                </button>
               </div>
             </form>
           )}
