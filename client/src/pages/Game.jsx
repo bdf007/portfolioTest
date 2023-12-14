@@ -13,10 +13,10 @@ const Game = () => {
   const [updatedTitle, setUpdatedTitle] = useState("");
   const [updatedGenre, setUpdatedGenre] = useState("");
   const [updatedDescription, setUpdatedDescription] = useState("");
-  const [updatedMinPlayer, setUpdatedMinPlayer] = useState("");
-  const [updatedMaxPlayer, setUpdatedMaxPlayer] = useState("");
-  const [updatedAge, setUpdatedAge] = useState("");
-  const [updatedDuration, setUpdatedDuration] = useState("");
+  const [updatedMinPlayer, setUpdatedMinPlayer] = useState(0);
+  const [updatedMaxPlayer, setUpdatedMaxPlayer] = useState(0);
+  const [updatedAge, setUpdatedAge] = useState(0);
+  const [updatedDuration, setUpdatedDuration] = useState(0);
 
   const gameId = window.location.pathname.split("/")[2];
 
@@ -41,8 +41,8 @@ const Game = () => {
           description: updatedDescription,
           minPlayer: updatedMinPlayer,
           maxPlayer: updatedMaxPlayer,
-          age: updatedAge,
-          Duration: updatedDuration,
+          minAge: updatedAge,
+          duration: updatedDuration,
           status: "in pending",
         }
       );
@@ -70,8 +70,8 @@ const Game = () => {
     description,
     minPlayer,
     maxPlayer,
-    age,
-    Duration
+    minAge,
+    duration
   ) => {
     setEditing(true);
     setEditingGameId(gameId);
@@ -80,8 +80,8 @@ const Game = () => {
     setUpdatedDescription(description);
     setUpdatedMinPlayer(minPlayer);
     setUpdatedMaxPlayer(maxPlayer);
-    setUpdatedAge(age);
-    setUpdatedDuration(Duration);
+    setUpdatedAge(minAge);
+    setUpdatedDuration(duration);
   };
 
   useEffect(() => {
@@ -121,6 +121,7 @@ const Game = () => {
         {editing ? (
           <div className="col-6">
             <p>
+              <label>Genre :</label>
               <input
                 type="text"
                 value={updatedGenre}
@@ -128,6 +129,7 @@ const Game = () => {
               />
             </p>
             <p>
+              <label>Description :</label>
               <textarea
                 type="text"
                 value={updatedDescription}
@@ -135,6 +137,7 @@ const Game = () => {
               />
             </p>
             <p>
+              <label>Nombre de joueurs minimum :</label>
               <input
                 type="number"
                 value={updatedMinPlayer}
@@ -142,6 +145,7 @@ const Game = () => {
               />
             </p>
             <p>
+              <label>Nombre de joueurs maximum :</label>
               <input
                 type="number"
                 value={updatedMaxPlayer}
@@ -154,6 +158,7 @@ const Game = () => {
               />
             </p>
             <p>
+              <label>Age minimum :</label>
               <input
                 type="number"
                 value={updatedAge}
@@ -161,6 +166,7 @@ const Game = () => {
               />
             </p>
             <p>
+              <label>Temps de jeu :</label>
               <input
                 type="number"
                 value={updatedDuration}
@@ -202,7 +208,7 @@ const Game = () => {
 
               <p>Age: {game.minAge} +</p>
               <p>Temps de jeu : {game.duration} min</p>
-              {(user._id === game.addBy || user.role === "admin") && (
+              {user && (
                 <>
                   <button
                     className="btn btn-primary"
