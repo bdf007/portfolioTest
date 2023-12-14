@@ -52,6 +52,16 @@ const Ludotheque = () => {
       const response = await axios.get(
         `${process.env.REACT_APP_API_URL}/api/games`
       );
+      // sort by title alphabetically
+      response.data.sort((a, b) => {
+        if (a.title.toLowerCase() < b.title.toLowerCase()) {
+          return -1;
+        }
+        if (a.title.toLowerCase() > b.title.toLowerCase()) {
+          return 1;
+        }
+        return 0;
+      });
 
       // Set the list of games with the updated data
       setListOfGames(response.data);
@@ -325,7 +335,7 @@ const Ludotheque = () => {
   return (
     <div className="container " style={{ paddingBottom: "12rem" }}>
       <div className="row">
-        <h1 className="mx-auto text-center">La Ludothéque</h1>
+        <h1 className="mx-auto text-center">Ma Ludothéque</h1>
         <div>
           <div className="col-12 col-md-6 mx-auto">
             <div className="d-flex justify-content-around">
@@ -594,12 +604,16 @@ const Ludotheque = () => {
             <thead>
               <tr>
                 <th scope="col">titre</th>
-                <th scope="col">genre</th>
-                {show === true && <th scope="col">résumé</th>}
-                <th scope="col">nombre de joueurs</th>
-                <th scope="col">age minimum</th>
-                <th scope="col">durée</th>
                 <th scope="col">couverture</th>
+                {show === true && (
+                  <>
+                    <th scope="col">genre</th>
+                    <th scope="col">résumé</th>
+                    <th scope="col">nombre de joueurs</th>
+                    <th scope="col">age minimum</th>
+                    <th scope="col">durée</th>
+                  </>
+                )}
               </tr>
             </thead>
             <tbody>
@@ -615,6 +629,16 @@ const Ludotheque = () => {
                 filteredGames.map((game) => (
                   <tr key={game._id}>
                     <th className="text-justify">{game.title}</th>
+                    <td>
+                      <Link to={`/game/${game._id}`}>
+                        <img
+                          src={game.imageData}
+                          alt={game.title}
+                          className="img-thumbnail"
+                          style={{ maxWidth: "200px", maxHeight: "200px" }}
+                        />
+                      </Link>
+                    </td>
                     <td>{game.genre}</td>
                     {show === true && (
                       <td className="text-justify">{game.description}</td>
@@ -638,16 +662,6 @@ const Ludotheque = () => {
                     )}
                     <td>{game.minAge} ans</td>
                     <td>{game.duration} min</td>
-                    <td>
-                      <Link to={`/game/${game._id}`}>
-                        <img
-                          src={game.imageData}
-                          alt={game.title}
-                          className="img-thumbnail"
-                          style={{ maxWidth: "200px", maxHeight: "200px" }}
-                        />
-                      </Link>
-                    </td>
                   </tr>
                 ))
               )}
@@ -658,18 +672,18 @@ const Ludotheque = () => {
             <thead>
               <tr>
                 <th scope="col">titre</th>
-                <th scope="col">genre</th>
+                <th scope="col">couverture</th>
                 {show === true && (
                   <>
+                    <th scope="col">genre</th>
                     <th scope="col">résumé</th>
+                    <th scope="col">nombre de joueurs</th>
+                    <th scope="col">age minimum</th>
+                    <th scope="col">durée</th>
+                    <th scope="col">Status</th>
+                    {user && show === true && <th scope="col">action</th>}
                   </>
                 )}
-                <th scope="col">nombre de joueurs</th>
-                <th scope="col">age minimum</th>
-                <th scope="col">durée</th>
-                <th scope="col">couverture</th>
-                <th scope="col">Status</th>
-                {user && show === true && <th scope="col">action</th>}
               </tr>
             </thead>
             <tbody>
@@ -685,29 +699,6 @@ const Ludotheque = () => {
                 filteredGames.map((game) => (
                   <tr key={game._id}>
                     <th className="text-justify">{game.title}</th>
-                    <td>{game.genre}</td>
-                    {show === true && (
-                      <td className="text-justify">{game.description}</td>
-                    )}
-                    {game.maxPlayer === null ? (
-                      game.minPlayer === 1 ? (
-                        <td>solo</td>
-                      ) : (
-                        <td>{game.minPlayer} joueurs</td>
-                      )
-                    ) : game.minPlayer === game.maxPlayer ? (
-                      <td>{game.minPlayer} joueurs</td>
-                    ) : game.minPlayer < game.maxPlayer ? (
-                      <td>
-                        De {game.minPlayer} à {game.maxPlayer} joueurs
-                      </td>
-                    ) : (
-                      <td>
-                        De {game.maxPlayer} à {game.minPlayer} joueurs
-                      </td>
-                    )}
-                    <td>{game.minAge} ans</td>
-                    <td>{game.duration} min</td>
                     <td>
                       <Link to={`/game/${game._id}`}>
                         <img
@@ -719,6 +710,28 @@ const Ludotheque = () => {
                     </td>
                     {show === true && (
                       <>
+                        <td>{game.genre}</td>
+                        <td className="text-justify">{game.description}</td>
+                        {game.maxPlayer === null ? (
+                          game.minPlayer === 1 ? (
+                            <td>solo</td>
+                          ) : (
+                            <td>{game.minPlayer} joueurs</td>
+                          )
+                        ) : game.minPlayer === game.maxPlayer ? (
+                          <td>{game.minPlayer} joueurs</td>
+                        ) : game.minPlayer < game.maxPlayer ? (
+                          <td>
+                            De {game.minPlayer} à {game.maxPlayer} joueurs
+                          </td>
+                        ) : (
+                          <td>
+                            De {game.maxPlayer} à {game.minPlayer} joueurs
+                          </td>
+                        )}
+                        <td>{game.minAge} ans</td>
+                        <td>{game.duration} min</td>
+
                         <td className="text-center">
                           {game.status === "in pending" ? (
                             <p className="list-inline bg-warning">
@@ -755,7 +768,7 @@ const Ludotheque = () => {
                           )}
                         </td>
                         <td>
-                          {user.role === "admin" && (
+                          {user && (
                             <button
                               type="button"
                               className="btn btn-danger"
