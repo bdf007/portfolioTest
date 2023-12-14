@@ -634,7 +634,7 @@ const Ludotheque = () => {
                         <img
                           src={game.imageData}
                           alt={game.title}
-                          className="img-thumbnail"
+                          className="img-thumbnail rounded"
                           style={{ maxWidth: "200px", maxHeight: "200px" }}
                         />
                       </Link>
@@ -706,7 +706,8 @@ const Ludotheque = () => {
                         <img
                           src={game.imageData}
                           alt={game.title}
-                          className="img-thumbnail"
+                          className="img-thumbnail rounded"
+                          style={{ maxWidth: "200px", maxHeight: "200px" }}
                         />
                       </Link>
                     </td>
