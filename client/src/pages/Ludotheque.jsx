@@ -639,29 +639,31 @@ const Ludotheque = () => {
                         />
                       </Link>
                     </td>
-                    <td>{game.genre}</td>
                     {show === true && (
-                      <td className="text-justify">{game.description}</td>
+                      <>
+                        <td>{game.genre}</td>
+                        <td className="text-justify">{game.description}</td>
+                        {game.maxPlayer === null || game.maxPlayer === 0 ? (
+                          game.minPlayer === 1 ? (
+                            <td>solo</td>
+                          ) : (
+                            <td>{game.minPlayer} joueurs</td>
+                          )
+                        ) : game.minPlayer === game.maxPlayer ? (
+                          <td>{game.minPlayer} joueurs</td>
+                        ) : game.minPlayer < game.maxPlayer ? (
+                          <td>
+                            De {game.minPlayer} à {game.maxPlayer} joueurs
+                          </td>
+                        ) : (
+                          <td>
+                            De {game.maxPlayer} à {game.minPlayer} joueurs
+                          </td>
+                        )}
+                        <td>{game.minAge} ans</td>
+                        <td>{game.duration} min</td>
+                      </>
                     )}
-                    {game.maxPlayer === null || game.maxPlayer === 0 ? (
-                      game.minPlayer === 1 ? (
-                        <td>solo</td>
-                      ) : (
-                        <td>{game.minPlayer} joueurs</td>
-                      )
-                    ) : game.minPlayer === game.maxPlayer ? (
-                      <td>{game.minPlayer} joueurs</td>
-                    ) : game.minPlayer < game.maxPlayer ? (
-                      <td>
-                        De {game.minPlayer} à {game.maxPlayer} joueurs
-                      </td>
-                    ) : (
-                      <td>
-                        De {game.maxPlayer} à {game.minPlayer} joueurs
-                      </td>
-                    )}
-                    <td>{game.minAge} ans</td>
-                    <td>{game.duration} min</td>
                   </tr>
                 ))
               )}
