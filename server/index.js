@@ -35,6 +35,9 @@ const commentRoutes = require("./routes/comment");
 // get the contact routes
 const contactRoutes = require("./routes/contact");
 
+// get the game routes
+const gameRoutes = require("./routes/game");
+
 // middleware
 app.use(json({ limit: "10mb" }));
 app.use(
@@ -79,6 +82,9 @@ app.use("/api/", commentRoutes);
 
 // use the contact routes
 app.use("/api/", contactRoutes);
+
+// use the game routes
+app.use("/api/", gameRoutes);
 
 // Serve the React app
 app.get("/*", (req, res) => {

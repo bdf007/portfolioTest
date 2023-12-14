@@ -24,6 +24,8 @@ import Education from "./pages/Education";
 import Experience from "./pages/Experience";
 import Project from "./pages/Project";
 import Contact from "./pages/Contact";
+import Ludotheque from "./pages/Ludotheque";
+import Game from "./pages/Game";
 import Footer from "./component/footer";
 
 // API functions
@@ -58,7 +60,9 @@ function App() {
                 <Route exact path="/Project" element={<Project />} />
                 <Route exact path="/Contact" element={<Contact />} />
                 <Route exact path="/signup" element={<Signup />} />
-                <Route exact path="/login" element={<Login />} />{" "}
+                <Route exact path="/login" element={<Login />} />
+                <Route exact path="/Ludotheque" element={<Ludotheque />} />
+                <Route exact path="/game/:id" element={<Game />} />
                 <Route path="*" element={<Navigate to="/" />} />
               </>
             ) : (
@@ -69,7 +73,8 @@ function App() {
                 <Route exact path="/Experience" element={<Experience />} />
                 <Route exact path="/Project" element={<Project />} />
                 <Route exact path="/Contact" element={<Contact />} />
-
+                <Route exact path="/Ludotheque" element={<Ludotheque />} />
+                <Route exact path="/game/:id" element={<Game />} />
                 <Route path="*" element={<Navigate to="/" />} />
               </>
             )}
