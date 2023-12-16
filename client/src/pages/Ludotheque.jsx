@@ -42,7 +42,7 @@ const Ludotheque = () => {
     localStorage.getItem("searchDuration")
   );
 
-  const [searchStatus, setSearchStatus] = useState(""); // "idle" | "pending" | "resolved" | "rejected"
+  const [searchStatus, setSearchStatus] = useState("");
   //get the size of the window
   const [width, setWidth] = useState(window.innerWidth);
   const [show, setShow] = useState(true);
@@ -50,7 +50,7 @@ const Ludotheque = () => {
   const getListOfGames = async () => {
     try {
       const response = await axios.get(
-        `${process.env.REACT_APP_API_URL}/api/games`
+        `${process.env.REACT_APP_API_URL}/api/games/noimage`
       );
       // sort by title alphabetically
       response.data.sort((a, b) => {
@@ -136,15 +136,6 @@ const Ludotheque = () => {
         toast.success("jeu ajouté avec succès");
         getListOfGames();
         setListOfGames((prevGames) => [...prevGames, response.data]);
-        // post the game to the user
-        const game = response.data.game;
-        console.log(game);
-        await axios.put(
-          `${process.env.REACT_APP_API_URL}/api/${user._id}/add-list-owned-game`,
-          { listOwnedGames: game }
-        );
-
-        // userHasGame(game, user._id);
       };
       resetForm();
     } catch (error) {
@@ -175,9 +166,6 @@ const Ludotheque = () => {
       await axios.delete(`${process.env.REACT_APP_API_URL}/api/game/${id}`);
       toast.success("jeu supprimé avec succès");
       setListOfGames(listOfGames.filter((game) => game._id !== id));
-      await axios.delete(
-        `${process.env.REACT_APP_API_URL}/api/userHasGames/${id}`
-      );
     } catch (error) {
       console.log(error);
       toast.error("Erreur lors de la suppression du jeu");
@@ -604,10 +592,10 @@ const Ludotheque = () => {
             <thead>
               <tr>
                 <th scope="col">titre</th>
-                <th scope="col">couverture</th>
+                {/* <th scope="col">couverture</th> */}
+                <th scope="col">genre</th>
                 {show === true && (
                   <>
-                    <th scope="col">genre</th>
                     <th scope="col">résumé</th>
                     <th scope="col">nombre de joueurs</th>
                     <th scope="col">age minimum</th>
@@ -620,28 +608,28 @@ const Ludotheque = () => {
               {!listOfGames || listOfGames.length === 0 ? (
                 <tr>
                   {show === true ? (
-                    <td colSpan="8">Aucun jeu</td>
-                  ) : (
                     <td colSpan="7">Aucun jeu</td>
+                  ) : (
+                    <td colSpan="2">Aucun jeu</td>
                   )}
                 </tr>
               ) : (
                 filteredGames.map((game) => (
                   <tr key={game._id}>
-                    <th className="text-justify">{game.title}</th>
-                    <td>
-                      <Link to={`/game/${game._id}`}>
+                    <Link to={`/game/${game._id}`}>
+                      <th className="text-justify">{game.title}</th>
+                    </Link>
+                    {/* <td>
                         <img
                           src={game.imageData}
                           alt={game.title}
                           className="img-thumbnail rounded"
                           style={{ maxWidth: "200px", maxHeight: "200px" }}
                         />
-                      </Link>
-                    </td>
+                    </td> */}
+                    <td>{game.genre}</td>
                     {show === true && (
                       <>
-                        <td>{game.genre}</td>
                         <td className="text-justify">{game.description}</td>
                         {game.maxPlayer === null || game.maxPlayer === 0 ? (
                           game.minPlayer === 1 ? (
@@ -672,12 +660,12 @@ const Ludotheque = () => {
         ) : (
           <table className="table table-striped table-bordered table-hover">
             <thead>
-              <tr>
+              <tr key="0">
                 <th scope="col">titre</th>
-                <th scope="col">couverture</th>
+                <th scope="col">genre</th>
+                {/* <th scope="col">couverture</th> */}
                 {show === true && (
                   <>
-                    <th scope="col">genre</th>
                     <th scope="col">résumé</th>
                     <th scope="col">nombre de joueurs</th>
                     <th scope="col">age minimum</th>
@@ -692,28 +680,30 @@ const Ludotheque = () => {
               {!listOfGames || listOfGames.length === 0 ? (
                 <tr>
                   {show === true ? (
-                    <td colSpan="9">Aucun jeu</td>
+                    <td colSpan="8">Aucun jeu</td>
                   ) : (
-                    <td colSpan="6">Aucun jeu</td>
+                    <td colSpan="2">Aucun jeu</td>
                   )}
                 </tr>
               ) : (
                 filteredGames.map((game) => (
                   <tr key={game._id}>
-                    <th className="text-justify">{game.title}</th>
-                    <td>
-                      <Link to={`/game/${game._id}`}>
+                    <Link to={`/game/${game._id}`}>
+                      <th className="text-justify">
+                        <h6>{game.title}</h6>
+                      </th>
+                    </Link>
+                    {/* <td>
                         <img
                           src={game.imageData}
                           alt={game.title}
                           className="img-thumbnail rounded"
                           style={{ maxWidth: "200px", maxHeight: "200px" }}
                         />
-                      </Link>
-                    </td>
+                    </td> */}
+                    <td>{game.genre}</td>
                     {show === true && (
                       <>
-                        <td>{game.genre}</td>
                         <td className="text-justify">{game.description}</td>
                         {game.maxPlayer === null ? (
                           game.minPlayer === 1 ? (

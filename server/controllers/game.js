@@ -12,6 +12,16 @@ exports.createGame = async (req, res) => {
   });
 };
 
+// get all games but dont send back the imageData
+exports.getGamesWithoutImageData = async (req, res) => {
+  try {
+    const games = await Game.find({}).select("-imageData");
+    res.status(200).json(games);
+  } catch (error) {
+    console.log(error);
+  }
+};
+
 exports.getGames = async (req, res) => {
   try {
     const games = await Game.find({});
