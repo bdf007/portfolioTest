@@ -38,8 +38,14 @@ const Ludotheque = () => {
   const [searchMinAge, setSearchMinAge] = useState(
     localStorage.getItem("searchMinAge")
   );
-  const [searchDuration, setSearchDuration] = useState(
-    localStorage.getItem("searchDuration")
+  const [searchMaxAge, setSearchMaxAge] = useState(
+    localStorage.getItem("searchMaxAge")
+  );
+  const [searchMinDuration, setSearchMinDuration] = useState(
+    localStorage.getItem("searchMinDuration")
+  );
+  const [searchMaxDuration, setSearchMaxDuration] = useState(
+    localStorage.getItem("searchMaxDuration")
   );
 
   const [searchStatus, setSearchStatus] = useState("");
@@ -178,14 +184,10 @@ const Ludotheque = () => {
     setSearchMinPlayer("");
     setSearchMaxPlayer("");
     setSearchMinAge("");
-    setSearchDuration("");
+    setSearchMaxAge("");
+    setSearchMinDuration("");
+    setSearchMaxDuration("");
     setSearchStatus("");
-    // localStorage.setItem("searchTitle", "");
-    // localStorage.setItem("searchGenre", "");
-    // localStorage.setItem("searchMinPlayer", "");
-    // localStorage.setItem("searchMaxPlayer", "");
-    // localStorage.setItem("searchMinAge", "");
-    // localStorage.setItem("searchDuration", "");
   };
 
   const cancelEditing = () => {
@@ -242,11 +244,25 @@ const Ludotheque = () => {
     localStorage.setItem("searchMinAge", value);
   };
 
-  const handleSeachDuration = (e) => {
+  const handleSeachMaxAge = (e) => {
     e.preventDefault();
     const value = e.target.value;
-    setSearchDuration(value);
-    localStorage.setItem("searchDuration", value);
+    setSearchMaxAge(value);
+    localStorage.setItem("searchMaxAge", value);
+  };
+
+  const handleSeachMinDuration = (e) => {
+    e.preventDefault();
+    const value = e.target.value;
+    setSearchMinDuration(value);
+    localStorage.setItem("searchMinDuration", value);
+  };
+
+  const handleSeachMaxDuration = (e) => {
+    e.preventDefault();
+    const value = e.target.value;
+    setSearchMaxDuration(value);
+    localStorage.setItem("searchMaxDuration", value);
   };
 
   const handleSearchStatus = (e) => {
@@ -269,13 +285,17 @@ const Ludotheque = () => {
       (game.genre &&
         game.genre.toLowerCase().includes(searchGenre.toLowerCase()));
     const matchesSearchMinPlayer =
-      !searchMinPlayer || game.minPlayer >= parseInt(searchMinPlayer, 10);
+      !searchMinPlayer || game.minPlayer === parseInt(searchMinPlayer, 10);
     const matchesSearchMaxPlayer =
-      !searchMaxPlayer || game.maxPlayer <= parseInt(searchMaxPlayer, 10);
+      !searchMaxPlayer || game.maxPlayer === parseInt(searchMaxPlayer, 10);
     const matchesSearchMinAge =
-      !searchMinAge || game.minAge <= parseInt(searchMinAge, 10);
-    const matchesSearchDuration =
-      !searchDuration || game.duration <= parseInt(searchDuration, 10);
+      !searchMinAge || game.minAge >= parseInt(searchMinAge, 10);
+    const matchesSearchMaxAge =
+      !searchMaxAge || game.minAge <= parseInt(searchMaxAge, 10);
+    const matchesSearchMinDuration =
+      !searchMinDuration || game.duration >= parseInt(searchMinDuration, 10);
+    const matchesSearchMaxDuration =
+      !searchMaxDuration || game.duration <= parseInt(searchMaxDuration, 10);
     const matchesSearchStatus =
       !searchStatus ||
       (game.status &&
@@ -287,7 +307,9 @@ const Ludotheque = () => {
       matchesSearchMinPlayer &&
       matchesSearchMaxPlayer &&
       matchesSearchMinAge &&
-      matchesSearchDuration &&
+      matchesSearchMaxAge &&
+      matchesSearchMinDuration &&
+      matchesSearchMaxDuration &&
       matchesSearchStatus
     );
   });
@@ -475,17 +497,21 @@ const Ludotheque = () => {
                       <tbody>
                         <tr>
                           <td>
+                            <label htmlFor="title">Titre</label>
                             <input
                               type="text"
                               value={searchTitle}
+                              className="form-control"
                               placeholder="recherche par titre"
                               onChange={handleSearchTitle}
                             />
                           </td>
                           <td>
+                            <label htmlFor="genre">Genre</label>
                             <input
                               type="text"
                               value={searchGenre}
+                              className="form-control"
                               placeholder="recherche par genre"
                               onChange={handleSearchGenre}
                             />
@@ -493,7 +519,7 @@ const Ludotheque = () => {
                         </tr>
                         <tr>
                           <td>
-                            <label htmlFor="minPlayer">min:</label>
+                            <label htmlFor="minPlayer">nb joueur min:</label>
                             <input
                               type="number"
                               id="minPlayer"
@@ -502,17 +528,7 @@ const Ludotheque = () => {
                               placeholder="nombre de joueur minimum"
                               onChange={handleSeachMinPlayer}
                             />
-                            <label htmlFor="maxPlayer">max:</label>
-                            <input
-                              type="number"
-                              id="maxPlayer"
-                              value={searchMaxPlayer}
-                              className="form-control"
-                              placeholder="nombre de joueur maximum"
-                              onChange={handleSeachMaxPlayer}
-                            />
-                          </td>
-                          <td>
+                            <label htmlFor="minAge">Age minimum</label>
                             <input
                               type="number"
                               id="minAge"
@@ -522,36 +538,77 @@ const Ludotheque = () => {
                               onChange={handleSeachMinAge}
                             />
                           </td>
+                          <td>
+                            <label htmlFor="maxPlayer">nb joueur max:</label>
+                            <input
+                              type="number"
+                              id="maxPlayer"
+                              value={searchMaxPlayer}
+                              className="form-control"
+                              placeholder="nombre de joueur maximum"
+                              onChange={handleSeachMaxPlayer}
+                            />
+
+                            <label htmlFor="maxAge">Age maximum</label>
+                            <input
+                              type="number"
+                              id="maxAge"
+                              value={searchMaxAge}
+                              className="form-control"
+                              placeholder="age maximum"
+                              onChange={handleSeachMaxAge}
+                            />
+                          </td>
                         </tr>
                         <tr>
                           <td>
-                            <label htmlFor="duration">durée max : </label>
+                            <label htmlFor="minDuration">durée min : </label>
                             <input
                               type="number"
-                              id="duration"
-                              value={searchDuration}
+                              id="minDuration"
+                              value={searchMinDuration}
                               className="form-control"
-                              placeholder="durée"
-                              onChange={handleSeachDuration}
+                              placeholder="durée min"
+                              onChange={handleSeachMinDuration}
                             />
                           </td>
                           <td>
-                            <select
-                              value={searchStatus}
-                              onChange={handleSearchStatus}
-                            >
-                              <option value="">Tous</option>
-                              <option value="in pending">En attente</option>
-                              <option value="accepted">Accepté</option>
-                              <option value="rejected">Refusé</option>
-                            </select>
+                            <label htmlFor="maxDuration">durée max : </label>
+                            <input
+                              type="number"
+                              id="maxDuration"
+                              value={searchMaxDuration}
+                              className="form-control"
+                              placeholder="durée max"
+                              onChange={handleSeachMaxDuration}
+                            />
                           </td>
                         </tr>
+                        {user && (
+                          <tr>
+                            <td colSpan="2">
+                              <label htmlFor="status">Status</label>
+                              <select
+                                value={searchStatus}
+                                className="form-select"
+                                onChange={handleSearchStatus}
+                              >
+                                <option value="">Tous</option>
+                                <option value="in pending">En attente</option>
+                                <option value="accepted">Accepté</option>
+                                <option value="rejected">Refusé</option>
+                              </select>
+                            </td>
+                          </tr>
+                        )}
                         <tr>
                           <td className="text-center">
                             <button
                               className="btn btn-danger"
-                              onClick={() => setShowSearch(!showSearch)}
+                              onClick={() => {
+                                setShowSearch(!showSearch);
+                                resetFilter();
+                              }}
                             >
                               annuler la recherche
                             </button>
