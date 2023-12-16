@@ -739,7 +739,7 @@ const Ludotheque = () => {
                               Jeu refusé
                             </p>
                           )}
-                          {user && (
+                          {user && game.status !== "accepted" && (
                             <>
                               <select
                                 value={status}
