@@ -616,9 +616,9 @@ const Ludotheque = () => {
               ) : (
                 filteredGames.map((game) => (
                   <tr key={game._id}>
-                    <Link to={`/game/${game._id}`}>
-                      <th className="text-justify">{game.title}</th>
-                    </Link>
+                    <th className="text-justify">
+                      <Link to={`/game/${game._id}`}>{game.title}</Link>
+                    </th>
                     {/* <td>
                         <img
                           src={game.imageData}
@@ -688,11 +688,11 @@ const Ludotheque = () => {
               ) : (
                 filteredGames.map((game) => (
                   <tr key={game._id}>
-                    <Link to={`/game/${game._id}`}>
-                      <th className="text-justify">
+                    <th className="text-justify">
+                      <Link to={`/game/${game._id}`}>
                         <h6>{game.title}</h6>
-                      </th>
-                    </Link>
+                      </Link>
+                    </th>
                     {/* <td>
                         <img
                           src={game.imageData}
