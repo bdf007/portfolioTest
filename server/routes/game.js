@@ -5,6 +5,7 @@ const router = express.Router();
 const {
   createGame,
   getGames,
+  getGamesWithoutImageData,
   deleteGameById,
   updateGameById,
   getGameById,
@@ -12,6 +13,7 @@ const {
 // api routes
 router.post("/game", createGame);
 router.get("/games", getGames);
+router.get("/games/noimage", getGamesWithoutImageData);
 router.delete("/game/:id", deleteGameById);
 router.put("/game/:id", updateGameById);
 router.get("/game/:id", getGameById);
