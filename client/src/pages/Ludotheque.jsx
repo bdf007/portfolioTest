@@ -314,6 +314,7 @@ const Ludotheque = () => {
 
   useEffect(() => {
     getListOfGames();
+    resetFilter();
     if (!user) {
       return;
     }
