@@ -388,7 +388,7 @@ const Ludotheque = () => {
                               type="text"
                               id="description"
                               value={description}
-                              placeholder="résumé"
+                              placeholder="description"
                               onChange={handleDescriptionChange}
                             />
                           </div>
@@ -512,7 +512,15 @@ const Ludotheque = () => {
                             filteredGames.length === 1
                               ? "jeu"
                               : "jeux"}{" "}
-                            correspondant à la recherche
+                            {show && <span>correspondant à la recherche</span>}
+                            sur{" "}
+                            <span
+                              className={`badge ${
+                                filteredGames.length !== 0 && "bg-success"
+                              }`}
+                            >
+                              {listOfGames.length}{" "}
+                            </span>
                           </td>
                         </tr>
                       </thead>
@@ -671,20 +679,32 @@ const Ludotheque = () => {
           <table className="table table-striped table-bordered table-hover align-middle text-center">
             <thead>
               <tr>
-                <th scope="col">titre</th>
+                <th scope="col">
+                  <p className="text-bold">Titre</p>
+                  {!show && <p className="fst-italic">Age minimum</p>}
+                </th>
                 {/* <th scope="col">couverture</th> */}
-                <th scope="col">genre</th>
+                <th scope="col">
+                  <p>genre</p>
+                  {!show && <p>durée minimum</p>}
+                </th>
                 {show === true && (
                   <>
-                    <th scope="col">résumé</th>
-                    <th scope="col">age minimum</th>
+                    <th scope="col">
+                      <p>description</p>
+                    </th>
+                    <th scope="col">
+                      <p>age minimum</p>
+                    </th>
                   </>
                 )}
-                <th scope="col">nombre de joueurs</th>
+                <th scope="col">
+                  <p>nombre de joueurs</p>
+                </th>
                 {show === true && (
-                  <>
-                    <th scope="col">durée minimum</th>
-                  </>
+                  <th scope="col">
+                    <p>durée minimum</p>
+                  </th>
                 )}
               </tr>
             </thead>
@@ -707,6 +727,24 @@ const Ludotheque = () => {
                       >
                         <h6>{game.title}</h6>
                       </Link>
+                      <>
+                        <br />
+                        {!show &&
+                          (game.minAge >= 18 ? (
+                            <p className="badge bg-danger text-white fw-lighter fst-italic">
+                              interdit aux mineurs
+                            </p>
+                          ) : (
+                            <p className="fw-lighter fst-italic">
+                              {" "}
+                              à partir de{" "}
+                              <span className="badge bg-info">
+                                {game.minAge}
+                              </span>{" "}
+                              ans
+                            </p>
+                          ))}
+                      </>
                     </th>
                     {/* <td>
                         <img
@@ -717,16 +755,32 @@ const Ludotheque = () => {
                         />
                     </td> */}
                     <td>
-                      <span className="badge bg-warning text-dark text-wrap">
+                      <p className="badge bg-warning text-dark text-wrap">
                         {game.genre}
-                      </span>
+                      </p>
+                      {!show && (
+                        <>
+                          <br />
+                          <p className="badge bg-primary">
+                            {game.duration} min
+                          </p>
+                        </>
+                      )}
                     </td>
                     {show === true && (
                       <>
                         <td className="text-justify">{game.description}</td>
                         <td>
-                          <span className="badge bg-info text-dark">
-                            {game.minAge} ans
+                          <span
+                            className={`badge ${
+                              game.minAge >= 18
+                                ? "bg-danger text-white"
+                                : "bg-info text-dark"
+                            }`}
+                          >
+                            {game.minAge >= 18
+                              ? "interdit aux mineurs"
+                              : `${game.minAge} ans`}
                           </span>
                         </td>
                       </>
@@ -787,21 +841,41 @@ const Ludotheque = () => {
           <table className="table table-striped table-bordered table-hover align-middle text-center">
             <thead>
               <tr key="0">
-                <th scope="col">titre</th>
-                <th scope="col">genre</th>
+                <th scope="col">
+                  <p>titre</p>
+                  {!show && <p className="fst-italic">Age minimum</p>}
+                </th>
+                <th scope="col">
+                  <p>genre</p>
+                  {!show && <p>durée minimum</p>}
+                </th>
                 {/* <th scope="col">couverture</th> */}
                 {show === true && (
                   <>
-                    <th scope="col">résumé</th>
-                    <th scope="col">age minimum</th>
+                    <th scope="col">
+                      <p>description</p>
+                    </th>
+                    <th scope="col">
+                      <p>age minimum</p>
+                    </th>
                   </>
                 )}
-                <th scope="col">nombre de joueurs</th>
+                <th scope="col">
+                  <p>nombre de joueurs</p>
+                </th>
                 {show === true && (
                   <>
-                    <th scope="col">durée</th>
-                    <th scope="col">Status</th>
-                    {user && show === true && <th scope="col">action</th>}
+                    <th scope="col">
+                      <p>durée</p>
+                    </th>
+                    <th scope="col">
+                      <p>Status</p>
+                    </th>
+                    {user && show === true && (
+                      <th scope="col">
+                        <p>action</p>
+                      </th>
+                    )}
                   </>
                 )}
               </tr>
@@ -825,6 +899,24 @@ const Ludotheque = () => {
                       >
                         <h6>{game.title}</h6>
                       </Link>
+                      <>
+                        <br />
+                        {!show &&
+                          (game.minAge >= 18 ? (
+                            <p className="badge bg-danger text-white fw-lighter fst-italic">
+                              interdit aux mineurs
+                            </p>
+                          ) : (
+                            <p className="fw-lighter fst-italic">
+                              {" "}
+                              à partir de{" "}
+                              <span className="badge bg-info">
+                                {game.minAge}
+                              </span>{" "}
+                              ans
+                            </p>
+                          ))}
+                      </>
                     </th>
                     {/* <td>
                         <img
@@ -835,17 +927,33 @@ const Ludotheque = () => {
                         />
                     </td> */}
                     <td>
-                      <span className="badge bg-warning text-dark text-wrap">
+                      <p className="badge bg-warning text-dark text-wrap">
                         {game.genre}
-                      </span>
+                      </p>
+                      {!show && (
+                        <>
+                          <br />
+                          <p className="badge bg-primary">
+                            {game.duration} min
+                          </p>
+                        </>
+                      )}
                     </td>
 
                     {show === true && (
                       <>
                         <td className="text-justify">{game.description}</td>
                         <td>
-                          <span className="badge bg-info text-dark">
-                            {game.minAge} ans
+                          <span
+                            className={`badge ${
+                              game.minAge >= 18
+                                ? "bg-danger text-white"
+                                : "bg-info text-dark"
+                            }`}
+                          >
+                            {game.minAge >= 18
+                              ? "interdit aux mineurs"
+                              : `${game.minAge} ans`}
                           </span>
                         </td>
                       </>
