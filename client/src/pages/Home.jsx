@@ -1,5 +1,4 @@
-import React, { useContext, useState } from "react";
-import { UserContext } from "../context/UserContext";
+import React, { useState } from "react";
 import { Helmet } from "react-helmet";
 import profil from "../assets/profil.png";
 
@@ -13,7 +12,6 @@ const Home = () => {
   const [showTel, setShowTel] = useState(false);
   const [showAddress, setShowAddress] = useState(false);
 
-  const { user } = useContext(UserContext);
   return (
     <>
       <div className="home">
@@ -28,13 +26,6 @@ const Home = () => {
           />
         </Helmet>
 
-        {/* {user && (
-          <div>
-            <h1>
-              <span>{user.username}'s</span> Home
-            </h1>
-          </div>
-        )} */}
         <div className="text-center">
           <h1 className="text-danger">Bienvenue sur mon portfolio</h1>
           <img
