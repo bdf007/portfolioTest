@@ -119,7 +119,7 @@ const ExperienceUploader = () => {
   return (
     <div>
       <h1 className="text-danger">Mon expérience</h1>
-      {user && (
+      {user && user.role === "admin" && (
         <>
           <h3>Experience Uploader</h3>
           <form>
@@ -174,7 +174,7 @@ const ExperienceUploader = () => {
               </h3>
               <p>{experience.description}</p>
 
-              {user && (
+              {user && user.role === "admin" && (
                 <>
                   <button
                     className="btn btn-primary"

@@ -187,7 +187,7 @@ const ProjectUploader = () => {
 
   return (
     <div className="home">
-      {user && (
+      {user && user.role === "admin" && (
         <>
           <h3>Project Uploader</h3>
           <form>
@@ -328,7 +328,7 @@ const ProjectUploader = () => {
                           {project.textProject || ""}
                         </p>
                       </pre>
-                      {user && (
+                      {user && user.role === "admin" && (
                         <div className="card-footer d-grid gap-2 col-6 mx-auto">
                           <button
                             className="btn btn-danger"

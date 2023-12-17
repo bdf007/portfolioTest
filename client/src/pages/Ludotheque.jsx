@@ -337,7 +337,7 @@ const Ludotheque = () => {
   useEffect(() => {
     getListOfGames();
     resetFilter();
-    if (!user) {
+    if (!user || user.role !== "admin") {
       return;
     }
     //eslint-disable-next-line
@@ -351,6 +351,7 @@ const Ludotheque = () => {
           <div className="col-12 col-md-6 mx-auto">
             <div className="d-flex justify-content-around">
               {user &&
+                user.role === "admin" &&
                 (addNewGame ? (
                   <>
                     <CancelOutlinedIcon
@@ -614,7 +615,7 @@ const Ludotheque = () => {
                             />
                           </td>
                         </tr>
-                        {user && (
+                        {user && user.role === "admin" && (
                           <tr>
                             <td colSpan="2">
                               <label htmlFor="status">Status</label>
@@ -675,7 +676,7 @@ const Ludotheque = () => {
       <div className="table-responsive">
         {/* Search input fields */}
 
-        {!user ? (
+        {!user || user.role !== "admin" ? (
           <table className="table table-striped table-bordered table-hover align-middle text-center">
             <thead>
               <tr>
@@ -871,7 +872,7 @@ const Ludotheque = () => {
                     <th scope="col">
                       <p>Status</p>
                     </th>
-                    {user && show === true && (
+                    {user && user.role === "admin" && show === true && (
                       <th scope="col">
                         <p>action</p>
                       </th>
@@ -1040,7 +1041,7 @@ const Ludotheque = () => {
                           )}
                         </td>
                         <td>
-                          {user && (
+                          {user && user.role === "admin" && (
                             <button
                               type="button"
                               className="btn btn-danger"

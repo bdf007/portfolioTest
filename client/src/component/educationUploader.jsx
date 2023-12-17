@@ -119,7 +119,7 @@ const EducationUploader = () => {
 
   return (
     <div>
-      {user && (
+      {user && user.role === "admin" && (
         <>
           <h3>Education Uploader</h3>
           <form>
@@ -171,7 +171,7 @@ const EducationUploader = () => {
             <div key={education._id}>
               <h3 className="text-primary">{education.title}</h3>
               <p>{education.description}</p>
-              {user && (
+              {user && user.role === "admin" && (
                 <>
                   <button
                     className="btn btn-primary"
