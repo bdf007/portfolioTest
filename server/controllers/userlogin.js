@@ -78,3 +78,21 @@ exports.getLoggedInUser = (req, res) => {
     message: "User is still logged in",
   });
 };
+
+exports.getAllUsers = async (req, res) => {
+  try {
+    const users = await User.find({}).select("-hashedPassword -salt");
+    res.json(users);
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+exports.deleteUserById = async (req, res) => {
+  try {
+    const user = await User.findByIdAndDelete(req.params.id);
+    res.json(user);
+  } catch (error) {
+    console.log(error);
+  }
+};
