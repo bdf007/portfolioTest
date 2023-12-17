@@ -35,7 +35,7 @@ const Login = () => {
       else {
         toast.success(res.message);
         // set user in context
-        setUser(res.username);
+        setUser({ username: res.username, role: res.role });
         // redirect to home page
         navigate("/");
       }

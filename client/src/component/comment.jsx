@@ -86,7 +86,7 @@ const CommentUploader = () => {
 
   return (
     <div>
-      {!user && (
+      {(!user || user.role !== "admin") && (
         <>
           <h2 className="text-danger">Laissez moi un commentaire</h2>
           {!isLoading ? (
@@ -190,7 +190,7 @@ const CommentUploader = () => {
                   )}
                 </p>
 
-                {user && (
+                {user && user.role === "admin" && (
                   <div>
                     {comment.email ? <p>{comment.email}</p> : <p> No email</p>}
                     <button

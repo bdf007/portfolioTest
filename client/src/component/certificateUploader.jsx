@@ -157,7 +157,7 @@ const CertificateUploader = () => {
 
   return (
     <div>
-      {user && (
+      {user && user.role === "admin" && (
         <>
           <h3 className="text-danger">certificate Uploader</h3>
 
@@ -333,7 +333,7 @@ const CertificateUploader = () => {
                         <h5 className="card-title text-center text-primary">
                           {certificate.title || ""}
                         </h5>
-                        {user && (
+                        {user && user.role === "admin" && (
                           <div className="card-footer d-grid gap-2 col-6 mx-auto">
                             <button
                               className="btn btn-danger"

@@ -174,7 +174,7 @@ const TechnologieUploader = () => {
   return (
     <div>
       <h1 className="text-danger">Technologies utilisées</h1>
-      {user && (
+      {user && user.role === "admin" && (
         <>
           <h3>technologie Uploader</h3>
 
@@ -270,7 +270,7 @@ const TechnologieUploader = () => {
                     <h5 className="card-title text-center">
                       {technologie.title || ""}
                     </h5>
-                    {user && (
+                    {user && user.role === "admin" && (
                       <div className="card-footer d-grid gap-2 col-6 mx-auto">
                         <button
                           className="btn btn-danger"

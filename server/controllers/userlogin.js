@@ -50,10 +50,11 @@ exports.login = async (req, res) => {
 
     res.cookie("jwt", token, { expire: new Date() + 9999, httpOnly: true });
 
-    const { username } = user;
+    const { username, role } = user;
     return res.json({
       message: "Login success",
       username,
+      role,
     });
   } catch (error) {
     // Handle any potential errors
@@ -70,9 +71,10 @@ exports.logout = (req, res) => {
 };
 
 exports.getLoggedInUser = (req, res) => {
-  const { username } = req.user;
+  const { username, role } = req.user;
   return res.status(200).json({
     username,
+    role,
     message: "User is still logged in",
   });
 };

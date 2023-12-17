@@ -208,7 +208,7 @@ const Game = () => {
 
               <p>Age: {game.minAge} +</p>
               <p>Temps de jeu : {game.duration} min</p>
-              {user && (
+              {user && user.role === "admin" && (
                 <>
                   <button
                     className="btn btn-primary"

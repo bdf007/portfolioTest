@@ -38,7 +38,7 @@ function App() {
     const unsubscribe = getUser()
       .then((res) => {
         if (res.error) toast(res.error);
-        else setUser(res.username);
+        else setUser({ username: res.username, role: res.role });
       })
       .catch((err) => toast(err));
 

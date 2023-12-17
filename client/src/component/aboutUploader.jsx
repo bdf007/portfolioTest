@@ -100,7 +100,7 @@ const AboutUploader = () => {
 
   return (
     <div>
-      {user && (
+      {user && user.role === "admin" && (
         <>
           <h3>About Uploader</h3>
           <form>
@@ -143,7 +143,7 @@ const AboutUploader = () => {
                 <pre>
                   <p className="description">{about.description}</p>
                 </pre>
-                {user && (
+                {user && user.role === "admin" && (
                   <>
                     <button
                       className="btn btn-primary"
