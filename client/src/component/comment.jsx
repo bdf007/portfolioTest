@@ -13,6 +13,9 @@ const CommentUploader = () => {
 
   const [listOfComment, setListOfComment] = useState([]);
 
+  // Email validation regular expression
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
   useEffect(() => {
     setIsLoading(false);
     axios.get(`${process.env.REACT_APP_API_URL}/api/comment`).then((res) => {
@@ -33,6 +36,11 @@ const CommentUploader = () => {
   };
 
   const handleUpload = () => {
+    // Validate fields
+    if (!name.trim() || !comment.trim()) {
+      toast.error("Merci de remplir tous les champs.");
+      return;
+    }
     axios
       .post(`${process.env.REACT_APP_API_URL}/api/comment`, {
         name: name,
@@ -85,6 +93,10 @@ const CommentUploader = () => {
             <form
               action="https://formsubmit.co/christophemidelet650@gmail.com"
               method="POST"
+              onSubmit={(e) => {
+                e.preventDefault(); // Prevent the default form submission behavior
+                handleUpload(); // Perform your custom form submission logic
+              }}
             >
               <div className="form-group">
                 <label htmlFor="name">Nom, prénom ou surnom*</label>
@@ -130,8 +142,9 @@ const CommentUploader = () => {
                 <button
                   className="btn btn-primary"
                   type="submit"
-                  onClick={handleUpload}
-                  disabled={!name || !comment}
+                  disabled={
+                    !name || !comment || (email && !emailRegex.test(email))
+                  }
                 >
                   Envoyer
                 </button>
