@@ -13,6 +13,8 @@ const Contact = () => {
   const [listOfContact, setListOfContact] = useState([]);
   const { user } = useContext(UserContext);
   const [isLoading, setIsLoading] = useState(false);
+  // Email validation regular expression
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
   useEffect(() => {
     // setIsLoading(false);
@@ -38,6 +40,17 @@ const Contact = () => {
   };
 
   const handleUpload = () => {
+    // Validate fields
+    if (
+      !firstname.trim() ||
+      !lastname.trim() ||
+      !email.trim() ||
+      !message.trim()
+    ) {
+      toast.error("Merci de remplir tous les champs.");
+      return;
+    }
+
     axios
       .post(`${process.env.REACT_APP_API_URL}/api/contact`, {
         firstname: firstname,
@@ -130,6 +143,10 @@ const Contact = () => {
                 <form
                   action="https://formsubmit.co/christophemidelet650@gmail.com"
                   method="POST"
+                  onSubmit={(e) => {
+                    e.preventDefault(); // Prevent the default form submission behavior
+                    handleUpload(); // Perform your custom form submission logic
+                  }}
                 >
                   <div className="form-group">
                     <label htmlFor="firstname">Prénom*</label>
@@ -188,8 +205,13 @@ const Contact = () => {
                     <button
                       className="btn btn-primary"
                       type="submit"
-                      onClick={handleUpload}
-                      disabled={!firstname || !lastname || !email || !message}
+                      disabled={
+                        !firstname ||
+                        !lastname ||
+                        !email ||
+                        !message ||
+                        !emailRegex.test(email)
+                      }
                     >
                       Envoyer
                     </button>
