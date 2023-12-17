@@ -482,15 +482,37 @@ const Ludotheque = () => {
               {showSearch ? (
                 <div className="d-flex justify-content-around">
                   <CancelOutlinedIcon
-                    onClick={() => setShowSearch(!showSearch)}
+                    onClick={() => {
+                      setShowSearch(!showSearch);
+                      resetFilter();
+                    }}
                     style={{ fontSize: "3rem", cursor: "pointer" }}
                   />
                   <div className="table-responsive">
                     <table>
                       <thead>
                         <tr>
-                          <td colSpan="2" className="text-center">
-                            Recherche
+                          <td
+                            colSpan="2"
+                            className={`text-center ${
+                              filteredGames.length === 0 &&
+                              "bg-danger text-white"
+                            }`}
+                          >
+                            <span
+                              className={`badge ${
+                                filteredGames.length === 0
+                                  ? "bg-danger"
+                                  : "bg-primary"
+                              }`}
+                            >
+                              {filteredGames.length}
+                            </span>{" "}
+                            {filteredGames.length === 0 ||
+                            filteredGames.length === 1
+                              ? "jeu"
+                              : "jeux"}{" "}
+                            correspondant à la recherche
                           </td>
                         </tr>
                       </thead>
@@ -646,7 +668,7 @@ const Ludotheque = () => {
         {/* Search input fields */}
 
         {!user ? (
-          <table className="table table-striped table-bordered table-hover">
+          <table className="table table-striped table-bordered table-hover align-middle text-center">
             <thead>
               <tr>
                 <th scope="col">titre</th>
@@ -655,9 +677,13 @@ const Ludotheque = () => {
                 {show === true && (
                   <>
                     <th scope="col">résumé</th>
-                    <th scope="col">nombre de joueurs</th>
                     <th scope="col">age minimum</th>
-                    <th scope="col">durée</th>
+                  </>
+                )}
+                <th scope="col">nombre de joueurs</th>
+                {show === true && (
+                  <>
+                    <th scope="col">durée minimum</th>
                   </>
                 )}
               </tr>
@@ -668,14 +694,19 @@ const Ludotheque = () => {
                   {show === true ? (
                     <td colSpan="7">Aucun jeu</td>
                   ) : (
-                    <td colSpan="2">Aucun jeu</td>
+                    <td colSpan="3">Aucun jeu</td>
                   )}
                 </tr>
               ) : (
                 filteredGames.map((game) => (
                   <tr key={game._id}>
                     <th className="text-justify">
-                      <Link to={`/game/${game._id}`}>{game.title}</Link>
+                      <Link
+                        to={`/game/${game._id}`}
+                        className="badge bg-success text-wrap"
+                      >
+                        <h6>{game.title}</h6>
+                      </Link>
                     </th>
                     {/* <td>
                         <img
@@ -685,29 +716,66 @@ const Ludotheque = () => {
                           style={{ maxWidth: "200px", maxHeight: "200px" }}
                         />
                     </td> */}
-                    <td>{game.genre}</td>
+                    <td>
+                      <span className="badge bg-warning text-dark text-wrap">
+                        {game.genre}
+                      </span>
+                    </td>
                     {show === true && (
                       <>
                         <td className="text-justify">{game.description}</td>
-                        {game.maxPlayer === null || game.maxPlayer === 0 ? (
-                          game.minPlayer === 1 ? (
-                            <td>solo</td>
-                          ) : (
-                            <td>{game.minPlayer} joueurs</td>
-                          )
-                        ) : game.minPlayer === game.maxPlayer ? (
-                          <td>{game.minPlayer} joueurs</td>
-                        ) : game.minPlayer < game.maxPlayer ? (
-                          <td>
-                            De {game.minPlayer} à {game.maxPlayer} joueurs
-                          </td>
-                        ) : (
-                          <td>
-                            De {game.maxPlayer} à {game.minPlayer} joueurs
-                          </td>
-                        )}
-                        <td>{game.minAge} ans</td>
-                        <td>{game.duration} min</td>
+                        <td>
+                          <span className="badge bg-info text-dark">
+                            {game.minAge} ans
+                          </span>
+                        </td>
+                      </>
+                    )}
+                    {game.minPlayer === 1 &&
+                    (game.maxPlayer === null ||
+                      game.maxPlayer === 0 ||
+                      game.maxPlayer === 1) ? (
+                      <td>solo</td>
+                    ) : game.minPlayer === game.maxPlayer ? (
+                      <td>
+                        <span className="badge bg-danger">
+                          {game.minPlayer}
+                        </span>{" "}
+                        joueurs
+                      </td>
+                    ) : game.minPlayer < game.maxPlayer ? (
+                      <td>
+                        De{" "}
+                        <span className="badge bg-danger">
+                          {game.minPlayer}
+                        </span>{" "}
+                        à{" "}
+                        <span className="badge bg-danger">
+                          {game.maxPlayer}
+                        </span>{" "}
+                        joueurs
+                      </td>
+                    ) : (
+                      <td>
+                        De{" "}
+                        <span className="badge bg-danger">
+                          {game.maxPlayer}
+                        </span>{" "}
+                        à{" "}
+                        <span className="badge bg-danger">
+                          {game.minPlayer}
+                        </span>{" "}
+                        joueurs
+                      </td>
+                    )}
+                    {show === true && (
+                      <>
+                        <td>
+                          <span className="badge bg-primary">
+                            {game.duration}
+                          </span>
+                          min
+                        </td>
                       </>
                     )}
                   </tr>
@@ -716,7 +784,7 @@ const Ludotheque = () => {
             </tbody>
           </table>
         ) : (
-          <table className="table table-striped table-bordered table-hover">
+          <table className="table table-striped table-bordered table-hover align-middle text-center">
             <thead>
               <tr key="0">
                 <th scope="col">titre</th>
@@ -725,8 +793,12 @@ const Ludotheque = () => {
                 {show === true && (
                   <>
                     <th scope="col">résumé</th>
-                    <th scope="col">nombre de joueurs</th>
                     <th scope="col">age minimum</th>
+                  </>
+                )}
+                <th scope="col">nombre de joueurs</th>
+                {show === true && (
+                  <>
                     <th scope="col">durée</th>
                     <th scope="col">Status</th>
                     {user && show === true && <th scope="col">action</th>}
@@ -740,14 +812,17 @@ const Ludotheque = () => {
                   {show === true ? (
                     <td colSpan="8">Aucun jeu</td>
                   ) : (
-                    <td colSpan="2">Aucun jeu</td>
+                    <td colSpan="3">Aucun jeu</td>
                   )}
                 </tr>
               ) : (
                 filteredGames.map((game) => (
                   <tr key={game._id}>
                     <th className="text-justify">
-                      <Link to={`/game/${game._id}`}>
+                      <Link
+                        to={`/game/${game._id}`}
+                        className="badge bg-success text-wrap"
+                      >
                         <h6>{game.title}</h6>
                       </Link>
                     </th>
@@ -759,29 +834,67 @@ const Ludotheque = () => {
                           style={{ maxWidth: "200px", maxHeight: "200px" }}
                         />
                     </td> */}
-                    <td>{game.genre}</td>
+                    <td>
+                      <span className="badge bg-warning text-dark text-wrap">
+                        {game.genre}
+                      </span>
+                    </td>
+
                     {show === true && (
                       <>
                         <td className="text-justify">{game.description}</td>
-                        {game.maxPlayer === null ? (
-                          game.minPlayer === 1 ? (
-                            <td>solo</td>
-                          ) : (
-                            <td>{game.minPlayer} joueurs</td>
-                          )
-                        ) : game.minPlayer === game.maxPlayer ? (
-                          <td>{game.minPlayer} joueurs</td>
-                        ) : game.minPlayer < game.maxPlayer ? (
-                          <td>
-                            De {game.minPlayer} à {game.maxPlayer} joueurs
-                          </td>
-                        ) : (
-                          <td>
-                            De {game.maxPlayer} à {game.minPlayer} joueurs
-                          </td>
-                        )}
-                        <td>{game.minAge} ans</td>
-                        <td>{game.duration} min</td>
+                        <td>
+                          <span className="badge bg-info text-dark">
+                            {game.minAge} ans
+                          </span>
+                        </td>
+                      </>
+                    )}
+                    {game.minPlayer === 1 &&
+                    (game.maxPlayer === null ||
+                      game.maxPlayer === 0 ||
+                      game.maxPlayer === 1) ? (
+                      <td>solo</td>
+                    ) : game.minPlayer === game.maxPlayer ? (
+                      <td>
+                        <span className="badge bg-danger">
+                          {game.minPlayer}
+                        </span>{" "}
+                        joueurs
+                      </td>
+                    ) : game.minPlayer < game.maxPlayer ? (
+                      <td>
+                        De{" "}
+                        <span className="badge bg-danger">
+                          {game.minPlayer}
+                        </span>{" "}
+                        à{" "}
+                        <span className="badge bg-danger">
+                          {game.maxPlayer}
+                        </span>{" "}
+                        joueurs
+                      </td>
+                    ) : (
+                      <td>
+                        De{" "}
+                        <span className="badge bg-danger">
+                          {game.maxPlayer}
+                        </span>{" "}
+                        à{" "}
+                        <span className="badge bg-danger">
+                          {game.minPlayer}
+                        </span>{" "}
+                        joueurs
+                      </td>
+                    )}
+                    {show === true && (
+                      <>
+                        <td>
+                          <span className="badge bg-primary">
+                            {game.duration}
+                            min
+                          </span>{" "}
+                        </td>
 
                         <td className="text-center">
                           {game.status === "in pending" ? (

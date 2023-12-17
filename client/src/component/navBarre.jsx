@@ -65,6 +65,11 @@ const NavBarre = () => {
                   </Link>
                 </li>
                 <li className="nav-item">
+                  <Link className="nav-link" to="/Ludotheque">
+                    Ludotheque
+                  </Link>
+                </li>
+                <li className="nav-item">
                   <Link className="nav-link" to="/Contact">
                     Contact
                   </Link>
