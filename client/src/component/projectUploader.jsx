@@ -63,74 +63,97 @@ const ProjectUploader = () => {
   const handleUpload = async () => {
     try {
       const fileReader = new FileReader();
-      fileReader.readAsDataURL(selectedFile);
 
-      fileReader.onloadend = async () => {
-        const base64data = fileReader.result;
+      let base64data = null;
 
-        if (editingProject) {
-          // Update existing project
-          const updatedProjectData = {
-            title,
-            textProject,
-            linkToProject,
-            description,
-            orderList,
-            imageData: selectedFile ? base64data : editingProject.imageData,
-          };
+      if (selectedFile) {
+        // If a new file is selected, convert to WebP format
+        base64data = await new Promise((resolve, reject) => {
+          fileReader.onloadend = () => resolve(fileReader.result);
+          fileReader.onerror = reject;
+          fileReader.readAsDataURL(selectedFile);
+        });
 
-          await axios.put(
-            `${process.env.REACT_APP_API_URL}/api/project/projectWithImage/update/${editingProject._id}`,
-            updatedProjectData
-          );
+        // Convert to WebP format
+        const image = new Image();
+        image.src = base64data;
 
-          toast.success("Project updated successfully");
-          setListOfProjects((prevProjects) => {
-            const updatedProjects = prevProjects.map((project) => {
-              if (project._id === editingProject._id) {
-                return {
-                  ...project,
-                  title,
-                  textProject,
-                  linkToProject,
-                  description,
-                  orderList,
-                  imageData: selectedFile
-                    ? base64data
-                    : editingProject.imageData,
-                };
-              }
-              return project;
-            });
-            return updatedProjects;
+        await new Promise((resolve, reject) => {
+          image.onload = resolve;
+          image.onerror = reject;
+        });
+
+        const canvas = document.createElement("canvas");
+        canvas.width = image.width;
+        canvas.height = image.height;
+
+        const context = canvas.getContext("2d");
+        context.drawImage(image, 0, 0);
+
+        // Convert the canvas content to base64 with WebP format
+        base64data = canvas.toDataURL("image/webp");
+      }
+
+      if (editingProject) {
+        // Update existing project
+        const updatedProjectData = {
+          title,
+          textProject,
+          linkToProject,
+          description,
+          orderList,
+          imageData: base64data || null, // Use base64data if available, otherwise set to null
+        };
+
+        await axios.put(
+          `${process.env.REACT_APP_API_URL}/api/project/projectWithImage/update/${editingProject._id}`,
+          updatedProjectData
+        );
+
+        toast.success("Project updated successfully");
+        setListOfProjects((prevProjects) => {
+          const updatedProjects = prevProjects.map((project) => {
+            if (project._id === editingProject._id) {
+              return {
+                ...project,
+                title,
+                textProject,
+                linkToProject,
+                description,
+                orderList,
+                imageData: base64data || null, // Use base64data if available, otherwise set to null
+              };
+            }
+            return project;
           });
+          return updatedProjects;
+        });
 
-          setEditingProject(null);
-        } else {
-          // Create new project
-          const newProjectData = {
-            title,
-            textProject,
-            linkToProject,
-            description,
-            orderList,
-            imageData: base64data,
-          };
+        setEditingProject(null);
+      } else {
+        // Create new project
+        const newProjectData = {
+          title,
+          textProject,
+          linkToProject,
+          description,
+          orderList,
+          imageData: base64data || null, // Use base64data if available, otherwise set to null
+        };
 
-          const response = await axios.post(
-            `${process.env.REACT_APP_API_URL}/api/project/upload`,
-            newProjectData
-          );
+        const response = await axios.post(
+          `${process.env.REACT_APP_API_URL}/api/project/upload`,
+          newProjectData
+        );
 
-          toast.success("Project uploaded successfully");
-          setListOfProjects((prevProjects) => [
-            ...prevProjects,
-            response.data.project,
-          ]);
-        }
+        toast.success("Project uploaded successfully");
+        setListOfProjects((prevProjects) => [
+          ...prevProjects,
+          response.data.project,
+        ]);
+      }
 
-        resetForm();
-      };
+      resetForm();
     } catch (error) {
       toast.error("Something went wrong");
     }
