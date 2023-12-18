@@ -187,7 +187,14 @@ const Game = () => {
           <>
             <div className="col-6">
               <p>Genre : {game.genre}</p>
-              <p>Description : {game.description}</p>
+              <p>
+                Description :{" "}
+                {game.description === null || game.description === "" ? (
+                  <span>Pas de description disponible</span>
+                ) : (
+                  <span>{game.description}</span>
+                )}
+              </p>
               {game.maxPlayer === null || game.maxPlayer === 0 ? (
                 game.minPlayer === 1 ? (
                   <p>solo</p>

@@ -94,3 +94,13 @@ exports.getGameById = async (req, res) => {
     });
   }
 };
+
+exports.getAGameRamdomly = async (req, res) => {
+  try {
+    const games = await Game.find({}).select("-imageData");
+    const randomGame = games[Math.floor(Math.random() * games.length)];
+    res.status(200).json(randomGame);
+  } catch (error) {
+    console.log(error);
+  }
+};
