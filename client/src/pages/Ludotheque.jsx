@@ -133,35 +133,74 @@ const Ludotheque = () => {
     setStatus(e.target.value);
   };
 
-  const handleUploadGame = () => {
+  const handleUploadGame = async () => {
     try {
       const fileReader = new FileReader();
-      fileReader.readAsDataURL(selectedFile);
 
-      fileReader.onload = async () => {
-        const base64Data = fileReader.result;
+      const base64Data = await new Promise((resolve, reject) => {
+        fileReader.onload = () => resolve(fileReader.result);
+        fileReader.onerror = reject;
+        fileReader.readAsDataURL(selectedFile);
+      });
 
-        const gameData = {
-          title,
-          genre,
-          description,
-          minPlayer,
-          maxPlayer,
-          minAge,
-          duration,
-          imageData: base64Data,
-          addBy: user._id,
-          status,
-        };
+      const image = new Image();
+      image.src = base64Data;
 
-        const response = await axios.post(
-          `${process.env.REACT_APP_API_URL}/api/game`,
-          gameData
-        );
-        toast.success("jeu ajouté avec succès");
-        getListOfGames();
-        setListOfGames((prevGames) => [...prevGames, response.data]);
+      await new Promise((resolve, reject) => {
+        image.onload = resolve;
+        image.onerror = reject;
+      });
+
+      // Set the maximum width or height for the resized image
+      const maxWidth = 800;
+      const maxHeight = 600;
+
+      let newWidth = image.width;
+      let newHeight = image.height;
+
+      // Resize the image while maintaining the aspect ratio
+      if (image.width > maxWidth) {
+        newWidth = maxWidth;
+        newHeight = (image.height * maxWidth) / image.width;
+      }
+
+      if (newHeight > maxHeight) {
+        newHeight = maxHeight;
+        newWidth = (image.width * maxHeight) / image.height;
+      }
+
+      // Create a canvas element to draw the resized image
+      const canvas = document.createElement("canvas");
+      canvas.width = newWidth;
+      canvas.height = newHeight;
+
+      const context = canvas.getContext("2d");
+      context.drawImage(image, 0, 0, newWidth, newHeight);
+
+      // Convert the canvas content to base64 with WebP format
+      const base64WebpData = canvas.toDataURL("image/webp");
+
+      const gameData = {
+        title,
+        genre,
+        description,
+        minPlayer,
+        maxPlayer,
+        minAge,
+        duration,
+        imageData: base64WebpData,
+        addBy: user._id,
+        status,
       };
+
+      const response = await axios.post(
+        `${process.env.REACT_APP_API_URL}/api/game`,
+        gameData
+      );
+
+      toast.success("Jeu ajouté avec succès");
+      getListOfGames();
+      setListOfGames((prevGames) => [...prevGames, response.data]);
       resetForm();
     } catch (error) {
       toast.error("Erreur lors de l'ajout du jeu");
