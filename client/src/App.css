@@ -46,8 +46,8 @@ main {
 
 .scroll-to-top {
   position: fixed;
-  bottom: 20px;
-  right: 20px;
+  bottom: 12rem;
+  right: 2rem;
   background-color: #007bff;
   color: #fff;
   border: none;

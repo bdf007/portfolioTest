@@ -2,7 +2,14 @@ import React from "react";
 import EducationUploader from "../component/educationUploader";
 import CertificateUploader from "../component/certificateUploader";
 
+// design
+import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
+
 const Education = () => {
+  // Scroll to the top of the page
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
   return (
     <div className="home accordion accordion-flush" id="accordionExample">
       <div className="accordion-item techno ">
@@ -53,6 +60,9 @@ const Education = () => {
           </div>
         </div>
       </div>
+      <button className="scroll-to-top" onClick={scrollToTop}>
+        <ArrowUpwardIcon />
+      </button>
     </div>
   );
 };
