@@ -134,7 +134,14 @@ const AboutUploader = () => {
       )}
       <div className="mx-auto text-wrap" style={{ maxWidth: "75%" }}>
         {listOfAbout.length === 0 ? (
-          <h3 className="mb-0">No About</h3>
+          <div
+            className="d-flex justify-content-center"
+            style={{ paddingTop: "5rem" }}
+          >
+            <div className="spinner-border text-primary" role="status">
+              <span className="sr-only">Loading...</span>
+            </div>
+          </div>
         ) : (
           listOfAbout?.map((about) => {
             return (

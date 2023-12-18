@@ -165,7 +165,16 @@ const EducationUploader = () => {
         </>
       )}
       <div className="home">
-        {listOfEducation.length === 0 && <h3>Work in Progress</h3>}
+        {listOfEducation.length === 0 && (
+          <div
+            className="d-flex justify-content-center"
+            style={{ paddingTop: "5rem" }}
+          >
+            <div className="spinner-border text-primary" role="status">
+              <span className="sr-only">Loading...</span>
+            </div>
+          </div>
+        )}
         {listOfEducation.map((education) => {
           return (
             <div key={education._id}>
