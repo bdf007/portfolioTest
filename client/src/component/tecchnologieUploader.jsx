@@ -2,7 +2,6 @@ import React, { useEffect, useState, useContext } from "react";
 import axios from "axios";
 import { UserContext } from "../context/UserContext";
 import { toast } from "react-toastify";
-import WIP from "../assets/WIP.png";
 import "../App.css";
 
 const TechnologieUploader = () => {
@@ -249,11 +248,14 @@ const TechnologieUploader = () => {
       <div>
         <div className="row row-cols-1 row-cols-md-4 row-cols-lg-6  g-lg-3  home">
           {listOftechnologies.length === 0 && (
-            <img
-              src={WIP}
-              alt="WIP"
-              style={{ maxWidth: "100%", maxHeight: "100%" }}
-            />
+            <div
+              className="d-flex justify-content-center"
+              style={{ paddingTop: "5rem" }}
+            >
+              <div className="spinner-border text-primary" role="status">
+                <span className="sr-only">Loading...</span>
+              </div>
+            </div>
           )}
           {listOftechnologies.map((technologie) => {
             return (

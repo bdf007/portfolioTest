@@ -2,10 +2,6 @@ import React, { useEffect, useState, useContext } from "react";
 import axios from "axios";
 import { UserContext } from "../context/UserContext";
 import { toast } from "react-toastify";
-import diplomeWCS from "../assets/diplomeWCS.png";
-import certifHTMLCSS from "../assets/certifHTMLCSS.png";
-import certifNodeJSExpress from "../assets/certifNodeJSExpress.png";
-import restAPIExpressMongodb from "../assets/restAPIExpressMongodb.png";
 
 const CertificateUploader = () => {
   const [selectedFile, setSelectedFile] = useState(null);
@@ -215,90 +211,12 @@ const CertificateUploader = () => {
       <div className="home">
         <div className="row g-3 home">
           {listOfcertificates.length === 0 && (
-            <div className="container">
-              <div className="row justify-content-center">
-                <div className="col-5">
-                  <div className="card">
-                    <img
-                      className="card-img-top"
-                      src={diplomeWCS}
-                      alt="diplome Wild Code School"
-                      style={{ maxWidth: "100%", maxHeight: "100%" }}
-                    />
-
-                    <div className="card-body">
-                      <h5 className="card-title text-center">
-                        Titre développeur web et mobile
-                      </h5>
-                    </div>
-                  </div>
-                </div>
-                <div className="col-5">
-                  <div className="card">
-                    <a
-                      href="https://academy.zenva.com/certificate/ba5646ee"
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      <img
-                        className="card-img-top"
-                        src={certifHTMLCSS}
-                        alt="certification HTML CSS Zenva.com"
-                        style={{ maxWidth: "100%", maxHeight: "100%" }}
-                      />
-                    </a>
-
-                    <div className="card-body">
-                      <h5 className="card-title text-center">
-                        Intro to HTML and CSS certification on Zenva.com
-                      </h5>
-                    </div>
-                  </div>
-                </div>
-                <div className="col-5">
-                  <div className="card">
-                    <a
-                      href="https://academy.zenva.com/certificate/a6512e66636a"
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      <img
-                        className="card-img-top"
-                        src={certifNodeJSExpress}
-                        alt="certification NodeJS Express Zenva.com"
-                        style={{ maxWidth: "100%", maxHeight: "100%" }}
-                      />
-                    </a>
-
-                    <div className="card-body">
-                      <h5 className="card-title text-center">
-                        certification NodeJS Express Zenva.com
-                      </h5>
-                    </div>
-                  </div>
-                </div>
-                <div className="col-5">
-                  <div className="card">
-                    <a
-                      href="https://academy.zenva.com/certificate/2ee81fadd254"
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      <img
-                        className="card-img-top"
-                        src={restAPIExpressMongodb}
-                        alt="certification Rest API Express Mongodb Zenva.com"
-                        style={{ maxWidth: "100%", maxHeight: "100%" }}
-                      />
-                    </a>
-
-                    <div className="card-body">
-                      <h5 className="card-title text-center">
-                        certification Rest API Express Mongodb Zenva.com
-                      </h5>
-                    </div>
-                  </div>
-                </div>
+            <div
+              className="d-flex justify-content-center"
+              style={{ paddingTop: "5rem", paddingBottom: "12rem" }}
+            >
+              <div className="spinner-border text-primary" role="status">
+                <span className="sr-only">Loading...</span>
               </div>
             </div>
           )}

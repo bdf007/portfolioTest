@@ -2,7 +2,6 @@ import React, { useState, useContext, useEffect } from "react";
 import axios from "axios";
 import { UserContext } from "../context/UserContext";
 import { toast } from "react-toastify";
-import WIP from "../assets/WIP.png";
 import "../App.css";
 
 const ProjectUploader = () => {
@@ -265,21 +264,12 @@ const ProjectUploader = () => {
       )}
       <div>
         {listOfProjects.length === 0 && (
-          <div className="container">
-            <div className="row justify-content-center">
-              <div className="col-md-auto">
-                <img
-                  className="card-img-top"
-                  src={WIP}
-                  alt="WIP"
-                  style={{ maxWidth: "100%", maxHeight: "100%" }}
-                />
-                <div className="card-body">
-                  <h2 className="card-title text-center text-primary">
-                    Chargement en cours...
-                  </h2>
-                </div>
-              </div>
+          <div
+            className="d-flex justify-content-center"
+            style={{ paddingTop: "5rem" }}
+          >
+            <div className="spinner-border text-primary" role="status">
+              <span className="sr-only">Loading...</span>
             </div>
           </div>
         )}
