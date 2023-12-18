@@ -1,6 +1,7 @@
 import React, { useState, useContext, useEffect } from "react";
 import axios from "axios";
 import { UserContext } from "../context/UserContext";
+import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
 
@@ -8,9 +9,11 @@ import { toast } from "react-toastify";
 import AddCircleOutlineOutlinedIcon from "@mui/icons-material/AddCircleOutlineOutlined";
 import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
 import CancelOutlinedIcon from "@mui/icons-material/CancelOutlined";
+import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 
 const Ludotheque = () => {
   const { user } = useContext(UserContext);
+  const navigate = useNavigate();
   const [title, setTitle] = useState("");
   const [genre, setGenre] = useState("");
   const [description, setDescription] = useState("");
@@ -74,6 +77,22 @@ const Ludotheque = () => {
     } catch (error) {
       console.log(error);
       toast.error("Erreur lors de la récupération des jeux");
+    }
+  };
+
+  const handleRandomGame = async () => {
+    try {
+      const response = await axios.get(
+        `${process.env.REACT_APP_API_URL}/api/games/random`
+      );
+
+      // Set the list of games with the updated data
+      setListOfGames([response.data]);
+      // Use navigate to navigate to the game page
+      navigate(`/game/${response.data._id}`);
+    } catch (error) {
+      console.log(error);
+      toast.error("Erreur lors de la récupération du jeu");
     }
   };
 
@@ -314,6 +333,11 @@ const Ludotheque = () => {
     );
   });
 
+  // Scroll to the top of the page
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   // check if the size of the window is a mobile size
   const handleResize = () => {
     const newWidth = window.innerWidth;
@@ -522,6 +546,13 @@ const Ludotheque = () => {
                             >
                               {listOfGames.length}{" "}
                             </span>
+                            <br />
+                            <button
+                              className="btn btn-success"
+                              onClick={handleRandomGame}
+                            >
+                              Jeu aléatoire
+                            </button>
                           </td>
                         </tr>
                       </thead>
@@ -1060,6 +1091,9 @@ const Ludotheque = () => {
           </table>
         )}
       </div>
+      <button className="scroll-to-top" onClick={scrollToTop}>
+        <ArrowUpwardIcon />
+      </button>
     </div>
   );
 };

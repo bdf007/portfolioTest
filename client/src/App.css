@@ -44,6 +44,22 @@ main {
   background-color: darkgray;
 }
 
+.scroll-to-top {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  padding: 10px;
+  cursor: pointer;
+  border-radius: 5rem;
+}
+
+.scroll-to-top:hover {
+  background-color: #0056b3;
+}
+
 @media screen and (max-width: 768px) {
   .description {
     font-size: 1.5rem;
