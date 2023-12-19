@@ -133,7 +133,8 @@ const Ludotheque = () => {
     setStatus(e.target.value);
   };
 
-  const handleUploadGame = async () => {
+  const handleUploadGame = async (e) => {
+    e.preventDefault();
     try {
       const fileReader = new FileReader();
 
