@@ -56,71 +56,95 @@ const TechnologieUploader = () => {
     setOrderList(event.target.value);
   };
 
-  const handleUpload = async () => {
+  const handleUpload = async (e) => {
+    e.preventDefault();
     try {
       const fileReader = new FileReader();
-      fileReader.readAsDataURL(selectedFile);
 
-      fileReader.onloadend = async () => {
-        const base64data = fileReader.result;
+      let base64data = null;
 
-        if (editingtechnologie) {
-          // update technologie
-          const updatedTechnologieData = {
-            title,
-            link,
-            description,
-            orderList,
-            imageData: selectedFile ? base64data : editingtechnologie.imageData,
-          };
+      if (selectedFile) {
+        fileReader.readAsDataURL(selectedFile);
 
-          await axios.put(
-            `${process.env.REACT_APP_API_URL}/api/technologie/updateTechnologie/${editingtechnologie._id}`,
-            updatedTechnologieData
-          );
+        base64data = await new Promise((resolve, reject) => {
+          fileReader.onloadend = () => resolve(fileReader.result);
+          fileReader.onerror = reject;
+        });
 
-          toast.success("Technologie updated successfully");
-          setListOftechnologies((prevTechnologies) => {
-            const updatedTechnologies = prevTechnologies.map((technologie) => {
-              if (technologie._id === editingtechnologie._id) {
-                return {
-                  ...technologie,
-                  title,
-                  link,
-                  description,
-                  orderList,
-                  imageData: selectedFile
-                    ? base64data
-                    : editingtechnologie.imageData,
-                };
-              }
-              return technologie;
-            });
-            return updatedTechnologies;
+        const image = new Image();
+        image.src = base64data;
+
+        await new Promise((resolve, reject) => {
+          image.onload = resolve;
+          image.onerror = reject;
+        });
+
+        const canvas = document.createElement("canvas");
+        canvas.width = image.width;
+        canvas.height = image.height;
+
+        const context = canvas.getContext("2d");
+        context.drawImage(image, 0, 0);
+
+        // Convert the canvas content to base64 with WebP format
+        base64data = canvas.toDataURL("image/webp");
+      }
+
+      if (editingtechnologie) {
+        // update technologie
+        const updatedTechnologieData = {
+          title,
+          link,
+          description,
+          orderList,
+          imageData: base64data || null,
+        };
+
+        await axios.put(
+          `${process.env.REACT_APP_API_URL}/api/technologie/updateTechnologie/${editingtechnologie._id}`,
+          updatedTechnologieData
+        );
+
+        toast.success("Technologie updated successfully");
+        setListOftechnologies((prevTechnologies) => {
+          const updatedTechnologies = prevTechnologies.map((technologie) => {
+            if (technologie._id === editingtechnologie._id) {
+              return {
+                ...technologie,
+                title,
+                link,
+                description,
+                orderList,
+                imageData: base64data || editingtechnologie.imageData,
+              };
+            }
+            return technologie;
           });
+          return updatedTechnologies;
+        });
 
-          setEditingtechnologie(null);
-        } else {
-          const technologieData = {
-            title,
-            link,
-            description,
-            orderList,
-            imageData: base64data,
-          };
+        setEditingtechnologie(null);
+      } else {
+        const technologieData = {
+          title,
+          link,
+          description,
+          orderList,
+          imageData: base64data,
+        };
 
-          const response = await axios.post(
-            `${process.env.REACT_APP_API_URL}/api/technologie/upload`,
-            technologieData
-          );
-          toast.success("Technologie uploaded successfully");
-          setListOftechnologies((prevTechnologies) => [
-            ...prevTechnologies,
-            response.data.technologie,
-          ]);
-        }
-        resetForm();
-      };
+        const response = await axios.post(
+          `${process.env.REACT_APP_API_URL}/api/technologie/upload`,
+          technologieData
+        );
+
+        toast.success("Technologie uploaded successfully");
+        setListOftechnologies((prevTechnologies) => [
+          ...prevTechnologies,
+          response.data.technologie,
+        ]);
+      }
+      resetForm();
     } catch (error) {
       toast.error("Something went wrong");
     }
@@ -171,7 +195,7 @@ const TechnologieUploader = () => {
   };
 
   return (
-    <div>
+    <div className="home">
       <h1 className="text-danger">Technologies utilisées</h1>
       {user && user.role === "admin" && (
         <>

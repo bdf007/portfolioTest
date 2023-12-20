@@ -47,70 +47,91 @@ const CertificateUploader = () => {
     setDescription(event.target.value);
   };
 
-  const handleUpload = async () => {
+  const handleUpload = async (e) => {
+    e.preventDefault();
     try {
       const fileReader = new FileReader();
-      fileReader.readAsDataURL(selectedFile);
+      let base64data = null;
 
-      fileReader.onloadend = async () => {
-        const base64data = fileReader.result;
+      if (selectedFile) {
+        base64data = await new Promise((resolve, reject) => {
+          fileReader.onloadend = () => resolve(fileReader.result);
+          fileReader.onerror = reject;
+          fileReader.readAsDataURL(selectedFile);
+        });
 
-        if (editingcertificate) {
-          // update the certificate
-          const updatedcertificateData = {
-            title,
-            link,
-            description,
-            imageData: selectedFile ? base64data : editingcertificate.imageData,
-          };
+        const image = new Image();
+        image.src = base64data;
 
-          await axios.put(
-            `${process.env.REACT_APP_API_URL}/api/certificate/updateCertificate/${editingcertificate._id}`,
-            updatedcertificateData
-          );
+        await new Promise((resolve, reject) => {
+          image.onload = resolve;
+          image.onerror = reject;
+        });
 
-          toast.success("Certificate updated successfully");
-          setListOfcertificates((prevCertificates) => {
-            const updatedcertificateData = prevCertificates.map(
-              (certificate) => {
-                if (certificate._id === editingcertificate._id) {
-                  return {
-                    ...certificate,
-                    title,
-                    link,
-                    description,
-                    imageData: selectedFile
-                      ? base64data
-                      : editingcertificate.imageData,
-                  };
-                }
-                return certificate;
-              }
-            );
-            return updatedcertificateData;
+        const canvas = document.createElement("canvas");
+        canvas.width = image.width;
+        canvas.height = image.height;
+
+        const context = canvas.getContext("2d");
+        context.drawImage(image, 0, 0);
+
+        base64data = canvas.toDataURL("image/webp");
+      }
+
+      if (editingcertificate) {
+        // Update the certificate
+        const updatedcertificateData = {
+          title,
+          link,
+          description,
+          imageData: selectedFile ? base64data : editingcertificate.imageData,
+        };
+
+        await axios.put(
+          `${process.env.REACT_APP_API_URL}/api/certificate/updateCertificate/${editingcertificate._id}`,
+          updatedcertificateData
+        );
+
+        toast.success("Certificate updated successfully");
+        setListOfcertificates((prevCertificates) => {
+          const updatedCertificates = prevCertificates.map((certificate) => {
+            if (certificate._id === editingcertificate._id) {
+              return {
+                ...certificate,
+                title,
+                link,
+                description,
+                imageData: selectedFile
+                  ? base64data
+                  : editingcertificate.imageData,
+              };
+            }
+            return certificate;
           });
-          setEditingcertificate(null);
-        } else {
-          const certificateData = {
-            title,
-            link,
-            description,
-            imageData: base64data,
-          };
+          return updatedCertificates;
+        });
 
-          const response = await axios.post(
-            `${process.env.REACT_APP_API_URL}/api/certificate/upload`,
-            certificateData
-          );
+        setEditingcertificate(null);
+      } else {
+        const certificateData = {
+          title,
+          link,
+          description,
+          imageData: base64data,
+        };
 
-          toast.success("Certificate uploaded successfully");
-          setListOfcertificates((prevCertificates) => [
-            ...prevCertificates,
-            response.data.certificate,
-          ]);
-        }
-        resetForm();
-      };
+        const response = await axios.post(
+          `${process.env.REACT_APP_API_URL}/api/certificate/upload`,
+          certificateData
+        );
+
+        toast.success("Certificate uploaded successfully");
+        setListOfcertificates((prevCertificates) => [
+          ...prevCertificates,
+          response.data.certificate,
+        ]);
+      }
+      resetForm();
     } catch (error) {
       toast.error("Something went wrong");
     }
