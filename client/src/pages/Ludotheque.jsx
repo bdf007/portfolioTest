@@ -334,15 +334,22 @@ const Ludotheque = () => {
     setSearchStatus(value);
   };
 
+  // Helper const to check if all words in the search term are present in the target string
+  const containsAllWords = (target, searchTerm) => {
+    const searchWords = searchTerm.split(" ");
+    return searchWords.every((word) => target.includes(word));
+  };
+
   const filteredGames = listOfGames.filter((game) => {
     const matchesSearchTitle =
       !searchTitle ||
       (game.title &&
-        game.title.toLowerCase().includes(searchTitle.toLowerCase()));
+        containsAllWords(game.title.toLowerCase(), searchTitle.toLowerCase()));
+
     const matchesSearchGenre =
       !searchGenre ||
       (game.genre &&
-        game.genre.toLowerCase().includes(searchGenre.toLowerCase()));
+        containsAllWords(game.genre.toLowerCase(), searchGenre.toLowerCase()));
     const matchesSearchMinPlayer =
       !searchMinPlayer || game.minPlayer === parseInt(searchMinPlayer, 10);
     const matchesSearchMaxPlayer =
