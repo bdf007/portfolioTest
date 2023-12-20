@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import EducationUploader from "../component/educationUploader";
 import CertificateUploader from "../component/certificateUploader";
 
@@ -6,10 +6,24 @@ import CertificateUploader from "../component/certificateUploader";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 
 const Education = () => {
+  const [showScrollButton, setShowScrollButton] = useState(false);
   // Scroll to the top of the page
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
+
+  const handleScroll = () => {
+    const scrollY = window.scrollY;
+    // You can adjust the threshold value based on when you want the button to appear
+    setShowScrollButton(scrollY > 100);
+  };
+
+  useEffect(() => {
+    window.addEventListener("scroll", handleScroll);
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, []);
   return (
     <div className="home accordion accordion-flush" id="accordionExample">
       <div className="accordion-item techno ">
@@ -60,9 +74,11 @@ const Education = () => {
           </div>
         </div>
       </div>
-      <button className="scroll-to-top" onClick={scrollToTop}>
-        <ArrowUpwardIcon />
-      </button>
+      {showScrollButton && (
+        <button className="scroll-to-top" onClick={scrollToTop}>
+          <ArrowUpwardIcon />
+        </button>
+      )}
     </div>
   );
 };

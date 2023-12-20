@@ -117,7 +117,7 @@ const ExperienceUploader = () => {
   };
 
   return (
-    <div>
+    <div className="home">
       <h1 className="text-danger">Mon expérience</h1>
       {user && user.role === "admin" && (
         <>

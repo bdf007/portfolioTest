@@ -56,6 +56,8 @@ const Ludotheque = () => {
   const [width, setWidth] = useState(window.innerWidth);
   const [show, setShow] = useState(true);
 
+  const [showScrollButton, setShowScrollButton] = useState(false);
+
   const getListOfGames = async () => {
     try {
       const response = await axios.get(
@@ -384,6 +386,19 @@ const Ludotheque = () => {
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
+
+  const handleScroll = () => {
+    const scrollY = window.scrollY;
+    // You can adjust the threshold value based on when you want the button to appear
+    setShowScrollButton(scrollY > 100);
+  };
+
+  useEffect(() => {
+    window.addEventListener("scroll", handleScroll);
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, []);
 
   // check if the size of the window is a mobile size
   const handleResize = () => {
@@ -1138,9 +1153,11 @@ const Ludotheque = () => {
           </table>
         )}
       </div>
-      <button className="scroll-to-top" onClick={scrollToTop}>
-        <ArrowUpwardIcon />
-      </button>
+      {showScrollButton && (
+        <button className="scroll-to-top" onClick={scrollToTop}>
+          <ArrowUpwardIcon />
+        </button>
+      )}
     </div>
   );
 };
