@@ -73,7 +73,6 @@ const Ludotheque = () => {
         }
         return 0;
       });
-
       // Set the list of games with the updated data
       setListOfGames(response.data);
     } catch (error) {
@@ -397,6 +396,20 @@ const Ludotheque = () => {
       matchesSearchStatus
     );
   });
+
+  // const addByToAllGGames = () => {
+  //   listOfGames.forEach((game) => {
+  //     const gameData = {
+  //       addBy: user._id,
+  //     };
+  //     axios.put(
+  //       `${process.env.REACT_APP_API_URL}/api/game/${game._id}`,
+  //       gameData
+  //     );
+  //   });
+
+  //   toast.success("addBy ajouté avec succès");
+  // };
 
   // Scroll to the top of the page
   const scrollToTop = () => {
@@ -861,14 +874,6 @@ const Ludotheque = () => {
                           ))}
                       </>
                     </th>
-                    {/* <td>
-                        <img
-                          src={game.imageData}
-                          alt={game.title}
-                          className="img-thumbnail rounded"
-                          style={{ maxWidth: "200px", maxHeight: "200px" }}
-                        />
-                    </td> */}
                     <td>
                       <p className="badge bg-warning text-dark text-wrap">
                         {game.genre}

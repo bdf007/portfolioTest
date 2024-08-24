@@ -58,13 +58,13 @@ main {
 }
 
 .popup-content {
-  background-color: white;
+  background-color: wheat;
   padding: 20px;
   border-radius: 5px;
-  max-width: 500px;
+  max-width: 800px;
   width: 90%;
-  max-height: 80vh; /* Limite la hauteur maximale du popup */
-  overflow-y: auto; /* Ajoute une barre de défilement si le contenu dépasse */
+  max-height: 90vh;
+  overflow-y: auto;
 }
 
 .scroll-to-top {
