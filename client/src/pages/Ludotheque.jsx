@@ -1,9 +1,8 @@
 import React, { useState, useContext, useEffect } from "react";
 import axios from "axios";
 import { UserContext } from "../context/UserContext";
-import { useNavigate } from "react-router-dom";
-import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
+import GamePopup from "../component/gamePopup";
 
 //design
 import AddCircleOutlineOutlinedIcon from "@mui/icons-material/AddCircleOutlineOutlined";
@@ -13,7 +12,6 @@ import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 
 const Ludotheque = () => {
   const { user } = useContext(UserContext);
-  const navigate = useNavigate();
   const [title, setTitle] = useState("");
   const [genre, setGenre] = useState("");
   const [description, setDescription] = useState("");
@@ -24,6 +22,8 @@ const Ludotheque = () => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [status, setStatus] = useState("in pending"); // "in pending" | "accepted" | "rejected"
   const [listOfGames, setListOfGames] = useState([]);
+  const [isPopupOpen, setIsPopupOpen] = useState(false);
+  const [selectedGame, setSelectedGame] = useState(null);
   const [addNewGame, setAddNewGame] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [searchTitle, setSearchTitle] = useState(
@@ -81,17 +81,33 @@ const Ludotheque = () => {
       toast.error("Erreur lors de la récupération des jeux");
     }
   };
+  const openGamePopup = async (gameId) => {
+    try {
+      gameId = gameId._id;
+      console.log(gameId);
+      const res = await axios.get(
+        `${process.env.REACT_APP_API_URL}/api/game/${gameId}`
+      );
+      setSelectedGame(res.data);
+      console.log(res.data);
+      setIsPopupOpen(true);
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
+  const closeGamePopup = () => {
+    setSelectedGame(null);
+    setIsPopupOpen(false);
+  };
   const handleRandomGame = async () => {
     try {
       const response = await axios.get(
         `${process.env.REACT_APP_API_URL}/api/games/random`
       );
 
-      // Set the list of games with the updated data
-      setListOfGames([response.data]);
-      // Use navigate to navigate to the game page
-      navigate(`/game/${response.data._id}`);
+      setSelectedGame(response.data);
+      openGamePopup(response.data);
     } catch (error) {
       console.log(error);
       toast.error("Erreur lors de la récupération du jeu");
@@ -409,6 +425,10 @@ const Ludotheque = () => {
     } else {
       setShow(true);
     }
+  };
+  // Callback function to update the game list
+  const handleGameUpdate = () => {
+    getListOfGames(); // Refresh the list of games
   };
   useEffect(() => {
     handleResize(); // Call it on initial render
@@ -815,12 +835,13 @@ const Ludotheque = () => {
                 filteredGames.map((game) => (
                   <tr key={game._id}>
                     <th className="text-justify">
-                      <Link
-                        to={`/game/${game._id}`}
+                      <span
+                        onClick={() => openGamePopup(game)}
                         className="badge bg-success text-wrap"
+                        style={{ cursor: "pointer" }}
                       >
                         <h6>{game.title}</h6>
-                      </Link>
+                      </span>
                       <>
                         <br />
                         {!show &&
@@ -987,12 +1008,13 @@ const Ludotheque = () => {
                 filteredGames.map((game) => (
                   <tr key={game._id}>
                     <th className="text-justify">
-                      <Link
-                        to={`/game/${game._id}`}
+                      <span
+                        onClick={() => openGamePopup(game)}
                         className="badge bg-success text-wrap"
+                        style={{ cursor: "pointer" }}
                       >
                         <h6>{game.title}</h6>
-                      </Link>
+                      </span>
                       <>
                         <br />
                         {!show &&
@@ -1157,6 +1179,14 @@ const Ludotheque = () => {
         <button className="scroll-to-top" onClick={scrollToTop}>
           <ArrowUpwardIcon />
         </button>
+      )}
+      {isPopupOpen && selectedGame && (
+        <GamePopup
+          game={selectedGame}
+          onClose={closeGamePopup}
+          user={user}
+          onUpdate={handleGameUpdate}
+        />
       )}
     </div>
   );
