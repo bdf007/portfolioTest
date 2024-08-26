@@ -83,12 +83,10 @@ const Ludotheque = () => {
   const openGamePopup = async (gameId) => {
     try {
       gameId = gameId._id;
-      console.log(gameId);
       const res = await axios.get(
         `${process.env.REACT_APP_API_URL}/api/game/${gameId}`
       );
       setSelectedGame(res.data);
-      console.log(res.data);
       setIsPopupOpen(true);
     } catch (error) {
       console.log(error);
@@ -807,7 +805,7 @@ const Ludotheque = () => {
             <thead>
               <tr>
                 <th scope="col">
-                  <p className="text-bold">Titre</p>
+                  <p className="text-bold ">Titre</p>
                   {!show && <p className="fst-italic">Age minimum</p>}
                 </th>
                 {/* <th scope="col">couverture</th> */}
@@ -853,7 +851,9 @@ const Ludotheque = () => {
                         className="badge bg-success text-wrap"
                         style={{ cursor: "pointer" }}
                       >
-                        <h6>{game.title}</h6>
+                        <h6 className="text-decoration-underline">
+                          {game.title}
+                        </h6>
                       </span>
                       <>
                         <br />
@@ -1018,7 +1018,9 @@ const Ludotheque = () => {
                         className="badge bg-success text-wrap"
                         style={{ cursor: "pointer" }}
                       >
-                        <h6>{game.title}</h6>
+                        <h6 className="text-decoration-underline">
+                          {game.title}
+                        </h6>
                       </span>
                       <>
                         <br />

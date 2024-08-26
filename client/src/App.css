@@ -58,13 +58,20 @@ main {
 }
 
 .popup-content {
-  background-color: wheat;
+  background-color: #45a29e;
   padding: 20px;
   border-radius: 5px;
   max-width: 800px;
-  width: 90%;
-  max-height: 90vh;
+  width: 80vw;
+  max-height: 80vh;
   overflow-y: auto;
+}
+
+textarea {
+  width: 100%;
+  min-height: 100px; /* Optional: Set a minimum height */
+  padding: 10px;
+  box-sizing: border-box; /* Ensure padding is included in the element's width/height */
 }
 
 .scroll-to-top {

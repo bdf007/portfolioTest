@@ -48,25 +48,28 @@ const GamePopup = ({ game, onClose, user, onUpdate }) => {
       <div className="popup-content">
         {user && user.role === "admin" && editing ? (
           <div>
-            <div className="form-group d-flex justify-content-between">
+            <div className="form-group d-flex align-items-center">
               <label>Title : </label>
               <input
+                className="flex-grow-1 ml-2"
                 type="text"
                 value={updatedTitle}
                 onChange={(e) => setUpdatedTitle(e.target.value)}
               />
             </div>
-            <div className="form-group d-flex justify-content-between">
+            <div className="form-group d-flex align-items-center">
               <label>Genre : </label>
               <input
+                className="flex-grow-1 ml-2"
                 type="text"
                 value={updatedGenre}
                 onChange={(e) => setUpdatedGenre(e.target.value)}
               />
             </div>
-            <div className="form_group d-flex justify-content-between">
+            <div className="form_group d-flex align-items-center">
               <label>Description : </label>
               <textarea
+                className="flex-grow-1 ml-2"
                 value={updatedDescription}
                 onChange={(e) => setUpdatedDescription(e.target.value)}
               />
@@ -79,9 +82,12 @@ const GamePopup = ({ game, onClose, user, onUpdate }) => {
                 onChange={(e) => setUpdatedMinPlayer(e.target.value)}
               />
             </div>
-            <div className="form-group d-flex justify-content-between">
-              <label>Max player : </label>
+            <div className="form-group d-flex align-items-center flex-nowrap">
+              <label className="mb-0" style={{ whiteSpace: "nowrap" }}>
+                Max player :{" "}
+              </label>
               <input
+                className="flex-grow-1 ml-2"
                 type="number"
                 value={updatedMaxPlayer}
                 onChange={(e) => setUpdatedMaxPlayer(e.target.value)}
@@ -124,7 +130,7 @@ const GamePopup = ({ game, onClose, user, onUpdate }) => {
           </div>
         ) : (
           <div>
-            <h2>{game.title}</h2>
+            <h2 className="text-center">{game.title}</h2>
             <p>Genre: {game.genre}</p>
             <p>Description: {game.description}</p>
             <p>Age minimum: {game.minAge}</p>
@@ -136,7 +142,7 @@ const GamePopup = ({ game, onClose, user, onUpdate }) => {
               <img
                 src={game.imageData}
                 alt={game.title}
-                className="img-fluid"
+                className="img-fluid rounded mx-auto d-block"
               />
             )}
             {user && user.role === "admin" && (
