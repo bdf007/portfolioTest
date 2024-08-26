@@ -889,7 +889,11 @@ const Ludotheque = () => {
                     </td>
                     {show === true && (
                       <>
-                        <td className="text-justify">{game.description}</td>
+                        <td className="text-justify">
+                          {game.description
+                            ? game.description
+                            : "pas de résumé renseigné"}
+                        </td>
                         <td>
                           <span
                             className={`badge ${
@@ -1065,7 +1069,11 @@ const Ludotheque = () => {
 
                     {show === true && (
                       <>
-                        <td className="text-justify">{game.description}</td>
+                        <td className="text-justify">
+                          {game.description
+                            ? game.description
+                            : "pas de résumé renseigné"}
+                        </td>
                         <td>
                           <span
                             className={`badge ${
