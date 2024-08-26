@@ -48,8 +48,10 @@ const GamePopup = ({ game, onClose, user, onUpdate }) => {
       <div className="popup-content">
         {user && user.role === "admin" && editing ? (
           <div>
-            <div className="form-group d-flex align-items-center">
-              <label>Title : </label>
+            <div className="form-group d-flex justify-content-between">
+              <label className="mb-0" style={{ whiteSpace: "nowrap" }}>
+                Title :{" "}
+              </label>
               <input
                 className="flex-grow-1 ml-2"
                 type="text"
@@ -57,8 +59,10 @@ const GamePopup = ({ game, onClose, user, onUpdate }) => {
                 onChange={(e) => setUpdatedTitle(e.target.value)}
               />
             </div>
-            <div className="form-group d-flex align-items-center">
-              <label>Genre : </label>
+            <div className="form-group d-flex justify-content-between">
+              <label className="mb-0" style={{ whiteSpace: "nowrap" }}>
+                Genre :{" "}
+              </label>
               <input
                 className="flex-grow-1 ml-2"
                 type="text"
@@ -66,8 +70,10 @@ const GamePopup = ({ game, onClose, user, onUpdate }) => {
                 onChange={(e) => setUpdatedGenre(e.target.value)}
               />
             </div>
-            <div className="form_group d-flex align-items-center">
-              <label>Description : </label>
+            <div className="form-group d-flex justify-content-between">
+              <label className="mb-0" style={{ whiteSpace: "nowrap" }}>
+                Description :{" "}
+              </label>
               <textarea
                 className="flex-grow-1 ml-2"
                 value={updatedDescription}
@@ -75,7 +81,9 @@ const GamePopup = ({ game, onClose, user, onUpdate }) => {
               />
             </div>
             <div className="form-group d-flex justify-content-between">
-              <label>Min player : </label>
+              <label className="mb-0" style={{ whiteSpace: "nowrap" }}>
+                Min player :{" "}
+              </label>
               <input
                 type="number"
                 value={updatedMinPlayer}
@@ -93,7 +101,9 @@ const GamePopup = ({ game, onClose, user, onUpdate }) => {
               />
             </div>
             <div className="form-group d-flex justify-content-between">
-              <label>Age : </label>
+              <label className="mb-0" style={{ whiteSpace: "nowrap" }}>
+                Age :{" "}
+              </label>
               <input
                 type="number"
                 value={updatedAge}
@@ -101,7 +111,9 @@ const GamePopup = ({ game, onClose, user, onUpdate }) => {
               />
             </div>
             <div className="form-group d-flex justify-content-between">
-              <label>Duration : </label>
+              <label className="mb-0" style={{ whiteSpace: "nowrap" }}>
+                Duration :{" "}
+              </label>
               <input
                 type="number"
                 value={updatedDuration}
