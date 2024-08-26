@@ -49,7 +49,10 @@ const GamePopup = ({ game, onClose, user, onUpdate }) => {
         {user && user.role === "admin" && editing ? (
           <div>
             <div className="form-group d-flex justify-content-between">
-              <label className="mb-0" style={{ whiteSpace: "nowrap" }}>
+              <label
+                className="mb-0 fw-bolder text-decoration-underline"
+                style={{ whiteSpace: "nowrap" }}
+              >
                 Title :{" "}
               </label>
               <input
@@ -60,7 +63,10 @@ const GamePopup = ({ game, onClose, user, onUpdate }) => {
               />
             </div>
             <div className="form-group d-flex justify-content-between">
-              <label className="mb-0" style={{ whiteSpace: "nowrap" }}>
+              <label
+                className="mb-0 fw-bolder text-decoration-underline"
+                style={{ whiteSpace: "nowrap" }}
+              >
                 Genre :{" "}
               </label>
               <input
@@ -71,7 +77,10 @@ const GamePopup = ({ game, onClose, user, onUpdate }) => {
               />
             </div>
             <div className="form-group d-flex justify-content-between">
-              <label className="mb-0" style={{ whiteSpace: "nowrap" }}>
+              <label
+                className="mb-0 fw-bolder text-decoration-underline"
+                style={{ whiteSpace: "nowrap" }}
+              >
                 Description :{" "}
               </label>
               <textarea
@@ -81,7 +90,10 @@ const GamePopup = ({ game, onClose, user, onUpdate }) => {
               />
             </div>
             <div className="form-group d-flex justify-content-between">
-              <label className="mb-0" style={{ whiteSpace: "nowrap" }}>
+              <label
+                className="mb-0 fw-bolder text-decoration-underline"
+                style={{ whiteSpace: "nowrap" }}
+              >
                 Min player :{" "}
               </label>
               <input
@@ -91,7 +103,10 @@ const GamePopup = ({ game, onClose, user, onUpdate }) => {
               />
             </div>
             <div className="form-group d-flex justify-content-between">
-              <label className="mb-0" style={{ whiteSpace: "nowrap" }}>
+              <label
+                className="mb-0 fw-bolder text-decoration-underline"
+                style={{ whiteSpace: "nowrap" }}
+              >
                 Max player :{" "}
               </label>
               <input
@@ -101,7 +116,10 @@ const GamePopup = ({ game, onClose, user, onUpdate }) => {
               />
             </div>
             <div className="form-group d-flex justify-content-between">
-              <label className="mb-0" style={{ whiteSpace: "nowrap" }}>
+              <label
+                className="mb-0 fw-bolder text-decoration-underline"
+                style={{ whiteSpace: "nowrap" }}
+              >
                 Age :{" "}
               </label>
               <input
@@ -111,7 +129,10 @@ const GamePopup = ({ game, onClose, user, onUpdate }) => {
               />
             </div>
             <div className="form-group d-flex justify-content-between">
-              <label className="mb-0" style={{ whiteSpace: "nowrap" }}>
+              <label
+                className="mb-0 fw-bolder text-decoration-underline"
+                style={{ whiteSpace: "nowrap" }}
+              >
                 Duration :{" "}
               </label>
               <input
@@ -142,13 +163,6 @@ const GamePopup = ({ game, onClose, user, onUpdate }) => {
         ) : (
           <div>
             <h2 className="text-center">{game.title}</h2>
-            <p>Genre: {game.genre}</p>
-            <p>Description: {game.description}</p>
-            <p>Age minimum: {game.minAge}</p>
-            <p>
-              Nombre de joueurs: {game.minPlayer} - {game.maxPlayer}
-            </p>
-            <p>Durée: {game.duration} min</p>
             {game.imageData && (
               <img
                 src={game.imageData}
@@ -156,6 +170,40 @@ const GamePopup = ({ game, onClose, user, onUpdate }) => {
                 className="img-fluid rounded mx-auto d-block"
               />
             )}
+            <p>
+              <span className="fw-bolder text-decoration-underline">
+                Genre:{" "}
+              </span>
+              {game.genre ? game.genre : "pas de genre défini"}
+            </p>
+            <p>
+              <span className="fw-bolder text-decoration-underline">
+                Description:
+              </span>
+              {game.description
+                ? game.description
+                : "pas de description renseignée"}
+            </p>
+            <p>
+              <span className="fw-bolder text-decoration-underline">
+                Age minimum:{" "}
+              </span>
+              {game.minAge ? game.minAge : "pas d'âge minimum défini"}
+            </p>
+            <p>
+              <span className="fw-bolder text-decoration-underline">
+                Nombre de joueurs:{" "}
+              </span>
+              {game.minPlayer ? game.minPlayer : "pas de joueur minimum saisi"}{" "}
+              -{" "}
+              {game.maxPlayer ? game.maxPlayer : "pas de joueur maximum saisi"}
+            </p>
+            <p>
+              <span className="fw-bolder text-decoration-underline">
+                Durée:{" "}
+              </span>
+              {game.duration ? game.duration : "pas de durée saisie"} min
+            </p>
             {user && user.role === "admin" && (
               <div className="d-flex justify-content-center">
                 <button
