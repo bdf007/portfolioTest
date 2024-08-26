@@ -82,12 +82,11 @@ const GamePopup = ({ game, onClose, user, onUpdate }) => {
                 onChange={(e) => setUpdatedMinPlayer(e.target.value)}
               />
             </div>
-            <div className="form-group d-flex align-items-center flex-nowrap">
+            <div className="form-group d-flex justify-content-between">
               <label className="mb-0" style={{ whiteSpace: "nowrap" }}>
                 Max player :{" "}
               </label>
               <input
-                className="flex-grow-1 ml-2"
                 type="number"
                 value={updatedMaxPlayer}
                 onChange={(e) => setUpdatedMaxPlayer(e.target.value)}
