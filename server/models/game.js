@@ -23,6 +23,13 @@ const gameSchema = new mongoose.Schema({
   minAge: {
     type: Number,
   },
+  date: {
+    type: Number,
+  },
+  editor: {
+    type: String,
+    trim: true,
+  },
   duration: {
     type: Number,
   },

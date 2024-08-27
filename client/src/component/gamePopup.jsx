@@ -9,6 +9,8 @@ const GamePopup = ({ game, onClose, user, onUpdate }) => {
   const [updatedDescription, setUpdatedDescription] = useState(
     game.description
   );
+  const [updatedDate, setUpdatedDate] = useState(game.date);
+  const [updatedEditor, setUpdatedEditor] = useState(game.editor);
   const [updatedMinPlayer, setUpdatedMinPlayer] = useState(game.minPlayer);
   const [updatedMaxPlayer, setUpdatedMaxPlayer] = useState(game.maxPlayer);
   const [updatedAge, setUpdatedAge] = useState(game.minAge);
@@ -20,6 +22,8 @@ const GamePopup = ({ game, onClose, user, onUpdate }) => {
         title: updatedTitle,
         genre: updatedGenre,
         description: updatedDescription,
+        date: updatedDate,
+        editor: updatedEditor,
         minPlayer: updatedMinPlayer,
         maxPlayer: updatedMaxPlayer,
         minAge: updatedAge,
@@ -87,6 +91,32 @@ const GamePopup = ({ game, onClose, user, onUpdate }) => {
                 className="flex-grow-1 ml-2"
                 value={updatedDescription}
                 onChange={(e) => setUpdatedDescription(e.target.value)}
+              />
+            </div>
+            <div className="form-group d-flex justify-content-between">
+              <label
+                className="mb-0 fw-bolder text-decoration-underline"
+                style={{ whiteSpace: "nowrap" }}
+              >
+                Date :{" "}
+              </label>
+              <input
+                type="number"
+                value={updatedDate}
+                onChange={(e) => setUpdatedDate(e.target.value)}
+              />
+            </div>
+            <div className="form-group d-flex justify-content-between">
+              <label
+                className="mb-0 fw-bolder text-decoration-underline"
+                style={{ whiteSpace: "nowrap" }}
+              >
+                Editor :{" "}
+              </label>
+              <input
+                type="text"
+                value={updatedEditor}
+                onChange={(e) => setUpdatedEditor(e.target.value)}
               />
             </div>
             <div className="form-group d-flex justify-content-between">
@@ -183,6 +213,18 @@ const GamePopup = ({ game, onClose, user, onUpdate }) => {
               {game.description
                 ? game.description
                 : "pas de description renseignée"}
+            </p>
+            <p>
+              <span className="fw-bolder text-decoration-underline">
+                Date de sortie:{" "}
+              </span>
+              {game.date ? game.date : "pas de date définie"}
+            </p>
+            <p>
+              <span className="fw-bolder text-decoration-underline">
+                Editeur:{" "}
+              </span>
+              {game.editor ? game.editor : "pas d'éditeur renseigné"}
             </p>
             <p>
               <span className="fw-bolder text-decoration-underline">
