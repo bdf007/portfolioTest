@@ -15,6 +15,8 @@ const Ludotheque = () => {
   const [title, setTitle] = useState("");
   const [genre, setGenre] = useState("");
   const [description, setDescription] = useState("");
+  const [date, setDate] = useState("");
+  const [editor, setEditor] = useState("");
   const [minPlayer, setMinPlayer] = useState(0);
   const [maxPlayer, setMaxPlayer] = useState(0);
   const [minAge, setMinAge] = useState(0);
@@ -31,6 +33,12 @@ const Ludotheque = () => {
   );
   const [searchGenre, setSearchGenre] = useState(
     localStorage.getItem("searchGenre") || ""
+  );
+  const [searchDate, setSearchDate] = useState(
+    localStorage.getItem("searchDate") || ""
+  );
+  const [searchEditor, setSearchEditor] = useState(
+    localStorage.getItem("searchEditor") || ""
   );
   const [searchMinPlayer, setSearchMinPlayer] = useState(
     localStorage.getItem("searchMinPlayer")
@@ -123,6 +131,14 @@ const Ludotheque = () => {
     setDescription(e.target.value);
   };
 
+  const handleDateChange = (e) => {
+    setDate(e.target.value);
+  };
+
+  const handleEditorChange = (e) => {
+    setEditor(e.target.value);
+  };
+
   const handleMinPlayerChange = (e) => {
     setMinPlayer(e.target.value);
   };
@@ -200,6 +216,8 @@ const Ludotheque = () => {
         title,
         genre,
         description,
+        date,
+        editor,
         minPlayer,
         maxPlayer,
         minAge,
@@ -255,6 +273,8 @@ const Ludotheque = () => {
   const resetFilter = () => {
     setSearchTitle("");
     setSearchGenre("");
+    setSearchDate("");
+    setSearchEditor("");
     setSearchMinPlayer("");
     setSearchMaxPlayer("");
     setSearchMinAge("");
@@ -274,6 +294,8 @@ const Ludotheque = () => {
     setTitle("");
     setGenre("");
     setDescription("");
+    setDate("");
+    setEditor("");
     setMinPlayer("");
     setMaxPlayer("");
     setMinAge("");
@@ -295,6 +317,20 @@ const Ludotheque = () => {
     const value = e.target.value;
     setSearchGenre(value);
     localStorage.setItem("searchGenre", value);
+  };
+
+  const handleSearchDate = (e) => {
+    e.preventDefault();
+    const value = e.target.value;
+    setSearchDate(value);
+    localStorage.setItem("searchDate", value);
+  };
+
+  const handleSearchEditor = (e) => {
+    e.preventDefault();
+    const value = e.target.value;
+    setSearchEditor(value);
+    localStorage.setItem("searchEditor", value);
   };
 
   const handleSeachMinPlayer = (e) => {
@@ -360,7 +396,15 @@ const Ludotheque = () => {
       !searchTitle ||
       (game.title &&
         containsAllWords(game.title.toLowerCase(), searchTitle.toLowerCase()));
-
+    const matchesSearchdate =
+      !searchDate || game.date === parseInt(searchDate, 10);
+    const matchesSearchEditor =
+      !searchEditor ||
+      (game.editor &&
+        containsAllWords(
+          game.editor.toLowerCase(),
+          searchEditor.toLowerCase()
+        ));
     const matchesSearchGenre =
       !searchGenre ||
       (game.genre &&
@@ -385,6 +429,8 @@ const Ludotheque = () => {
     return (
       matchesSearchTitle &&
       matchesSearchGenre &&
+      matchesSearchdate &&
+      matchesSearchEditor &&
       matchesSearchMinPlayer &&
       matchesSearchMaxPlayer &&
       matchesSearchMinAge &&
@@ -508,6 +554,28 @@ const Ludotheque = () => {
                               value={description}
                               placeholder="description"
                               onChange={handleDescriptionChange}
+                            />
+                          </div>
+                          <div className="form-group">
+                            <label htmlFor="date">Date</label>
+                            <input
+                              type="number"
+                              id="date"
+                              value={date}
+                              className="form-control"
+                              placeholder="date"
+                              onChange={handleDateChange}
+                            />
+                          </div>
+                          <div className="form-group">
+                            <label htmlFor="editor">Editeur</label>
+                            <input
+                              type="text"
+                              id="editor"
+                              value={editor}
+                              className="form-control"
+                              placeholder="editeur"
+                              onChange={handleEditorChange}
                             />
                           </div>
                           <div className="form-group">
@@ -674,6 +742,28 @@ const Ludotheque = () => {
                         </tr>
                         <tr>
                           <td>
+                            <label htmlFor="date">Date</label>
+                            <input
+                              type="number"
+                              value={searchDate}
+                              className="form-control"
+                              placeholder="recherche par date"
+                              onChange={handleSearchDate}
+                            />
+                          </td>
+                          <td>
+                            <label htmlFor="editor">Editeur</label>
+                            <input
+                              type="text"
+                              value={searchEditor}
+                              className="form-control"
+                              placeholder="recherche par editeur"
+                              onChange={handleSearchEditor}
+                            />
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>
                             <label htmlFor="minPlayer">nb joueur min:</label>
                             <input
                               type="number"
@@ -806,6 +896,7 @@ const Ludotheque = () => {
               <tr>
                 <th scope="col">
                   <p className="text-bold ">Titre</p>
+                  <p className="fst-italic">Editeur </p>
                   {!show && <p className="fst-italic">Age minimum</p>}
                 </th>
                 {/* <th scope="col">couverture</th> */}
@@ -817,6 +908,7 @@ const Ludotheque = () => {
                   <>
                     <th scope="col">
                       <p>description</p>
+                      <p className="fst-italic">date de sortie</p>
                     </th>
                     <th scope="col">
                       <p>age minimum</p>
@@ -854,6 +946,9 @@ const Ludotheque = () => {
                         <h6 className="text-decoration-underline">
                           {game.title}
                         </h6>
+                        <p className="fst-italic">
+                          {game.editor ? `par ${game.editor}` : ""}
+                        </p>
                       </span>
                       <>
                         <br />
@@ -890,9 +985,14 @@ const Ludotheque = () => {
                     {show === true && (
                       <>
                         <td className="text-justify">
-                          {game.description
-                            ? game.description
-                            : "pas de résumé renseigné"}
+                          <p>
+                            {game.description
+                              ? game.description
+                              : "pas de résumé renseigné"}
+                          </p>
+                          <p className="fst-italic">
+                            {game.date ? `édité en ${game.date}` : ""}
+                          </p>
                         </td>
                         <td>
                           <span
@@ -967,6 +1067,7 @@ const Ludotheque = () => {
               <tr key="0">
                 <th scope="col">
                   <p>titre</p>
+                  <p className="fst-italic">Editeur</p>
                   {!show && <p className="fst-italic">Age minimum</p>}
                 </th>
                 <th scope="col">
@@ -978,6 +1079,7 @@ const Ludotheque = () => {
                   <>
                     <th scope="col">
                       <p>description</p>
+                      <p className="fst-italic">date de sortie</p>
                     </th>
                     <th scope="col">
                       <p>age minimum</p>
@@ -1025,6 +1127,9 @@ const Ludotheque = () => {
                         <h6 className="text-decoration-underline">
                           {game.title}
                         </h6>
+                        <p className="fst-italic">
+                          {game.editor ? `par ${game.editor}` : ""}
+                        </p>
                       </span>
                       <>
                         <br />
@@ -1070,9 +1175,14 @@ const Ludotheque = () => {
                     {show === true && (
                       <>
                         <td className="text-justify">
-                          {game.description
-                            ? game.description
-                            : "pas de résumé renseigné"}
+                          <p>
+                            {game.description
+                              ? game.description
+                              : "pas de résumé renseigné"}
+                          </p>
+                          <p className="fst-italic">
+                            {game.date ? `édité en ${game.date}` : ""}
+                          </p>
                         </td>
                         <td>
                           <span
