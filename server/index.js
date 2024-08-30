@@ -1,4 +1,5 @@
 const express = require("express");
+const compression = require("compression");
 const { json, urlencoded } = express;
 const app = express();
 const connection = require("./config/db");
@@ -7,6 +8,9 @@ const cors = require("cors");
 require("dotenv").config();
 const cookieParser = require("cookie-parser");
 const expressValidator = require("express-validator");
+
+// compress all responses
+app.use(compression());
 
 // get the technologie route
 const technologieRoute = require("./routes/technologieRoutes");
