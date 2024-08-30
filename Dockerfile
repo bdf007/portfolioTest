@@ -35,4 +35,11 @@ RUN npm install -g npm
 # Create front app
 RUN cd ./client && npm i && npm run build
 # RUN mkdir -p ./client/dist/src && cp -r ./client/src/assets ./client/dist/src
+RUN cp ./client/public/robots.txt ./client/build
+RUN cp ./client/public/sitemap.xml ./client/build
+# Create back app
+RUN cd ./server && npm i --prod
 
+# expose full app on APP_PORT
+EXPOSE ${PORT}
+CMD ["node", "server/index.js"]
