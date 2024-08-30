@@ -57,7 +57,7 @@ const GamePopup = ({ game, onClose, user, onUpdate }) => {
                 className="mb-0 fw-bolder text-decoration-underline"
                 style={{ whiteSpace: "nowrap" }}
               >
-                Title :{" "}
+                Titre :{" "}
               </label>
               <input
                 className="flex-grow-1 ml-2"
@@ -65,6 +65,15 @@ const GamePopup = ({ game, onClose, user, onUpdate }) => {
                 value={updatedTitle}
                 onChange={(e) => setUpdatedTitle(e.target.value)}
               />
+            </div>
+            <div className="form-group d-flex justify-content-between">
+              {game.imageData && (
+                <img
+                  src={game.imageData}
+                  alt={game.title}
+                  className="img-fluid rounded mx-auto d-block"
+                />
+              )}
             </div>
             <div className="form-group d-flex justify-content-between">
               <label
@@ -111,7 +120,7 @@ const GamePopup = ({ game, onClose, user, onUpdate }) => {
                 className="mb-0 fw-bolder text-decoration-underline"
                 style={{ whiteSpace: "nowrap" }}
               >
-                Editor :{" "}
+                Editeur :{" "}
               </label>
               <input
                 type="text"
@@ -178,7 +187,7 @@ const GamePopup = ({ game, onClose, user, onUpdate }) => {
                 onClick={updateGame}
                 type="button"
               >
-                Update
+                Mettre à jour
               </button>
               <br />
               <button
@@ -186,7 +195,7 @@ const GamePopup = ({ game, onClose, user, onUpdate }) => {
                 onClick={() => setEditing(false)}
                 type="button"
               >
-                Cancel
+                Annuler
               </button>
             </div>
           </div>
@@ -252,7 +261,7 @@ const GamePopup = ({ game, onClose, user, onUpdate }) => {
                   className="btn btn-primary"
                   onClick={() => setEditing(true)}
                 >
-                  Edit
+                  Modifier
                 </button>
               </div>
             )}
