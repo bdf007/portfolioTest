@@ -53,6 +53,8 @@ RUN cp ./client/public/sitemap.xml ./client/build
 
 # Exposer le port sur lequel l'application sera disponible
 EXPOSE ${PORT}
+  
 
 # Commande pour démarrer le serveur Node.js
 CMD ["node", "server/index.js"]
+
