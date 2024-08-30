@@ -31,6 +31,8 @@ ARG FRONTEND_URL=${FRONTEND_URL}
 
 COPY ./ /usr/src/app
 RUN npm install -g npm
+
 # Create front app
 RUN cd ./client && npm i && npm run build
 # RUN mkdir -p ./client/dist/src && cp -r ./client/src/assets ./client/dist/src
+
