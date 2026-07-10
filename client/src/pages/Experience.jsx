@@ -25,7 +25,7 @@ const Experience = () => {
     };
   }, []);
   return (
-    <div className="container " style={{ paddingBottom: "12rem" }}>
+    <div className="container home-page" style={{ paddingBottom: "12rem" }}>
       <div>
         <ExperienceUploader />
       </div>

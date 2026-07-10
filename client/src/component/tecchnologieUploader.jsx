@@ -2,7 +2,6 @@ import React, { useEffect, useState, useContext } from "react";
 import axios from "axios";
 import { UserContext } from "../context/UserContext";
 import { toast } from "react-toastify";
-import "../App.css";
 
 const TechnologieUploader = () => {
   const [selectedFile, setSelectedFile] = useState(null);
@@ -19,10 +18,10 @@ const TechnologieUploader = () => {
   const fetchtechnologies = async () => {
     try {
       const response = await axios.get(
-        `${process.env.REACT_APP_API_URL}/api/technologie/getTechnologies`
+        `${process.env.REACT_APP_API_URL}/api/technologie/getTechnologies`,
       );
       const sortedData = response.data.sort(
-        (a, b) => a.orderList - b.orderList
+        (a, b) => a.orderList - b.orderList,
       );
       setListOftechnologies(sortedData);
     } catch (error) {
@@ -102,7 +101,7 @@ const TechnologieUploader = () => {
 
         await axios.put(
           `${process.env.REACT_APP_API_URL}/api/technologie/updateTechnologie/${editingtechnologie._id}`,
-          updatedTechnologieData
+          updatedTechnologieData,
         );
 
         toast.success("Technologie updated successfully");
@@ -135,7 +134,7 @@ const TechnologieUploader = () => {
 
         const response = await axios.post(
           `${process.env.REACT_APP_API_URL}/api/technologie/upload`,
-          technologieData
+          technologieData,
         );
 
         toast.success("Technologie uploaded successfully");
@@ -153,11 +152,11 @@ const TechnologieUploader = () => {
   const deleteTechnologie = async (id) => {
     try {
       await axios.delete(
-        `${process.env.REACT_APP_API_URL}/api/technologie/deleteTechnologie/${id}`
+        `${process.env.REACT_APP_API_URL}/api/technologie/deleteTechnologie/${id}`,
       );
       toast.success("Technologie deleted successfully");
       setListOftechnologies((prevTechnologies) =>
-        prevTechnologies.filter((technologie) => technologie._id !== id)
+        prevTechnologies.filter((technologie) => technologie._id !== id),
       );
     } catch (error) {
       toast.error("Something went wrong");
@@ -195,7 +194,7 @@ const TechnologieUploader = () => {
   };
 
   return (
-    <div className="home">
+    <div className="tech-uploader">
       <h1 className="text-danger">Technologies utilisées</h1>
       {user && user.role === "admin" && (
         <>
@@ -269,59 +268,43 @@ const TechnologieUploader = () => {
           </form>
         </>
       )}
-      <div>
-        <div className="row row-cols-1 row-cols-md-4 row-cols-lg-6  g-lg-3  home">
-          {listOftechnologies.length === 0 && (
-            <div
-              className="d-flex justify-content-center"
-              style={{ paddingTop: "5rem" }}
-            >
-              <div className="spinner-border text-primary" role="status">
-                <span className="sr-only">Loading...</span>
-              </div>
-            </div>
-          )}
-          {listOftechnologies.map((technologie) => {
-            return (
-              <div className="col" key={technologie._id}>
-                <div className="card techno border-0 pt-5">
-                  <img
-                    className="rounded mx-auto d-block "
-                    src={technologie.imageData}
-                    alt={technologie.description || ""}
-                    style={{ maxWidth: "25%", maxHeight: "25%" }}
-                  />
 
-                  <div className="card-body">
-                    <h5 className="card-title text-center">
-                      {technologie.title || ""}
-                    </h5>
-                    {user && user.role === "admin" && (
-                      <div className="card-footer d-grid gap-2 col-6 mx-auto">
-                        <button
-                          className="btn btn-danger"
-                          onClick={() => {
-                            deleteTechnologie(technologie._id);
-                          }}
-                        >
-                          Delete
-                        </button>
-                        <button
-                          className="btn btn-primary"
-                          onClick={() => {
-                            editTechnologie(technologie);
-                          }}
-                        >
-                          Edit
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            );
-          })}
+      {listOftechnologies.length === 0 && (
+        <div className="tech-loading">
+          <div className="spinner-border text-primary" role="status">
+            <span className="sr-only">Loading...</span>
+          </div>
         </div>
+      )}
+
+      <div className="tech-grid">
+        {listOftechnologies.map((technologie) => (
+          <div className="tech-card" key={technologie._id}>
+            <img
+              className="tech-card-img"
+              src={technologie.imageData}
+              alt={technologie.description || ""}
+            />
+            <h5 className="tech-card-title">{technologie.title || ""}</h5>
+
+            {user && user.role === "admin" && (
+              <div className="tech-card-actions">
+                <button
+                  className="btn btn-danger"
+                  onClick={() => deleteTechnologie(technologie._id)}
+                >
+                  Delete
+                </button>
+                <button
+                  className="btn btn-primary"
+                  onClick={() => editTechnologie(technologie)}
+                >
+                  Edit
+                </button>
+              </div>
+            )}
+          </div>
+        ))}
       </div>
     </div>
   );

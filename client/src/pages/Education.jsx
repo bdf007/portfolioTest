@@ -25,7 +25,7 @@ const Education = () => {
     };
   }, []);
   return (
-    <div className="home accordion accordion-flush" id="accordionExample">
+    <div className="home-page accordion accordion-flush" id="accordionExample">
       <div className="accordion-item techno ">
         <h2 className="accordion-header" id="headingOne">
           <button

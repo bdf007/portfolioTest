@@ -1,21 +1,242 @@
-.App {
-  text-align: center;
-  min-height: 100vh;
-}
+@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@400;500&display=swap");
+
 #root {
   min-height: 100vh;
 }
-* {
-  box-sizing: border-box;
+.home-page {
+  --bg-dark: #0b0c10;
+  --bg-panel: #1f2833;
+  --accent: #45a29e;
+  --accent-light: #66fcf1;
+  --text-light: #c5c6c7;
+  --text-muted: #6b7280;
+
+  min-height: 100vh;
+  padding: 4rem 1.5rem 6rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3rem;
+  background: radial-gradient(
+    circle at top,
+    var(--bg-panel),
+    var(--bg-dark) 70%
+  );
+  color: var(--text-light);
+  font-family: "Space Grotesk", sans-serif;
 }
 
-body {
-  position: relative;
-  background-color: darkgray;
+/* ---------- Hero ---------- */
+
+.hero {
+  text-align: center;
 }
-main {
-  margin-bottom: 220px;
+
+.hero-avatar {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--accent);
+  box-shadow: 0 0 0 6px rgba(69, 162, 158, 0.15);
+  margin-bottom: 1.5rem;
 }
+
+.hero-eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  font-size: 0.75rem;
+  color: var(--accent-light);
+  margin: 0 0 0.5rem;
+}
+
+.hero-name {
+  font-size: clamp(2rem, 5vw, 3rem);
+  font-weight: 700;
+  margin: 0;
+  color: #ffffff;
+}
+
+.hero-role {
+  font-weight: 500;
+  font-size: 1.1rem;
+  color: var(--accent);
+  margin: 0.5rem 0 0;
+}
+
+/* ---------- Terminal card (signature element) ---------- */
+
+.terminal {
+  width: 100%;
+  max-width: 560px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--bg-panel);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.terminal-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.7rem 1rem;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+.dot-red {
+  background: #ff5f56;
+}
+.dot-yellow {
+  background: #ffbd2e;
+}
+.dot-green {
+  background: #27c93f;
+}
+
+.terminal-title {
+  margin-left: 0.5rem;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.terminal-body {
+  padding: 1.5rem;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.9rem;
+  text-align: left;
+}
+
+.terminal-command {
+  color: var(--text-muted);
+  margin: 0 0 1rem;
+}
+
+.terminal-line {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0 0 0.8rem;
+}
+
+.terminal-prompt {
+  color: var(--accent-light);
+}
+
+.terminal-label {
+  color: var(--accent);
+}
+
+.terminal-value {
+  color: var(--text-muted);
+  letter-spacing: 0.1em;
+  transition:
+    color 0.15s ease,
+    letter-spacing 0.15s ease;
+}
+
+.terminal-value.is-visible {
+  color: var(--text-light);
+  letter-spacing: normal;
+}
+
+.terminal-toggle {
+  color: var(--text-muted) !important;
+  margin-left: auto !important;
+}
+
+.terminal-toggle:hover {
+  color: var(--accent-light) !important;
+}
+
+.terminal-toggle:focus-visible {
+  outline: 2px solid var(--accent-light);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .terminal-value {
+    transition: none;
+  }
+}
+
+@media screen and (max-width: 600px) {
+  .home {
+    padding: 3rem 1rem 4rem;
+    gap: 2rem;
+  }
+  .terminal-body {
+    font-size: 0.8rem;
+  }
+}
+
+/* ---------- Thecnology stack ---------- */
+.tech-uploader {
+  padding-top: 2rem;
+  text-align: center;
+}
+
+.tech-loading {
+  display: flex;
+  justify-content: center;
+  padding-top: 5rem;
+}
+
+/* Grille responsive : s'adapte au nombre de logos sans dépendre
+   des classes row-cols-* de Bootstrap ni d'un display hérité d'ailleurs. */
+.tech-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+
+.tech-card {
+  background: #fff;
+  border-radius: 8px;
+  padding: 1.5rem 1rem 1rem;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.tech-card-img {
+  max-width: 60%;
+  max-height: 80px;
+  object-fit: contain;
+  margin-bottom: 1rem;
+}
+
+.tech-card-title {
+  font-size: 0.95rem;
+  margin: 0 0 1rem;
+  text-align: center;
+}
+
+.tech-card-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+@media screen and (max-width: 600px) {
+  .tech-grid {
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    gap: 1rem;
+  }
+}
+
+/* ---------- Footer ---------- */
+
 .footer-bs {
   position: absolute;
   width: 100%;
@@ -24,25 +245,8 @@ main {
   height: 10rem;
   color: white;
 }
-.home {
-  padding-top: 2rem;
-  padding-bottom: 10rem;
-  max-width: 100vw;
-  margin-right: 0;
-  padding-left: 0;
-  overflow: hidden;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-}
-.description {
-  font-size: 2rem;
-  white-space: pre-line;
-}
 
-.techno {
-  background-color: darkgray;
-}
+/* ---------- ludotheque ---------- */
 
 .popup-overlay {
   position: fixed;
@@ -89,10 +293,7 @@ textarea {
 .scroll-to-top:hover {
   background-color: #0056b3;
 }
-
-@media screen and (max-width: 768px) {
-  .description {
-    font-size: 1.5rem;
-    white-space: pre-line;
-  }
+body {
+  position: relative;
+  background-color: darkslategray;
 }
