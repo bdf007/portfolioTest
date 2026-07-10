@@ -29,34 +29,34 @@ const Ludotheque = () => {
   const [addNewGame, setAddNewGame] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [searchTitle, setSearchTitle] = useState(
-    localStorage.getItem("searchTitle") || ""
+    localStorage.getItem("searchTitle") || "",
   );
   const [searchGenre, setSearchGenre] = useState(
-    localStorage.getItem("searchGenre") || ""
+    localStorage.getItem("searchGenre") || "",
   );
   const [searchDate, setSearchDate] = useState(
-    localStorage.getItem("searchDate") || ""
+    localStorage.getItem("searchDate") || "",
   );
   const [searchEditor, setSearchEditor] = useState(
-    localStorage.getItem("searchEditor") || ""
+    localStorage.getItem("searchEditor") || "",
   );
   const [searchMinPlayer, setSearchMinPlayer] = useState(
-    localStorage.getItem("searchMinPlayer")
+    localStorage.getItem("searchMinPlayer"),
   );
   const [searchMaxPlayer, setSearchMaxPlayer] = useState(
-    localStorage.getItem("searchMaxPlayer")
+    localStorage.getItem("searchMaxPlayer"),
   );
   const [searchMinAge, setSearchMinAge] = useState(
-    localStorage.getItem("searchMinAge")
+    localStorage.getItem("searchMinAge"),
   );
   const [searchMaxAge, setSearchMaxAge] = useState(
-    localStorage.getItem("searchMaxAge")
+    localStorage.getItem("searchMaxAge"),
   );
   const [searchMinDuration, setSearchMinDuration] = useState(
-    localStorage.getItem("searchMinDuration")
+    localStorage.getItem("searchMinDuration"),
   );
   const [searchMaxDuration, setSearchMaxDuration] = useState(
-    localStorage.getItem("searchMaxDuration")
+    localStorage.getItem("searchMaxDuration"),
   );
 
   const [searchStatus, setSearchStatus] = useState("");
@@ -68,9 +68,15 @@ const Ludotheque = () => {
 
   const getListOfGames = async () => {
     try {
+      const isAdmin = user?.role === "admin";
+
+      const endpoint = isAdmin ? "/api/games" : "/api/games/noimage";
+
       const response = await axios.get(
-        `${process.env.REACT_APP_API_URL}/api/games/noimage`
+        `${process.env.REACT_APP_API_URL}${endpoint}`,
       );
+      // show the games in the console
+      console.log("response.data", response.data);
       // sort by title alphabetically
       response.data.sort((a, b) => {
         if (a.title.toLowerCase() < b.title.toLowerCase()) {
@@ -92,7 +98,7 @@ const Ludotheque = () => {
     try {
       gameId = gameId._id;
       const res = await axios.get(
-        `${process.env.REACT_APP_API_URL}/api/game/${gameId}`
+        `${process.env.REACT_APP_API_URL}/api/game/${gameId}`,
       );
       setSelectedGame(res.data);
       setIsPopupOpen(true);
@@ -108,7 +114,7 @@ const Ludotheque = () => {
   const handleRandomGame = async () => {
     try {
       const response = await axios.get(
-        `${process.env.REACT_APP_API_URL}/api/games/random`
+        `${process.env.REACT_APP_API_URL}/api/games/random`,
       );
 
       setSelectedGame(response.data);
@@ -229,7 +235,7 @@ const Ludotheque = () => {
 
       const response = await axios.post(
         `${process.env.REACT_APP_API_URL}/api/game`,
-        gameData
+        gameData,
       );
 
       toast.success("Jeu ajouté avec succès");
@@ -248,7 +254,7 @@ const Ludotheque = () => {
       };
       await axios.put(
         `${process.env.REACT_APP_API_URL}/api/game/${id}`,
-        gameStatus
+        gameStatus,
       );
       toast.success("Status du jeu mis à jour avec succès");
       getListOfGames();
@@ -392,6 +398,7 @@ const Ludotheque = () => {
   };
 
   const filteredGames = listOfGames.filter((game) => {
+    console.log("game", game);
     const matchesSearchTitle =
       !searchTitle ||
       (game.title &&
@@ -403,7 +410,7 @@ const Ludotheque = () => {
       (game.editor &&
         containsAllWords(
           game.editor.toLowerCase(),
-          searchEditor.toLowerCase()
+          searchEditor.toLowerCase(),
         ));
     const matchesSearchGenre =
       !searchGenre ||
@@ -1127,6 +1134,15 @@ const Ludotheque = () => {
                         <h6 className="text-decoration-underline">
                           {game.title}
                         </h6>
+                        <p>
+                          <img
+                            loading="lazy"
+                            src={game.imageData}
+                            alt={game.title}
+                            className="img-thumbnail rounded"
+                            style={{ maxWidth: "200px", maxHeight: "200px" }}
+                          />
+                        </p>
                         <p className="fst-italic">
                           {game.editor ? `par ${game.editor}` : ""}
                         </p>
@@ -1157,7 +1173,7 @@ const Ludotheque = () => {
                           className="img-thumbnail rounded"
                           style={{ maxWidth: "200px", maxHeight: "200px" }}
                         />
-                    </td> */}
+                      </td>*/}
                     <td>
                       <p className="badge bg-warning text-dark text-wrap">
                         {game.genre}
@@ -1259,7 +1275,7 @@ const Ludotheque = () => {
                               Jeu refusé
                             </p>
                           )}
-                          {user && game.status !== "accepted" && (
+                          {user && user.role === "admin" && (
                             <>
                               <select
                                 value={status}

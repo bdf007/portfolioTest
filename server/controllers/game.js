@@ -12,10 +12,10 @@ exports.createGame = async (req, res) => {
   });
 };
 
-// get all games but dont send back the imageData
+// get all games with the status accepted but dont send back the imageData
 exports.getGamesWithoutImageData = async (req, res) => {
   try {
-    const games = await Game.find({}).select("-imageData");
+    const games = await Game.find({ status: "accepted" }).select("-imageData");
     res.status(200).json(games);
   } catch (error) {
     console.log(error);

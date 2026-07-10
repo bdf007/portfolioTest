@@ -35,7 +35,7 @@ const AboutUploader = () => {
             {
               title: title,
               description: description,
-            }
+            },
           )
           .then((response) => {
             toast.success("About updated");
@@ -148,7 +148,7 @@ const AboutUploader = () => {
               <div key={about._id}>
                 <h3 className="text-danger">{about.title}</h3>
                 <pre>
-                  <p className="description">{about.description}</p>
+                  <p className="description text-light">{about.description}</p>
                 </pre>
                 {user && user.role === "admin" && (
                   <>

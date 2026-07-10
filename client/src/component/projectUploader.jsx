@@ -19,10 +19,10 @@ const ProjectUploader = () => {
   const fetchProjects = async () => {
     try {
       const response = await axios.get(
-        `${process.env.REACT_APP_API_URL}/api/project/projectWithImage`
+        `${process.env.REACT_APP_API_URL}/api/project/projectWithImage`,
       );
       const sortedData = response.data.sort(
-        (a, b) => a.orderList - b.orderList
+        (a, b) => a.orderList - b.orderList,
       );
       setListOfProjects(sortedData);
     } catch (error) {
@@ -107,7 +107,7 @@ const ProjectUploader = () => {
 
         await axios.put(
           `${process.env.REACT_APP_API_URL}/api/project/projectWithImage/update/${editingProject._id}`,
-          updatedProjectData
+          updatedProjectData,
         );
 
         toast.success("Project updated successfully");
@@ -143,7 +143,7 @@ const ProjectUploader = () => {
 
         const response = await axios.post(
           `${process.env.REACT_APP_API_URL}/api/project/upload`,
-          newProjectData
+          newProjectData,
         );
 
         toast.success("Project uploaded successfully");
@@ -162,11 +162,11 @@ const ProjectUploader = () => {
   const deleteProject = async (id) => {
     try {
       await axios.delete(
-        `${process.env.REACT_APP_API_URL}/api/project/deleteProject/${id}`
+        `${process.env.REACT_APP_API_URL}/api/project/deleteProject/${id}`,
       );
       toast.success("Project deleted successfully");
       setListOfProjects((prevProjects) =>
-        prevProjects.filter((project) => project._id !== id)
+        prevProjects.filter((project) => project._id !== id),
       );
     } catch (error) {
       console.log(error);
@@ -337,7 +337,7 @@ const ProjectUploader = () => {
                         {project.title || ""}
                       </h2>
                       <pre>
-                        <p className="card-text description text-center fs-6">
+                        <p className="card-text description text-center text-warp fs-6">
                           {project.textProject || ""}
                         </p>
                       </pre>
