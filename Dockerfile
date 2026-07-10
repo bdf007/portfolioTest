@@ -1,7 +1,6 @@
 # production environment
 FROM node:20-alpine
-# Create app directory
-RUN mkdir /usr/src/app
+
 WORKDIR /usr/src/app
 # Create env variables
 ENV PATH /usr/src/app/node_modules/.bin:$PATH
