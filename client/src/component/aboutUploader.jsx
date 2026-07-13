@@ -9,7 +9,7 @@ const AboutUploader = () => {
   const [description, setDescription] = useState("");
   const [listOfAbout, setListOfAbout] = useState([]);
   const [editingAbout, setEditingAbout] = useState(null);
-  const [isEditing, setIsEditing] = useState(false); // New state
+  const [isEditing, setIsEditing] = useState(false);
   const { user } = useContext(UserContext);
 
   useEffect(() => {
@@ -18,13 +18,8 @@ const AboutUploader = () => {
     });
   }, []);
 
-  const handleTitleChange = (e) => {
-    setTitle(e.target.value);
-  };
-
-  const handleDescriptionChange = (e) => {
-    setDescription(e.target.value);
-  };
+  const handleTitleChange = (e) => setTitle(e.target.value);
+  const handleDescriptionChange = (e) => setDescription(e.target.value);
 
   const handleUpload = () => {
     try {
@@ -52,7 +47,7 @@ const AboutUploader = () => {
               });
               return updatedList;
             });
-            setIsEditing(false); // Reset the isEditing state
+            setIsEditing(false);
             setEditingAbout(null);
           });
       } else {
@@ -94,82 +89,83 @@ const AboutUploader = () => {
   const editAbout = (about) => {
     setTitle(about.title);
     setDescription(about.description);
-    setIsEditing(true); // Set isEditing to true
+    setIsEditing(true);
     setEditingAbout(about);
   };
 
   return (
-    <div>
-      {user && user.role === "admin" && (
-        <>
-          <h3>About Uploader</h3>
-          <form>
-            <div className="form-group">
-              <input
-                value={title}
-                id="title"
-                size="small"
-                className="form-control mb-3"
-                placeholder="Title"
-                label="Title"
-                onChange={handleTitleChange}
-              />
-            </div>
-            <div className="form-group">
-              <textarea
-                value={description}
-                id="description"
-                size="small"
-                className="form-control mb-3"
-                placeholder="Description"
-                label="Description"
-                onChange={handleDescriptionChange}
-              />
-              <button onClick={handleUpload}>
-                {isEditing ? "Update" : "Upload"}
-              </button>
-            </div>
-          </form>
-        </>
-      )}
-      <div className="mx-auto text-wrap" style={{ maxWidth: "75%" }}>
-        {listOfAbout.length === 0 ? (
-          <div
-            className="d-flex justify-content-center"
-            style={{ paddingTop: "5rem" }}
-          >
-            <div className="spinner-border text-primary" role="status">
-              <span className="sr-only">Loading...</span>
-            </div>
-          </div>
-        ) : (
-          listOfAbout?.map((about) => {
-            return (
-              <div key={about._id}>
-                <h3 className="text-danger">{about.title}</h3>
-                <pre>
-                  <p className="description text-light">{about.description}</p>
-                </pre>
-                {user && user.role === "admin" && (
-                  <>
-                    <button
-                      className="btn btn-primary"
-                      onClick={() => editAbout(about)}
-                    >
-                      Edit About
-                    </button>
-                    <button
-                      className="btn btn-danger"
-                      onClick={() => deleteAbout(about._id)}
-                    >
-                      Delete About
-                    </button>
-                  </>
-                )}
+    <div className="about-page">
+      <div className="uploader">
+        {user && user.role === "admin" && (
+          <div className="admin-panel">
+            <h3 className="admin-panel-title">About Uploader</h3>
+            <form>
+              <div className="form-group">
+                <input
+                  value={title}
+                  id="title"
+                  className="field-input"
+                  placeholder="Title"
+                  onChange={handleTitleChange}
+                />
               </div>
-            );
-          })
+              <div className="form-group">
+                <textarea
+                  value={description}
+                  id="description"
+                  className="field-textarea"
+                  placeholder="Description"
+                  onChange={handleDescriptionChange}
+                />
+                <button className="field-submit" onClick={handleUpload}>
+                  {isEditing ? "Update" : "Upload"}
+                </button>
+              </div>
+            </form>
+          </div>
         )}
+
+        <div className="terminal">
+          <div className="terminal-bar">
+            <span className="dot dot-red" />
+            <span className="dot dot-yellow" />
+            <span className="dot dot-green" />
+            <span className="terminal-title">about.md</span>
+          </div>
+
+          <div className="terminal-body">
+            {listOfAbout.length === 0 ? (
+              <div className="entry-loading">
+                <div className="spinner-border text-primary" role="status">
+                  <span className="sr-only">Loading...</span>
+                </div>
+              </div>
+            ) : (
+              listOfAbout.map((about) => (
+                <div className="entry" key={about._id}>
+                  <h3 className="entry-title"># {about.title}</h3>
+                  <p className="entry-description">{about.description}</p>
+                  {user && user.role === "admin" && (
+                    <div className="entry-actions">
+                      <button
+                        className="btn btn-primary"
+                        onClick={() => editAbout(about)}
+                      >
+                        Edit About
+                      </button>
+                      <button
+                        className="btn btn-danger"
+                        onClick={() => deleteAbout(about._id)}
+                      >
+                        Delete About
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

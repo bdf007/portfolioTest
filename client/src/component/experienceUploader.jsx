@@ -2,6 +2,7 @@ import React, { useEffect, useState, useContext } from "react";
 import axios from "axios";
 import { UserContext } from "../context/UserContext";
 import { toast } from "react-toastify";
+import "../App.css";
 
 const ExperienceUploader = () => {
   const [title, setTitle] = useState("");
@@ -9,7 +10,7 @@ const ExperienceUploader = () => {
   const [linktoProject, setLinktoProject] = useState("");
   const [listOfExperience, setListOfExperience] = useState([]);
   const [editingExperience, setEditingExperience] = useState(null);
-  const [isEditing, setIsEditing] = useState(false); // New state
+  const [isEditing, setIsEditing] = useState(false);
   const { user } = useContext(UserContext);
 
   useEffect(() => {
@@ -18,17 +19,9 @@ const ExperienceUploader = () => {
     });
   }, []);
 
-  const handleTitleChange = (e) => {
-    setTitle(e.target.value);
-  };
-
-  const handleDescriptionChange = (e) => {
-    setDescription(e.target.value);
-  };
-
-  const handleLinkToPorjectChange = (e) => {
-    setLinktoProject(e.target.value);
-  };
+  const handleTitleChange = (e) => setTitle(e.target.value);
+  const handleDescriptionChange = (e) => setDescription(e.target.value);
+  const handleLinkToPorjectChange = (e) => setLinktoProject(e.target.value);
 
   const handleUpload = () => {
     try {
@@ -40,7 +33,7 @@ const ExperienceUploader = () => {
               title: title,
               description: description,
               linktoProject: linktoProject,
-            }
+            },
           )
           .then((response) => {
             toast.success("Experience updated");
@@ -58,7 +51,7 @@ const ExperienceUploader = () => {
               });
               return updatedList;
             });
-            setIsEditing(false); // Reset the isEditing state
+            setIsEditing(false);
             setEditingExperience(null);
           });
       } else {
@@ -82,11 +75,9 @@ const ExperienceUploader = () => {
           });
       }
 
-      // reset the form
       setTitle("");
       setDescription("");
       setLinktoProject("");
-      // clear the input field
       document.getElementById("title").value = "";
       document.getElementById("description").value = "";
       document.getElementById("linktoProject").value = "";
@@ -100,16 +91,12 @@ const ExperienceUploader = () => {
       .delete(`${process.env.REACT_APP_API_URL}/api/experience/${id}`)
       .then(() => {
         toast.success("Experience deleted");
-        setListOfExperience(
-          listOfExperience.filter((val) => {
-            return val._id !== id;
-          })
-        );
+        setListOfExperience(listOfExperience.filter((val) => val._id !== id));
       });
   };
 
   const editExperience = (experience) => {
-    setIsEditing(true); // Set the isEditing state
+    setIsEditing(true);
     setEditingExperience(experience);
     setTitle(experience.title);
     setDescription(experience.description);
@@ -117,20 +104,19 @@ const ExperienceUploader = () => {
   };
 
   return (
-    <div className="home">
-      <h1 className="text-danger">Mon expérience</h1>
+    <div className="uploader">
+      <h1 className="page-title">Mon expérience</h1>
+
       {user && user.role === "admin" && (
-        <>
-          <h3>Experience Uploader</h3>
+        <div className="admin-panel">
+          <h3 className="admin-panel-title">Experience Uploader</h3>
           <form>
             <div className="form-group">
               <input
                 value={title}
                 id="title"
-                size="small"
-                className="form-control mb-3"
+                className="field-input"
                 placeholder="Title"
-                label="Title"
                 onChange={handleTitleChange}
               />
             </div>
@@ -138,70 +124,76 @@ const ExperienceUploader = () => {
               <textarea
                 value={description}
                 id="description"
-                size="small"
-                className="form-control mb-3"
+                className="field-textarea"
                 placeholder="Description"
-                label="Description"
                 onChange={handleDescriptionChange}
-              >
-                {" "}
-              </textarea>
+              />
             </div>
             <div className="form-group">
               <input
                 value={linktoProject}
                 id="linktoProject"
-                size="small"
-                className="form-control mb-3"
+                className="field-input"
                 placeholder="Link to Project"
-                label="Link to Project"
                 onChange={handleLinkToPorjectChange}
               />
             </div>
-            <button onClick={handleUpload}>
+            <button className="field-submit" onClick={handleUpload}>
               {isEditing ? "Update" : "Upload"}
             </button>
           </form>
-        </>
+        </div>
       )}
-      <div>
-        {listOfExperience.length === 0 && (
-          <div
-            className="d-flex justify-content-center"
-            style={{ paddingTop: "5rem" }}
-          >
-            <div className="spinner-border text-primary" role="status">
-              <span className="sr-only">Loading...</span>
-            </div>
-          </div>
-        )}
-        {listOfExperience.map((experience) => {
-          return (
-            <div key={experience._id}>
-              <h3 className="text-primary">
-                <a href={experience.linktoProject}>{experience.title}</a>
-              </h3>
-              <p>{experience.description}</p>
 
-              {user && user.role === "admin" && (
-                <>
-                  <button
-                    className="btn btn-primary"
-                    onClick={() => editExperience(experience)}
-                  >
-                    Edit Experience
-                  </button>
-                  <button
-                    className="btn btn-danger"
-                    onClick={() => deleteExperience(experience._id)}
-                  >
-                    Delete Experience
-                  </button>
-                </>
-              )}
+      <div className="terminal">
+        <div className="terminal-bar">
+          <span className="dot dot-red" />
+          <span className="dot dot-yellow" />
+          <span className="dot dot-green" />
+          <span className="terminal-title">experience.log</span>
+        </div>
+        <div className="terminal-body">
+          {listOfExperience.length === 0 ? (
+            <div className="entry-loading">
+              <div className="spinner-border text-primary" role="status">
+                <span className="sr-only">Loading...</span>
+              </div>
             </div>
-          );
-        })}
+          ) : (
+            listOfExperience.map((experience) => (
+              <div className="entry" key={experience._id}>
+                <h3 className="entry-title">
+                  #{" "}
+                  <a
+                    className="entry-link"
+                    href={experience.linktoProject}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    {experience.title}
+                  </a>
+                </h3>
+                <p className="entry-description">{experience.description}</p>
+                {user && user.role === "admin" && (
+                  <div className="entry-actions">
+                    <button
+                      className="btn btn-primary"
+                      onClick={() => editExperience(experience)}
+                    >
+                      Edit Experience
+                    </button>
+                    <button
+                      className="btn btn-danger"
+                      onClick={() => deleteExperience(experience._id)}
+                    >
+                      Delete Experience
+                    </button>
+                  </div>
+                )}
+              </div>
+            ))
+          )}
+        </div>
       </div>
     </div>
   );
