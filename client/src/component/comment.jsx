@@ -10,10 +10,7 @@ const CommentUploader = () => {
   const [comment, setComment] = useState("");
   const { user } = useContext(UserContext);
   const [isLoading, setIsLoading] = useState(false);
-
   const [listOfComment, setListOfComment] = useState([]);
-
-  // Email validation regular expression
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
   useEffect(() => {
@@ -23,20 +20,11 @@ const CommentUploader = () => {
     });
   }, []);
 
-  const handleNameChange = (e) => {
-    setName(e.target.value);
-  };
-
-  const handleEmailChange = (e) => {
-    setEmail(e.target.value);
-  };
-
-  const handleCommentChange = (e) => {
-    setComment(e.target.value);
-  };
+  const handleNameChange = (e) => setName(e.target.value);
+  const handleEmailChange = (e) => setEmail(e.target.value);
+  const handleCommentChange = (e) => setComment(e.target.value);
 
   const handleUpload = () => {
-    // Validate fields
     if (!name.trim() || !comment.trim()) {
       toast.error("Merci de remplir tous les champs.");
       return;
@@ -59,15 +47,9 @@ const CommentUploader = () => {
             comment: comment,
           },
         ]);
-        // reset the form
         setName("");
         setEmail("");
         setComment("");
-
-        // clear the input field
-        // document.getElementById("name").value = "";
-        // document.getElementById("email").value = "";
-        // document.getElementById("comment").value = "";
       });
   };
 
@@ -76,71 +58,65 @@ const CommentUploader = () => {
       .delete(`${process.env.REACT_APP_API_URL}/api/comment/${id}`)
       .then(() => {
         toast.success("Comment deleted");
-        setListOfComment(
-          listOfComment.filter((val) => {
-            return val._id !== id;
-          })
-        );
+        setListOfComment(listOfComment.filter((val) => val._id !== id));
       });
   };
 
   return (
-    <div>
+    <>
       {(!user || user.role !== "admin") && (
         <>
-          <h2 className="text-danger">Laissez moi un commentaire</h2>
+          <h2 className="panel-title">Laissez-moi un commentaire</h2>
           {!isLoading ? (
             <form
               action="https://formsubmit.co/christophemidelet650@gmail.com"
               method="POST"
               onSubmit={(e) => {
-                e.preventDefault(); // Prevent the default form submission behavior
-                handleUpload(); // Perform your custom form submission logic
+                e.preventDefault();
+                handleUpload();
               }}
             >
               <div className="form-group">
-                <label htmlFor="name">Nom, prénom ou surnom*</label>
+                <label htmlFor="name" className="field-label">
+                  Nom, prénom ou surnom*
+                </label>
                 <input
                   value={name}
                   id="name"
                   name="name"
-                  size="small"
-                  className="form-control mb-3"
+                  className="field-input"
                   placeholder="Nom, prénom ou surnom*"
-                  label="Nom*"
                   onChange={handleNameChange}
                 />
               </div>
               <div className="form-group">
-                <label htmlFor="email">Email</label>
+                <label htmlFor="email" className="field-label">
+                  Email
+                </label>
                 <input
                   value={email}
                   id="email"
                   name="email"
-                  size="small"
-                  className="form-control mb-3"
+                  className="field-input"
                   placeholder="Email"
-                  label="Email"
                   onChange={handleEmailChange}
                 />
               </div>
               <div className="form-group">
-                <label htmlFor="comment">Commentaire*</label>
+                <label htmlFor="comment" className="field-label">
+                  Commentaire*
+                </label>
                 <textarea
                   value={comment}
                   id="comment"
                   name="comment"
-                  size="small"
-                  className="form-control mb-3"
+                  className="field-textarea"
                   placeholder="Commentaire*"
-                  label="Commentaire*"
                   onChange={handleCommentChange}
-                >
-                  {" "}
-                </textarea>
-                <p className="fs-6 text-muted">*: champs obligatoire</p>
+                />
+                <p className="field-hint">*: champs obligatoire</p>
                 <button
-                  className="btn btn-primary"
+                  className="field-submit"
                   type="submit"
                   disabled={
                     !name || !comment || (email && !emailRegex.test(email))
@@ -158,56 +134,54 @@ const CommentUploader = () => {
               />
             </form>
           ) : (
-            <p>
+            <p className="loading-text">
               merci de patienter{" "}
-              <span>
-                <img
-                  src={spin}
-                  alt="loading"
-                  className="spin"
-                  style={{ width: "2rem", height: "2rem" }}
-                />
-              </span>
+              <img src={spin} alt="loading" className="spin-icon" />
             </p>
           )}
         </>
       )}
-      {!isLoading && (
-        <div>
-          {listOfComment.length === 0 && (
-            <h3>Aucun Commentaire pour le moment</h3>
-          )}
-          {listOfComment.map((comment) => {
-            return (
-              <div key={comment._id}>
-                <p>
-                  <span className="text-primary fs-4">{comment.name}</span>{" "}
-                  <span className="fs-5">{comment.comment}</span>
-                  {comment.Date && (
-                    <span className="text-success fs-6">
-                      {comment.Date.slice(0, 10)}
-                    </span>
-                  )}
-                </p>
 
+      {!isLoading && (
+        <div className="terminal">
+          <div className="terminal-bar">
+            <span className="dot dot-red" />
+            <span className="dot dot-yellow" />
+            <span className="dot dot-green" />
+            <span className="terminal-title">comments.log</span>
+          </div>
+          <div className="terminal-body">
+            {listOfComment.length === 0 && (
+              <p className="entry-description">
+                Aucun commentaire pour le moment.
+              </p>
+            )}
+            {listOfComment.map((comment) => (
+              <div key={comment._id} className="entry">
+                <h3 className="entry-title"># {comment.name}</h3>
+                <p className="entry-description">{comment.comment}</p>
+                {comment.Date && (
+                  <p className="entry-meta">{comment.Date.slice(0, 10)}</p>
+                )}
                 {user && user.role === "admin" && (
-                  <div>
-                    {comment.email ? <p>{comment.email}</p> : <p> No email</p>}
+                  <div className="entry-actions">
+                    <p className="entry-meta">
+                      {comment.email || "Pas d'email"}
+                    </p>
                     <button
                       className="btn btn-danger"
                       onClick={() => deleteComment(comment._id)}
-                      style={{ marginBottom: "2rem" }}
                     >
                       Delete Comment
                     </button>
                   </div>
                 )}
               </div>
-            );
-          })}
+            ))}
+          </div>
         </div>
       )}
-    </div>
+    </>
   );
 };
 

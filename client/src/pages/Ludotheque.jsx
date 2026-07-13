@@ -514,7 +514,7 @@ const Ludotheque = () => {
   }, [setListOfGames, user]);
 
   return (
-    <div className="container " style={{ paddingBottom: "12rem" }}>
+    <div className="container home-page" style={{ paddingBottom: "12rem" }}>
       <div className="row">
         <h1 className="mx-auto text-center">Ma Ludothéque</h1>
         <div>

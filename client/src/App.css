@@ -1,79 +1,121 @@
 @import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@400;500&display=swap");
 
+/* ==========================================================================
+   Base / layout global
+   ========================================================================== */
+
+.App {
+  text-align: center;
+  min-height: 100vh;
+}
 #root {
   min-height: 100vh;
 }
-.home-page {
-  --bg-dark: #0b0c10;
-  --bg-panel: #1f2833;
+* {
+  box-sizing: border-box;
+}
+
+:root {
   --accent: #45a29e;
   --accent-light: #66fcf1;
+  --bg-dark: #0b0c10;
+  --bg-panel: #1f2833;
   --text-light: #c5c6c7;
   --text-muted: #6b7280;
+}
 
-  min-height: 100vh;
-  padding: 4rem 1.5rem 6rem;
+body {
+  position: relative;
+  background-color: darkgray;
+}
+main {
+  margin-bottom: 220px;
+}
+.footer-bs {
+  position: absolute;
+  width: 100%;
+  left: 0;
+  bottom: 0;
+  height: 10rem;
+  color: white;
+}
+
+.description {
+  font-size: 2rem;
+  white-space: pre-line;
+}
+
+.techno {
+  background-color: darkgray;
+}
+
+.popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
   display: flex;
-  flex-direction: column;
+  justify-content: center;
   align-items: center;
-  gap: 3rem;
-  background: radial-gradient(
-    circle at top,
-    var(--bg-panel),
-    var(--bg-dark) 70%
-  );
-  color: var(--text-light);
-  font-family: "Space Grotesk", sans-serif;
+  z-index: 1000;
 }
 
-/* ---------- Hero ---------- */
-
-.hero {
-  text-align: center;
+.popup-content {
+  background-color: #45a29e;
+  padding: 20px;
+  border-radius: 5px;
+  max-width: 800px;
+  width: 80vw;
+  max-height: 80vh;
+  overflow-y: auto;
 }
 
-.hero-avatar {
-  width: 140px;
-  height: 140px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 3px solid var(--accent);
-  box-shadow: 0 0 0 6px rgba(69, 162, 158, 0.15);
-  margin-bottom: 1.5rem;
+textarea {
+  width: 100%;
+  min-height: 100px;
+  padding: 10px;
+  box-sizing: border-box;
 }
 
-.hero-eyebrow {
-  text-transform: uppercase;
-  letter-spacing: 0.2em;
-  font-size: 0.75rem;
-  color: var(--accent-light);
-  margin: 0 0 0.5rem;
+.scroll-to-top {
+  position: fixed;
+  bottom: 12rem;
+  right: 2rem;
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  padding: 10px;
+  cursor: pointer;
+  border-radius: 5rem;
 }
 
-.hero-name {
-  font-size: clamp(2rem, 5vw, 3rem);
-  font-weight: 700;
-  margin: 0;
-  color: #ffffff;
+.scroll-to-top:hover {
+  background-color: #0056b3;
 }
 
-.hero-role {
-  font-weight: 500;
-  font-size: 1.1rem;
-  color: var(--accent);
-  margin: 0.5rem 0 0;
+@media screen and (max-width: 768px) {
+  .description {
+    font-size: 1.5rem;
+    white-space: pre-line;
+  }
 }
 
-/* ---------- Terminal card (signature element) ---------- */
+/* ==========================================================================
+   Composant partagé : fenêtre "terminal" (About, Education, Experience...)
+   ========================================================================== */
 
 .terminal {
   width: 100%;
   max-width: 560px;
+  margin: 0 auto;
   border-radius: 10px;
   overflow: hidden;
   background: var(--bg-panel);
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
   border: 1px solid rgba(255, 255, 255, 0.06);
+  font-family: "JetBrains Mono", monospace;
 }
 
 .terminal-bar {
@@ -101,16 +143,15 @@
 
 .terminal-title {
   margin-left: 0.5rem;
-  font-family: "JetBrains Mono", monospace;
   font-size: 0.75rem;
   color: var(--text-muted);
 }
 
 .terminal-body {
   padding: 1.5rem;
-  font-family: "JetBrains Mono", monospace;
   font-size: 0.9rem;
   text-align: left;
+  color: var(--text-light);
 }
 
 .terminal-command {
@@ -167,38 +208,200 @@
   }
 }
 
-@media screen and (max-width: 600px) {
-  .home {
-    padding: 3rem 1rem 4rem;
-    gap: 2rem;
-  }
-  .terminal-body {
-    font-size: 0.8rem;
-  }
+/* ==========================================================================
+   Composant partagé : panneau CRUD (formulaire admin + liste "log")
+   Utilisé par About / Education / Experience
+   ========================================================================== */
+
+.uploader {
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 2rem 0;
 }
 
-/* ---------- Thecnology stack ---------- */
-.tech-uploader {
-  padding-top: 2rem;
+.page-title {
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--accent-light);
+  margin: 0 0 1.5rem;
   text-align: center;
 }
 
-.tech-loading {
+.admin-panel,
+.panel {
+  width: 100%;
+  background: var(--bg-panel);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+  padding: 1.5rem;
+  text-align: left;
+  margin-bottom: 2rem;
+}
+
+.admin-panel-title,
+.panel-title {
+  margin: 0 0 1rem;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--accent-light);
+}
+
+.field-label {
+  display: block;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  margin-bottom: 0.3rem;
+}
+
+.field-hint {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin: 0.3rem 0 0.8rem;
+}
+
+.entry-meta {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin: 0 0 0.6rem;
+}
+
+.loading-text {
+  color: var(--text-light);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.spin-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.field-input,
+.field-textarea {
+  width: 100%;
+  background: var(--bg-dark);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  padding: 0.6rem 0.8rem;
+  color: var(--text-light);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.85rem;
+  margin-bottom: 0.8rem;
+}
+
+.field-input:focus,
+.field-textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.field-textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.field-file {
+  display: block;
+  color: var(--text-light);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.8rem;
+  margin-bottom: 0.8rem;
+}
+
+.field-preview {
+  max-width: 100%;
+  max-height: 200px;
+  border-radius: 6px;
+  margin-bottom: 0.8rem;
+}
+
+.field-submit {
+  background: var(--accent);
+  color: #0b0c10;
+  border: none;
+  border-radius: 6px;
+  padding: 0.5rem 1.2rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.field-submit:hover {
+  background: var(--accent-light);
+}
+
+.entry-loading {
   display: flex;
   justify-content: center;
-  padding-top: 5rem;
+  padding: 2rem 0;
 }
 
-/* Grille responsive : s'adapte au nombre de logos sans dépendre
-   des classes row-cols-* de Bootstrap ni d'un display hérité d'ailleurs. */
-.tech-grid {
+.entry {
+  margin-bottom: 2rem;
+  text-align: left;
+}
+.entry:last-child {
+  margin-bottom: 0;
+}
+
+.entry-title {
+  color: var(--accent-light);
+  font-size: 1rem;
+  margin: 0 0 0.6rem;
+}
+
+.entry-link {
+  color: inherit;
+  text-decoration: none;
+  border-bottom: 1px dashed var(--accent-light);
+}
+.entry-link:hover {
+  color: var(--accent);
+}
+
+.entry-description {
+  color: var(--text-light);
+  font-size: 0.9rem;
+  line-height: 1.6;
+  white-space: pre-line;
+  margin: 0 0 1rem;
+}
+
+.entry-actions {
+  display: flex;
+  gap: 0.6rem;
+}
+
+@media screen and (max-width: 600px) {
+  .admin-panel,
+  .entry-description {
+    font-size: 0.85rem;
+  }
+}
+
+/* ==========================================================================
+   Composant partagé : grille média (Technologies, Certificats)
+   ========================================================================== */
+
+.media-loading {
+  display: flex;
+  justify-content: center;
+  padding: 3rem 0;
+}
+
+.media-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
   gap: 1.5rem;
-  margin-top: 2rem;
+  margin-top: 1rem;
 }
 
-.tech-card {
+.media-card {
   background: #fff;
   border-radius: 8px;
   padding: 1.5rem 1rem 1rem;
@@ -208,20 +411,21 @@
   align-items: center;
 }
 
-.tech-card-img {
-  max-width: 60%;
-  max-height: 80px;
+.media-card-img {
+  max-width: 100%;
+  max-height: 140px;
   object-fit: contain;
   margin-bottom: 1rem;
 }
 
-.tech-card-title {
+.media-card-title {
   font-size: 0.95rem;
   margin: 0 0 1rem;
   text-align: center;
+  color: #1f2833;
 }
 
-.tech-card-actions {
+.media-card-actions {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
@@ -229,9 +433,241 @@
 }
 
 @media screen and (max-width: 600px) {
-  .tech-grid {
-    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  .media-grid {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
     gap: 1rem;
+  }
+}
+
+/* ==========================================================================
+   Page : Home (préfixe .home-page)
+   ========================================================================== */
+
+.home-page {
+  min-height: 100vh;
+  padding: 4rem 1.5rem 12rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3rem;
+  background: radial-gradient(
+    circle at top,
+    var(--bg-panel),
+    var(--bg-dark) 70%
+  );
+  color: var(--text-light);
+  font-family: "Space Grotesk", sans-serif;
+}
+
+.home-page .hero {
+  text-align: center;
+}
+
+.home-page .hero-avatar {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--accent);
+  box-shadow: 0 0 0 6px rgba(69, 162, 158, 0.15);
+  margin-bottom: 1.5rem;
+}
+
+.home-page .hero-eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  font-size: 0.75rem;
+  color: var(--accent-light);
+  margin: 0 0 0.5rem;
+}
+
+.home-page .hero-name {
+  font-size: clamp(2rem, 5vw, 3rem);
+  font-weight: 700;
+  margin: 0;
+  color: #ffffff;
+}
+
+.home-page .hero-role {
+  font-weight: 500;
+  font-size: 1.1rem;
+  color: var(--accent);
+  margin: 0.5rem 0 0;
+}
+
+@media screen and (max-width: 600px) {
+  .home-page {
+    padding: 3rem 1rem 12rem;
+    gap: 2rem;
+  }
+  .home-page .terminal-body {
+    font-size: 0.8rem;
+  }
+}
+
+/* ==========================================================================
+   Page : Education (préfixe .education-page)
+   ========================================================================== */
+
+.education-page {
+  min-height: 100vh;
+  padding: 3rem 1.5rem 12rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: radial-gradient(
+    circle at top,
+    var(--bg-panel),
+    var(--bg-dark) 70%
+  );
+  color: var(--text-light);
+  font-family: "Space Grotesk", sans-serif;
+}
+
+.education-page .accordion {
+  width: 100%;
+  max-width: 760px;
+}
+
+.education-page .accordion-item {
+  background: var(--bg-panel);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  margin-bottom: 1rem;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.education-page .accordion-button {
+  background: var(--bg-panel);
+  color: var(--accent-light);
+  font-weight: 600;
+  font-size: 1.1rem;
+  box-shadow: none;
+}
+
+.education-page .accordion-button:not(.collapsed) {
+  background: var(--bg-dark);
+  color: var(--accent-light);
+}
+
+.education-page .accordion-button:focus {
+  box-shadow: none;
+  border-color: var(--accent);
+}
+
+/* recolore la flèche par défaut de Bootstrap (SVG sombre) en teal clair */
+.education-page .accordion-button::after {
+  filter: invert(72%) sepia(11%) saturate(1147%) hue-rotate(126deg)
+    brightness(94%) contrast(89%);
+}
+
+.education-page .accordion-body {
+  background: var(--bg-dark);
+  padding: 1.5rem;
+}
+
+/* ==========================================================================
+   Page : About (préfixe .about-page)
+   ========================================================================== */
+
+.about-page {
+  min-height: 100vh;
+  padding: 3rem 1.5rem 12rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: radial-gradient(
+    circle at top,
+    var(--bg-panel),
+    var(--bg-dark) 70%
+  );
+  color: var(--text-light);
+  font-family: "Space Grotesk", sans-serif;
+}
+
+/* ==========================================================================
+   Page : Contact (préfixe .contact-page)
+   ========================================================================== */
+
+.contact-page {
+  min-height: 100vh;
+  padding: 3rem 1.5rem 12rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: radial-gradient(
+    circle at top,
+    var(--bg-panel),
+    var(--bg-dark) 70%
+  );
+  color: var(--text-light);
+  font-family: "Space Grotesk", sans-serif;
+}
+
+.contact-grid {
+  width: 100%;
+  max-width: 960px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 2rem;
+  align-items: start;
+}
+
+.contact-grid .terminal {
+  max-width: 100%;
+}
+
+@media screen and (max-width: 800px) {
+  .contact-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ==========================================================================
+   Page : Project (préfixe .project-page / .project-uploader)
+   ========================================================================== */
+
+.project-page {
+  min-height: 100vh;
+  padding: 3rem 1.5rem 12rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: radial-gradient(
+    circle at top,
+    var(--bg-panel),
+    var(--bg-dark) 70%
+  );
+  color: var(--text-light);
+  font-family: "Space Grotesk", sans-serif;
+}
+
+.project-uploader {
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.project-uploader .admin-panel {
+  max-width: 640px;
+  margin: 0 auto 2rem;
+}
+
+.project-terminal {
+  max-width: 720px;
+}
+
+.entry-image {
+  width: 100%;
+  max-height: 320px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 0.8rem;
+}
+
+@media screen and (max-width: 600px) {
+  .project-page {
+    padding: 2rem 1rem 10rem;
   }
 }
 
@@ -296,190 +732,4 @@ textarea {
 body {
   position: relative;
   background-color: #0b0c10;
-}
-
-/* ==========================================================================
-   Page : Technologies (préfixe .tech-uploader)
-   ========================================================================== */
-
-.tech-uploader {
-  padding-top: 2rem;
-  text-align: center;
-}
-
-.tech-uploader .tech-loading {
-  display: flex;
-  justify-content: center;
-  padding-top: 5rem;
-}
-
-.tech-uploader .tech-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  gap: 1.5rem;
-  margin-top: 2rem;
-}
-
-.tech-uploader .tech-card {
-  background: #fff;
-  border-radius: 8px;
-  padding: 1.5rem 1rem 1rem;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.tech-uploader .tech-card-img {
-  max-width: 60%;
-  max-height: 80px;
-  object-fit: contain;
-  margin-bottom: 1rem;
-}
-
-.tech-uploader .tech-card-title {
-  font-size: 0.95rem;
-  margin: 0 0 1rem;
-  text-align: center;
-}
-
-.tech-uploader .tech-card-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  width: 100%;
-}
-
-@media screen and (max-width: 600px) {
-  .tech-uploader .tech-grid {
-    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-    gap: 1rem;
-  }
-}
-
-/* ==========================================================================
-   Page : About (préfixe .about-page)
-   ========================================================================== */
-
-.about-page {
-  min-height: 100vh;
-  padding: 3rem 1.5rem 6rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2.5rem;
-  background: radial-gradient(
-    circle at top,
-    var(--bg-panel),
-    var(--bg-dark) 70%
-  );
-  color: var(--text-light);
-  font-family: "Space Grotesk", sans-serif;
-}
-
-.about-page .about-readme {
-  max-width: 720px;
-}
-
-/* -- Panel admin (formulaire d'édition) -- */
-
-.about-admin-panel {
-  width: 100%;
-  max-width: 720px;
-  background: var(--bg-panel);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 10px;
-  padding: 1.5rem;
-  text-align: left;
-}
-
-.about-admin-title {
-  margin: 0 0 1rem;
-  font-size: 0.95rem;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--accent-light);
-}
-
-.about-input,
-.about-textarea {
-  width: 100%;
-  background: var(--bg-dark);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 6px;
-  padding: 0.6rem 0.8rem;
-  color: var(--text-light);
-  font-family: "JetBrains Mono", monospace;
-  font-size: 0.85rem;
-}
-
-.about-input:focus,
-.about-textarea:focus {
-  outline: none;
-  border-color: var(--accent);
-}
-
-.about-textarea {
-  min-height: 120px;
-  resize: vertical;
-  margin-bottom: 0.8rem;
-}
-
-.about-submit {
-  background: var(--accent);
-  color: #0b0c10;
-  border: none;
-  border-radius: 6px;
-  padding: 0.5rem 1.2rem;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.about-submit:hover {
-  background: var(--accent-light);
-}
-
-/* -- Bloc "readme" (lecture) -- */
-
-.about-loading {
-  display: flex;
-  justify-content: center;
-  padding-top: 2rem;
-}
-
-.about-entry {
-  margin-bottom: 2rem;
-}
-
-.about-entry:last-child {
-  margin-bottom: 0;
-}
-
-.about-entry-title {
-  color: var(--accent-light);
-  font-size: 1rem;
-  margin: 0 0 0.6rem;
-}
-
-.about-entry-description {
-  color: var(--text-light);
-  font-size: 0.9rem;
-  line-height: 1.6;
-  white-space: pre-line;
-  margin: 0 0 1rem;
-}
-
-.about-entry-actions {
-  display: flex;
-  gap: 0.6rem;
-}
-
-@media screen and (max-width: 600px) {
-  .about-page {
-    padding: 2rem 1rem 4rem;
-  }
-  .about-admin-panel,
-  .about-entry-description {
-    font-size: 0.85rem;
-  }
 }

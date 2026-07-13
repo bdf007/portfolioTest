@@ -2,6 +2,7 @@ import React, { useEffect, useState, useContext } from "react";
 import axios from "axios";
 import { UserContext } from "../context/UserContext";
 import { toast } from "react-toastify";
+import "../App.css";
 
 const CertificateUploader = () => {
   const [selectedFile, setSelectedFile] = useState(null);
@@ -13,11 +14,10 @@ const CertificateUploader = () => {
   const [editingcertificate, setEditingcertificate] = useState(null);
   const { user } = useContext(UserContext);
 
-  // get all the projects from the server
   const fetchcertificates = async () => {
     try {
       const response = await axios.get(
-        `${process.env.REACT_APP_API_URL}/api/certificate/getCertificates`
+        `${process.env.REACT_APP_API_URL}/api/certificate/getCertificates`,
       );
       setListOfcertificates(response.data);
     } catch (error) {
@@ -35,17 +35,9 @@ const CertificateUploader = () => {
     setPreviewUrl(URL.createObjectURL(file));
   };
 
-  const handleTitleChange = (event) => {
-    setTitle(event.target.value);
-  };
-
-  const handleLinkChange = (event) => {
-    setLink(event.target.value);
-  };
-
-  const handleDescriptionChange = (event) => {
-    setDescription(event.target.value);
-  };
+  const handleTitleChange = (event) => setTitle(event.target.value);
+  const handleLinkChange = (event) => setLink(event.target.value);
+  const handleDescriptionChange = (event) => setDescription(event.target.value);
 
   const handleUpload = async (e) => {
     e.preventDefault();
@@ -79,7 +71,6 @@ const CertificateUploader = () => {
       }
 
       if (editingcertificate) {
-        // Update the certificate
         const updatedcertificateData = {
           title,
           link,
@@ -89,7 +80,7 @@ const CertificateUploader = () => {
 
         await axios.put(
           `${process.env.REACT_APP_API_URL}/api/certificate/updateCertificate/${editingcertificate._id}`,
-          updatedcertificateData
+          updatedcertificateData,
         );
 
         toast.success("Certificate updated successfully");
@@ -122,7 +113,7 @@ const CertificateUploader = () => {
 
         const response = await axios.post(
           `${process.env.REACT_APP_API_URL}/api/certificate/upload`,
-          certificateData
+          certificateData,
         );
 
         toast.success("Certificate uploaded successfully");
@@ -140,11 +131,11 @@ const CertificateUploader = () => {
   const deleteCertificate = async (id) => {
     try {
       await axios.delete(
-        `${process.env.REACT_APP_API_URL}/api/certificate/deleteCertificate/${id}`
+        `${process.env.REACT_APP_API_URL}/api/certificate/deleteCertificate/${id}`,
       );
       toast.success("Certificate deleted successfully");
       setListOfcertificates((prevCertificates) =>
-        prevCertificates.filter((certificate) => certificate._id !== id)
+        prevCertificates.filter((certificate) => certificate._id !== id),
       );
     } catch (error) {
       toast.error("Something went wrong");
@@ -165,7 +156,6 @@ const CertificateUploader = () => {
     setDescription("");
     setSelectedFile(null);
     setPreviewUrl(null);
-    // clear the input field
     document.getElementById("title").value = "";
     document.getElementById("link").value = "";
     document.getElementById("description").value = "";
@@ -173,133 +163,106 @@ const CertificateUploader = () => {
   };
 
   return (
-    <div>
+    <div className="uploader">
       {user && user.role === "admin" && (
-        <>
-          <h3 className="text-danger">certificate Uploader</h3>
-
-          <div>
+        <div className="admin-panel">
+          <h3 className="admin-panel-title">Certificate Uploader</h3>
+          <form>
             <input
               type="file"
               id="file"
               accept="image/*"
+              className="field-file"
               onChange={handleFileInputChange}
             />
-            <form>
-              {selectedFile && (
-                <div className="form-group">
-                  <img
-                    src={previewUrl}
-                    alt="Preview"
-                    style={{ maxWidth: "100%", maxHeight: "200px" }}
-                  />
-                </div>
-              )}
+            {selectedFile && (
               <div className="form-group">
-                <input
-                  type="text"
-                  id="title"
-                  value={title}
-                  onChange={handleTitleChange}
-                  placeholder="Title"
-                />
+                <img src={previewUrl} alt="Preview" className="field-preview" />
               </div>
-              <div className="form-group">
-                <input
-                  type="text"
-                  id="link"
-                  value={link}
-                  onChange={handleLinkChange}
-                  placeholder="Link "
-                />
-              </div>
-              <div className="form-group">
-                <input
-                  type="text"
-                  id="description"
-                  value={description}
-                  onChange={handleDescriptionChange}
-                  placeholder="Description"
-                />
-              </div>
-              <button onClick={handleUpload}>
-                {editingcertificate ? "Update" : "Upload"}
-              </button>
-            </form>
-          </div>
-        </>
+            )}
+            <div className="form-group">
+              <input
+                type="text"
+                id="title"
+                value={title}
+                className="field-input"
+                onChange={handleTitleChange}
+                placeholder="Title"
+              />
+            </div>
+            <div className="form-group">
+              <input
+                type="text"
+                id="link"
+                value={link}
+                className="field-input"
+                onChange={handleLinkChange}
+                placeholder="Link"
+              />
+            </div>
+            <div className="form-group">
+              <input
+                type="text"
+                id="description"
+                value={description}
+                className="field-input"
+                onChange={handleDescriptionChange}
+                placeholder="Description"
+              />
+            </div>
+            <button className="field-submit" onClick={handleUpload}>
+              {editingcertificate ? "Update" : "Upload"}
+            </button>
+          </form>
+        </div>
       )}
-      <div className="home">
-        <div className="row g-3 home">
-          {listOfcertificates.length === 0 && (
-            <div
-              className="d-flex justify-content-center"
-              style={{ paddingTop: "5rem", paddingBottom: "12rem" }}
-            >
-              <div className="spinner-border text-primary" role="status">
-                <span className="sr-only">Loading...</span>
-              </div>
-            </div>
-          )}
-          <div className="container">
-            <div className="row justify-content-center">
-              {listOfcertificates.map((certificate) => {
-                return (
-                  <div className="col-5" key={certificate._id}>
-                    <div className="card">
-                      {certificate.link ? (
-                        <a
-                          href={certificate.link}
-                          target="_blank"
-                          rel="noreferrer"
-                        >
-                          <img
-                            className="card-img-top"
-                            src={certificate.imageData}
-                            alt={certificate.description || ""}
-                            style={{ maxWidth: "100%", maxHeight: "100%" }}
-                          />
-                        </a>
-                      ) : (
-                        <img
-                          className="card-img-top"
-                          src={certificate.imageData}
-                          alt={certificate.description || ""}
-                          style={{ maxWidth: "100%", maxHeight: "100%" }}
-                        />
-                      )}
-                      <div className="card-body">
-                        <h5 className="card-title text-center text-primary">
-                          {certificate.title || ""}
-                        </h5>
-                        {user && user.role === "admin" && (
-                          <div className="card-footer d-grid gap-2 col-6 mx-auto">
-                            <button
-                              className="btn btn-danger"
-                              onClick={() => {
-                                deleteCertificate(certificate._id);
-                              }}
-                            >
-                              Delete
-                            </button>
-                            <button
-                              className="btn btn-primary"
-                              onClick={() => {
-                                editCertificate(certificate);
-                              }}
-                            >
-                              Edit
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+
+      {listOfcertificates.length === 0 && (
+        <div className="media-loading">
+          <div className="spinner-border text-primary" role="status">
+            <span className="sr-only">Loading...</span>
           </div>
         </div>
+      )}
+
+      <div className="media-grid">
+        {listOfcertificates.map((certificate) => (
+          <div className="media-card" key={certificate._id}>
+            {certificate.link ? (
+              <a href={certificate.link} target="_blank" rel="noreferrer">
+                <img
+                  className="media-card-img"
+                  src={certificate.imageData}
+                  alt={certificate.description || ""}
+                />
+              </a>
+            ) : (
+              <img
+                className="media-card-img"
+                src={certificate.imageData}
+                alt={certificate.description || ""}
+              />
+            )}
+            <h5 className="media-card-title">{certificate.title || ""}</h5>
+
+            {user && user.role === "admin" && (
+              <div className="media-card-actions">
+                <button
+                  className="btn btn-danger"
+                  onClick={() => deleteCertificate(certificate._id)}
+                >
+                  Delete
+                </button>
+                <button
+                  className="btn btn-primary"
+                  onClick={() => editCertificate(certificate)}
+                >
+                  Edit
+                </button>
+              </div>
+            )}
+          </div>
+        ))}
       </div>
     </div>
   );

@@ -9,7 +9,7 @@ const AboutUploader = () => {
   const [description, setDescription] = useState("");
   const [listOfAbout, setListOfAbout] = useState([]);
   const [editingAbout, setEditingAbout] = useState(null);
-  const [isEditing, setIsEditing] = useState(false); // New state
+  const [isEditing, setIsEditing] = useState(false);
   const { user } = useContext(UserContext);
 
   useEffect(() => {
@@ -18,13 +18,8 @@ const AboutUploader = () => {
     });
   }, []);
 
-  const handleTitleChange = (e) => {
-    setTitle(e.target.value);
-  };
-
-  const handleDescriptionChange = (e) => {
-    setDescription(e.target.value);
-  };
+  const handleTitleChange = (e) => setTitle(e.target.value);
+  const handleDescriptionChange = (e) => setDescription(e.target.value);
 
   const handleUpload = () => {
     try {
@@ -52,7 +47,7 @@ const AboutUploader = () => {
               });
               return updatedList;
             });
-            setIsEditing(false); // Reset the isEditing state
+            setIsEditing(false);
             setEditingAbout(null);
           });
       } else {
@@ -94,80 +89,82 @@ const AboutUploader = () => {
   const editAbout = (about) => {
     setTitle(about.title);
     setDescription(about.description);
-    setIsEditing(true); // Set isEditing to true
+    setIsEditing(true);
     setEditingAbout(about);
   };
 
   return (
     <div className="about-page">
-      {user && user.role === "admin" && (
-        <div className="about-admin-panel">
-          <h3 className="about-admin-title">About Uploader</h3>
-          <form className="about-form">
-            <div className="form-group">
-              <input
-                value={title}
-                id="title"
-                className="about-input"
-                placeholder="Title"
-                onChange={handleTitleChange}
-              />
-            </div>
-            <div className="form-group">
-              <textarea
-                value={description}
-                id="description"
-                className="about-textarea"
-                placeholder="Description"
-                onChange={handleDescriptionChange}
-              />
-              <button className="about-submit" onClick={handleUpload}>
-                {isEditing ? "Update" : "Upload"}
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
-
-      <div className="terminal about-readme">
-        <div className="terminal-bar">
-          <span className="dot dot-red" />
-          <span className="dot dot-yellow" />
-          <span className="dot dot-green" />
-          <span className="terminal-title">about.md</span>
-        </div>
-
-        <div className="terminal-body about-readme-body">
-          {listOfAbout.length === 0 ? (
-            <div className="about-loading">
-              <div className="spinner-border text-primary" role="status">
-                <span className="sr-only">Loading...</span>
+      <div className="uploader">
+        {user && user.role === "admin" && (
+          <div className="admin-panel">
+            <h3 className="admin-panel-title">About Uploader</h3>
+            <form>
+              <div className="form-group">
+                <input
+                  value={title}
+                  id="title"
+                  className="field-input"
+                  placeholder="Title"
+                  onChange={handleTitleChange}
+                />
               </div>
-            </div>
-          ) : (
-            listOfAbout.map((about) => (
-              <div className="about-entry" key={about._id}>
-                <h3 className="about-entry-title"># {about.title}</h3>
-                <p className="about-entry-description">{about.description}</p>
-                {user && user.role === "admin" && (
-                  <div className="about-entry-actions">
-                    <button
-                      className="btn btn-primary"
-                      onClick={() => editAbout(about)}
-                    >
-                      Edit About
-                    </button>
-                    <button
-                      className="btn btn-danger"
-                      onClick={() => deleteAbout(about._id)}
-                    >
-                      Delete About
-                    </button>
-                  </div>
-                )}
+              <div className="form-group">
+                <textarea
+                  value={description}
+                  id="description"
+                  className="field-textarea"
+                  placeholder="Description"
+                  onChange={handleDescriptionChange}
+                />
+                <button className="field-submit" onClick={handleUpload}>
+                  {isEditing ? "Update" : "Upload"}
+                </button>
               </div>
-            ))
-          )}
+            </form>
+          </div>
+        )}
+
+        <div className="terminal">
+          <div className="terminal-bar">
+            <span className="dot dot-red" />
+            <span className="dot dot-yellow" />
+            <span className="dot dot-green" />
+            <span className="terminal-title">about.md</span>
+          </div>
+
+          <div className="terminal-body">
+            {listOfAbout.length === 0 ? (
+              <div className="entry-loading">
+                <div className="spinner-border text-primary" role="status">
+                  <span className="sr-only">Loading...</span>
+                </div>
+              </div>
+            ) : (
+              listOfAbout.map((about) => (
+                <div className="entry" key={about._id}>
+                  <h3 className="entry-title"># {about.title}</h3>
+                  <p className="entry-description">{about.description}</p>
+                  {user && user.role === "admin" && (
+                    <div className="entry-actions">
+                      <button
+                        className="btn btn-primary"
+                        onClick={() => editAbout(about)}
+                      >
+                        Edit About
+                      </button>
+                      <button
+                        className="btn btn-danger"
+                        onClick={() => deleteAbout(about._id)}
+                      >
+                        Delete About
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
         </div>
       </div>
     </div>

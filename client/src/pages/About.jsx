@@ -3,7 +3,7 @@ import AboutUploader from "../component/aboutUploader";
 
 const About = () => {
   return (
-    <div className="home-page ">
+    <div className="about-page ">
       <AboutUploader />
     </div>
   );

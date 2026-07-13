@@ -40,41 +40,25 @@ const ProjectUploader = () => {
     setPreviewUrl(URL.createObjectURL(file));
   };
 
-  const handleTitleChange = (event) => {
-    setTitle(event.target.value);
-  };
-
-  const handleTextProjectChange = (event) => {
-    setTextProject(event.target.value);
-  };
-
-  const handleLinkToProjectChange = (event) => {
+  const handleTitleChange = (event) => setTitle(event.target.value);
+  const handleTextProjectChange = (event) => setTextProject(event.target.value);
+  const handleLinkToProjectChange = (event) =>
     setLinkToProject(event.target.value);
-  };
-
-  const handleDescriptionChange = (event) => {
-    setDescription(event.target.value);
-  };
-
-  const handleOrderChange = (event) => {
-    setOrderList(event.target.value);
-  };
+  const handleDescriptionChange = (event) => setDescription(event.target.value);
+  const handleOrderChange = (event) => setOrderList(event.target.value);
 
   const handleUpload = async () => {
     try {
       const fileReader = new FileReader();
-
       let base64data = null;
 
       if (selectedFile) {
-        // If a new file is selected, convert to WebP format
         base64data = await new Promise((resolve, reject) => {
           fileReader.onloadend = () => resolve(fileReader.result);
           fileReader.onerror = reject;
           fileReader.readAsDataURL(selectedFile);
         });
 
-        // Convert to WebP format
         const image = new Image();
         image.src = base64data;
 
@@ -90,19 +74,17 @@ const ProjectUploader = () => {
         const context = canvas.getContext("2d");
         context.drawImage(image, 0, 0);
 
-        // Convert the canvas content to base64 with WebP format
         base64data = canvas.toDataURL("image/webp");
       }
 
       if (editingProject) {
-        // Update existing project
         const updatedProjectData = {
           title,
           textProject,
           linkToProject,
           description,
           orderList,
-          imageData: base64data || null, // Use base64data if available, otherwise set to null
+          imageData: base64data || null,
         };
 
         await axios.put(
@@ -121,7 +103,7 @@ const ProjectUploader = () => {
                 linkToProject,
                 description,
                 orderList,
-                imageData: base64data || null, // Use base64data if available, otherwise set to null
+                imageData: base64data || null,
               };
             }
             return project;
@@ -131,14 +113,13 @@ const ProjectUploader = () => {
 
         setEditingProject(null);
       } else {
-        // Create new project
         const newProjectData = {
           title,
           textProject,
           linkToProject,
           description,
           orderList,
-          imageData: base64data || null, // Use base64data if available, otherwise set to null
+          imageData: base64data || null,
         };
 
         const response = await axios.post(
@@ -181,11 +162,10 @@ const ProjectUploader = () => {
     setOrderList(project.orderList);
     setEditingProject(project);
     setPreviewUrl(project.imageData);
-    // Programmatically trigger the file input
     const fileInput = document.getElementById("file");
     if (fileInput) {
-      fileInput.value = ""; // Clear the current selection
-      fileInput.click(); // Simulate a click event
+      fileInput.value = "";
+      fileInput.click();
     }
   };
 
@@ -198,7 +178,6 @@ const ProjectUploader = () => {
     setSelectedFile(null);
     setPreviewUrl(null);
     setEditingProject(null);
-    // clear file input
     document.getElementById("file").value = "";
     document.getElementById("title").value = "";
     document.getElementById("textProject").value = "";
@@ -208,26 +187,25 @@ const ProjectUploader = () => {
   };
 
   return (
-    <div className="home">
+    <div className="project-uploader">
       {user && user.role === "admin" && (
-        <>
-          <h3>Project Uploader</h3>
+        <div className="admin-panel">
+          <h3 className="admin-panel-title">Project Uploader</h3>
           <form>
-            <div className="form-group">
-              <input
-                type="file"
-                id="file"
-                accept="image/*"
-                onChange={handleFileInputChange}
-              />
-            </div>
+            <input
+              type="file"
+              id="file"
+              accept="image/*"
+              className="field-file"
+              onChange={handleFileInputChange}
+            />
             {editingProject
               ? previewUrl && (
                   <div className="form-group">
                     <img
                       src={previewUrl}
                       alt="Preview"
-                      style={{ maxWidth: "100%", maxHeight: "200px" }}
+                      className="field-preview"
                     />
                   </div>
                 )
@@ -236,21 +214,25 @@ const ProjectUploader = () => {
                     <img
                       src={previewUrl}
                       alt="Preview"
-                      style={{ maxWidth: "100%", maxHeight: "200px" }}
+                      className="field-preview"
                     />
                   </div>
                 )}
             <div className="form-group">
               <input
                 type="text"
+                id="title"
                 value={title}
+                className="field-input"
                 onChange={handleTitleChange}
                 placeholder="Title"
               />
             </div>
             <div className="form-group">
               <textarea
+                id="textProject"
                 value={textProject}
+                className="field-textarea"
                 onChange={handleTextProjectChange}
                 placeholder="Text Project"
               />
@@ -258,7 +240,9 @@ const ProjectUploader = () => {
             <div className="form-group">
               <input
                 type="text"
+                id="linkToProject"
                 value={linkToProject}
+                className="field-input"
                 onChange={handleLinkToProjectChange}
                 placeholder="Link Project"
               />
@@ -266,7 +250,9 @@ const ProjectUploader = () => {
             <div className="form-group">
               <input
                 type="text"
+                id="description"
                 value={description}
+                className="field-input"
                 onChange={handleDescriptionChange}
                 placeholder="Description"
               />
@@ -274,99 +260,86 @@ const ProjectUploader = () => {
             <div className="form-group">
               <input
                 type="number"
+                id="orderList"
                 value={orderList}
+                className="field-input"
                 onChange={handleOrderChange}
                 placeholder="Order"
               />
             </div>
-            <button onClick={handleUpload}>
+            <button className="field-submit" onClick={handleUpload}>
               {editingProject ? "Update" : "Upload"}
             </button>
           </form>
-        </>
+        </div>
       )}
-      <div>
-        {listOfProjects.length === 0 && (
-          <div
-            className="d-flex justify-content-center"
-            style={{ paddingTop: "5rem" }}
-          >
-            <div className="spinner-border text-primary" role="status">
-              <span className="sr-only">Loading...</span>
+
+      <div className="terminal project-terminal">
+        <div className="terminal-bar">
+          <span className="dot dot-red" />
+          <span className="dot dot-yellow" />
+          <span className="dot dot-green" />
+          <span className="terminal-title">projects.log</span>
+        </div>
+        <div className="terminal-body">
+          {listOfProjects.length === 0 && (
+            <div className="entry-loading">
+              <div className="spinner-border text-primary" role="status">
+                <span className="sr-only">Loading...</span>
+              </div>
             </div>
-          </div>
-        )}
-        <div className="row row-cols-1 row-cols-md-2 g-2 home">
-          <div className="container">
-            <div className="row justify-content-center">
-              {listOfProjects.map((project) => {
-                return (
-                  <div className="col-md-auto" key={project._id}>
-                    <div className="card">
-                      {project.linkToProject ? (
-                        <a
-                          href={project.linkToProject}
-                          target="_blank"
-                          rel="noreferrer"
-                        >
-                          <img
-                            className="card-img-top"
-                            src={
-                              editingProject &&
-                              editingProject._id === project._id
-                                ? previewUrl || project.imageData
-                                : project.imageData
-                            }
-                            alt={project.description || ""}
-                          />
-                        </a>
-                      ) : (
-                        <img
-                          className="card-img-top"
-                          src={
-                            editingProject && editingProject._id === project._id
-                              ? previewUrl || project.imageData
-                              : project.imageData
-                          }
-                          alt={project.description || ""}
-                        />
-                      )}
-                    </div>
-                    <div className="card-body">
-                      <h2 className="card-title text-center text-primary">
-                        {project.title || ""}
-                      </h2>
-                      <pre>
-                        <p className="card-text description text-center text-warp fs-6">
-                          {project.textProject || ""}
-                        </p>
-                      </pre>
-                      {user && user.role === "admin" && (
-                        <div className="card-footer d-grid gap-2 col-6 mx-auto">
-                          <button
-                            className="btn btn-danger"
-                            onClick={() => {
-                              deleteProject(project._id);
-                            }}
-                          >
-                            Delete
-                          </button>
-                          <button
-                            className="btn btn-primary"
-                            onClick={() => {
-                              editProject(project);
-                            }}
-                          >
-                            Edit
-                          </button>
-                        </div>
-                      )}
-                    </div>
+          )}
+
+          {listOfProjects.map((project) => {
+            const imgSrc =
+              editingProject && editingProject._id === project._id
+                ? previewUrl || project.imageData
+                : project.imageData;
+
+            return (
+              <div className="entry" key={project._id}>
+                {imgSrc && (
+                  <img
+                    className="entry-image"
+                    src={imgSrc}
+                    alt={project.description || ""}
+                  />
+                )}
+                <h3 className="entry-title">
+                  #{" "}
+                  {project.linkToProject ? (
+                    <a
+                      className="entry-link"
+                      href={project.linkToProject}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      {project.title}
+                    </a>
+                  ) : (
+                    project.title
+                  )}
+                </h3>
+                <p className="entry-description">{project.textProject || ""}</p>
+                {user && user.role === "admin" && (
+                  <div className="entry-actions">
+                    <button
+                      className="btn btn-danger"
+                      onClick={() => deleteProject(project._id)}
+                    >
+                      Delete
+                    </button>
+                    <button
+                      className="btn btn-primary"
+                      onClick={() => editProject(project)}
+                    >
+                      Edit
+                    </button>
                   </div>
-                );
-              })}
-            </div>
-          </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>

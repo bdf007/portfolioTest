@@ -10,12 +10,11 @@ const TechnologieUploader = () => {
   const [title, setTitle] = useState("");
   const [link, setLink] = useState("");
   const [description, setDescription] = useState("");
-  const [orderList, setOrderList] = useState(0); // New state
+  const [orderList, setOrderList] = useState(0);
   const [listOftechnologies, setListOftechnologies] = useState([]);
   const [editingtechnologie, setEditingtechnologie] = useState(null);
   const { user } = useContext(UserContext);
 
-  // get all the projects from the server
   const fetchtechnologies = async () => {
     try {
       const response = await axios.get(
@@ -40,27 +39,15 @@ const TechnologieUploader = () => {
     setPreviewUrl(URL.createObjectURL(file));
   };
 
-  const handleTitleChange = (event) => {
-    setTitle(event.target.value);
-  };
-
-  const handleLinkChange = (event) => {
-    setLink(event.target.value);
-  };
-
-  const handleDescriptionChange = (event) => {
-    setDescription(event.target.value);
-  };
-
-  const handleOrderChange = (event) => {
-    setOrderList(event.target.value);
-  };
+  const handleTitleChange = (event) => setTitle(event.target.value);
+  const handleLinkChange = (event) => setLink(event.target.value);
+  const handleDescriptionChange = (event) => setDescription(event.target.value);
+  const handleOrderChange = (event) => setOrderList(event.target.value);
 
   const handleUpload = async (e) => {
     e.preventDefault();
     try {
       const fileReader = new FileReader();
-
       let base64data = null;
 
       if (selectedFile) {
@@ -86,12 +73,10 @@ const TechnologieUploader = () => {
         const context = canvas.getContext("2d");
         context.drawImage(image, 0, 0);
 
-        // Convert the canvas content to base64 with WebP format
         base64data = canvas.toDataURL("image/webp");
       }
 
       if (editingtechnologie) {
-        // update technologie
         const updatedTechnologieData = {
           title,
           link,
@@ -171,11 +156,10 @@ const TechnologieUploader = () => {
     setDescription(technologie.description);
     setOrderList(technologie.orderList);
     setPreviewUrl(technologie.imageData);
-    // Programmatically trigger the file input
     const fileInput = document.getElementById("file");
     if (fileInput) {
-      fileInput.value = ""; // Clear the current selection
-      fileInput.click(); // Simulate a click event
+      fileInput.value = "";
+      fileInput.click();
     }
   };
 
@@ -186,7 +170,6 @@ const TechnologieUploader = () => {
     setOrderList(0);
     setSelectedFile(null);
     setPreviewUrl(null);
-    // clear the input field
     document.getElementById("title").value = "";
     document.getElementById("link").value = "";
     document.getElementById("description").value = "";
@@ -195,17 +178,18 @@ const TechnologieUploader = () => {
   };
 
   return (
-    <div className="tech-uploader">
-      <h1 className="text-danger">Technologies utilisées</h1>
-      {user && user.role === "admin" && (
-        <>
-          <h3>technologie Uploader</h3>
+    <div className="uploader">
+      <h1 className="page-title">Technologies utilisées</h1>
 
+      {user && user.role === "admin" && (
+        <div className="admin-panel">
+          <h3 className="admin-panel-title">Technologie Uploader</h3>
           <form>
             <input
               type="file"
               id="file"
               accept="image/*"
+              className="field-file"
               onChange={handleFileInputChange}
             />
             {editingtechnologie
@@ -214,7 +198,7 @@ const TechnologieUploader = () => {
                     <img
                       src={previewUrl}
                       alt="Preview"
-                      style={{ maxWidth: "100%", maxHeight: "200px" }}
+                      className="field-preview"
                     />
                   </div>
                 )
@@ -223,7 +207,7 @@ const TechnologieUploader = () => {
                     <img
                       src={previewUrl}
                       alt="Preview"
-                      style={{ maxWidth: "100%", maxHeight: "200px" }}
+                      className="field-preview"
                     />
                   </div>
                 )}
@@ -232,6 +216,7 @@ const TechnologieUploader = () => {
                 type="text"
                 id="title"
                 value={title}
+                className="field-input"
                 onChange={handleTitleChange}
                 placeholder="Title"
               />
@@ -241,8 +226,9 @@ const TechnologieUploader = () => {
                 type="text"
                 id="link"
                 value={link}
+                className="field-input"
                 onChange={handleLinkChange}
-                placeholder="Link "
+                placeholder="Link"
               />
             </div>
             <div className="form-group">
@@ -250,6 +236,7 @@ const TechnologieUploader = () => {
                 type="text"
                 id="description"
                 value={description}
+                className="field-input"
                 onChange={handleDescriptionChange}
                 placeholder="Description"
               />
@@ -259,37 +246,38 @@ const TechnologieUploader = () => {
                 type="number"
                 id="orderList"
                 value={orderList}
+                className="field-input"
                 onChange={handleOrderChange}
                 placeholder="Order"
               />
             </div>
-            <button onClick={handleUpload}>
+            <button className="field-submit" onClick={handleUpload}>
               {editingtechnologie ? "Edit" : "Upload"}
             </button>
           </form>
-        </>
+        </div>
       )}
 
       {listOftechnologies.length === 0 && (
-        <div className="tech-loading">
+        <div className="media-loading">
           <div className="spinner-border text-primary" role="status">
             <span className="sr-only">Loading...</span>
           </div>
         </div>
       )}
 
-      <div className="tech-grid">
+      <div className="media-grid">
         {listOftechnologies.map((technologie) => (
-          <div className="tech-card" key={technologie._id}>
+          <div className="media-card" key={technologie._id}>
             <img
-              className="tech-card-img"
+              className="media-card-img"
               src={technologie.imageData}
               alt={technologie.description || ""}
             />
-            <h5 className="tech-card-title">{technologie.title || ""}</h5>
+            <h5 className="media-card-title">{technologie.title || ""}</h5>
 
             {user && user.role === "admin" && (
-              <div className="tech-card-actions">
+              <div className="media-card-actions">
                 <button
                   className="btn btn-danger"
                   onClick={() => deleteTechnologie(technologie._id)}
