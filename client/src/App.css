@@ -295,5 +295,191 @@ textarea {
 }
 body {
   position: relative;
-  background-color: darkslategray;
+  background-color: #0b0c10;
+}
+
+/* ==========================================================================
+   Page : Technologies (préfixe .tech-uploader)
+   ========================================================================== */
+
+.tech-uploader {
+  padding-top: 2rem;
+  text-align: center;
+}
+
+.tech-uploader .tech-loading {
+  display: flex;
+  justify-content: center;
+  padding-top: 5rem;
+}
+
+.tech-uploader .tech-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+
+.tech-uploader .tech-card {
+  background: #fff;
+  border-radius: 8px;
+  padding: 1.5rem 1rem 1rem;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.tech-uploader .tech-card-img {
+  max-width: 60%;
+  max-height: 80px;
+  object-fit: contain;
+  margin-bottom: 1rem;
+}
+
+.tech-uploader .tech-card-title {
+  font-size: 0.95rem;
+  margin: 0 0 1rem;
+  text-align: center;
+}
+
+.tech-uploader .tech-card-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+@media screen and (max-width: 600px) {
+  .tech-uploader .tech-grid {
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    gap: 1rem;
+  }
+}
+
+/* ==========================================================================
+   Page : About (préfixe .about-page)
+   ========================================================================== */
+
+.about-page {
+  min-height: 100vh;
+  padding: 3rem 1.5rem 6rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2.5rem;
+  background: radial-gradient(
+    circle at top,
+    var(--bg-panel),
+    var(--bg-dark) 70%
+  );
+  color: var(--text-light);
+  font-family: "Space Grotesk", sans-serif;
+}
+
+.about-page .about-readme {
+  max-width: 720px;
+}
+
+/* -- Panel admin (formulaire d'édition) -- */
+
+.about-admin-panel {
+  width: 100%;
+  max-width: 720px;
+  background: var(--bg-panel);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+  padding: 1.5rem;
+  text-align: left;
+}
+
+.about-admin-title {
+  margin: 0 0 1rem;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--accent-light);
+}
+
+.about-input,
+.about-textarea {
+  width: 100%;
+  background: var(--bg-dark);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  padding: 0.6rem 0.8rem;
+  color: var(--text-light);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.85rem;
+}
+
+.about-input:focus,
+.about-textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.about-textarea {
+  min-height: 120px;
+  resize: vertical;
+  margin-bottom: 0.8rem;
+}
+
+.about-submit {
+  background: var(--accent);
+  color: #0b0c10;
+  border: none;
+  border-radius: 6px;
+  padding: 0.5rem 1.2rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.about-submit:hover {
+  background: var(--accent-light);
+}
+
+/* -- Bloc "readme" (lecture) -- */
+
+.about-loading {
+  display: flex;
+  justify-content: center;
+  padding-top: 2rem;
+}
+
+.about-entry {
+  margin-bottom: 2rem;
+}
+
+.about-entry:last-child {
+  margin-bottom: 0;
+}
+
+.about-entry-title {
+  color: var(--accent-light);
+  font-size: 1rem;
+  margin: 0 0 0.6rem;
+}
+
+.about-entry-description {
+  color: var(--text-light);
+  font-size: 0.9rem;
+  line-height: 1.6;
+  white-space: pre-line;
+  margin: 0 0 1rem;
+}
+
+.about-entry-actions {
+  display: flex;
+  gap: 0.6rem;
+}
+
+@media screen and (max-width: 600px) {
+  .about-page {
+    padding: 2rem 1rem 4rem;
+  }
+  .about-admin-panel,
+  .about-entry-description {
+    font-size: 0.85rem;
+  }
 }

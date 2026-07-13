@@ -99,19 +99,17 @@ const AboutUploader = () => {
   };
 
   return (
-    <div>
+    <div className="about-page">
       {user && user.role === "admin" && (
-        <>
-          <h3>About Uploader</h3>
-          <form>
+        <div className="about-admin-panel">
+          <h3 className="about-admin-title">About Uploader</h3>
+          <form className="about-form">
             <div className="form-group">
               <input
                 value={title}
                 id="title"
-                size="small"
-                className="form-control mb-3"
+                className="about-input"
                 placeholder="Title"
-                label="Title"
                 onChange={handleTitleChange}
               />
             </div>
@@ -119,39 +117,40 @@ const AboutUploader = () => {
               <textarea
                 value={description}
                 id="description"
-                size="small"
-                className="form-control mb-3"
+                className="about-textarea"
                 placeholder="Description"
-                label="Description"
                 onChange={handleDescriptionChange}
               />
-              <button onClick={handleUpload}>
+              <button className="about-submit" onClick={handleUpload}>
                 {isEditing ? "Update" : "Upload"}
               </button>
             </div>
           </form>
-        </>
+        </div>
       )}
-      <div className="mx-auto text-wrap" style={{ maxWidth: "75%" }}>
-        {listOfAbout.length === 0 ? (
-          <div
-            className="d-flex justify-content-center"
-            style={{ paddingTop: "5rem" }}
-          >
-            <div className="spinner-border text-primary" role="status">
-              <span className="sr-only">Loading...</span>
+
+      <div className="terminal about-readme">
+        <div className="terminal-bar">
+          <span className="dot dot-red" />
+          <span className="dot dot-yellow" />
+          <span className="dot dot-green" />
+          <span className="terminal-title">about.md</span>
+        </div>
+
+        <div className="terminal-body about-readme-body">
+          {listOfAbout.length === 0 ? (
+            <div className="about-loading">
+              <div className="spinner-border text-primary" role="status">
+                <span className="sr-only">Loading...</span>
+              </div>
             </div>
-          </div>
-        ) : (
-          listOfAbout?.map((about) => {
-            return (
-              <div key={about._id}>
-                <h3 className="text-danger">{about.title}</h3>
-                <pre>
-                  <p className="description text-light">{about.description}</p>
-                </pre>
+          ) : (
+            listOfAbout.map((about) => (
+              <div className="about-entry" key={about._id}>
+                <h3 className="about-entry-title"># {about.title}</h3>
+                <p className="about-entry-description">{about.description}</p>
                 {user && user.role === "admin" && (
-                  <>
+                  <div className="about-entry-actions">
                     <button
                       className="btn btn-primary"
                       onClick={() => editAbout(about)}
@@ -164,12 +163,12 @@ const AboutUploader = () => {
                     >
                       Delete About
                     </button>
-                  </>
+                  </div>
                 )}
               </div>
-            );
-          })
-        )}
+            ))
+          )}
+        </div>
       </div>
     </div>
   );
