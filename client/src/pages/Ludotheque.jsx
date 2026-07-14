@@ -3,6 +3,7 @@ import axios from "axios";
 import { UserContext } from "../context/UserContext";
 import { toast } from "react-toastify";
 import GamePopup from "../component/gamePopup";
+import "../App.css";
 
 //design
 import AddCircleOutlineOutlinedIcon from "@mui/icons-material/AddCircleOutlineOutlined";
@@ -75,9 +76,6 @@ const Ludotheque = () => {
       const response = await axios.get(
         `${process.env.REACT_APP_API_URL}${endpoint}`,
       );
-      // show the games in the console
-      console.log("response.data", response.data);
-      // sort by title alphabetically
       response.data.sort((a, b) => {
         if (a.title.toLowerCase() < b.title.toLowerCase()) {
           return -1;
@@ -87,7 +85,6 @@ const Ludotheque = () => {
         }
         return 0;
       });
-      // Set the list of games with the updated data
       setListOfGames(response.data);
     } catch (error) {
       console.log(error);
@@ -189,14 +186,12 @@ const Ludotheque = () => {
         image.onerror = reject;
       });
 
-      // Set the maximum width or height for the resized image
       const maxWidth = 800;
       const maxHeight = 600;
 
       let newWidth = image.width;
       let newHeight = image.height;
 
-      // Resize the image while maintaining the aspect ratio
       if (image.width > maxWidth) {
         newWidth = maxWidth;
         newHeight = (image.height * maxWidth) / image.width;
@@ -207,7 +202,6 @@ const Ludotheque = () => {
         newWidth = (image.width * maxHeight) / image.height;
       }
 
-      // Create a canvas element to draw the resized image
       const canvas = document.createElement("canvas");
       canvas.width = newWidth;
       canvas.height = newHeight;
@@ -215,7 +209,6 @@ const Ludotheque = () => {
       const context = canvas.getContext("2d");
       context.drawImage(image, 0, 0, newWidth, newHeight);
 
-      // Convert the canvas content to base64 with WebP format
       const base64WebpData = canvas.toDataURL("image/webp");
 
       const gameData = {
@@ -398,7 +391,6 @@ const Ludotheque = () => {
   };
 
   const filteredGames = listOfGames.filter((game) => {
-    console.log("game", game);
     const matchesSearchTitle =
       !searchTitle ||
       (game.title &&
@@ -448,20 +440,6 @@ const Ludotheque = () => {
     );
   });
 
-  // const addByToAllGGames = () => {
-  //   listOfGames.forEach((game) => {
-  //     const gameData = {
-  //       addBy: user._id,
-  //     };
-  //     axios.put(
-  //       `${process.env.REACT_APP_API_URL}/api/game/${game._id}`,
-  //       gameData
-  //     );
-  //   });
-
-  //   toast.success("addBy ajouté avec succès");
-  // };
-
   // Scroll to the top of the page
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -469,7 +447,6 @@ const Ludotheque = () => {
 
   const handleScroll = () => {
     const scrollY = window.scrollY;
-    // You can adjust the threshold value based on when you want the button to appear
     setShowScrollButton(scrollY > 100);
   };
 
@@ -498,7 +475,6 @@ const Ludotheque = () => {
     handleResize(); // Call it on initial render
     window.addEventListener("resize", handleResize); // Attach it to the resize event
 
-    // Don't forget to remove the event listener on cleanup
     return () => {
       window.removeEventListener("resize", handleResize);
     };
@@ -514,9 +490,9 @@ const Ludotheque = () => {
   }, [setListOfGames, user]);
 
   return (
-    <div className="container home-page" style={{ paddingBottom: "12rem" }}>
+    <div className="ludotheque-page">
       <div className="row">
-        <h1 className="mx-auto text-center">Ma Ludothéque</h1>
+        <h1 className="page-title">Ma Ludothèque</h1>
         <div>
           <div className="col-12 col-md-6 mx-auto">
             <div className="d-flex justify-content-around">
@@ -526,7 +502,7 @@ const Ludotheque = () => {
                   <>
                     <CancelOutlinedIcon
                       onClick={() => cancelEditing()}
-                      style={{ fontSize: "3rem", cursor: "pointer" }}
+                      className="icon-button"
                     />
                     <form>
                       {selectedFile && (
@@ -667,7 +643,7 @@ const Ludotheque = () => {
                         setAddNewGame(true);
                         setShowSearch(false);
                       }}
-                      style={{ fontSize: "3rem", cursor: "pointer" }}
+                      className="icon-button"
                     />
                   )
                 ))}
@@ -679,7 +655,7 @@ const Ludotheque = () => {
                       setShowSearch(!showSearch);
                       resetFilter();
                     }}
-                    style={{ fontSize: "3rem", cursor: "pointer" }}
+                    className="icon-button"
                   />
                   <div className="table-responsive">
                     <table>
@@ -885,7 +861,7 @@ const Ludotheque = () => {
                       setShowSearch(!showSearch);
                       cancelEditing();
                     }}
-                    style={{ fontSize: "3rem", cursor: "pointer" }}
+                    className="icon-button"
                   />
                 )
               )}
@@ -895,8 +871,6 @@ const Ludotheque = () => {
       </div>
 
       <div className="table-responsive">
-        {/* Search input fields */}
-
         {!user || user.role !== "admin" ? (
           <table className="table table-striped table-bordered table-hover align-middle text-center">
             <thead>
@@ -906,7 +880,6 @@ const Ludotheque = () => {
                   <p className="fst-italic">Editeur </p>
                   {!show && <p className="fst-italic">Age minimum</p>}
                 </th>
-                {/* <th scope="col">couverture</th> */}
                 <th scope="col">
                   <p>genre</p>
                   {!show && <p>durée minimum</p>}
@@ -1081,7 +1054,6 @@ const Ludotheque = () => {
                   <p>genre</p>
                   {!show && <p>durée minimum</p>}
                 </th>
-                {/* <th scope="col">couverture</th> */}
                 {show === true && (
                   <>
                     <th scope="col">
@@ -1166,14 +1138,6 @@ const Ludotheque = () => {
                           ))}
                       </>
                     </th>
-                    {/* <td>
-                        <img
-                          src={game.imageData}
-                          alt={game.title}
-                          className="img-thumbnail rounded"
-                          style={{ maxWidth: "200px", maxHeight: "200px" }}
-                        />
-                      </td>*/}
                     <td>
                       <p className="badge bg-warning text-dark text-wrap">
                         {game.genre}
