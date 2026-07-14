@@ -2,19 +2,17 @@ import React, { useEffect, useState, useContext } from "react";
 import axios from "axios";
 import { UserContext } from "../context/UserContext";
 import { toast } from "react-toastify";
-import spin from "../assets/Spin.gif";
 
 const CommentUploader = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [comment, setComment] = useState("");
   const { user } = useContext(UserContext);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
   const [listOfComment, setListOfComment] = useState([]);
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
   useEffect(() => {
-    setIsLoading(false);
     axios.get(`${process.env.REACT_APP_API_URL}/api/comment`).then((res) => {
       setListOfComment(res.data);
     });
@@ -37,7 +35,7 @@ const CommentUploader = () => {
       })
       .then((response) => {
         toast.success("Comment added");
-        setIsLoading(true);
+        setIsSubmitted(true);
         setListOfComment([
           ...listOfComment,
           {
@@ -67,7 +65,7 @@ const CommentUploader = () => {
       {(!user || user.role !== "admin") && (
         <>
           <h2 className="panel-title">Laissez-moi un commentaire</h2>
-          {!isLoading ? (
+          {!isSubmitted ? (
             <form
               action="https://formsubmit.co/christophemidelet650@gmail.com"
               method="POST"
@@ -134,53 +132,56 @@ const CommentUploader = () => {
               />
             </form>
           ) : (
-            <p className="loading-text">
-              merci de patienter{" "}
-              <img src={spin} alt="loading" className="spin-icon" />
-            </p>
+            <div className="form-success">
+              <p className="form-success-text">
+                ✓ Merci, votre commentaire a bien été envoyé !
+              </p>
+              <button
+                className="field-submit"
+                onClick={() => setIsSubmitted(false)}
+              >
+                Laisser un autre commentaire
+              </button>
+            </div>
           )}
         </>
       )}
 
-      {!isLoading && (
-        <div className="terminal">
-          <div className="terminal-bar">
-            <span className="dot dot-red" />
-            <span className="dot dot-yellow" />
-            <span className="dot dot-green" />
-            <span className="terminal-title">comments.log</span>
-          </div>
-          <div className="terminal-body">
-            {listOfComment.length === 0 && (
-              <p className="entry-description">
-                Aucun commentaire pour le moment.
-              </p>
-            )}
-            {listOfComment.map((comment) => (
-              <div key={comment._id} className="entry">
-                <h3 className="entry-title"># {comment.name}</h3>
-                <p className="entry-description">{comment.comment}</p>
-                {comment.Date && (
-                  <p className="entry-meta">{comment.Date.slice(0, 10)}</p>
-                )}
-                {user && user.role === "admin" && (
-                  <div className="entry-actions">
-                    <p className="entry-meta">
-                      {comment.email || "Pas d'email"}
-                    </p>
-                    <button
-                      className="btn btn-danger"
-                      onClick={() => deleteComment(comment._id)}
-                    >
-                      Delete Comment
-                    </button>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
+      <div className="terminal">
+        <div className="terminal-bar">
+          <span className="dot dot-red" />
+          <span className="dot dot-yellow" />
+          <span className="dot dot-green" />
+          <span className="terminal-title">comments.log</span>
         </div>
-      )}
+        <div className="terminal-body">
+          {listOfComment.length === 0 && (
+            <p className="entry-description">
+              Aucun commentaire pour le moment.
+            </p>
+          )}
+          {listOfComment.map((comment) => (
+            <div key={comment._id} className="entry">
+              <h3 className="entry-title"># {comment.name}</h3>
+              <p className="entry-description">{comment.comment}</p>
+              {comment.Date && (
+                <p className="entry-meta">{comment.Date.slice(0, 10)}</p>
+              )}
+              {user && user.role === "admin" && (
+                <div className="entry-actions">
+                  <p className="entry-meta">{comment.email || "Pas d'email"}</p>
+                  <button
+                    className="btn btn-danger"
+                    onClick={() => deleteComment(comment._id)}
+                  >
+                    Delete Comment
+                  </button>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
     </>
   );
 };

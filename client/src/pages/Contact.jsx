@@ -3,7 +3,6 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import { UserContext } from "../context/UserContext";
 import CommentUploader from "../component/comment";
-import spin from "../assets/Spin.gif";
 import "../App.css";
 
 const Contact = () => {
@@ -13,7 +12,7 @@ const Contact = () => {
   const [message, setMessage] = useState("");
   const [listOfContact, setListOfContact] = useState([]);
   const { user } = useContext(UserContext);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
   useEffect(() => {
@@ -47,7 +46,7 @@ const Contact = () => {
       })
       .then((response) => {
         toast.success("Message sent");
-        setIsLoading(true);
+        setIsSubmitted(true);
         setListOfContact([
           ...listOfContact,
           {
@@ -127,7 +126,7 @@ const Contact = () => {
         <div className="contact-grid">
           <div className="panel">
             <h2 className="panel-title">Contactez-moi</h2>
-            {!isLoading ? (
+            {!isSubmitted ? (
               <form
                 action="https://formsubmit.co/christophemidelet650@gmail.com"
                 method="POST"
@@ -211,10 +210,17 @@ const Contact = () => {
                 />
               </form>
             ) : (
-              <p className="loading-text">
-                merci de patienter{" "}
-                <img src={spin} alt="loading" className="spin-icon" />
-              </p>
+              <div className="form-success">
+                <p className="form-success-text">
+                  ✓ Merci, votre message a bien été envoyé !
+                </p>
+                <button
+                  className="field-submit"
+                  onClick={() => setIsSubmitted(false)}
+                >
+                  Envoyer un autre message
+                </button>
+              </div>
             )}
           </div>
 

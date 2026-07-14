@@ -1,11 +1,19 @@
 import React, { useContext } from "react";
-import { Link } from "react-router-dom";
-import { useNavigate } from "react-router-dom";
+import { Link, NavLink, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { UserContext } from "../context/UserContext";
 
 // API functions
 import { logout } from "../api/user";
+
+const NAV_LINKS = [
+  { to: "/About", label: "À propos" },
+  { to: "/Education", label: "Éducation" },
+  { to: "/Experience", label: "Expérience" },
+  { to: "/Project", label: "Projets" },
+  { to: "/Ludotheque", label: "Ludothèque" },
+  { to: "/Contact", label: "Contact" },
+];
 
 const NavBarre = () => {
   const navigate = useNavigate();
@@ -16,18 +24,17 @@ const NavBarre = () => {
     logout()
       .then((res) => {
         toast.success(res.message);
-        // set user to null
         setUser(null);
-        // redirect to login page
         navigate("/login");
       })
       .catch((err) => console.log(err));
   };
+
   return (
-    <nav className="navbar navbar-expand-lg navbar-dark bg-black">
+    <nav className="navbar navbar-expand-lg navbar-dark app-navbar">
       <div className="container-fluid">
-        <Link className="navbar-brand" to="/">
-          Christophe Midelet
+        <Link className="navbar-brand app-navbar-brand" to="/">
+          <span className="app-navbar-prompt">~$</span> Christophe Midelet
         </Link>
         <button
           className="navbar-toggler"
@@ -42,93 +49,38 @@ const NavBarre = () => {
         </button>
         <div className="collapse navbar-collapse" id="navbarNav">
           <ul className="navbar-nav ms-auto">
-            {!user ? (
-              <>
-                <li className="nav-item">
-                  <Link className="nav-link" to="/About">
-                    A propos
-                  </Link>
-                </li>
-                <li className="nav-item">
-                  <Link className="nav-link" to="/Education">
-                    Education
-                  </Link>
-                </li>
-                <li className="nav-item">
-                  <Link className="nav-link" to="/Experience">
-                    Expérience
-                  </Link>
-                </li>
-                <li className="nav-item">
-                  <Link className="nav-link" to="/Project">
-                    Projet
-                  </Link>
-                </li>
-                <li className="nav-item">
-                  <Link className="nav-link" to="/Ludotheque">
-                    Ludotheque
-                  </Link>
-                </li>
-                <li className="nav-item">
-                  <Link className="nav-link" to="/Contact">
-                    Contact
-                  </Link>
-                </li>
+            {NAV_LINKS.map((link) => (
+              <li className="nav-item" key={link.to}>
+                <NavLink className="nav-link app-nav-link" to={link.to}>
+                  {link.label}
+                </NavLink>
+              </li>
+            ))}
 
-                {/* <li className="nav-item">
-                  <Link className="nav-link" to="/signup">
-                    Sign Up
-                  </Link>
-                </li> */}
-                {/* <li className="nav-item">
-                  <Link className="nav-link" to="/login">
-                    Login
-                  </Link>
-                </li> */}
-              </>
-            ) : (
-              <>
-                <li className="nav-item">
-                  <Link className="nav-link" to="/About">
-                    About
-                  </Link>
-                </li>
-                <li className="nav-item">
-                  <Link className="nav-link" to="/Education">
-                    Education
-                  </Link>
-                </li>
-                <li className="nav-item">
-                  <Link className="nav-link" to="/Experience">
-                    Experience
-                  </Link>
-                </li>
-                <li className="nav-item">
-                  <Link className="nav-link" to="/Project">
-                    Project
-                  </Link>
-                </li>
-                <li className="nav-item">
-                  <Link className="nav-link" to="/Contact">
-                    Contact
-                  </Link>
-                </li>
-                <li className="nav-item">
-                  <Link className="nav-link" to="/Ludotheque">
-                    Ludotheque
-                  </Link>
-                </li>
-                <li className="nav-item">
-                  <span
-                    className="nav-link"
-                    style={{ cursor: "pointer" }}
-                    onClick={handleLogout}
-                  >
-                    Logout
-                  </span>
-                </li>
-              </>
+            {user && (
+              <li className="nav-item">
+                <span
+                  className="nav-link app-nav-link app-nav-logout"
+                  style={{ cursor: "pointer" }}
+                  onClick={handleLogout}
+                >
+                  Logout
+                </span>
+              </li>
             )}
+
+            {/* Réservé pour une future utilisation :
+            <li className="nav-item">
+              <Link className="nav-link app-nav-link" to="/signup">
+                Sign Up
+              </Link>
+            </li>
+            <li className="nav-item">
+              <Link className="nav-link app-nav-link" to="/login">
+                Login
+              </Link>
+            </li>
+            */}
           </ul>
         </div>
       </div>

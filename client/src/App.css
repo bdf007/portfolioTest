@@ -5,8 +5,10 @@
    ========================================================================== */
 
 .App {
-  text-align: center;
+  display: flex;
+  flex-direction: column;
   min-height: 100vh;
+  text-align: center;
 }
 #root {
   min-height: 100vh;
@@ -25,19 +27,13 @@
 }
 
 body {
-  position: relative;
   background-color: darkgray;
 }
-main {
-  margin-bottom: 220px;
-}
-.footer-bs {
-  position: absolute;
-  width: 100%;
-  left: 0;
-  bottom: 0;
-  height: 10rem;
-  color: white;
+
+/* Le contenu routé grandit pour occuper l'espace disponible,
+   le footer reste toujours juste après lui, jamais superposé. */
+.app-main {
+  flex: 1 0 auto;
 }
 
 .description {
@@ -63,13 +59,37 @@ main {
 }
 
 .popup-content {
-  background-color: #45a29e;
+  background-color: var(--bg-panel);
+  color: var(--text-light);
   padding: 20px;
   border-radius: 5px;
   max-width: 800px;
   width: 80vw;
   max-height: 80vh;
   overflow-y: auto;
+}
+
+/* Rhabille les champs de formulaire Bootstrap par défaut (blancs) en thème sombre,
+   sans toucher au JSX de GamePopup */
+.popup-content input,
+.popup-content textarea,
+.popup-content select {
+  background: var(--bg-dark);
+  color: var(--text-light);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+  padding: 0.4rem 0.6rem;
+}
+
+.popup-content input:focus,
+.popup-content textarea:focus,
+.popup-content select:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.popup-content label {
+  color: var(--accent-light);
 }
 
 textarea {
@@ -81,7 +101,7 @@ textarea {
 
 .scroll-to-top {
   position: fixed;
-  bottom: 12rem;
+  bottom: 2rem;
   right: 2rem;
   background-color: #007bff;
   color: #fff;
@@ -100,6 +120,110 @@ textarea {
     font-size: 1.5rem;
     white-space: pre-line;
   }
+}
+
+/* ---------- Footer ---------- */
+
+.footer-bs {
+  flex-shrink: 0;
+  width: 100%;
+  padding: 2.5rem 1.5rem 2rem;
+  background: var(--bg-dark);
+  color: var(--text-light);
+  font-family: "Space Grotesk", sans-serif;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.footer-nav {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.footer-link {
+  color: var(--text-light);
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+
+.footer-link:hover {
+  color: var(--accent-light);
+}
+
+.footer-text,
+.footer-social,
+.footer-copyright {
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin: 0 0 0.5rem;
+}
+
+.footer-copyright {
+  margin-bottom: 0;
+}
+
+.footer-link-subtle {
+  color: var(--accent-light);
+  text-decoration: none;
+}
+
+.footer-link-subtle:hover {
+  text-decoration: underline;
+}
+
+/* Lien discret : même couleur que le texte autour, ne se distingue pas
+   visuellement (utilisé pour l'accès login caché dans "site") */
+.footer-inline-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.footer-inline-link:hover {
+  text-decoration: underline;
+}
+
+/* ---------- Navbar ---------- */
+
+.app-navbar {
+  background: var(--bg-dark);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  font-family: "Space Grotesk", sans-serif;
+}
+
+.app-navbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: #ffffff !important;
+  font-weight: 700;
+}
+
+.app-navbar-prompt {
+  font-family: "JetBrains Mono", monospace;
+  color: var(--accent-light);
+  font-size: 0.9rem;
+}
+
+.app-nav-link {
+  color: var(--text-light) !important;
+  font-size: 0.9rem;
+  margin: 0 0.3rem;
+}
+
+.app-nav-link:hover,
+.app-nav-link.active {
+  color: var(--accent-light) !important;
+}
+
+.app-nav-logout {
+  color: var(--text-muted) !important;
+}
+
+.app-nav-logout:hover {
+  color: #ff5f56 !important;
 }
 
 /* ==========================================================================
@@ -270,16 +394,15 @@ textarea {
   margin: 0 0 0.6rem;
 }
 
-.loading-text {
-  color: var(--text-light);
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+.form-success {
+  text-align: center;
+  padding: 1.5rem 0;
 }
 
-.spin-icon {
-  width: 1.5rem;
-  height: 1.5rem;
+.form-success-text {
+  color: var(--accent-light);
+  font-size: 0.95rem;
+  margin: 0 0 1rem;
 }
 
 .field-input,
@@ -445,7 +568,7 @@ textarea {
 
 .home-page {
   min-height: 100vh;
-  padding: 4rem 1.5rem 12rem;
+  padding: 4rem 1.5rem 4rem;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -497,7 +620,7 @@ textarea {
 
 @media screen and (max-width: 600px) {
   .home-page {
-    padding: 3rem 1rem 12rem;
+    padding: 3rem 1rem 3rem;
     gap: 2rem;
   }
   .home-page .terminal-body {
@@ -511,7 +634,7 @@ textarea {
 
 .education-page {
   min-height: 100vh;
-  padding: 3rem 1.5rem 12rem;
+  padding: 3rem 1.5rem 4rem;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -572,7 +695,7 @@ textarea {
 
 .about-page {
   min-height: 100vh;
-  padding: 3rem 1.5rem 12rem;
+  padding: 3rem 1.5rem 4rem;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -591,7 +714,7 @@ textarea {
 
 .contact-page {
   min-height: 100vh;
-  padding: 3rem 1.5rem 12rem;
+  padding: 3rem 1.5rem 4rem;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -629,7 +752,7 @@ textarea {
 
 .project-page {
   min-height: 100vh;
-  padding: 3rem 1.5rem 12rem;
+  padding: 3rem 1.5rem 4rem;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -667,69 +790,122 @@ textarea {
 
 @media screen and (max-width: 600px) {
   .project-page {
-    padding: 2rem 1rem 10rem;
+    padding: 2rem 1rem 3rem;
   }
 }
 
-/* ---------- Footer ---------- */
+/* ==========================================================================
+   Page : Ludothèque (préfixe .ludotheque-page)
+   Le code couleur des badges Bootstrap (bg-success/warning/danger/info/primary)
+   est volontairement conservé tel quel : c'est le système de distinction
+   des infos (âge, joueurs, statut...) demandé par le client.
+   ========================================================================== */
 
-.footer-bs {
-  position: absolute;
-  width: 100%;
-  left: 0;
-  bottom: 0;
-  height: 10rem;
-  color: white;
+.ludotheque-page {
+  min-height: 100vh;
+  padding: 3rem 1.5rem 4rem;
+  background: radial-gradient(
+    circle at top,
+    var(--bg-panel),
+    var(--bg-dark) 70%
+  );
+  color: var(--text-light);
+  font-family: "Space Grotesk", sans-serif;
 }
 
-/* ---------- ludotheque ---------- */
-
-.popup-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.7);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
+.ludotheque-page .page-title {
+  margin-bottom: 1.5rem;
 }
 
-.popup-content {
-  background-color: #45a29e;
-  padding: 20px;
-  border-radius: 5px;
-  max-width: 800px;
-  width: 80vw;
-  max-height: 80vh;
-  overflow-y: auto;
-}
-
-textarea {
-  width: 100%;
-  min-height: 100px; /* Optional: Set a minimum height */
-  padding: 10px;
-  box-sizing: border-box; /* Ensure padding is included in the element's width/height */
-}
-
-.scroll-to-top {
-  position: fixed;
-  bottom: 12rem;
-  right: 2rem;
-  background-color: #007bff;
-  color: #fff;
-  border: none;
-  padding: 10px;
+.icon-button {
+  font-size: 3rem !important;
+  color: var(--accent-light);
   cursor: pointer;
-  border-radius: 5rem;
+  transition: color 0.15s ease;
 }
 
-.scroll-to-top:hover {
-  background-color: #0056b3;
+.icon-button:hover {
+  color: var(--accent);
 }
-body {
-  position: relative;
-  background-color: #0b0c10;
+
+/* Rhabille les form-control / form-select / textarea Bootstrap par défaut
+   (blancs) en thème sombre, sans toucher au JSX ni à la logique du composant */
+.ludotheque-page input.form-control,
+.ludotheque-page select.form-select,
+.ludotheque-page textarea,
+.ludotheque-page select {
+  background: var(--bg-dark);
+  color: var(--text-light);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.ludotheque-page input.form-control:focus,
+.ludotheque-page select.form-select:focus,
+.ludotheque-page textarea:focus {
+  background: var(--bg-dark);
+  color: var(--text-light);
+  border-color: var(--accent);
+  box-shadow: none;
+}
+
+.ludotheque-page label {
+  color: var(--accent-light);
+  font-size: 0.85rem;
+}
+
+/* Tableaux : fond sombre, texte clair, les badges gardent leurs couleurs propres */
+.ludotheque-page table {
+  background: var(--bg-panel);
+  color: var(--text-light);
+}
+
+.ludotheque-page .table-striped > tbody > tr:nth-of-type(odd) > * {
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text-light);
+}
+
+.ludotheque-page th,
+.ludotheque-page td {
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* ==========================================================================
+   Page : Admin (préfixe .admin-page)
+   ========================================================================== */
+
+.admin-page {
+  min-height: 100vh;
+  padding: 3rem 1.5rem 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: radial-gradient(
+    circle at top,
+    var(--bg-panel),
+    var(--bg-dark) 70%
+  );
+  color: var(--text-light);
+  font-family: "Space Grotesk", sans-serif;
+}
+
+.admin-page .admin-panel,
+.admin-page .uploader {
+  max-width: 720px;
+}
+
+.admin-role-badge {
+  display: inline-block;
+  background: var(--accent);
+  color: var(--bg-dark);
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+  vertical-align: middle;
+}
+
+.admin-username {
+  color: var(--accent-light);
 }

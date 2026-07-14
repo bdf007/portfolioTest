@@ -7,7 +7,7 @@ const GamePopup = ({ game, onClose, user, onUpdate }) => {
   const [updatedTitle, setUpdatedTitle] = useState(game.title);
   const [updatedGenre, setUpdatedGenre] = useState(game.genre);
   const [updatedDescription, setUpdatedDescription] = useState(
-    game.description
+    game.description,
   );
   const [updatedDate, setUpdatedDate] = useState(game.date);
   const [updatedEditor, setUpdatedEditor] = useState(game.editor);
@@ -31,16 +31,14 @@ const GamePopup = ({ game, onClose, user, onUpdate }) => {
         status: "in pending",
       });
       setEditing(false);
-      // toast success message
       toast.success("Game updated");
-      onUpdate(); // Notify parent component
-      onClose(); // Fermer le popup après la mise à jour
+      onUpdate();
+      onClose();
     } catch (error) {
       console.log(error);
     }
   };
 
-  // Fonction pour gérer le clic en dehors du popup
   const handleOverlayClick = (e) => {
     if (e.target === e.currentTarget) {
       onClose();
