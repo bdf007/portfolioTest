@@ -7,7 +7,6 @@ const path = require("path");
 const cors = require("cors");
 require("dotenv").config();
 const cookieParser = require("cookie-parser");
-const expressValidator = require("express-validator");
 
 // compress all responses
 app.use(compression());
@@ -48,11 +47,10 @@ app.use(
   cors({
     origin: process.env.FRONTEND_URL.split(",") ?? "http://localhost:3000",
     credentials: true,
-  })
+  }),
 );
 app.use(urlencoded({ limit: "10mb", extended: false }));
 app.use(cookieParser());
-app.use(expressValidator());
 
 //db connection
 connection();

@@ -13,19 +13,19 @@ const Footer = () => {
         <Link className="footer-link" to="/">
           Home
         </Link>
-        <Link className="footer-link" to="/About">
+        <Link className="footer-link" to="/About" onClick={scrollToTop}>
           À propos
         </Link>
-        <Link className="footer-link" to="/Education">
+        <Link className="footer-link" to="/Education" onClick={scrollToTop}>
           Éducation
         </Link>
-        <Link className="footer-link" to="/Experience">
+        <Link className="footer-link" to="/Experience" onClick={scrollToTop}>
           Expérience
         </Link>
-        <Link className="footer-link" to="/Project">
+        <Link className="footer-link" to="/Project" onClick={scrollToTop}>
           Projets
         </Link>
-        <Link className="footer-link" to="/Contact">
+        <Link className="footer-link" to="/Contact" onClick={scrollToTop}>
           Contact
         </Link>
       </nav>
