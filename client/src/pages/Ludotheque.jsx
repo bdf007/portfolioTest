@@ -1089,9 +1089,27 @@ const Ludotheque = () => {
               {!listOfGames || listOfGames.length === 0 ? (
                 <tr>
                   {show === true ? (
-                    <td colSpan="8">Aucun jeu</td>
+                    <td colSpan="8">
+                      <div className="entry-loading">
+                        <div
+                          className="spinner-border text-primary"
+                          role="status"
+                        >
+                          <span className="sr-only">Loading...</span>
+                        </div>
+                      </div>
+                    </td>
                   ) : (
-                    <td colSpan="3">Aucun jeu</td>
+                    <td colSpan="3">
+                      <div className="entry-loading">
+                        <div
+                          className="spinner-border text-primary"
+                          role="status"
+                        >
+                          <span className="sr-only">Loading...</span>
+                        </div>
+                      </div>
+                    </td>
                   )}
                 </tr>
               ) : (
@@ -1111,8 +1129,7 @@ const Ludotheque = () => {
                             loading="lazy"
                             src={game.imageData}
                             alt={game.title}
-                            className="img-thumbnail rounded"
-                            style={{ maxWidth: "80%", maxHeight: "80%" }}
+                            className="img-thumbnail rounded ludotheque-thumbnail"
                           />
                         </p>
                         <p className="fst-italic">
