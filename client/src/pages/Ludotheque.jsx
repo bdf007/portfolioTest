@@ -1112,7 +1112,7 @@ const Ludotheque = () => {
                             src={game.imageData}
                             alt={game.title}
                             className="img-thumbnail rounded"
-                            style={{ maxWidth: "200px", maxHeight: "200px" }}
+                            style={{ maxWidth: "80%", maxHeight: "80%" }}
                           />
                         </p>
                         <p className="fst-italic">
