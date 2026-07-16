@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React, { useContext, useState } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { UserContext } from "../context/UserContext";
@@ -18,6 +18,7 @@ const NAV_LINKS = [
 const NavBarre = () => {
   const navigate = useNavigate();
   const { user, setUser } = useContext(UserContext);
+  const [isOpen, setIsOpen] = useState(false);
 
   const handleLogout = async (e) => {
     e.preventDefault();
@@ -25,6 +26,7 @@ const NavBarre = () => {
       .then((res) => {
         toast.success(res.message);
         setUser(null);
+        setIsOpen(false);
         navigate("/login");
       })
       .catch((err) => console.log(err));
@@ -33,25 +35,35 @@ const NavBarre = () => {
   return (
     <nav className="navbar navbar-expand-lg navbar-dark app-navbar">
       <div className="container-fluid">
-        <Link className="navbar-brand app-navbar-brand" to="/">
+        <Link
+          className="navbar-brand app-navbar-brand"
+          to="/"
+          onClick={() => setIsOpen(false)}
+        >
           <span className="app-navbar-prompt">~$</span> Christophe Midelet
         </Link>
         <button
           className="navbar-toggler"
           type="button"
-          data-bs-toggle="collapse"
-          data-bs-target="#navbarNav"
+          onClick={() => setIsOpen(!isOpen)}
           aria-controls="navbarNav"
-          aria-expanded="false"
+          aria-expanded={isOpen}
           aria-label="Toggle navigation"
         >
           <span className="navbar-toggler-icon"></span>
         </button>
-        <div className="collapse navbar-collapse" id="navbarNav">
+        <div
+          className={`collapse navbar-collapse ${isOpen ? "show" : ""}`}
+          id="navbarNav"
+        >
           <ul className="navbar-nav ms-auto">
             {NAV_LINKS.map((link) => (
               <li className="nav-item" key={link.to}>
-                <NavLink className="nav-link app-nav-link" to={link.to}>
+                <NavLink
+                  className="nav-link app-nav-link"
+                  to={link.to}
+                  onClick={() => setIsOpen(false)}
+                >
                   {link.label}
                 </NavLink>
               </li>

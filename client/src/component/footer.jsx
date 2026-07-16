@@ -3,6 +3,10 @@ import { Link } from "react-router-dom";
 import "../App.css";
 
 const Footer = () => {
+  // Scroll to the top of the page
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
   return (
     <footer className="footer-bs">
       <nav className="footer-nav" aria-label="Navigation du pied de page">
@@ -27,7 +31,7 @@ const Footer = () => {
       </nav>
 
       <p className="footer-text">
-        <Link to="/Login" className="footer-inline-link">
+        <Link to="/Login" className="footer-inline-link" onClick={scrollToTop}>
           site
         </Link>{" "}
         réalisé avec MongoDB, Express, React, NodeJS

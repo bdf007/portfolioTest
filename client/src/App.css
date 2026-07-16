@@ -24,6 +24,7 @@
   --bg-panel: #1f2833;
   --bg-darkBlue: #032342;
   --text-light: #c5c6c7;
+  --text-lightRed: #ff5f56;
   --text-muted: #6b7280;
 }
 
@@ -220,13 +221,29 @@ textarea {
 }
 
 .app-nav-logout {
-  color: var(--text-muted) !important;
+  color: var(--text-lightRed) !important;
 }
 
 .app-nav-logout:hover {
-  color: #ff5f56 !important;
+  color: #3e0704 !important;
 }
 
+@media (max-width: 991.98px) {
+  .app-navbar .navbar-collapse {
+    display: block !important; /* on annule le display:none de Bootstrap pour animer nous-mêmes */
+    overflow: hidden;
+    max-height: 0;
+    opacity: 0;
+    transition:
+      max-height 0.3s ease,
+      opacity 0.25s ease;
+  }
+
+  .app-navbar .navbar-collapse.show {
+    max-height: 400px; /* assez grand pour contenir tous les liens du menu */
+    opacity: 1;
+  }
+}
 /* ==========================================================================
    Composant partagé : fenêtre "terminal" (About, Education, Experience...)
    ========================================================================== */
@@ -817,9 +834,6 @@ textarea {
 
 /* ==========================================================================
    Page : Ludothèque (préfixe .ludotheque-page)
-   Le code couleur des badges Bootstrap (bg-success/warning/danger/info/primary)
-   est volontairement conservé tel quel : c'est le système de distinction
-   des infos (âge, joueurs, statut...) demandé par le client.
    ========================================================================== */
 
 .ludotheque-page {
@@ -888,6 +902,45 @@ textarea {
 .ludotheque-page th,
 .ludotheque-page td {
   border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.ludotheque-thumbnail {
+  max-width: 140px;
+  max-height: 140px;
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+}
+
+@media screen and (max-width: 600px) {
+  .ludotheque-thumbnail {
+    max-width: 64px;
+    max-height: 64px;
+  }
+
+  .ludotheque-page .table-responsive {
+    overflow-x: hidden; /* on force le tableau à tenir dans l'écran plutôt que scroller */
+  }
+
+  .ludotheque-page table {
+    table-layout: fixed;
+    width: 100%;
+    font-size: 0.7rem;
+  }
+
+  .ludotheque-page th,
+  .ludotheque-page td {
+    padding: 0.3rem !important;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    white-space: normal !important;
+  }
+
+  .ludotheque-page .badge {
+    font-size: 0.65rem;
+    padding: 0.25em 0.4em;
+    white-space: normal;
+  }
 }
 
 /* ==========================================================================
