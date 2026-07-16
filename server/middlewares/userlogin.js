@@ -1,35 +1,30 @@
+const { body, validationResult } = require("express-validator");
 const User = require("../models/userlogin");
 
-exports.userRegisterValidator = (req, res, next) => {
-  // username is not null
-  req.check("username", "Username is required").notEmpty();
-  // email is not null, valid and normalized
-  req.check("email", "Email must be between 3 to 32 characters").notEmpty();
-  req.check("email", "Invalid email").isEmail();
-  // check for password
-  req.check("password", "Password is required").notEmpty();
-  req
-    .check("password")
+exports.userRegisterValidator = [
+  body("username", "Username is required").notEmpty(),
+
+  body("email", "Email must be between 3 to 32 characters").notEmpty(),
+  body("email", "Invalid email").isEmail(),
+
+  body("password", "Password is required").notEmpty(),
+  body("password")
     .isLength({ min: 6 })
-    .withMessage("Password must contain at least 6 characters");
-  req
-    .check(
-      "password",
-      "Password must contain at least one numeric digit, one uppercase, one lowercase and one special character"
-    )
-    .matches(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[^a-zA-Z0-9]).{6,}$/, "i");
+    .withMessage("Password must contain at least 6 characters"),
+  body(
+    "password",
+    "Password must contain at least one numeric digit, one uppercase, one lowercase and one special character",
+  ).matches(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[^a-zA-Z0-9]).{6,}$/),
 
-  // check for errors
-  const errors = req.validationErrors();
-  // if error show the first one as they happen
-  if (errors) {
-    const firstError = errors.map((error) => error.msg)[0];
-    return res.status(400).json({ error: firstError });
-  }
-
-  // proceed to next middleware
-  next();
-};
+  (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      const firstError = errors.array()[0].msg;
+      return res.status(400).json({ error: firstError });
+    }
+    next();
+  },
+];
 
 exports.userById = async (req, res, next) => {
   try {

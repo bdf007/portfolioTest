@@ -168,15 +168,18 @@ const CommentUploader = () => {
                 <p className="entry-meta">{comment.Date.slice(0, 10)}</p>
               )}
               {user && user.role === "admin" && (
-                <div className="entry-actions">
+                <>
                   <p className="entry-meta">{comment.email || "Pas d'email"}</p>
-                  <button
-                    className="btn btn-danger"
-                    onClick={() => deleteComment(comment._id)}
-                  >
-                    Delete Comment
-                  </button>
-                </div>
+                  <div className="entry-actions">
+                    <br />
+                    <button
+                      className="btn btn-danger"
+                      onClick={() => deleteComment(comment._id)}
+                    >
+                      Delete Comment
+                    </button>
+                  </div>
+                </>
               )}
             </div>
           ))}
