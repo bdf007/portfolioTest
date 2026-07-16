@@ -22,6 +22,7 @@
   --accent-light: #66fcf1;
   --bg-dark: #0b0c10;
   --bg-panel: #1f2833;
+  --bg-darkBlue: #032342;
   --text-light: #c5c6c7;
   --text-muted: #6b7280;
 }
@@ -128,7 +129,7 @@ textarea {
   flex-shrink: 0;
   width: 100%;
   padding: 2.5rem 1.5rem 2rem;
-  background: var(--bg-dark);
+  background: linear-gradient(to bottom, var(--text-muted), var(--bg-dark));
   color: var(--text-light);
   font-family: "Space Grotesk", sans-serif;
   border-top: 1px solid rgba(255, 255, 255, 0.06);
@@ -188,7 +189,7 @@ textarea {
 /* ---------- Navbar ---------- */
 
 .app-navbar {
-  background: var(--bg-dark);
+  background: linear-gradient(to bottom, var(--bg-dark), var(--text-muted));
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   font-family: "Space Grotesk", sans-serif;
 }
@@ -493,6 +494,7 @@ textarea {
   line-height: 1.6;
   white-space: pre-line;
   margin: 0 0 1rem;
+  text-wrap: balance;
 }
 
 .entry-actions {
@@ -575,7 +577,7 @@ textarea {
   gap: 3rem;
   background: radial-gradient(
     circle at top,
-    var(--bg-panel),
+    var(--bg-darkBlue),
     var(--bg-dark) 70%
   );
   color: var(--text-light);
@@ -640,7 +642,7 @@ textarea {
   align-items: center;
   background: radial-gradient(
     circle at top,
-    var(--bg-panel),
+    var(--bg-darkBlue),
     var(--bg-dark) 70%
   );
   color: var(--text-light);
@@ -690,6 +692,25 @@ textarea {
 }
 
 /* ==========================================================================
+   Page : Experience (préfixe .experience-page)
+   ========================================================================== */
+
+.experience-page {
+  min-height: 100vh;
+  padding: 3rem 1.5rem 4rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: radial-gradient(
+    circle at top,
+    var(--bg-darkBlue),
+    var(--bg-dark) 70%
+  );
+  color: var(--text-light);
+  font-family: "Space Grotesk", sans-serif;
+}
+
+/* ==========================================================================
    Page : About (préfixe .about-page)
    ========================================================================== */
 
@@ -701,7 +722,7 @@ textarea {
   align-items: center;
   background: radial-gradient(
     circle at top,
-    var(--bg-panel),
+    var(--bg-darkBlue),
     var(--bg-dark) 70%
   );
   color: var(--text-light);
@@ -720,7 +741,7 @@ textarea {
   align-items: center;
   background: radial-gradient(
     circle at top,
-    var(--bg-panel),
+    var(--bg-darkBlue),
     var(--bg-dark) 70%
   );
   color: var(--text-light);
@@ -758,7 +779,7 @@ textarea {
   align-items: center;
   background: radial-gradient(
     circle at top,
-    var(--bg-panel),
+    var(--bg-darkBlue),
     var(--bg-dark) 70%
   );
   color: var(--text-light);
@@ -806,7 +827,7 @@ textarea {
   padding: 3rem 1.5rem 4rem;
   background: radial-gradient(
     circle at top,
-    var(--bg-panel),
+    var(--bg-darkBlue),
     var(--bg-dark) 70%
   );
   color: var(--text-light);
@@ -881,7 +902,7 @@ textarea {
   align-items: center;
   background: radial-gradient(
     circle at top,
-    var(--bg-panel),
+    var(--bg-darkBlue),
     var(--bg-dark) 70%
   );
   color: var(--text-light);
@@ -908,4 +929,8 @@ textarea {
 
 .admin-username {
   color: var(--accent-light);
+}
+
+td {
+  text-wrap: balance;
 }

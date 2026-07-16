@@ -53,7 +53,7 @@ const Signup = () => {
   };
 
   return (
-    <div className="home">
+    <div className="home-page">
       <div className="container mt-5 col-10 col-sm-8 col-md-6 col-lg-5">
         <div className="text-center mb-5 alert alert-primary">
           <label htmlFor="" className="h2">
@@ -96,12 +96,12 @@ const Signup = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               endAdornment={
-                <InputAdornment>
+                <InputAdornment position="end">
                   <IconButton
                     edge="end"
                     onClick={() => setShowPassword(!showPassword)}
                   >
-                    {showPassword ? <VisibilityIcon /> : <VisibilityOffIcon />}
+                    {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
                   </IconButton>
                 </InputAdornment>
               }
