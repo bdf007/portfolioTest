@@ -17,15 +17,16 @@ const {
 router.get("/experience", getExperience);
 
 // post experience page
-router.post("/experience", postExperience);
+const { adminAuthMiddleware } = require("../middlewares/auth");
+router.post("/experience", adminAuthMiddleware, postExperience);
 
 // get specific experience by id
-router.get("/experience/:id", getExperienceById);
+router.get("/experience/:id", adminAuthMiddleware, getExperienceById);
 
 // update specific experience by id
-router.put("/experience/update/:id", updateExperienceById);
+router.put("/experience/update/:id", adminAuthMiddleware, updateExperienceById);
 
 //  delete specific experience by id
-router.delete("/experience/:id", deleteExperienceById);
+router.delete("/experience/:id", adminAuthMiddleware, deleteExperienceById);
 
 module.exports = router;

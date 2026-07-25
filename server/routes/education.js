@@ -17,15 +17,16 @@ const {
 router.get("/education", getEducation);
 
 // post education page
-router.post("/education", postEducation);
+const { adminAuthMiddleware } = require("../middlewares/auth");
+router.post("/education", adminAuthMiddleware, postEducation);
 
 // get specific education by id
-router.get("/education/:id", getEducationById);
+router.get("/education/:id", adminAuthMiddleware, getEducationById);
 
 // update specific education by id
-router.put("/education/update/:id", updateEducationById);
+router.put("/education/update/:id", adminAuthMiddleware, updateEducationById);
 
 //  delete specific education by id
-router.delete("/education/:id", deleteEducationById);
+router.delete("/education/:id", adminAuthMiddleware, deleteEducationById);
 
 module.exports = router;

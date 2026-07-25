@@ -11,12 +11,13 @@ const {
   getGameById,
   getAGameRamdomly,
 } = require("../controllers/game");
+const { adminAuthMiddleware } = require("../middlewares/auth");
 // api routes
-router.post("/game", createGame);
+router.post("/game", adminAuthMiddleware, createGame);
 router.get("/games", getGames);
 router.get("/games/noimage", getGamesWithoutImageData);
-router.delete("/game/:id", deleteGameById);
-router.put("/game/:id", updateGameById);
+router.delete("/game/:id", adminAuthMiddleware, deleteGameById);
+router.put("/game/:id", adminAuthMiddleware, updateGameById);
 router.get("/game/:id", getGameById);
 router.get("/games/random", getAGameRamdomly);
 

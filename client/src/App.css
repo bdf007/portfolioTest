@@ -944,6 +944,144 @@ textarea {
 }
 
 /* ==========================================================================
+   Page : Dungeon (préfixe .dungeon-page)
+   ========================================================================== */
+
+.dungeon-container {
+  font-family: Arial, sans-serif;
+  max-width: 800px;
+  margin: 2rem auto;
+}
+
+.board-grid {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  grid-template-rows: repeat(8, 1fr);
+
+  width: min(90vw, 480px);
+  aspect-ratio: 1 / 1;
+
+  margin: 2rem auto;
+
+  border: 2px solid #333;
+}
+
+.hero-panel {
+  display: flex;
+  gap: 2rem;
+  align-items: flex-start;
+  justify-content: center;
+  margin-top: 1rem;
+}
+
+.hero-info,
+.movement-info {
+  padding: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  min-width: 250px;
+}
+
+.tile {
+  position: relative;
+  box-sizing: border-box;
+
+  display: flex; /* gardé pour un éventuel contenu texte de secours */
+  justify-content: center;
+  align-items: center;
+
+  background-color: #f0f0f0;
+  border: 1px solid #999;
+  border-radius: 0.5rem;
+
+  font-size: 12px;
+  cursor: pointer;
+  overflow: hidden; /* ← empêche tout débordement hors de la case */
+}
+
+.tile:hover {
+  background-color: #e0e0e0;
+}
+
+/* Base commune à TOUTES les images de tuile */
+.tile img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0; /* centre visuellement l'image dans les 80% restants */
+  object-fit: contain;
+  pointer-events: none;
+}
+
+/* Calque 1 : le sol, tout en fond */
+.sol-image {
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+}
+
+/* Calque 2 : contenu de la tuile (ennemi, clé, piège, magasin, boss...) */
+.monster-image,
+.rat-image,
+.key-image,
+.shop-image,
+.goufre-image,
+.herse-image,
+.boss-image,
+.chest-image {
+  z-index: 2;
+}
+
+/* Calque 3 : le héros, toujours au-dessus de tout */
+.hero-image {
+  z-index: 3;
+}
+.hero-position {
+  background-color: #4caf50;
+  color: white;
+}
+
+.active-tile {
+  background-color: #ffeb3b;
+}
+
+.hero-info {
+  margin-top: 1rem;
+  padding: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.tile-details {
+  margin-top: 2rem;
+  padding: 1rem;
+  background-color: #f9f9f9;
+  border-radius: 4px;
+}
+
+.ground-loot-marker {
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  width: 30%;
+  height: 30%;
+  background-color: gold;
+  border-radius: 50%;
+  border: 2px solid #b8860b;
+  z-index: 4; /* au-dessus du contenu, sous le héros si superposition */
+}
+
+@media (max-width: 700px) {
+  .hero-panel {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+/* ==========================================================================
    Page : Admin (préfixe .admin-page)
    ========================================================================== */
 

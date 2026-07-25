@@ -70,15 +70,26 @@ const NavBarre = () => {
             ))}
 
             {user && (
-              <li className="nav-item">
-                <span
-                  className="nav-link app-nav-link app-nav-logout"
-                  style={{ cursor: "pointer" }}
-                  onClick={handleLogout}
-                >
-                  Logout
-                </span>
-              </li>
+              <>
+                <li className="nav-item">
+                  <NavLink
+                    className="nav-link app-nav-link"
+                    to="/Dungeon"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    Dungeon
+                  </NavLink>
+                </li>
+                <li className="nav-item">
+                  <span
+                    className="nav-link app-nav-link app-nav-logout"
+                    style={{ cursor: "pointer" }}
+                    onClick={handleLogout}
+                  >
+                    Logout
+                  </span>
+                </li>
+              </>
             )}
 
             {/* Réservé pour une future utilisation :
