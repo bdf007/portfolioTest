@@ -22,13 +22,19 @@ import Experience from "./pages/Experience";
 import Project from "./pages/Project";
 import Contact from "./pages/Contact";
 import Ludotheque from "./pages/Ludotheque";
+import DungeonPage from "./pages/Dungeon";
 import Footer from "./component/footer";
 
 // API functions
 import { getUser } from "./api/user";
 
+import axios from "axios";
+
+axios.defaults.withCredentials = true;
+
 function App() {
   const [user, setUser] = useState(null);
+  const [authChecked, setAuthChecked] = useState(false);
 
   useEffect(() => {
     getUser()
@@ -36,8 +42,17 @@ function App() {
         if (res.error) toast(res.error);
         else setUser({ username: res.username, role: res.role });
       })
-      .catch((err) => toast(err));
+      .catch((err) => toast(err))
+      .finally(() => setAuthChecked(true));
   }, []);
+
+  // Tant que l'appel getUser() n'a pas répondu, on ne rend aucune route.
+  // Sans ça, "user" vaut encore null au premier rendu et la route "*"
+  // redirige immédiatement vers "/" avant même d'avoir la vraie réponse
+  // (particulièrement visible sur un rechargement de page type /Dungeon).
+  if (!authChecked) {
+    return <div className="app-loading">Chargement...</div>;
+  }
 
   return (
     <Router>
@@ -55,6 +70,7 @@ function App() {
               <Route path="/Project" element={<Project />} />
               <Route path="/Contact" element={<Contact />} />
               <Route path="/Ludotheque" element={<Ludotheque />} />
+              {user && <Route path="/Dungeon" element={<DungeonPage />} />}
 
               {!user && (
                 <>

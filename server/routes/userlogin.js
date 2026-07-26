@@ -12,17 +12,17 @@ const {
 } = require("../controllers/userlogin");
 // import middlewares
 const { userRegisterValidator, userById } = require("../middlewares/userlogin");
-const { verifyToken } = require("../middlewares/auth");
+const { authMiddleware, adminAuthMiddleware } = require("../middlewares/auth");
 // api routes
 router.post("/register", userRegisterValidator, register);
 router.post("/login", login);
 router.get("/logout", logout);
 
 // get logged in user
-router.get("/user", verifyToken, userById, getLoggedInUser);
+router.get("/user", authMiddleware, userById, getLoggedInUser);
 // get all users
-router.get("/users", getAllUsers);
+router.get("/users", adminAuthMiddleware, getAllUsers);
 // delete user by id
-router.delete("/user/:id", deleteUserById);
+router.delete("/user/:id", adminAuthMiddleware, deleteUserById);
 
 module.exports = router;

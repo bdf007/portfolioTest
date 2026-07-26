@@ -9,20 +9,29 @@ const {
   updateCertificateById,
   deleteCertificateById,
 } = require("../controllers/certificate");
+const { adminAuthMiddleware } = require("../middlewares/auth");
 
 // GET route for getting all the certificates
 router.get("/getCertificates", getCertificate);
 
 // GET route for getting a single certificate
-router.get("/getCertificate/:id", getCertificateById);
+router.get("/getCertificate/:id", adminAuthMiddleware, getCertificateById);
 
 // POST route for file upload
-router.post("/upload", postCertificate);
+router.post("/upload", adminAuthMiddleware, postCertificate);
 
 // update specific certificate by id
-router.put("/updateCertificate/:id", updateCertificateById);
+router.put(
+  "/updateCertificate/:id",
+  adminAuthMiddleware,
+  updateCertificateById,
+);
 
 // DELETE route for deleting an certificate
-router.delete("/deleteCertificate/:id", deleteCertificateById);
+router.delete(
+  "/deleteCertificate/:id",
+  adminAuthMiddleware,
+  deleteCertificateById,
+);
 
 module.exports = router;

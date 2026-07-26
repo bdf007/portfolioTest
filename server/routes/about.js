@@ -9,6 +9,7 @@ const {
   updateAboutById,
   deleteAboutById,
 } = require("../controllers/about");
+const { adminAuthMiddleware } = require("../middlewares/auth");
 
 // import middlewares
 
@@ -17,15 +18,15 @@ const {
 router.get("/about", getAbout);
 
 // post about page
-router.post("/about", postAbout);
+router.post("/about", adminAuthMiddleware, postAbout);
 
 // get specific user by id
-router.get("/about/:id", getAboutById);
+router.get("/about/:id", adminAuthMiddleware, getAboutById);
 
 // update specific about by id
-router.put("/about/update/:id", updateAboutById);
+router.put("/about/update/:id", adminAuthMiddleware, updateAboutById);
 
 //  delete specific about by id
-router.delete("/about/:id", deleteAboutById);
+router.delete("/about/:id", adminAuthMiddleware, deleteAboutById);
 
 module.exports = router;

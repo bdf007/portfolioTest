@@ -26,6 +26,7 @@ router.get("/comment/:id", getCommentById);
 router.put("/comment/update/:id", updateCommentById);
 
 //  delete specific comment by id
-router.delete("/comment/:id", deleteCommentById);
+const { adminAuthMiddleware } = require("../middlewares/auth");
+router.delete("/comment/:id", adminAuthMiddleware, deleteCommentById);
 
 module.exports = router;

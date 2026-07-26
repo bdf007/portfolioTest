@@ -11,6 +11,12 @@ const cookieParser = require("cookie-parser");
 // compress all responses
 app.use(compression());
 
+app.use(
+  cors({
+    origin: "http://localhost:3000", // l'URL exacte de ton front, PAS "*"
+    credentials: true,
+  }),
+);
 // get the technologie route
 const technologieRoute = require("./routes/technologieRoutes");
 
@@ -40,6 +46,9 @@ const contactRoutes = require("./routes/contact");
 
 // get the game routes
 const gameRoutes = require("./routes/game");
+
+// get the dungeon routes
+const dungeonRoutes = require("./routes/dungeonRoute");
 
 // middleware
 app.use(json({ limit: "10mb" }));
@@ -87,6 +96,9 @@ app.use("/api/", contactRoutes);
 
 // use the game routes
 app.use("/api/", gameRoutes);
+
+// use the dungeon routes
+app.use("/api/dungeon", dungeonRoutes);
 
 // Serve the React app
 app.get("/*", (req, res) => {

@@ -15,15 +15,24 @@ const {
 router.get("/projectWithImage", getProjectWithImage);
 
 // Post projectWithImage page
-router.post("/upload", postProjectWithImage);
+const { adminAuthMiddleware } = require("../middlewares/auth");
+router.post("/upload", adminAuthMiddleware, postProjectWithImage);
 
 // Get specific projectWithImage by id
 router.get("/projectWithImage/:id", getProjectWithImageById);
 
 // Update specific projectWithImage by id
-router.put("/projectWithImage/update/:id", updateProjectWithImageById);
+router.put(
+  "/projectWithImage/update/:id",
+  adminAuthMiddleware,
+  updateProjectWithImageById,
+);
 
 // Delete specific projectWithImage by id
-router.delete("/deleteProject/:id", deleteProjectWithImageById);
+router.delete(
+  "/deleteProject/:id",
+  adminAuthMiddleware,
+  deleteProjectWithImageById,
+);
 
 module.exports = router;

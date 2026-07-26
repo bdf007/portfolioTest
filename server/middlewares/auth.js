@@ -1,21 +1,36 @@
 const jwt = require("jsonwebtoken");
+const User = require("../models/userlogin"); // à garder tel quel si c'est bien ton modèle
 
-exports.verifyToken = (req, res, next) => {
-  let accessToken = req.cookies.jwt;
-  // if there is no token stored in cookies, the request is unauthorized
+exports.authMiddleware = async (req, res, next) => {
+  const accessToken = req.cookies.jwt;
   if (!accessToken) {
-    return res.sendStatus(403);
+    return res.status(403).json({ error: "Authentification requise" });
   }
-  let payload;
   try {
-    // verify the token is valid
-    // throws an error if the token is invalid or expired
-    payload = jwt.verify(accessToken, process.env.JWT_SECRET);
+    const payload = jwt.verify(accessToken, process.env.JWT_SECRET);
+    const user = await User.findById(payload._id).exec();
+    if (!user) {
+      return res.status(403).json({ error: "Utilisateur introuvable" });
+    }
     req._id = payload._id;
-
+    req.user = user; // <- disponible dans tous les contrôleurs en aval
     next();
   } catch (e) {
-    // return req unauthorized error
-    return res.status(403).json({ error: "Unauthorized" });
+    return res.status(403).json({ error: "Authentification échouée" });
   }
+};
+
+exports.adminAuthMiddleware = (req, res, next) => {
+  // Réutilise authMiddleware, évite de dupliquer la vérification du JWT
+  exports.authMiddleware(req, res, () => {
+    if (
+      !req.user ||
+      (req.user.role !== "admin" && req.user.role !== "superadmin")
+    ) {
+      return res
+        .status(403)
+        .json({ error: "Accès refusé : Pas un administrateur" });
+    }
+    next();
+  });
 };
