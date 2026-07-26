@@ -1,11 +1,22 @@
 import React from "react";
 
+const ENEMY_DISPLAY_NAMES = {
+  rat: "rat",
+  monstre: "monstre gélatineux",
+  "horde-rats": "horde de rats",
+  "monstre-gelatineux": "méga-blob",
+  "monstre-tresor": "mimic",
+  boss: "boss",
+};
+
 const EnemyChoicePanel = ({ pendingEnemyChoice, isBusy, onResolve }) => {
   const { options, enemyType } = pendingEnemyChoice;
 
   return (
     <div className="enemy-choice-popup">
-      <p>Un {enemyType} vous barre la route !</p>
+      <p>
+        Un {ENEMY_DISPLAY_NAMES[enemyType] || enemyType} vous barre la route !
+      </p>
       {options.includes("sneak_safe") && (
         <button onClick={() => onResolve("sneak_safe")} disabled={isBusy}>
           Se faufiler (garanti, 3 mvts)

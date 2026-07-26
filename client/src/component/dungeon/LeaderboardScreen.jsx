@@ -68,37 +68,69 @@ const LeaderboardScreen = ({ onBack }) => {
       {!leaderboard && !error && <p>Chargement...</p>}
 
       {leaderboard && (
-        <table className="leaderboard-table">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Joueur</th>
-              <th>Score</th>
-              <th>Étage atteint</th>
-              <th>Fin de partie</th>
-            </tr>
-          </thead>
-          <tbody>
+        <>
+          <div className="leaderboard-table-wrapper">
+            <table className="leaderboard-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Joueur</th>
+                  <th>Score</th>
+                  <th>Étage atteint</th>
+                  <th>Cause</th>
+                </tr>
+              </thead>
+              <tbody>
+                {leaderboard.map((entry, i) => (
+                  <tr key={i}>
+                    <td>{i + 1}</td>
+                    <td>{entry.username}</td>
+                    <td>{entry.score}</td>
+                    <td>{entry.floor}</td>
+                    <td className="leaderboard-cause">
+                      {entry.status === "abandoned" ? "🏳️" : "💀"} {entry.cause}
+                    </td>
+                  </tr>
+                ))}
+                {leaderboard.length === 0 && (
+                  <tr>
+                    <td colSpan={5}>
+                      Aucun score enregistré pour cette difficulté.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Version mobile : cartes empilées, aucun scroll horizontal nécessaire */}
+          <ul className="leaderboard-cards">
             {leaderboard.map((entry, i) => (
-              <tr key={i}>
-                <td>{i + 1}</td>
-                <td>{entry.username}</td>
-                <td>{entry.score}</td>
-                <td>{entry.floor}</td>
-                <td>
-                  {entry.status === "abandoned" ? "🏳️ Forfait" : "💀 Mort"}
-                </td>
-              </tr>
+              <li key={i} className="leaderboard-card">
+                <div className="leaderboard-card-top">
+                  <span className="leaderboard-card-rank">#{i + 1}</span>
+                  <span className="leaderboard-card-username">
+                    {entry.username}
+                  </span>
+                  <span className="leaderboard-card-score">
+                    {entry.score} pts
+                  </span>
+                </div>
+                <div className="leaderboard-card-bottom">
+                  <span>Étage {entry.floor}</span>
+                  <span>
+                    {entry.status === "abandoned" ? "🏳️" : "💀"} {entry.cause}
+                  </span>
+                </div>
+              </li>
             ))}
             {leaderboard.length === 0 && (
-              <tr>
-                <td colSpan={5}>
-                  Aucun score enregistré pour cette difficulté.
-                </td>
-              </tr>
+              <li className="leaderboard-card">
+                Aucun score enregistré pour cette difficulté.
+              </li>
             )}
-          </tbody>
-        </table>
+          </ul>
+        </>
       )}
     </div>
   );

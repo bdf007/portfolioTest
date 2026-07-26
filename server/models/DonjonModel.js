@@ -87,6 +87,7 @@ const DungeonSchema = new mongoose.Schema(
       movesRemaining: { type: Number, default: 0 },
       lockedDirection: { type: String, default: null },
       heroIsDead: { type: Boolean, default: false },
+      deathCause: { type: String, default: null },
       heroConfirmed: { type: Boolean, default: false },
       livesRemaining: { type: Number, default: 1 },
       rerollsRemaining: { type: Number, default: 1 },
@@ -240,6 +241,7 @@ function buildShuffledTreasureDeck() {
 DungeonSchema.statics.createGameForUser = async function (
   userId,
   difficulty = "facile",
+  heroName = "Hero",
 ) {
   const rules = DIFFICULTY_RULES[difficulty] || DIFFICULTY_RULES.facile;
 
@@ -250,7 +252,7 @@ DungeonSchema.statics.createGameForUser = async function (
     tiles: generateTiles(difficulty),
     treasureDeck: buildShuffledTreasureDeck(),
     hero: {
-      name: "Hero",
+      name: heroName,
       bodyParts: { tete: 0, torse: 0, jambes: 0 }, // à définir via roll-three-dices
       weaponDie: 1,
       gold: 0,

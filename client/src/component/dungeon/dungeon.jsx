@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import axios from "axios";
 
+import { UserContext } from "../../context/UserContext";
 import HeroPanel from "./HeroPanel";
 import HeroStatsBar from "./HeroStatsBar";
 import MovementPanel from "./MovementPanel";
@@ -20,6 +21,7 @@ import StartScreen from "./StartScreen";
 const API = process.env.REACT_APP_API_URL;
 
 const Dungeon = () => {
+  const { user } = useContext(UserContext);
   const [gameData, setGameData] = useState(null);
   const [activeGames, setActiveGames] = useState(undefined); // undefined = pas encore vérifié
   const [heroPosition, setHeroPosition] = useState([0, 0]);
@@ -29,6 +31,7 @@ const Dungeon = () => {
   const [error, setError] = useState(null);
   const [isBusy, setIsBusy] = useState(false);
   const [isInventoryOpen, setIsInventoryOpen] = useState(false);
+  const [interactionDismissed, setInteractionDismissed] = useState(false);
 
   const movesRemaining = gameData?.gameState?.movesRemaining ?? 0;
 
@@ -81,6 +84,13 @@ const Dungeon = () => {
       setSelectedDirection(gameData.gameState.lockedDirection ?? null);
     }
   }, [gameData]);
+
+  // Un popup optionnel (clé/coffre/magasin) fermé manuellement redevient
+  // proposable dès que le héros change de case.
+  const [heroX, heroY] = heroPosition;
+  useEffect(() => {
+    setInteractionDismissed(false);
+  }, [heroX, heroY]);
 
   const heroReady =
     gameData &&
@@ -529,6 +539,7 @@ const Dungeon = () => {
       <DefeatScreen
         score={gameData.gameState.score}
         floor={gameData.gameState.floor}
+        deathCause={gameData.gameState.deathCause}
         onNewGame={returnToStartScreen}
       />
     );
@@ -551,80 +562,133 @@ const Dungeon = () => {
 
   // Détermine LE panneau prioritaire à afficher en superposition du plateau
   // (mort, combat, piège, ennemi, clé, coffre, magasin) — un seul à la fois.
-  const renderPendingActionContent = () => {
+  // "dismissable" : peut être fermé sans agir (clé/coffre/magasin uniquement —
+  // combat/piège/ennemi ont déjà leurs propres boutons de sortie intégrés).
+  const getPendingAction = () => {
     if (heroIsDead) {
-      return (
-        <DeathPanel
-          livesRemaining={gameData.gameState.livesRemaining}
-          onRecreateHero={recreateHero}
-          onAbandonGame={abandonGame}
-        />
-      );
+      return {
+        dismissable: false,
+        content: (
+          <DeathPanel
+            livesRemaining={gameData.gameState.livesRemaining}
+            onRecreateHero={recreateHero}
+            onAbandonGame={abandonGame}
+          />
+        ),
+      };
+    }
+    if (!heroReady || !heroConfirmed) {
+      return {
+        dismissable: false,
+        content: (
+          <HeroPanel
+            hero={gameData.hero}
+            heroReady={heroReady}
+            heroConfirmed={heroConfirmed}
+            gameState={gameData.gameState}
+            onCreateHero={createHero}
+            onRerollHero={rerollHero}
+            onConfirmHero={confirmHero}
+          />
+        ),
+      };
     }
     if (pendingCombat && !pendingCombat.started) {
-      return (
-        <CombatChoicePanel
-          enemyType={pendingCombat.enemyType}
-          onStartCombat={startCombat}
-          onDeclineCombat={declineCombat}
-        />
-      );
+      return {
+        dismissable: false,
+        content: (
+          <CombatChoicePanel
+            enemyType={pendingCombat.enemyType}
+            onStartCombat={startCombat}
+            onDeclineCombat={declineCombat}
+          />
+        ),
+      };
     }
     if (pendingCombat?.started) {
-      return (
-        <CombatPanel
-          pendingCombat={pendingCombat}
-          hero={gameData.hero}
-          combatLog={combatLog}
-          isBusy={isBusy}
-          onAttack={attackRound}
-          onStopCombat={stopCombat}
-        />
-      );
+      return {
+        dismissable: false,
+        content: (
+          <CombatPanel
+            pendingCombat={pendingCombat}
+            hero={gameData.hero}
+            combatLog={combatLog}
+            isBusy={isBusy}
+            onAttack={attackRound}
+            onStopCombat={stopCombat}
+          />
+        ),
+      };
     }
     if (pendingTrap) {
-      return (
-        <TrapChoicePanel
-          pendingTrap={pendingTrap}
-          tiles={gameData.tiles}
-          isBusy={isBusy}
-          onResolve={resolveTrapChoice}
-        />
-      );
+      return {
+        dismissable: false,
+        content: (
+          <TrapChoicePanel
+            pendingTrap={pendingTrap}
+            tiles={gameData.tiles}
+            isBusy={isBusy}
+            onResolve={resolveTrapChoice}
+          />
+        ),
+      };
     }
     if (pendingEnemyChoice) {
-      return (
-        <EnemyChoicePanel
-          pendingEnemyChoice={pendingEnemyChoice}
-          isBusy={isBusy}
-          onResolve={resolveEnemyChoice}
-        />
-      );
+      return {
+        dismissable: false,
+        content: (
+          <EnemyChoicePanel
+            pendingEnemyChoice={pendingEnemyChoice}
+            isBusy={isBusy}
+            onResolve={resolveEnemyChoice}
+          />
+        ),
+      };
     }
+    if (interactionDismissed) return null;
+
     if (isHeroOnKey()) {
-      return <KeyPanel onPickUpKey={pickUpKey} />;
+      return {
+        dismissable: true,
+        content: <KeyPanel onPickUpKey={pickUpKey} />,
+      };
     }
     if (isHeroOnChest()) {
-      return <ChestPanel onOpenChest={openChest} />;
+      return {
+        dismissable: true,
+        content: <ChestPanel onOpenChest={openChest} />,
+      };
     }
     if (isHeroOnShop()) {
-      return <ShopPanel shopStock={gameData.shopStock} onBuyItem={buyItem} />;
+      return {
+        dismissable: true,
+        content: (
+          <ShopPanel shopStock={gameData.shopStock} onBuyItem={buyItem} />
+        ),
+      };
     }
     return null;
   };
 
-  const pendingActionContent = renderPendingActionContent();
+  const pendingAction = getPendingAction();
 
   return (
     <div className="dungeon-board">
       <div className="dungeon-header">
-        <h2>Skip the Dungeon</h2>
+        <h1 className="game-title">Skip the Dungeon</h1>
+        <div className="dungeon-header-meta">
+          <span>Étage {gameData.gameState.floor}</span>
+          <span className="hero-stats-sep">·</span>
+          <span>{gameData.difficulty}</span>
+          <span className="hero-stats-sep">·</span>
+          <span className="dungeon-username">{user?.username}</span>
+        </div>
         <button onClick={returnToStartScreen} className="save-and-quit-button">
           💾 Sauvegarder et quitter
         </button>
       </div>
 
-      {heroReady && (
+      {heroReady && heroConfirmed && (
         <HeroStatsBar hero={gameData.hero} gameState={gameData.gameState} />
       )}
 
@@ -639,11 +703,7 @@ const Dungeon = () => {
           }
         />
 
-        {pendingActionContent && (
-          <ActionOverlay>{pendingActionContent}</ActionOverlay>
-        )}
-
-        {isInventoryOpen && !pendingActionContent && (
+        {isInventoryOpen ? (
           <ActionOverlay onClose={() => setIsInventoryOpen(false)}>
             <InventoryPanel
               inventory={gameData.hero.inventory}
@@ -655,43 +715,61 @@ const Dungeon = () => {
               onUseBombeLigne={useBombeLigne}
             />
           </ActionOverlay>
+        ) : (
+          pendingAction && (
+            <ActionOverlay
+              onClose={
+                pendingAction.dismissable
+                  ? () => setInteractionDismissed(true)
+                  : undefined
+              }
+            >
+              {pendingAction.content}
+            </ActionOverlay>
+          )
         )}
       </div>
 
-      {heroReady && heroConfirmed && !heroIsDead && !pendingActionContent && (
-        <MovementPanel
-          movesRemaining={movesRemaining}
-          selectedDirection={selectedDirection}
-          isBusy={isBusy}
-          onRollDice={rollMoveDice}
-          onMoveOneStep={moveOneStep}
-          onStopMovement={stopMovement}
-        />
-      )}
+      <div className="board-controls">
+        {heroReady && heroConfirmed && !heroIsDead && !pendingAction && (
+          <MovementPanel
+            movesRemaining={movesRemaining}
+            selectedDirection={selectedDirection}
+            isBusy={isBusy}
+            onRollDice={rollMoveDice}
+            onMoveOneStep={moveOneStep}
+            onStopMovement={stopMovement}
+          />
+        )}
 
-      {tileMessage && <p className="tile-message">{tileMessage}</p>}
-      {error && <p className="dungeon-error-message">{error}</p>}
+        {tileMessage && <p className="tile-message">{tileMessage}</p>}
+        {error && <p className="dungeon-error-message">{error}</p>}
 
-      {heroReady && (
-        <button
-          className="inventory-toggle-button"
-          onClick={() => setIsInventoryOpen(true)}
-        >
-          🎒 Inventaire
-        </button>
-      )}
-
-      <div className="hero-reference-panel">
-        <HeroPanel
-          hero={gameData.hero}
-          heroReady={heroReady}
-          heroConfirmed={heroConfirmed}
-          gameState={gameData.gameState}
-          difficulty={gameData.difficulty}
-          onCreateHero={createHero}
-          onRerollHero={rerollHero}
-          onConfirmHero={confirmHero}
-        />
+        {heroReady && heroConfirmed && (
+          <button
+            className="inventory-toggle-button"
+            onClick={() => setIsInventoryOpen(true)}
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#a9714a"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="backpack-icon"
+            >
+              <path d="M6 8a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2Z" />
+              <path d="M9 6V4a3 3 0 0 1 6 0v2" />
+              <path d="M8 12h8" />
+              <path d="M9 16h2" />
+              <path d="M13 16h2" />
+            </svg>{" "}
+            Inventaire
+          </button>
+        )}
       </div>
     </div>
   );

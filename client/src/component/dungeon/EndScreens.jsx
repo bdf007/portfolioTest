@@ -18,9 +18,10 @@ export const GameOverScreen = ({ onNewGame }) => (
   </div>
 );
 
-export const DefeatScreen = ({ score, floor, onNewGame }) => (
+export const DefeatScreen = ({ score, floor, deathCause, onNewGame }) => (
   <div className="game-over-screen">
     <h2>💀 Défaite</h2>
+    {deathCause && <p className="death-cause">{deathCause}</p>}
     <p>
       Plus aucune vie disponible — l'aventure s'arrête ici, à l'étage {floor}.
     </p>

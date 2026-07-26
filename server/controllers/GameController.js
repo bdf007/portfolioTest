@@ -34,16 +34,42 @@ const GOLD_TABLE = {
   boss: 8,
   "horde-rats": 3,
   "monstre-gelatineux": 5,
-  mimic: 4,
+  "monstre-tresor": 4,
 };
 const POINTS_TABLE = {
   rat: 1,
   monstre: 2,
   "horde-rats": 4,
-  mimic: 5,
+  "monstre-tresor": 5,
   "monstre-gelatineux": 6,
   boss: 10,
 };
+
+// Noms affichés au joueur — distincts des identifiants internes (stockés en
+// base, utilisés dans toute la logique) pour ne jamais avoir à les renommer
+// en base si le vocabulaire change à nouveau.
+const ENEMY_DISPLAY_NAMES = {
+  rat: "rat",
+  monstre: "monstre gélatineux",
+  "horde-rats": "horde de rats",
+  "monstre-gelatineux": "méga-blob",
+  "monstre-tresor": "mimic",
+  boss: "boss",
+};
+function enemyDisplayName(type) {
+  return ENEMY_DISPLAY_NAMES[type] || type;
+}
+
+// Accord grammatical correct ("à la tête", "au torse", "aux jambes") — évite
+// le "au tête" invariable qui sonnait faux dans les logs de combat.
+const BODY_PART_PHRASES = {
+  tete: "à la tête",
+  torse: "au torse",
+  jambes: "aux jambes",
+};
+function bodyPartPhrase(part) {
+  return BODY_PART_PHRASES[part] || `au ${part}`;
+}
 const BODY_PART_ORDER_LOW_TO_HIGH = ["jambes", "torse", "tete"];
 
 function isInBounds(x, y) {
@@ -82,7 +108,7 @@ function isMandatoryFight(game, enemyType) {
   if (game.difficulty === "epique") return true; // aucun repli possible en épique, quel que soit l'ennemi
   return (
     enemyType === "horde-rats" ||
-    enemyType === "mimic" ||
+    enemyType === "monstre-tresor" ||
     (enemyType === "boss" && game.gameState.keyFound)
   );
 }
@@ -124,7 +150,7 @@ function applyBonusHeroStrike(game, enemyType, enemy) {
     } else {
       applyDamage(enemy.bodyParts, hitPart, heroPC);
       log.push(
-        `Frappe surprise : vous touchez au ${hitPart} (${heroPC} dégâts).`,
+        `Frappe surprise : vous touchez ${bodyPartPhrase(hitPart)} (${heroPC} dégâts).`,
       );
       if (hitPart === "jambes" && enemy.bodyParts.jambes === 0) {
         enemy.weaponDie = Math.max(1, enemy.weaponDie - 1);
@@ -141,7 +167,7 @@ function applyBonusHeroStrike(game, enemyType, enemy) {
         enemy.bodyParts[hitPart] === 0
       ) {
         victory = true;
-        log.push(`Le ${enemyType} s'effondre déjà !`);
+        log.push(`Le ${enemyDisplayName(enemyType)} s'effondre déjà !`);
       }
     }
   } else {
@@ -149,7 +175,9 @@ function applyBonusHeroStrike(game, enemyType, enemy) {
     log.push(`Frappe surprise : ${heroPC} dégâts (PV restants : ${enemy.pv}).`);
     if (enemy.pv <= 0) {
       victory = true;
-      log.push(`Le ${enemyType} est vaincu avant même d'avoir réagi !`);
+      log.push(
+        `Le ${enemyDisplayName(enemyType)} est vaincu avant même d'avoir réagi !`,
+      );
     }
   }
 
@@ -238,7 +266,7 @@ function checkAndMergeRats(game, justRevealedTile) {
 }
 
 // Si 2 autres blobs de la MÊME couleur sont déjà révélés, ils se regroupent
-// avec celui qu'on vient de découvrir pour former un blob.
+// avec celui qu'on vient de découvrir pour former un monstre gélatineux.
 function checkAndMergeBlobs(game, justRevealedTile) {
   const sameColorOthers = game.tiles.filter(
     (t) =>
@@ -291,7 +319,7 @@ function applyLowestPartDamage(hero, amount) {
 // au sol (à lootX, lootY), le recrée (nouveaux dés) et le replace sur la tuile d'entrée.
 // Marque le héros comme mort : dépose son or/objets/clé au sol (à lootX, lootY),
 // mais NE le recrée PAS automatiquement — le joueur choisira ensuite (recreateHero / abandonGame).
-function markHeroDead(game, lootX, lootY) {
+function markHeroDead(game, lootX, lootY, cause = "Une mort mystérieuse...") {
   if (!game.gameState.groundLoot) game.gameState.groundLoot = [];
 
   const droppedGold = game.hero.gold;
@@ -313,6 +341,7 @@ function markHeroDead(game, lootX, lootY) {
   game.gameState.keyFound = false;
 
   game.gameState.heroIsDead = true;
+  game.gameState.deathCause = cause;
   game.gameState.movesRemaining = 0;
   game.gameState.lockedDirection = null;
   game.gameState.pendingCombat = null;
@@ -437,7 +466,7 @@ exports.getLeaderboard = async (req, res) => {
       .limit(10)
       .populate("userId", "username")
       .select(
-        "gameState.score gameState.floor difficulty status userId createdAt",
+        "gameState.score gameState.floor gameState.deathCause difficulty status userId createdAt",
       );
 
     const leaderboard = topGames.map((g) => ({
@@ -446,6 +475,10 @@ exports.getLeaderboard = async (req, res) => {
       floor: g.gameState.floor || 1,
       difficulty: g.difficulty,
       status: g.status,
+      cause:
+        g.status === "abandoned"
+          ? "Abandon volontaire"
+          : g.gameState.deathCause || "Cause inconnue",
     }));
 
     res.json({ leaderboard, difficulty });
@@ -491,7 +524,12 @@ exports.getMyGames = async (req, res) => {
 exports.createGame = async (req, res) => {
   try {
     const { difficulty } = req.body;
-    const gameData = await Donjon.createGameForUser(req.user._id, difficulty);
+    const heroName = req.user.username || "Hero";
+    const gameData = await Donjon.createGameForUser(
+      req.user._id,
+      difficulty,
+      heroName,
+    );
     res.status(201).json(gameData);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -561,7 +599,7 @@ function buildEnemyFromTile(game, enemyType, x, y) {
 function persistEnemyDamage(game, combat) {
   const { enemyType, x, y, enemy } = combat;
 
-  if (enemyType === "mimic") return; // reset complet prévu en cas de mort, rien à conserver
+  if (enemyType === "monstre-tresor") return; // reset complet prévu en cas de mort, rien à conserver
 
   if (enemyType === "boss") {
     game.boss.bodyParts = { ...enemy.bodyParts };
@@ -692,7 +730,7 @@ exports.resolveEnemyChoice = async (req, res) => {
               retreatBack: { x: pending.enemyX, y: pending.enemyY },
               retreatForward: null,
             };
-            message = `${bonusStrike.log.join(" ")} Un ${landingTile.type} vous barrait la route juste après, le combat s'engage !`;
+            message = `${bonusStrike.log.join(" ")} Un ${enemyDisplayName(landingTile.type)} vous barrait la route juste après, le combat s'engage !`;
           }
         } else {
           game.gameState.lockedDirection =
@@ -703,7 +741,7 @@ exports.resolveEnemyChoice = async (req, res) => {
             pending.landingTo.y,
           );
           message =
-            `Vous vous faufilez discrètement devant : ${pending.enemyType}.` +
+            `Vous vous faufilez discrètement devant : ${enemyDisplayName(pending.enemyType)}.` +
             (recovered ? " Vous retrouvez votre trésor perdu !" : "");
         }
         break;
@@ -767,7 +805,7 @@ exports.resolveEnemyChoice = async (req, res) => {
                 retreatBack: { x: pending.enemyX, y: pending.enemyY },
                 retreatForward: null,
               };
-              message = `${bonusStrike.log.join(" ")} Un ${landingTile.type} vous barrait la route juste après, le combat s'engage !`;
+              message = `${bonusStrike.log.join(" ")} Un ${enemyDisplayName(landingTile.type)} vous barrait la route juste après, le combat s'engage !`;
             }
           } else {
             const recovered = collectGroundLoot(
@@ -800,7 +838,7 @@ exports.resolveEnemyChoice = async (req, res) => {
             retreatBack,
             retreatForward: pending.landingTo || null,
           };
-          message = `Votre tentative échoue, ${pending.enemyType} vous prend par surprise !`;
+          message = `Votre tentative échoue, ${enemyDisplayName(pending.enemyType)} vous prend par surprise !`;
         }
         break;
       }
@@ -828,7 +866,7 @@ exports.resolveEnemyChoice = async (req, res) => {
           retreatBack,
           retreatForward: pending.landingTo || null,
         };
-        message = `Vous engagez le combat contre : ${pending.enemyType}.`;
+        message = `Vous engagez le combat contre : ${enemyDisplayName(pending.enemyType)}.`;
         break;
       }
     }
@@ -862,9 +900,11 @@ exports.rollThreeDices = async (req, res) => {
     if (!game) return res.status(404).json({ error: "Partie introuvable." });
 
     if (game.gameState.heroConfirmed) {
-      return res.status(400).json({
-        error: "Le héros est déjà confirmé, impossible de relancer les dés.",
-      });
+      return res
+        .status(400)
+        .json({
+          error: "Le héros est déjà confirmé, impossible de relancer les dés.",
+        });
     }
     if (game.gameState.rerollsRemaining <= 0) {
       return res.status(400).json({
@@ -894,9 +934,11 @@ exports.rollWeaponDie = async (req, res) => {
     if (!game) return res.status(404).json({ error: "Partie introuvable." });
 
     if (game.gameState.heroConfirmed) {
-      return res.status(400).json({
-        error: "Le héros est déjà confirmé, impossible de relancer les dés.",
-      });
+      return res
+        .status(400)
+        .json({
+          error: "Le héros est déjà confirmé, impossible de relancer les dés.",
+        });
     }
 
     const weaponDie = Math.floor(Math.random() * 3) + 1; // PC 1-3
@@ -1247,7 +1289,7 @@ exports.resolveTrapChoice = async (req, res) => {
             // piège qu'on vient de sauter, on ne peut pas la retraverser gratuitement.
             mandatory: true,
           };
-          message = `Vous atterrissez en plein sur : ${landingTile.type} !`;
+          message = `Vous atterrissez en plein sur : ${enemyDisplayName(landingTile.type)} !`;
         } else if (isHerseTile(landingTile)) {
           const { heroDied: died } = applyLowestPartDamage(game.hero, 2);
           heroDied = died;
@@ -1302,7 +1344,7 @@ exports.resolveTrapChoice = async (req, res) => {
                 initiative: "enemy",
                 mandatory: true, // pas de repli sûr possible après un saut de piège
               };
-              message = `Saut risqué... réussi ! Mais vous atterrissez en plein sur : ${landingTile.type} !`;
+              message = `Saut risqué... réussi ! Mais vous atterrissez en plein sur : ${enemyDisplayName(landingTile.type)} !`;
             } else if (isHerseTile(landingTile)) {
               const { heroDied: died } = applyLowestPartDamage(game.hero, 2);
               heroDied = died;
@@ -1356,7 +1398,7 @@ exports.resolveTrapChoice = async (req, res) => {
                 initiative: "enemy",
                 mandatory: true, // pas de repli sûr possible après un saut de piège
               };
-              message = `Vous sautez avec agilité... et atterrissez en plein sur : ${landingTile.type} !`;
+              message = `Vous sautez avec agilité... et atterrissez en plein sur : ${enemyDisplayName(landingTile.type)} !`;
             } else if (isHerseTile(landingTile)) {
               const { heroDied: died } = applyLowestPartDamage(game.hero, 2);
               heroDied = died;
@@ -1401,6 +1443,7 @@ exports.resolveTrapChoice = async (req, res) => {
         game,
         game.gameState.currentTile.x,
         game.gameState.currentTile.y,
+        message,
       );
       message +=
         " Vous êtes mort ! Choisissez : recréer un héros ou abandonner la partie.";
@@ -1526,7 +1569,7 @@ exports.revealTile = async (req, res) => {
               };
             }
           } else {
-            message = `Un blob ${tile.color} apparaît devant vous !`;
+            message = `Un monstre gélatineux ${tile.color} apparaît devant vous !`;
             game.gameState.pendingCombat = {
               x,
               y,
@@ -1677,7 +1720,7 @@ exports.revealTile = async (req, res) => {
       const lootPos = deathLootAtCurrentTile
         ? { x, y }
         : game.gameState.previousTile || { x, y };
-      markHeroDead(game, lootPos.x, lootPos.y);
+      markHeroDead(game, lootPos.x, lootPos.y, message);
       message +=
         " Vous êtes mort ! Choisissez : recréer un héros ou abandonner la partie.";
     }
@@ -1755,7 +1798,7 @@ exports.openChest = async (req, res) => {
       game.gameState.pendingCombat = {
         x,
         y,
-        enemyType: "mimic",
+        enemyType: "monstre-tresor",
         started: true,
         attacksHero: 0,
         attacksEnemy: 0,
@@ -1871,9 +1914,11 @@ exports.useItem = async (req, res) => {
             .json({ error: "Choisissez une partie du corps valide." });
         }
         if (game.hero.bodyParts[bodyPart] >= 6) {
-          return res.status(400).json({
-            error: "Cette partie du corps est déjà au maximum (6 PV).",
-          });
+          return res
+            .status(400)
+            .json({
+              error: "Cette partie du corps est déjà au maximum (6 PV).",
+            });
         }
         game.hero.bodyParts[bodyPart] += 1;
         // Régénère l'usage des jambes, mais le malus d'arme déjà subi n'est PAS effacé (règle)
@@ -1889,9 +1934,11 @@ exports.useItem = async (req, res) => {
           (part) => game.hero.bodyParts[part] >= 6,
         );
         if (alreadyMaxed) {
-          return res.status(400).json({
-            error: "Toutes vos parties du corps sont déjà au maximum (6 PV).",
-          });
+          return res
+            .status(400)
+            .json({
+              error: "Toutes vos parties du corps sont déjà au maximum (6 PV).",
+            });
         }
         ["tete", "torse", "jambes"].forEach((part) => {
           game.hero.bodyParts[part] = Math.min(
@@ -2055,13 +2102,13 @@ exports.attackRound = async (req, res) => {
       } else if (enemy.bodyParts) {
         applyDamage(enemy.bodyParts, heroHitPart, heroPC);
         log.push(
-          `Vous touchez le ${combat.enemyType} au ${heroHitPart} (${heroPC} dégâts).`,
+          `Vous touchez le ${enemyDisplayName(combat.enemyType)} ${bodyPartPhrase(heroHitPart)} (${heroPC} dégâts).`,
         );
 
         if (heroHitPart === "jambes" && enemy.bodyParts.jambes === 0) {
           enemy.weaponDie = Math.max(1, enemy.weaponDie - 1);
           log.push(
-            `Le ${combat.enemyType} perd ses jambes, son arme est affaiblie.`,
+            `Le ${enemyDisplayName(combat.enemyType)} perd ses jambes, son arme est affaiblie.`,
           );
         }
         if (
@@ -2071,7 +2118,7 @@ exports.attackRound = async (req, res) => {
         ) {
           enemy.weaponDie = Math.max(1, enemy.weaponDie - 1);
           log.push(
-            "Une partie du blob se dissout, son attaque faiblit encore.",
+            "Une partie du monstre gélatineux se dissout, son attaque faiblit encore.",
           );
         }
         if (
@@ -2079,14 +2126,14 @@ exports.attackRound = async (req, res) => {
           enemy.bodyParts[heroHitPart] === 0
         ) {
           victory = true;
-          log.push(`Le ${combat.enemyType} s'effondre !`);
+          log.push(`Le ${enemyDisplayName(combat.enemyType)} s'effondre !`);
         }
       } else {
         enemy.pv = Math.max(0, enemy.pv - heroPC);
         log.push(`Vous infligez ${heroPC} dégâts (PV restants : ${enemy.pv}).`);
         if (enemy.pv <= 0) {
           victory = true;
-          log.push(`Le ${combat.enemyType} est vaincu !`);
+          log.push(`Le ${enemyDisplayName(combat.enemyType)} est vaincu !`);
         }
       }
       combat.attacksHero += 1;
@@ -2097,11 +2144,11 @@ exports.attackRound = async (req, res) => {
       const enemyHitPart = resolveHit(game.hero.bodyParts, rollHitLocation());
 
       if (!enemyHitPart) {
-        log.push(`Le ${combat.enemyType} vous rate !`);
+        log.push(`Le ${enemyDisplayName(combat.enemyType)} vous rate !`);
       } else {
         applyDamage(game.hero.bodyParts, enemyHitPart, enemyPC);
         log.push(
-          `Le ${combat.enemyType} vous touche au ${enemyHitPart} (${enemyPC} dégâts).`,
+          `Le ${enemyDisplayName(combat.enemyType)} vous touche ${bodyPartPhrase(enemyHitPart)} (${enemyPC} dégâts).`,
         );
 
         if (enemyHitPart === "jambes" && game.hero.bodyParts.jambes === 0) {
@@ -2161,12 +2208,17 @@ exports.attackRound = async (req, res) => {
 
       game.gameState.pendingCombat = null;
     } else if (heroDied) {
-      markHeroDead(game, combat.x, combat.y);
+      markHeroDead(
+        game,
+        combat.x,
+        combat.y,
+        `Vaincu au combat contre : ${enemyDisplayName(combat.enemyType)}.`,
+      );
       log.push(
         "Vous êtes mort ! Choisissez : recréer un héros ou abandonner la partie.",
       );
 
-      if (combat.enemyType === "mimic") {
+      if (combat.enemyType === "monstre-tresor") {
         const chestTile = game.tiles.find(
           (t) => t.position.x === combat.x && t.position.y === combat.y,
         );
@@ -2284,7 +2336,7 @@ exports.stopCombat = async (req, res) => {
     if (recovered) message += " Vous retrouvez votre trésor perdu !";
 
     if (heroDied) {
-      markHeroDead(game, retreatTile.x, retreatTile.y);
+      markHeroDead(game, retreatTile.x, retreatTile.y, message);
       message +=
         " Vous êtes mort ! Choisissez : recréer un héros ou abandonner la partie.";
     }

@@ -21,7 +21,16 @@ const InventoryPanel = ({
 }) => {
   const [ligneItemKey, setLigneItemKey] = useState(null);
 
-  if (!inventory || inventory.length === 0) return null;
+  if (!inventory || inventory.length === 0) {
+    return (
+      <div className="inventory-panel">
+        <h4>Inventaire</h4>
+        <p className="inventory-empty">
+          Ton inventaire est vide pour le moment.
+        </p>
+      </div>
+    );
+  }
 
   const counts = {};
   inventory.forEach((key) => {
@@ -37,19 +46,31 @@ const InventoryPanel = ({
             {ITEM_LABELS[itemKey] || itemKey} × {count}
             {(itemKey === "potionCoffre" || itemKey === "potionSimple") && (
               <span className="item-actions">
-                <button disabled={isBusy} onClick={() => onUsePotion(itemKey, "tete")}>
+                <button
+                  disabled={isBusy}
+                  onClick={() => onUsePotion(itemKey, "tete")}
+                >
                   Tête
                 </button>
-                <button disabled={isBusy} onClick={() => onUsePotion(itemKey, "torse")}>
+                <button
+                  disabled={isBusy}
+                  onClick={() => onUsePotion(itemKey, "torse")}
+                >
                   Torse
                 </button>
-                <button disabled={isBusy} onClick={() => onUsePotion(itemKey, "jambes")}>
+                <button
+                  disabled={isBusy}
+                  onClick={() => onUsePotion(itemKey, "jambes")}
+                >
                   Jambes
                 </button>
               </span>
             )}
             {itemKey === "potionTriple" && (
-              <button disabled={isBusy} onClick={() => onUsePotionTriple(itemKey)}>
+              <button
+                disabled={isBusy}
+                onClick={() => onUsePotionTriple(itemKey)}
+              >
                 Utiliser
               </button>
             )}
@@ -59,13 +80,19 @@ const InventoryPanel = ({
               </button>
             )}
             {itemKey === "bombeCarre" && (
-              <button disabled={isBusy} onClick={() => onUseBombeCarre(itemKey)}>
+              <button
+                disabled={isBusy}
+                onClick={() => onUseBombeCarre(itemKey)}
+              >
                 Utiliser
               </button>
             )}
             {itemKey === "bombeLigne" && (
               <>
-                <button disabled={isBusy} onClick={() => setLigneItemKey(itemKey)}>
+                <button
+                  disabled={isBusy}
+                  onClick={() => setLigneItemKey(itemKey)}
+                >
                   Utiliser
                 </button>
                 {ligneItemKey === itemKey && (

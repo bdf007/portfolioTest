@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import LeaderboardScreen from "./LeaderboardScreen";
+import RulesScreen from "./RulesScreen";
 
 const DIFFICULTIES = [
   { key: "facile", label: "Facile" },
@@ -10,19 +11,29 @@ const DIFFICULTIES = [
 
 const StartScreen = ({ activeGames, onResume, onAbandon, onStartNew }) => {
   const [showLeaderboard, setShowLeaderboard] = useState(false);
+  const [showRules, setShowRules] = useState(false);
 
   if (showLeaderboard) {
     return <LeaderboardScreen onBack={() => setShowLeaderboard(false)} />;
   }
 
+  if (showRules) {
+    return <RulesScreen onBack={() => setShowRules(false)} />;
+  }
+
   return (
     <div className="start-screen">
-      <button
-        onClick={() => setShowLeaderboard(true)}
-        className="leaderboard-link"
-      >
-        🏆 Voir le classement
-      </button>
+      <div className="start-screen-top-links">
+        <button
+          onClick={() => setShowLeaderboard(true)}
+          className="leaderboard-link"
+        >
+          🏆 Voir le classement
+        </button>
+        <button onClick={() => setShowRules(true)} className="rules-link">
+          📜 Voir les règles
+        </button>
+      </div>
 
       {activeGames.length > 0 && (
         <div className="saved-games-list">

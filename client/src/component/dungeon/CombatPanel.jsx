@@ -1,6 +1,15 @@
 import React from "react";
 import { chestMimicImage } from "./images";
 
+const ENEMY_DISPLAY_NAMES = {
+  rat: "rat",
+  monstre: "monstre gélatineux",
+  "horde-rats": "horde de rats",
+  "monstre-gelatineux": "méga-blob",
+  "monstre-tresor": "mimic",
+  boss: "boss",
+};
+
 const CombatPanel = ({
   pendingCombat,
   hero,
@@ -18,16 +27,15 @@ const CombatPanel = ({
     <div className="combat-panel">
       <h4>
         Combat contre{" "}
-        {pendingCombat.enemyType === "mimic"
-          ? "un mimic"
-          : pendingCombat.enemyType}
+        {ENEMY_DISPLAY_NAMES[pendingCombat.enemyType] ||
+          pendingCombat.enemyType}
       </h4>
       {pendingCombat.mandatory && (
         <p className="mandatory-warning">
           ⚠️ Combat obligatoire, impossible de fuir !
         </p>
       )}
-      {pendingCombat.enemyType === "mimic" && (
+      {pendingCombat.enemyType === "monstre-tresor" && (
         <img src={chestMimicImage} alt="Mimic" className="mimic-image" />
       )}
       <p>

@@ -5,19 +5,15 @@ const HeroPanel = ({
   heroReady,
   heroConfirmed,
   gameState,
-  difficulty,
   onCreateHero,
   onRerollHero,
   onConfirmHero,
 }) => {
-  const { rerollsRemaining, floor, keyFound } = gameState;
+  const { rerollsRemaining } = gameState;
 
   return (
     <div className="hero-info">
-      <h3>Héros — Étage {floor}</h3>
-      <p>Difficulté : {difficulty}</p>
-      <p>Or : {hero.gold} PO</p>
-      {keyFound && <p className="key-owned-indicator">🗝️ Vous portez la clé du donjon !</p>}
+      <h3>Création du héros</h3>
 
       {!heroReady ? (
         <>
@@ -27,17 +23,28 @@ const HeroPanel = ({
           </button>
         </>
       ) : (
-        !heroConfirmed && (
-          <div className="hero-confirm-actions">
-            <p>Essais de dés restants : {rerollsRemaining}</p>
-            <button onClick={onRerollHero} disabled={rerollsRemaining <= 0}>
-              🎲 Relancer les dés
-            </button>
-            <button onClick={onConfirmHero}>
-              {rerollsRemaining <= 0 ? "🚪 Entrer dans le donjon" : "✅ Garder ce héros"}
-            </button>
-          </div>
-        )
+        <>
+          <p className="hero-roll-result">
+            PV — Tête : {hero.bodyParts?.tete ?? 0} · Torse :{" "}
+            {hero.bodyParts?.torse ?? 0} · Jambes :{" "}
+            {hero.bodyParts?.jambes ?? 0}
+          </p>
+          <p className="hero-roll-result">PC (arme) : {hero.weaponDie}</p>
+
+          {!heroConfirmed && (
+            <div className="hero-confirm-actions">
+              <p>Essais de dés restants : {rerollsRemaining}</p>
+              <button onClick={onRerollHero} disabled={rerollsRemaining <= 0}>
+                🎲 Relancer les dés
+              </button>
+              <button onClick={onConfirmHero}>
+                {rerollsRemaining <= 0
+                  ? "🚪 Entrer dans le donjon"
+                  : "✅ Garder ce héros"}
+              </button>
+            </div>
+          )}
+        </>
       )}
     </div>
   );
