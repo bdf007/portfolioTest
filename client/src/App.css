@@ -947,83 +947,282 @@ textarea {
    Page : Dungeon (préfixe .dungeon-page)
    ========================================================================== */
 
-.dungeon-container {
-  font-family: Arial, sans-serif;
-  max-width: 800px;
-  margin: 2rem auto;
+:root {
+  /* Tokens additionnels, dérivés de la palette existante */
+  --text-gold: #f0c674;
+  --bg-stone: #12151c;
+  --border-subtle: rgba(255, 255, 255, 0.08);
+}
+
+.dungeon-page {
+  min-height: 100vh;
+  padding: 3rem 1.5rem 4rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: radial-gradient(
+    circle at top,
+    var(--bg-darkBlue),
+    var(--bg-dark) 70%
+  );
+  color: var(--text-light);
+  font-family: "Space Grotesk", sans-serif;
+}
+
+/* --------------------------------------------------------------------------
+   Layout général — mobile d'abord (empilement naturel dans l'ordre du DOM :
+   entête, barre de stats, plateau, déplacement, messages, inventaire, fiche),
+   desktop ensuite en grille 2 colonnes.
+   -------------------------------------------------------------------------- */
+
+.dungeon-board {
+  width: 100%;
+  max-width: 1100px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 1.1rem;
+}
+
+.dungeon-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border-subtle);
+  padding-bottom: 0.75rem;
+}
+
+.dungeon-header h2 {
+  font-size: 1.3rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--accent-light);
+  margin: 0;
+}
+
+.save-and-quit-button {
+  background: transparent;
+  border: 1px solid var(--border-subtle);
+  color: var(--text-light);
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 0.85rem;
+  padding: 0.5rem 0.9rem;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.save-and-quit-button:hover {
+  border-color: var(--accent);
+  color: var(--accent-light);
+}
+
+@media (min-width: 900px) {
+  .dungeon-board {
+    display: grid;
+    grid-template-columns: 340px 1fr;
+    grid-template-areas:
+      "header header"
+      "statsbar statsbar"
+      "side board";
+    align-items: start;
+    gap: 1rem 1.5rem;
+  }
+  .dungeon-header {
+    grid-area: header;
+  }
+  .hero-stats-bar {
+    grid-area: statsbar;
+    justify-content: flex-start;
+  }
+  .board-wrapper {
+    grid-area: board;
+  }
+  .movement-info-compact,
+  .tile-message,
+  .dungeon-error-message,
+  .inventory-toggle-button,
+  .hero-reference-panel {
+    grid-area: side;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Barre de stats compacte (au-dessus du plateau)
+   -------------------------------------------------------------------------- */
+
+.hero-stats-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  padding: 0.5rem 0.8rem;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.82rem;
+  color: var(--text-light);
+}
+
+.hero-stats-sep {
+  color: var(--text-muted);
+}
+
+/* --------------------------------------------------------------------------
+   Fiche de personnage (référence : difficulté, or, clé, création du héros)
+   -------------------------------------------------------------------------- */
+
+.hero-reference-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.hero-info {
+  background: var(--bg-panel);
+  color: var(--text-light);
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  padding: 1rem 1.1rem;
+  text-align: left;
+}
+
+.hero-info h3 {
+  margin: 0 0 0.6rem;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--accent-light);
+  border-bottom: 1px solid var(--border-subtle);
+  padding-bottom: 0.4rem;
+}
+
+.hero-info p {
+  margin: 0.3rem 0;
+  font-size: 0.88rem;
+  color: var(--text-light);
+}
+
+.key-owned-indicator {
+  color: var(--text-gold) !important;
+  font-weight: 600;
+}
+
+.hero-confirm-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: 0.5rem;
+}
+
+/* --------------------------------------------------------------------------
+   Boutons
+   -------------------------------------------------------------------------- */
+
+.dungeon-page button {
+  font-family: "Space Grotesk", sans-serif;
+  font-weight: 600;
+  font-size: 0.85rem;
+  padding: 0.5rem 0.9rem;
+  border-radius: 6px;
+  border: 1px solid var(--accent);
+  background: transparent;
+  color: var(--accent-light);
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease,
+    transform 0.08s ease;
+}
+
+.dungeon-page button:hover:not(:disabled) {
+  background: var(--accent);
+  color: var(--bg-dark);
+  transform: translateY(-1px);
+}
+
+.dungeon-page button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.dungeon-page button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.dungeon-page button:focus-visible {
+  outline: 2px solid var(--accent-light);
+  outline-offset: 2px;
+}
+
+.dungeon-page button.danger {
+  border-color: var(--text-lightRed);
+  color: var(--text-lightRed);
+}
+.dungeon-page button.danger:hover:not(:disabled) {
+  background: var(--text-lightRed);
+  color: var(--bg-dark);
+}
+
+.inventory-toggle-button {
+  align-self: center;
+}
+
+/* --------------------------------------------------------------------------
+   Plateau + superposition (combat, pièges, ennemis, inventaire...)
+   -------------------------------------------------------------------------- */
+
+.board-wrapper {
+  position: relative;
+  display: flex;
+  justify-content: center;
 }
 
 .board-grid {
   display: grid;
-  grid-template-columns: repeat(8, 1fr);
-  grid-template-rows: repeat(8, 1fr);
-
-  width: min(90vw, 480px);
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  grid-template-rows: repeat(8, minmax(0, 1fr));
+  width: min(90vw, 560px);
   aspect-ratio: 1 / 1;
-
-  margin: 2rem auto;
-
-  border: 2px solid #333;
-}
-
-.hero-panel {
-  display: flex;
-  gap: 2rem;
-  align-items: flex-start;
-  justify-content: center;
-  margin-top: 1rem;
-}
-
-.hero-info,
-.movement-info {
-  padding: 1rem;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  min-width: 250px;
+  gap: 2px;
+  padding: 10px;
+  background: var(--bg-stone);
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.5);
 }
 
 .tile {
   position: relative;
   box-sizing: border-box;
-
-  display: flex; /* gardé pour un éventuel contenu texte de secours */
-  justify-content: center;
-  align-items: center;
-
-  background-color: #f0f0f0;
-  border: 1px solid #999;
-  border-radius: 0.5rem;
-
-  font-size: 12px;
-  cursor: pointer;
-  overflow: hidden; /* ← empêche tout débordement hors de la case */
+  overflow: hidden;
+  border-radius: 3px;
+  background: var(--bg-panel);
 }
 
-.tile:hover {
-  background-color: #e0e0e0;
-}
-
-/* Base commune à TOUTES les images de tuile */
 .tile img {
   position: absolute;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
-  margin: 0; /* centre visuellement l'image dans les 80% restants */
+  width: 80%;
+  height: 80%;
+  margin: 10%;
   object-fit: contain;
   pointer-events: none;
 }
 
-/* Calque 1 : le sol, tout en fond */
-.sol-image {
+.back-tile-image {
+  width: 100% !important;
+  height: 100% !important;
+  margin: 0 !important;
+  object-fit: cover;
   z-index: 1;
-  width: 100%;
-  height: 100%;
-  margin: 0;
 }
 
-/* Calque 2 : contenu de la tuile (ennemi, clé, piège, magasin, boss...) */
+.sol-image {
+  z-index: 1;
+}
+
 .monster-image,
 .rat-image,
 .key-image,
@@ -1031,53 +1230,407 @@ textarea {
 .goufre-image,
 .herse-image,
 .boss-image,
-.chest-image {
+.chest-image,
+.door-image {
   z-index: 2;
 }
 
-/* Calque 3 : le héros, toujours au-dessus de tout */
 .hero-image {
   z-index: 3;
+  filter: drop-shadow(0 0 5px rgba(102, 252, 241, 0.6));
 }
+
 .hero-position {
-  background-color: #4caf50;
-  color: white;
-}
-
-.active-tile {
-  background-color: #ffeb3b;
-}
-
-.hero-info {
-  margin-top: 1rem;
-  padding: 1rem;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-}
-
-.tile-details {
-  margin-top: 2rem;
-  padding: 1rem;
-  background-color: #f9f9f9;
-  border-radius: 4px;
+  box-shadow: inset 0 0 0 2px var(--accent-light);
 }
 
 .ground-loot-marker {
   position: absolute;
-  bottom: 4px;
-  right: 4px;
-  width: 30%;
-  height: 30%;
-  background-color: gold;
+  bottom: 6%;
+  right: 6%;
+  width: 22%;
+  height: 22%;
+  background: radial-gradient(circle, var(--text-gold), #b8860b 70%);
   border-radius: 50%;
-  border: 2px solid #b8860b;
-  z-index: 4; /* au-dessus du contenu, sous le héros si superposition */
+  border: 1px solid #7a5416;
+  z-index: 4;
+  box-shadow: 0 0 8px rgba(240, 198, 116, 0.7);
 }
 
+/* Popup superposé (combat, pièges, ennemis, coffre, clé, magasin, mort,
+   inventaire) — sur mobile ET desktop, toujours par-dessus le plateau */
+.action-overlay-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(11, 12, 16, 0.85);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  padding: 1rem;
+  z-index: 10;
+}
+
+.action-overlay-panel {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+  max-height: 100%;
+  overflow-y: auto;
+  background: var(--bg-panel);
+  border: 1px solid var(--accent);
+  border-radius: 10px;
+  padding: 1.2rem;
+  text-align: left;
+}
+
+.action-overlay-close {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  padding: 0.2rem 0.5rem;
+  font-size: 0.8rem;
+  border-color: var(--border-subtle);
+  color: var(--text-muted);
+}
+
+/* Contenu des panneaux affichés DANS le popup — pas de fond/bordure propre,
+   le popup fournit déjà le cadre visuel */
+.combat-choice,
+.combat-panel,
+.trap-choice-popup,
+.enemy-choice-popup,
+.key-choice-panel,
+.chest-choice-panel,
+.shop-panel,
+.inventory-panel,
+.death-choice-panel {
+  text-align: left;
+}
+
+.combat-panel h4,
+.death-choice-panel h4,
+.key-choice-panel h4,
+.chest-choice-panel h4,
+.shop-panel h4 {
+  margin: 0 0 0.6rem;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--accent-light);
+  border-bottom: 1px solid var(--border-subtle);
+  padding-bottom: 0.4rem;
+}
+
+/* --------------------------------------------------------------------------
+   Déplacement compact (une seule ligne d'icônes)
+   -------------------------------------------------------------------------- */
+
+.movement-info-compact {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  position: relative;
+  padding: 0.3rem 0;
+}
+
+.movement-info-compact button {
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.moves-remaining-badge {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.75rem;
+  background: var(--accent);
+  color: var(--bg-dark);
+  border-radius: 999px;
+  padding: 0.15rem 0.5rem;
+  margin-left: 0.3rem;
+}
+
+/* --------------------------------------------------------------------------
+   Combat / pièges / ennemis — accent de danger
+   -------------------------------------------------------------------------- */
+
+.mandatory-warning {
+  background: rgba(255, 95, 86, 0.12);
+  border: 1px solid var(--text-lightRed);
+  color: var(--text-lightRed);
+  padding: 0.5rem 0.7rem;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.82rem;
+  margin: 0.5rem 0;
+}
+
+.mimic-image {
+  display: block;
+  width: 72px;
+  margin: 0.4rem 0;
+}
+
+/* Journal de combat : un bloc par round, le plus récent en premier */
+.combat-panel ul.combat-log {
+  list-style: none;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  max-height: 180px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.combat-log-round {
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 6px;
+  padding: 0.4rem 0.6rem;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.combat-log-round-number {
+  display: block;
+  color: var(--accent-light);
+  font-weight: 600;
+  margin-bottom: 0.2rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 0.68rem;
+}
+
+.combat-log-round p {
+  margin: 0.1rem 0;
+}
+
+.direction-picker,
+.item-actions {
+  display: inline-flex;
+  gap: 0.25rem;
+  margin-left: 0.4rem;
+}
+
+.inventory-panel ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.inventory-panel li {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  font-size: 0.85rem;
+}
+
+/* --------------------------------------------------------------------------
+   Messages
+   -------------------------------------------------------------------------- */
+
+.tile-message {
+  font-style: italic;
+  color: var(--accent-light);
+  border-left: 3px solid var(--accent);
+  padding-left: 0.7rem;
+  margin: 0;
+  font-size: 0.85rem;
+}
+
+.dungeon-error-message {
+  color: var(--text-lightRed);
+  text-align: center;
+  margin: 0;
+}
+
+/* --------------------------------------------------------------------------
+   Écran de démarrage
+   -------------------------------------------------------------------------- */
+
+.start-screen {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 2rem;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  color: var(--text-light);
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  text-align: left;
+}
+
+.start-screen h2 {
+  font-size: 1.2rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--accent-light);
+  border-bottom: 1px solid var(--border-subtle);
+  padding-bottom: 0.5rem;
+  margin: 0;
+}
+
+.saved-games-list ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+.saved-games-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  background: var(--bg-dark);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  padding: 0.6rem 0.8rem;
+  font-size: 0.85rem;
+}
+
+.difficulty-picker {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.leaderboard-link {
+  align-self: flex-start;
+}
+
+/* --------------------------------------------------------------------------
+   Classement
+   -------------------------------------------------------------------------- */
+
+.leaderboard-screen {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 2rem;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  color: var(--text-light);
+  text-align: left;
+}
+
+.leaderboard-tabs,
+.leaderboard-scope-toggle {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  margin: 1rem 0;
+}
+
+.active-tab {
+  background: var(--accent) !important;
+  color: var(--bg-dark) !important;
+}
+
+.leaderboard-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.82rem;
+}
+.leaderboard-table th,
+.leaderboard-table td {
+  text-align: left;
+  padding: 0.5rem 0.6rem;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.leaderboard-table th {
+  color: var(--accent-light);
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+}
+.leaderboard-table tr:nth-child(1) td {
+  color: var(--text-gold);
+  font-weight: 600;
+}
+
+/* --------------------------------------------------------------------------
+   Écrans de fin / transition
+   -------------------------------------------------------------------------- */
+
+.victory-screen,
+.game-over-screen,
+.floor-recap-screen {
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 2.5rem;
+  text-align: center;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  color: var(--text-light);
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.victory-screen h2,
+.game-over-screen h2,
+.floor-recap-screen h2 {
+  font-size: 1.5rem;
+  letter-spacing: 0.04em;
+  margin: 0;
+}
+
+.victory-screen h2 {
+  color: var(--accent-light);
+}
+.game-over-screen h2 {
+  color: var(--text-lightRed);
+}
+.floor-recap-screen h2 {
+  color: var(--text-gold);
+}
+
+.final-score {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 1.4rem;
+  color: var(--text-gold);
+}
+
+.floor-recap-actions {
+  display: flex;
+  gap: 0.6rem;
+  justify-content: center;
+  margin-top: 0.75rem;
+  flex-wrap: wrap;
+}
+
+/* --------------------------------------------------------------------------
+   Mobile
+   -------------------------------------------------------------------------- */
+
 @media (max-width: 700px) {
-  .hero-panel {
-    flex-direction: column;
-    align-items: stretch;
+  .dungeon-page {
+    padding: 2rem 1rem 3rem;
+  }
+  .board-grid {
+    width: 96vw;
+  }
+  .dungeon-header h2 {
+    font-size: 1.05rem;
   }
 }
 

@@ -1,7 +1,26 @@
 import React from "react";
 
-const TrapChoicePanel = ({ pendingTrap, isBusy, onResolve }) => {
-  const { options, trapType } = pendingTrap;
+const OBSTACLE_ENEMY_TYPES = [
+  "monstre",
+  "rat",
+  "boss",
+  "horde-rats",
+  "monstre-gelatineux",
+];
+
+const TrapChoicePanel = ({ pendingTrap, tiles, isBusy, onResolve }) => {
+  const { options, trapType, jumpTo } = pendingTrap;
+
+  const jumpLandsOnEnemy =
+    !!jumpTo &&
+    tiles?.some(
+      (t) =>
+        t.position.x === jumpTo.x &&
+        t.position.y === jumpTo.y &&
+        t.revealed &&
+        !t.cleared &&
+        OBSTACLE_ENEMY_TYPES.includes(t.type),
+    );
 
   return (
     <div className="trap-choice-popup">
@@ -10,6 +29,13 @@ const TrapChoicePanel = ({ pendingTrap, isBusy, onResolve }) => {
           ? "⚠️ Un gouffre s'ouvre devant vous !"
           : "Une herse vous barre la route."}
       </p>
+      {jumpLandsOnEnemy &&
+        (options.includes("jump_safe") || options.includes("jump_risky")) && (
+          <p className="mandatory-warning">
+            ⚠️ Un ennemi occupe la case d'en face : sauter engagera un combat
+            obligatoire, sans possibilité de repli !
+          </p>
+        )}
       {options.includes("walk") && (
         <button onClick={() => onResolve("walk")} disabled={isBusy}>
           Marcher (-1 PV)
@@ -31,7 +57,11 @@ const TrapChoicePanel = ({ pendingTrap, isBusy, onResolve }) => {
         </button>
       )}
       {options.includes("fall") && (
-        <button onClick={() => onResolve("fall")} disabled={isBusy} className="danger">
+        <button
+          onClick={() => onResolve("fall")}
+          disabled={isBusy}
+          className="danger"
+        >
           Se jeter dans le gouffre
         </button>
       )}

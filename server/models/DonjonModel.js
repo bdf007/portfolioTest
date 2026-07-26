@@ -10,7 +10,7 @@ const DungeonSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["in_progress", "victory", "abandoned"],
+      enum: ["in_progress", "victory", "abandoned", "defeat"],
       default: "in_progress",
     },
     difficulty: {
@@ -87,6 +87,16 @@ const DungeonSchema = new mongoose.Schema(
       movesRemaining: { type: Number, default: 0 },
       lockedDirection: { type: String, default: null },
       heroIsDead: { type: Boolean, default: false },
+      heroConfirmed: { type: Boolean, default: false },
+      livesRemaining: { type: Number, default: 1 },
+      rerollsRemaining: { type: Number, default: 1 },
+      score: { type: Number, default: 0 },
+      turnCount: { type: Number, default: 0 },
+      lastShopPurchaseTurn: { type: Number, default: -1 },
+      // Récapitulatif affiché après avoir réussi un étage, jusqu'à ce que le
+      // joueur confirme (continuer ou sauvegarder/quitter) — voir dismissFloorRecap.
+      floorRecap: { type: mongoose.Schema.Types.Mixed, default: null },
+      floor: { type: Number, default: 1 },
       // Ennemi croisé en chemin, en attente d'une décision (combattre / continuer au tour suivant)
       // puis état complet du combat une fois démarré (started: true, attacksHero, attacksEnemy, enemy)
       pendingCombat: { type: mongoose.Schema.Types.Mixed, default: null },
@@ -122,6 +132,15 @@ const DIFFICULTY_CONFIG = {
   epique: { monstres: 9, rats: 9, herses: 5, gouffres: 5, tresor: 10 },
 };
 
+// Nombre d'essais de dés à la création/recréation du héros, et nombre de vies
+// (recréations possibles) autorisées avant la fin définitive de la partie.
+const DIFFICULTY_RULES = {
+  facile: { maxRerolls: 4, maxLives: 4 },
+  moyen: { maxRerolls: 3, maxLives: 3 },
+  difficile: { maxRerolls: 2, maxLives: 2 },
+  epique: { maxRerolls: 1, maxLives: 1 },
+};
+
 function rollD6() {
   return Math.floor(Math.random() * 6) + 1;
 }
@@ -146,7 +165,13 @@ function generateTiles(difficulty) {
   // Entrée et sortie : positions fixes et réservées, exclues du tirage aléatoire
   usedPositions.add("0,0");
   usedPositions.add("7,7");
-  tiles.push({ type: "entrée", value: null, position: { x: 0, y: 0 } });
+  tiles.push({
+    type: "entrée",
+    value: null,
+    position: { x: 0, y: 0 },
+    revealed: true, // le héros démarre ici, jamais "découverte" via un déplacement
+    cleared: true,
+  });
   tiles.push({ type: "sortie", value: null, position: { x: 7, y: 7 } });
 
   const addTiles = (type, count, value) => {
@@ -216,6 +241,8 @@ DungeonSchema.statics.createGameForUser = async function (
   userId,
   difficulty = "facile",
 ) {
+  const rules = DIFFICULTY_RULES[difficulty] || DIFFICULTY_RULES.facile;
+
   return this.create({
     userId,
     difficulty,
@@ -240,6 +267,14 @@ DungeonSchema.statics.createGameForUser = async function (
       movesRemaining: 0,
       lockedDirection: null,
       heroIsDead: false,
+      heroConfirmed: false,
+      livesRemaining: rules.maxLives,
+      rerollsRemaining: rules.maxRerolls,
+      score: 0,
+      turnCount: 0,
+      lastShopPurchaseTurn: -1,
+      floorRecap: null,
+      floor: 1,
       pendingCombat: null,
       pendingTrapChoice: null,
       pendingEnemyChoice: null,
@@ -250,4 +285,7 @@ DungeonSchema.statics.createGameForUser = async function (
 
 const DonjonModel = mongoose.model("Donjon", DungeonSchema);
 DonjonModel.buildShuffledTreasureDeck = buildShuffledTreasureDeck;
+DonjonModel.generateTiles = generateTiles;
+DonjonModel.generateBossStats = generateBossStats;
+DonjonModel.DIFFICULTY_RULES = DIFFICULTY_RULES;
 module.exports = DonjonModel;

@@ -1,8 +1,6 @@
 import React from "react";
 import { chestMimicImage } from "./images";
 
-const NO_RETREAT_TYPES = ["horde-rats", "monstre-tresor"];
-
 const CombatPanel = ({
   pendingCombat,
   hero,
@@ -13,17 +11,23 @@ const CombatPanel = ({
 }) => {
   const canRetreat =
     pendingCombat.attacksHero === pendingCombat.attacksEnemy &&
-    !NO_RETREAT_TYPES.includes(pendingCombat.enemyType);
+    pendingCombat.attacksHero > 0 &&
+    !pendingCombat.mandatory;
 
   return (
     <div className="combat-panel">
       <h4>
         Combat contre{" "}
-        {pendingCombat.enemyType === "monstre-tresor"
+        {pendingCombat.enemyType === "mimic"
           ? "un mimic"
           : pendingCombat.enemyType}
       </h4>
-      {pendingCombat.enemyType === "monstre-tresor" && (
+      {pendingCombat.mandatory && (
+        <p className="mandatory-warning">
+          ⚠️ Combat obligatoire, impossible de fuir !
+        </p>
+      )}
+      {pendingCombat.enemyType === "mimic" && (
         <img src={chestMimicImage} alt="Mimic" className="mimic-image" />
       )}
       <p>
@@ -34,10 +38,14 @@ const CombatPanel = ({
         <p>
           Adversaire — Tête : {pendingCombat.enemy.bodyParts.tete} | Torse :{" "}
           {pendingCombat.enemy.bodyParts.torse} | Jambes :{" "}
-          {pendingCombat.enemy.bodyParts.jambes}
+          {pendingCombat.enemy.bodyParts.jambes} | PC :{" "}
+          {pendingCombat.enemy.weaponDie}
         </p>
       ) : (
-        <p>PV adversaire : {pendingCombat.enemy.pv}</p>
+        <p>
+          PV adversaire : {pendingCombat.enemy.pv} | PC :{" "}
+          {pendingCombat.enemy.weaponDie}
+        </p>
       )}
 
       <button onClick={onAttack} disabled={isBusy}>
@@ -45,9 +53,16 @@ const CombatPanel = ({
       </button>
       {canRetreat && <button onClick={onStopCombat}>🏃 Se replier</button>}
 
-      <ul>
-        {combatLog.map((line, i) => (
-          <li key={i}>{line}</li>
+      <ul className="combat-log">
+        {[...combatLog].reverse().map((roundLines, i) => (
+          <li key={combatLog.length - i} className="combat-log-round">
+            <span className="combat-log-round-number">
+              Round {combatLog.length - i}
+            </span>
+            {roundLines.map((line, j) => (
+              <p key={j}>{line}</p>
+            ))}
+          </li>
         ))}
       </ul>
     </div>

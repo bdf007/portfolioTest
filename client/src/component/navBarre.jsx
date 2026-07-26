@@ -91,19 +91,20 @@ const NavBarre = () => {
                 </li>
               </>
             )}
-
-            {/* Réservé pour une future utilisation :
-            <li className="nav-item">
-              <Link className="nav-link app-nav-link" to="/signup">
-                Sign Up
-              </Link>
-            </li>
-            <li className="nav-item">
-              <Link className="nav-link app-nav-link" to="/login">
-                Login
-              </Link>
-            </li>
-            */}
+            {!user && (
+              <>
+                <li className="nav-item">
+                  <Link className="nav-link app-nav-link" to="/signup">
+                    Sign Up
+                  </Link>
+                </li>
+                <li className="nav-item">
+                  <Link className="nav-link app-nav-link" to="/login">
+                    Login
+                  </Link>
+                </li>
+              </>
+            )}
           </ul>
         </div>
       </div>
