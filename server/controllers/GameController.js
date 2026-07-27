@@ -40,9 +40,9 @@ const POINTS_TABLE = {
   rat: 1,
   monstre: 2,
   "horde-rats": 4,
-  "monstre-tresor": 5,
-  "monstre-gelatineux": 6,
-  boss: 10,
+  "monstre-tresor": 6,
+  "monstre-gelatineux": 7,
+  boss: 12,
 };
 
 // Noms affichés au joueur — distincts des identifiants internes (stockés en
@@ -58,6 +58,17 @@ const ENEMY_DISPLAY_NAMES = {
 };
 function enemyDisplayName(type) {
   return ENEMY_DISPLAY_NAMES[type] || type;
+}
+
+// +1 point tous les 5 tuiles révélées (peu importe le moyen : marche, saut,
+// bombe...) — évite qu'un début de partie interrompu tôt (mort en Épique
+// après 1-2 tuiles) laisse systématiquement un score de 0.
+function awardTileRevealPoints(game, amount = 1) {
+  const prevCount = game.gameState.tilesRevealedCount || 0;
+  const newCount = prevCount + amount;
+  game.gameState.tilesRevealedCount = newCount;
+  const bonus = Math.floor(newCount / 5) - Math.floor(prevCount / 5);
+  if (bonus > 0) game.gameState.score = (game.gameState.score || 0) + bonus;
 }
 
 // Accord grammatical correct ("à la tête", "au torse", "aux jambes") — évite
@@ -554,6 +565,59 @@ exports.abandonGame = async (req, res) => {
 // Le joueur choisit de ne pas combattre l'ennemi croisé : on efface juste la
 // proposition de combat, SANS toucher aux mouvements restants ni à la direction
 // verrouillée — le joueur reprend son déplacement là où il l'avait laissé.
+// Uniquement utilisable quand pendingCombat.forced est vrai (héros bloqué au
+// contact, sans mouvement possible) : tentative de dissimulation, 1D6, 50%.
+// Réussite : l'ennemi ne repère pas le héros, l'affrontement est évité pour
+// ce tour. Échec : combat immédiat, initiative à l'ennemi (même logique que
+// la furtivité risquée classique).
+exports.attemptHideForced = async (req, res) => {
+  try {
+    const { gameId } = req.body;
+    const game = await Donjon.findOne({ _id: gameId, userId: req.user._id });
+    if (!game) return res.status(404).json({ error: "Partie introuvable." });
+
+    const pending = game.gameState.pendingCombat;
+    if (!pending || pending.started || !pending.forced) {
+      return res
+        .status(400)
+        .json({ error: "Aucune tentative de dissimulation possible ici." });
+    }
+
+    const roll = rollD6();
+    const success = roll >= 4;
+    let message;
+
+    if (success) {
+      game.gameState.pendingCombat = null;
+      message = `🎲 (${roll}) Vous parvenez à vous fondre dans l'ombre, ${enemyDisplayName(pending.enemyType)} ne vous repère pas.`;
+    } else {
+      game.gameState.pendingCombat = {
+        x: pending.x,
+        y: pending.y,
+        enemyType: pending.enemyType,
+        started: true,
+        attacksHero: 0,
+        attacksEnemy: 0,
+        enemy: buildEnemyFromTile(
+          game,
+          pending.enemyType,
+          pending.x,
+          pending.y,
+        ),
+        initiative: "enemy",
+        mandatory: isMandatoryFight(game, pending.enemyType),
+      };
+      message = `🎲 (${roll}) Repéré ! ${enemyDisplayName(pending.enemyType)} vous prend par surprise.`;
+    }
+
+    game.markModified("gameState.pendingCombat");
+    await game.save();
+    res.json({ gameData: game, message, success });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
 exports.declineCombat = async (req, res) => {
   try {
     const { gameId } = req.body;
@@ -562,6 +626,12 @@ exports.declineCombat = async (req, res) => {
 
     if (!game.gameState.pendingCombat || game.gameState.pendingCombat.started) {
       return res.status(400).json({ error: "Aucun combat à esquiver ici." });
+    }
+    if (game.gameState.pendingCombat.forced) {
+      return res.status(400).json({
+        error:
+          "Vous êtes au contact direct : combattez, ou tentez de vous dissimuler.",
+      });
     }
 
     game.gameState.pendingCombat = null;
@@ -637,6 +707,7 @@ function revealExitIfReady(game) {
 // mais la fusion elle-même est un effet purement structurel, pas un déclenchement.
 function revealTileAndCheckMerge(game, tile) {
   if (!tile || tile.revealed) return false;
+  awardTileRevealPoints(game);
   tile.revealed = true;
 
   if (tile.type === "rat") {
@@ -1010,7 +1081,44 @@ exports.rollDice = async (req, res) => {
     }
 
     let diceRoll = rollD6();
-    if (!game.hero.hasLegs) diceRoll = Math.max(0, diceRoll - 2); // malus jambes coupées
+    let message = null;
+    if (!game.hero.hasLegs) {
+      const rawRoll = diceRoll;
+      diceRoll = Math.max(0, diceRoll - 2); // malus jambes coupées
+      if (diceRoll === 0) {
+        message = `🎲 (${rawRoll} - 2 = 0) Trop faible pour vous déplacer ce tour...`;
+      }
+    }
+
+    // Résultat à 0 alors que le héros est planté sur un ennemi non résolu
+    // (déclin précédent, toujours pas pu s'éloigner) : on repropose le choix
+    // au lieu de le laisser sans aucune option pour ce tour.
+    const { x: hx, y: hy } = game.gameState.currentTile;
+    const standingTile = game.tiles.find(
+      (t) => t.position.x === hx && t.position.y === hy,
+    );
+    if (
+      diceRoll === 0 &&
+      standingTile?.revealed &&
+      !standingTile.cleared &&
+      OBSTACLE_ENEMY_TYPES.includes(standingTile.type) &&
+      !game.gameState.pendingCombat
+    ) {
+      game.gameState.pendingCombat = {
+        x: hx,
+        y: hy,
+        enemyType: standingTile.type,
+        started: false,
+        forced: true,
+      };
+      game.gameState.turnCount = (game.gameState.turnCount || 0) + 1;
+      await game.save();
+      return res.json({
+        gameData: game,
+        diceRoll,
+        message: `${message} Toujours au contact de ${enemyDisplayName(standingTile.type)} — que faites-vous ?`,
+      });
+    }
 
     game.gameState.movesRemaining = diceRoll;
     game.gameState.lockedDirection = null;
@@ -1018,7 +1126,7 @@ exports.rollDice = async (req, res) => {
     game.gameState.turnCount = (game.gameState.turnCount || 0) + 1;
     await game.save();
 
-    res.json({ diceRoll, gameData: game });
+    res.json({ diceRoll, gameData: game, message });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -1213,6 +1321,90 @@ exports.stopMovement = async (req, res) => {
 };
 
 // Résout un choix en attente sur un piège permanent (herse ou gouffre)
+// Jet de sauvetage lors de la découverte d'un gouffre : 1D6, besoin d'un 6.
+// Réussite : recul sur la case précédente, révélée SANS déclencher son
+// éventuel effet (même logique que les bombes — sécurité absolue, cf.
+// discussion sur les gouffres chaînés). Échec : le message d'échec s'affiche
+// d'abord, la mort n'est confirmée qu'via confirmGouffreDeath (bouton dédié
+// côté front, pour laisser le temps de lire ce qui vient de se passer).
+exports.rollGouffreFall = async (req, res) => {
+  try {
+    const { gameId } = req.body;
+    const game = await Donjon.findOne({ _id: gameId, userId: req.user._id });
+    if (!game) return res.status(404).json({ error: "Partie introuvable." });
+
+    const pending = game.gameState.pendingGouffreFall;
+    if (!pending)
+      return res.status(400).json({ error: "Aucun gouffre en attente." });
+
+    const roll = rollD6();
+    const success = roll === 6;
+    let message;
+
+    if (success) {
+      const retreatPos =
+        game.gameState.previousTile || game.gameState.entryTile;
+      const retreatTile = game.tiles.find(
+        (t) => t.position.x === retreatPos.x && t.position.y === retreatPos.y,
+      );
+      if (retreatTile) revealTileAndCheckMerge(game, retreatTile); // révélation passive, sûre
+
+      game.gameState.currentTile = retreatPos;
+      game.gameState.movesRemaining = 0;
+      game.gameState.lockedDirection = null;
+      game.gameState.pendingGouffreFall = null;
+
+      const recovered = collectGroundLoot(game, retreatPos.x, retreatPos.y);
+      message =
+        `🎲 (${roll}) Vous arrivez à vous accrocher au bord à la dernière seconde !` +
+        (recovered ? " Vous retrouvez votre trésor perdu !" : "");
+    } else {
+      game.gameState.pendingGouffreFall = { ...pending, failed: true, roll };
+      message = `🎲 (${roll}) Vous n'arrivez pas à vous accrocher... Le vide vous engloutit.`;
+    }
+
+    game.markModified("gameState.pendingGouffreFall");
+    await game.save();
+
+    res.json({ gameData: game, message, success });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// Appelé uniquement après un jet de sauvetage raté, quand le joueur clique
+// sur le bouton "voir la suite" — confirme la mort et ses conséquences.
+exports.confirmGouffreDeath = async (req, res) => {
+  try {
+    const { gameId } = req.body;
+    const game = await Donjon.findOne({ _id: gameId, userId: req.user._id });
+    if (!game) return res.status(404).json({ error: "Partie introuvable." });
+
+    const pending = game.gameState.pendingGouffreFall;
+    if (!pending || !pending.failed) {
+      return res
+        .status(400)
+        .json({ error: "Aucune mort en attente de confirmation." });
+    }
+
+    game.gameState.pendingGouffreFall = null;
+    const lootPos = game.gameState.previousTile || {
+      x: pending.x,
+      y: pending.y,
+    };
+    markHeroDead(game, lootPos.x, lootPos.y, "Englouti par un gouffre.");
+
+    await game.save();
+    res.json({
+      gameData: game,
+      message:
+        "Vous êtes mort ! Choisissez : recréer un héros ou abandonner la partie.",
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
 exports.resolveTrapChoice = async (req, res) => {
   try {
     const { gameId, choice } = req.body; // "stop" | "walk" | "jump_safe" | "jump_risky" | "fall"
@@ -1495,6 +1687,7 @@ exports.revealTile = async (req, res) => {
     let deathLootAtCurrentTile = false; // true = herse (dépôt sur place), false = gouffre (case précédente)
 
     if (!tile.revealed) {
+      awardTileRevealPoints(game);
       tile.revealed = true;
 
       switch (tile.type) {
@@ -1520,10 +1713,10 @@ exports.revealTile = async (req, res) => {
 
         case "piège":
           if (tile.value === -1) {
-            // Première découverte d'un gouffre = mort automatique (règle de base)
-            heroDied = true;
-            deathLootAtCurrentTile = false; // le trésor va sur la case précédente
-            message = "C'est un gouffre ! Vous tombez...";
+            // Première découverte d'un gouffre = tentative de rattrapage (1D6, besoin d'un 6),
+            // plutôt qu'une mort automatique — voir pendingGouffreFall.
+            game.gameState.pendingGouffreFall = { x, y };
+            message = "⚠️ Un gouffre s'ouvre sous vos pieds...";
           } else {
             const { heroDied: died } = applyLowestPartDamage(game.hero, 1);
             heroDied = died;
@@ -1679,9 +1872,12 @@ exports.revealTile = async (req, res) => {
       game.gameState.pendingCombat = null;
       game.gameState.pendingTrapChoice = null;
       game.gameState.pendingEnemyChoice = null;
+      game.gameState.pendingGouffreFall = null;
+      game.gameState.tilesRevealedCount = 0;
       game.gameState.groundLoot = [];
       game.gameState.turnCount = 0;
       game.gameState.lastShopPurchaseTurn = -1;
+      game.gameState.lastItemUseTurn = -1;
       // heroIsDead, heroConfirmed, livesRemaining, rerollsRemaining, score : conservés
     }
 
@@ -1754,6 +1950,7 @@ exports.pickUpKey = async (req, res) => {
 
     tile.cleared = true;
     game.gameState.keyFound = true;
+    game.gameState.score = (game.gameState.score || 0) + 1;
     game.gameState.movesRemaining = 0;
     game.gameState.lockedDirection = null;
     revealExitIfReady(game);
@@ -1903,6 +2100,29 @@ exports.useItem = async (req, res) => {
       return res.status(400).json({ error: "Vous ne possédez pas cet objet." });
     }
 
+    const inCombat = !!game.gameState.pendingCombat?.started;
+
+    // Les bombes n'ont aucun effet pendant un combat (elles ne servent qu'à
+    // révéler des cases) — inutile de les proposer là.
+    if (inCombat && (itemKey === "bombeCarre" || itemKey === "bombeLigne")) {
+      return res
+        .status(400)
+        .json({ error: "Cet objet n'a aucun effet en plein combat." });
+    }
+
+    // Hors combat, un seul objet utilisable par tour (même principe que le
+    // magasin) — sinon un tour consommé perdrait tout son sens.
+    if (
+      !inCombat &&
+      game.gameState.lastItemUseTurn === game.gameState.turnCount
+    ) {
+      return res
+        .status(400)
+        .json({
+          error: "Un seul objet utilisable par tour en dehors d'un combat.",
+        });
+    }
+
     let message;
 
     switch (itemKey) {
@@ -2024,6 +2244,16 @@ exports.useItem = async (req, res) => {
     }
 
     game.hero.inventory.splice(idx, 1);
+
+    // Hors combat, utiliser un objet consomme le tour (comme acheter ou ouvrir
+    // un coffre) et verrouille tout autre objet pour ce même tour. En combat,
+    // l'usage reste libre et n'affecte pas le round.
+    if (!inCombat) {
+      game.gameState.movesRemaining = 0;
+      game.gameState.lockedDirection = null;
+      game.gameState.lastItemUseTurn = game.gameState.turnCount;
+    }
+
     await game.save();
     res.json({ gameData: game, message });
   } catch (err) {

@@ -9,14 +9,30 @@ const ENEMY_DISPLAY_NAMES = {
   boss: "boss",
 };
 
-const CombatChoicePanel = ({ enemyType, onStartCombat, onDeclineCombat }) => {
+const CombatChoicePanel = ({
+  enemyType,
+  forced,
+  onStartCombat,
+  onDeclineCombat,
+  onAttemptHide,
+}) => {
   return (
     <div className="combat-choice">
       <p>
         Un {ENEMY_DISPLAY_NAMES[enemyType] || enemyType} vous barre la route !
       </p>
+      {forced && (
+        <p className="mandatory-warning">
+          ⚠️ Toujours au contact, impossible de vous éloigner — combattez, ou
+          tentez de vous dissimuler (1D6, 50%).
+        </p>
+      )}
       <button onClick={onStartCombat}>⚔️ Combattre</button>
-      <button onClick={onDeclineCombat}>➡️ Continuer sa route</button>
+      {forced ? (
+        <button onClick={onAttemptHide}>🎲 Tenter de se cacher (50%)</button>
+      ) : (
+        <button onClick={onDeclineCombat}>➡️ Continuer sa route</button>
+      )}
     </div>
   );
 };

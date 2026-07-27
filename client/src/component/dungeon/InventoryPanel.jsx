@@ -13,6 +13,8 @@ const ITEM_LABELS = {
 const InventoryPanel = ({
   inventory,
   isBusy,
+  inCombat,
+  alreadyUsedThisTurn,
   onUsePotion,
   onUsePotionTriple,
   onUseWeapon,
@@ -37,6 +39,17 @@ const InventoryPanel = ({
     counts[key] = (counts[key] || 0) + 1;
   });
 
+  // Hors combat, un seul objet par tour. En combat, les bombes n'ont aucun effet.
+  const itemDisabled = isBusy || (!inCombat && alreadyUsedThisTurn);
+  const bombDisabled = itemDisabled || inCombat;
+  const itemDisabledReason =
+    !inCombat && alreadyUsedThisTurn
+      ? "Déjà utilisé un objet ce tour-ci"
+      : undefined;
+  const bombDisabledReason = inCombat
+    ? "Sans effet en plein combat"
+    : itemDisabledReason;
+
   return (
     <div className="inventory-panel">
       <h4>Inventaire</h4>
@@ -47,19 +60,22 @@ const InventoryPanel = ({
             {(itemKey === "potionCoffre" || itemKey === "potionSimple") && (
               <span className="item-actions">
                 <button
-                  disabled={isBusy}
+                  disabled={itemDisabled}
+                  title={itemDisabledReason}
                   onClick={() => onUsePotion(itemKey, "tete")}
                 >
                   Tête
                 </button>
                 <button
-                  disabled={isBusy}
+                  disabled={itemDisabled}
+                  title={itemDisabledReason}
                   onClick={() => onUsePotion(itemKey, "torse")}
                 >
                   Torse
                 </button>
                 <button
-                  disabled={isBusy}
+                  disabled={itemDisabled}
+                  title={itemDisabledReason}
                   onClick={() => onUsePotion(itemKey, "jambes")}
                 >
                   Jambes
@@ -68,20 +84,26 @@ const InventoryPanel = ({
             )}
             {itemKey === "potionTriple" && (
               <button
-                disabled={isBusy}
+                disabled={itemDisabled}
+                title={itemDisabledReason}
                 onClick={() => onUsePotionTriple(itemKey)}
               >
                 Utiliser
               </button>
             )}
             {(itemKey === "armeCoffre" || itemKey === "armeBonus") && (
-              <button disabled={isBusy} onClick={() => onUseWeapon(itemKey)}>
+              <button
+                disabled={itemDisabled}
+                title={itemDisabledReason}
+                onClick={() => onUseWeapon(itemKey)}
+              >
                 Utiliser
               </button>
             )}
             {itemKey === "bombeCarre" && (
               <button
-                disabled={isBusy}
+                disabled={bombDisabled}
+                title={bombDisabledReason}
                 onClick={() => onUseBombeCarre(itemKey)}
               >
                 Utiliser
@@ -90,7 +112,8 @@ const InventoryPanel = ({
             {itemKey === "bombeLigne" && (
               <>
                 <button
-                  disabled={isBusy}
+                  disabled={bombDisabled}
+                  title={bombDisabledReason}
                   onClick={() => setLigneItemKey(itemKey)}
                 >
                   Utiliser
@@ -98,7 +121,7 @@ const InventoryPanel = ({
                 {ligneItemKey === itemKey && (
                   <span className="direction-picker">
                     <button
-                      disabled={isBusy}
+                      disabled={bombDisabled}
                       onClick={() => {
                         onUseBombeLigne(itemKey, "haut");
                         setLigneItemKey(null);
@@ -107,7 +130,7 @@ const InventoryPanel = ({
                       ↑
                     </button>
                     <button
-                      disabled={isBusy}
+                      disabled={bombDisabled}
                       onClick={() => {
                         onUseBombeLigne(itemKey, "bas");
                         setLigneItemKey(null);
@@ -116,7 +139,7 @@ const InventoryPanel = ({
                       ↓
                     </button>
                     <button
-                      disabled={isBusy}
+                      disabled={bombDisabled}
                       onClick={() => {
                         onUseBombeLigne(itemKey, "gauche");
                         setLigneItemKey(null);
@@ -125,7 +148,7 @@ const InventoryPanel = ({
                       ←
                     </button>
                     <button
-                      disabled={isBusy}
+                      disabled={bombDisabled}
                       onClick={() => {
                         onUseBombeLigne(itemKey, "droite");
                         setLigneItemKey(null);

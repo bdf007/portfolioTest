@@ -6,7 +6,7 @@ import {
   Navigate,
 } from "react-router-dom";
 import { UserContext } from "./context/UserContext";
-import { toast, ToastContainer } from "react-toastify";
+import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "./App.css";
 
@@ -39,10 +39,17 @@ function App() {
   useEffect(() => {
     getUser()
       .then((res) => {
-        if (res.error) toast(res.error);
-        else setUser({ username: res.username, role: res.role });
+        if (res.error) {
+          // "Pas connecté" est l'état normal pour un visiteur anonyme —
+          setUser(null);
+        } else {
+          setUser({ username: res.username, role: res.role });
+        }
       })
-      .catch((err) => toast(err))
+      .catch((err) => {
+        // Ici, une vraie erreur technique (réseau, serveur injoignable...)
+        console.error(err);
+      })
       .finally(() => setAuthChecked(true));
   }, []);
 
