@@ -1397,6 +1397,24 @@ textarea {
   margin-left: 0.3rem;
 }
 
+.movement-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.movement-row-run-all {
+  margin-top: 0.3rem;
+}
+
+.movement-row-label {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin-right: 0.2rem;
+}
+
 /* --------------------------------------------------------------------------
    Combat / pièges / ennemis — accent de danger
    -------------------------------------------------------------------------- */

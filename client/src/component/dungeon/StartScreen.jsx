@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import LeaderboardScreen from "./LeaderboardScreen";
 import RulesScreen from "./RulesScreen";
+import PatchNotesScreen from "./PatchNotesScreen";
 
 const DIFFICULTIES = [
   { key: "facile", label: "Facile" },
@@ -12,6 +13,7 @@ const DIFFICULTIES = [
 const StartScreen = ({ activeGames, onResume, onAbandon, onStartNew }) => {
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [showRules, setShowRules] = useState(false);
+  const [showPatchNotes, setShowPatchNotes] = useState(false);
 
   if (showLeaderboard) {
     return <LeaderboardScreen onBack={() => setShowLeaderboard(false)} />;
@@ -19,6 +21,10 @@ const StartScreen = ({ activeGames, onResume, onAbandon, onStartNew }) => {
 
   if (showRules) {
     return <RulesScreen onBack={() => setShowRules(false)} />;
+  }
+
+  if (showPatchNotes) {
+    return <PatchNotesScreen onBack={() => setShowPatchNotes(false)} />;
   }
 
   return (
@@ -32,6 +38,12 @@ const StartScreen = ({ activeGames, onResume, onAbandon, onStartNew }) => {
         </button>
         <button onClick={() => setShowRules(true)} className="rules-link">
           📜 Voir les règles
+        </button>
+        <button
+          onClick={() => setShowPatchNotes(true)}
+          className="patch-notes-link"
+        >
+          🛠️ Notes de mise à jour
         </button>
       </div>
 

@@ -8,7 +8,9 @@ import MovementPanel from "./MovementPanel";
 import DeathPanel from "./DeathPanel";
 import CombatChoicePanel from "./CombatChoicePanel";
 import CombatPanel from "./CombatPanel";
+import CombatResultPanel from "./CombatResultPanel";
 import TrapChoicePanel from "./TrapChoicePanel";
+import GouffreFallPanel from "./GouffreFallPanel";
 import EnemyChoicePanel from "./EnemyChoicePanel";
 import { KeyPanel, ChestPanel, ShopPanel } from "./InteractionPanels";
 import InventoryPanel from "./InventoryPanel";
@@ -32,6 +34,7 @@ const Dungeon = () => {
   const [isBusy, setIsBusy] = useState(false);
   const [isInventoryOpen, setIsInventoryOpen] = useState(false);
   const [interactionDismissed, setInteractionDismissed] = useState(false);
+  const [combatResultOverlay, setCombatResultOverlay] = useState(null);
 
   const movesRemaining = gameData?.gameState?.movesRemaining ?? 0;
 
@@ -56,6 +59,8 @@ const Dungeon = () => {
     setGameData(game);
     const { x, y } = game.gameState.currentTile;
     setHeroPosition([x, y]);
+    setCombatResultOverlay(null);
+    setInteractionDismissed(false);
   };
 
   const abandonFromList = (gameId) => {
@@ -75,6 +80,8 @@ const Dungeon = () => {
         setTileMessage(null);
         setCombatLog([]);
         setError(null);
+        setCombatResultOverlay(null);
+        setInteractionDismissed(false);
       })
       .catch((err) => console.error(err));
   };
@@ -161,9 +168,10 @@ const Dungeon = () => {
       .post(`${API}/api/dungeon/roll-dice`, { gameId: gameData._id })
       .then((res) => {
         setGameData(res.data.gameData);
-        setTileMessage(null);
+        setTileMessage(res.data.message || null);
         setCombatLog([]);
         setError(null);
+        setInteractionDismissed(false); // nouveau tour = un popup fermé redevient proposable
       })
       .catch((err) => {
         console.error(err);
@@ -211,6 +219,81 @@ const Dungeon = () => {
       .finally(() => setIsBusy(false));
   };
 
+  // Déroule automatiquement tous les mouvements restants dans une direction,
+  // en s'arrêtant net dès qu'une décision du joueur devient nécessaire
+  // (piège, ennemi, gouffre, mort...) — même logique que le pas-à-pas,
+  // simplement enchaînée en boucle côté client.
+  const runAllMoves = async (direction) => {
+    if (!gameData || movesRemaining <= 0 || isBusy) return;
+    if (selectedDirection !== null && direction !== selectedDirection) return;
+
+    setIsBusy(true);
+    setError(null);
+
+    let keepGoing = true;
+    let currentDirection = direction; // suit le rebond éventuel d'un pas à l'autre
+    const collectedMessages = []; // rien ne se perd, même sur les pas intermédiaires
+
+    while (keepGoing) {
+      try {
+        const res = await axios.post(`${API}/api/dungeon/move-one-step`, {
+          gameId: gameData._id,
+          direction: currentDirection,
+        });
+        const { gameData: updatedGame, message, stopped } = res.data;
+
+        setGameData(updatedGame);
+        setHeroPosition([
+          updatedGame.gameState.currentTile.x,
+          updatedGame.gameState.currentTile.y,
+        ]);
+        if (message) collectedMessages.push(message);
+
+        const gs = updatedGame.gameState;
+        // Le serveur renvoie la direction effective (post-rebond éventuel) dans
+        // lockedDirection tant que le mouvement continue — on la reprend pour
+        // le pas suivant plutôt que de s'entêter sur la direction d'origine.
+        if (gs.lockedDirection) currentDirection = gs.lockedDirection;
+
+        const needsPlayerChoice =
+          gs.pendingTrapChoice ||
+          gs.pendingCombat ||
+          gs.pendingEnemyChoice ||
+          gs.pendingGouffreFall ||
+          gs.heroIsDead;
+
+        if (needsPlayerChoice) {
+          keepGoing = false; // popup à afficher, on ne va pas plus loin sans le joueur
+        } else if (stopped && gs.movesRemaining === 0) {
+          keepGoing = false;
+          const revealRes = await axios.post(`${API}/api/dungeon/reveal-tile`, {
+            gameId: gameData._id,
+          });
+          setGameData(revealRes.data.gameData);
+          setHeroPosition([
+            revealRes.data.gameData.gameState.currentTile.x,
+            revealRes.data.gameData.gameState.currentTile.y,
+          ]);
+          if (revealRes.data.message)
+            collectedMessages.push(revealRes.data.message);
+        } else if (gs.movesRemaining <= 0) {
+          keepGoing = false;
+        }
+        // sinon : encore des mouvements, rien de bloquant → on continue la boucle
+      } catch (err) {
+        console.error(err);
+        setError(err.response?.data?.error || "Erreur lors du déplacement");
+        keepGoing = false;
+      }
+    }
+
+    if (collectedMessages.length > 0) {
+      setTileMessage(collectedMessages.join(" ⋅ "));
+    }
+
+    setIsBusy(false);
+  };
+
   const stopMovement = () => {
     if (isBusy) return;
     setIsBusy(true);
@@ -251,6 +334,54 @@ const Dungeon = () => {
         setError(
           err.response?.data?.error || "Erreur lors de la résolution du piège",
         );
+      })
+      .finally(() => setIsBusy(false));
+  };
+
+  // ---------------------------------------------------------------------
+  // Jet de sauvetage lors de la découverte d'un gouffre
+  // ---------------------------------------------------------------------
+  const rollGouffreFall = () => {
+    if (isBusy) return;
+    setIsBusy(true);
+
+    axios
+      .post(`${API}/api/dungeon/roll-gouffre-fall`, { gameId: gameData._id })
+      .then((res) => {
+        setGameData(res.data.gameData);
+        setTileMessage(res.data.message);
+
+        if (res.data.success) {
+          const { x, y } = res.data.gameData.gameState.currentTile;
+          setHeroPosition([x, y]);
+        }
+        // En cas d'échec, on reste affiché sur le popup (état "failed") en
+        // attendant que le joueur confirme via confirmGouffreDeath.
+      })
+      .catch((err) => {
+        console.error(err);
+        setError(
+          err.response?.data?.error || "Erreur lors du jet de sauvetage",
+        );
+      })
+      .finally(() => setIsBusy(false));
+  };
+
+  const confirmGouffreDeath = () => {
+    if (isBusy) return;
+    setIsBusy(true);
+
+    axios
+      .post(`${API}/api/dungeon/confirm-gouffre-death`, {
+        gameId: gameData._id,
+      })
+      .then((res) => {
+        setGameData(res.data.gameData);
+        setTileMessage(res.data.message);
+      })
+      .catch((err) => {
+        console.error(err);
+        setError(err.response?.data?.error || "Erreur");
       })
       .finally(() => setIsBusy(false));
   };
@@ -360,6 +491,23 @@ const Dungeon = () => {
       });
   };
 
+  const attemptHideForced = () => {
+    if (isBusy) return;
+    setIsBusy(true);
+
+    axios
+      .post(`${API}/api/dungeon/attempt-hide-forced`, { gameId: gameData._id })
+      .then((res) => {
+        setGameData(res.data.gameData);
+        setTileMessage(res.data.message);
+      })
+      .catch((err) => {
+        console.error(err);
+        setError(err.response?.data?.error || "Erreur");
+      })
+      .finally(() => setIsBusy(false));
+  };
+
   const attackRound = () => {
     if (isBusy) return;
     setIsBusy(true);
@@ -369,8 +517,16 @@ const Dungeon = () => {
       .then((res) => {
         setGameData(res.data.gameData);
         setCombatLog((prev) => [...prev, res.data.log]); // un round = un bloc de lignes (ordre interne préservé)
-        if (res.data.victory)
-          setTileMessage(`Victoire ! +${res.data.goldReward} PO`);
+
+        if (res.data.victory) {
+          setCombatResultOverlay({
+            type: "victory",
+            log: res.data.log,
+            goldReward: res.data.goldReward,
+          });
+        } else if (res.data.gameData.gameState.heroIsDead) {
+          setCombatResultOverlay({ type: "defeat", log: res.data.log });
+        }
       })
       .catch((err) => {
         console.error(err);
@@ -378,6 +534,8 @@ const Dungeon = () => {
       })
       .finally(() => setIsBusy(false));
   };
+
+  const dismissCombatResult = () => setCombatResultOverlay(null);
 
   const stopCombat = () => {
     axios
@@ -431,6 +589,8 @@ const Dungeon = () => {
     setTileMessage(null);
     setCombatLog([]);
     setError(null);
+    setCombatResultOverlay(null);
+    setInteractionDismissed(false);
     fetchMyGames();
   };
 
@@ -487,6 +647,7 @@ const Dungeon = () => {
   // ---------------------------------------------------------------------
   const isHeroOnShop = () => {
     if (!gameData?.gameState?.currentTile) return false;
+    if (movesRemaining > 0) return false; // pas juste en passant, il faut finir son tour dessus
     const { x, y } = gameData.gameState.currentTile;
     const tile = gameData.tiles.find(
       (t) => t.position.x === x && t.position.y === y,
@@ -557,6 +718,7 @@ const Dungeon = () => {
   const pendingTrap = gameData.gameState.pendingTrapChoice;
   const pendingCombat = gameData.gameState.pendingCombat;
   const pendingEnemyChoice = gameData.gameState.pendingEnemyChoice;
+  const pendingGouffreFall = gameData.gameState.pendingGouffreFall;
   const heroIsDead = gameData.gameState.heroIsDead;
   const heroConfirmed = gameData.gameState.heroConfirmed;
 
@@ -565,6 +727,17 @@ const Dungeon = () => {
   // "dismissable" : peut être fermé sans agir (clé/coffre/magasin uniquement —
   // combat/piège/ennemi ont déjà leurs propres boutons de sortie intégrés).
   const getPendingAction = () => {
+    if (combatResultOverlay) {
+      return {
+        dismissable: false,
+        content: (
+          <CombatResultPanel
+            result={combatResultOverlay}
+            onContinue={dismissCombatResult}
+          />
+        ),
+      };
+    }
     if (heroIsDead) {
       return {
         dismissable: false,
@@ -593,14 +766,29 @@ const Dungeon = () => {
         ),
       };
     }
+    if (pendingGouffreFall) {
+      return {
+        dismissable: false,
+        content: (
+          <GouffreFallPanel
+            pendingGouffreFall={pendingGouffreFall}
+            isBusy={isBusy}
+            onRoll={rollGouffreFall}
+            onConfirmDeath={confirmGouffreDeath}
+          />
+        ),
+      };
+    }
     if (pendingCombat && !pendingCombat.started) {
       return {
         dismissable: false,
         content: (
           <CombatChoicePanel
             enemyType={pendingCombat.enemyType}
+            forced={pendingCombat.forced}
             onStartCombat={startCombat}
             onDeclineCombat={declineCombat}
+            onAttemptHide={attemptHideForced}
           />
         ),
       };
@@ -708,6 +896,11 @@ const Dungeon = () => {
             <InventoryPanel
               inventory={gameData.hero.inventory}
               isBusy={isBusy}
+              inCombat={!!pendingCombat?.started}
+              alreadyUsedThisTurn={
+                gameData.gameState.lastItemUseTurn ===
+                gameData.gameState.turnCount
+              }
               onUsePotion={usePotion}
               onUsePotionTriple={useItem}
               onUseWeapon={useItem}
@@ -738,6 +931,7 @@ const Dungeon = () => {
             isBusy={isBusy}
             onRollDice={rollMoveDice}
             onMoveOneStep={moveOneStep}
+            onRunAllMoves={runAllMoves}
             onStopMovement={stopMovement}
           />
         )}

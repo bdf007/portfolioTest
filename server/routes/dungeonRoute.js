@@ -22,6 +22,8 @@ router.post("/resolve-trap-choice", GameController.resolveTrapChoice);
 router.post("/resolve-enemy-choice", GameController.resolveEnemyChoice);
 
 router.post("/reveal-tile", GameController.revealTile);
+router.post("/roll-gouffre-fall", GameController.rollGouffreFall);
+router.post("/confirm-gouffre-death", GameController.confirmGouffreDeath);
 router.post("/dismiss-floor-recap", GameController.dismissFloorRecap);
 router.post("/pickup-key", GameController.pickUpKey);
 router.post("/open-chest", GameController.openChest);
@@ -32,6 +34,7 @@ router.post("/use-item", GameController.useItem);
 
 router.post("/start-combat", GameController.startCombat);
 router.post("/decline-combat", GameController.declineCombat);
+router.post("/attempt-hide-forced", GameController.attemptHideForced);
 router.post("/attack-round", GameController.attackRound);
 router.post("/stop-combat", GameController.stopCombat);
 

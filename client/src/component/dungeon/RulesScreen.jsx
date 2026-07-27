@@ -51,6 +51,11 @@ const RulesScreen = ({ onBack }) => {
           Si tu n'as plus l'usage de tes jambes, ton lancer de dé est réduit de
           2 (1D6 - 2, minimum 0 mouvement).
         </p>
+        <p>
+          Astuce : la double flèche déroule tout le trajet restant en un clic,
+          et s'arrête automatiquement dès qu'une décision devient nécessaire
+          (piège, ennemi...).
+        </p>
       </section>
 
       <section>
@@ -62,9 +67,11 @@ const RulesScreen = ({ onBack }) => {
           l'usage de tes jambes.
         </p>
         <p>
-          <strong>Gouffre</strong> : mort instantanée à la découverte. Une fois
-          connu, tu ne peux que t'arrêter avant, t'y jeter volontairement, ou
-          tenter de sauter par-dessus (mêmes conditions que pour la herse).
+          <strong>Gouffre</strong> : à la découverte, tente un jet de sauvetage
+          (1D6, besoin d'un 6). Réussi, tu t'accroches de justesse et recules en
+          sécurité. Raté, c'est la mort. Une fois le gouffre connu, tu peux
+          t'arrêter avant, t'y jeter volontairement, ou tenter de sauter
+          par-dessus (mêmes conditions que pour la herse).
         </p>
         <p>
           Si tu atterris sur une autre herse en sautant, tu perds 2 PV au lieu
@@ -94,6 +101,17 @@ const RulesScreen = ({ onBack }) => {
           combat n'est pas obligatoire (horde de rats, monstre au trésor, boss
           avec la clé, ou n'importe quel combat en difficulté Épique).
         </p>
+        <p>
+          Si tu restes coincé sur la case d'un ennemi (typiquement sans jambes,
+          incapable de bouger), le choix te sera reproposé à chaque tour :
+          combattre, ou tenter de te dissimuler (1D6, 50 %) — un échec te fait
+          repérer, combat immédiat avec l'ennemi ayant l'initiative.
+        </p>
+        <p>
+          Victoire ou défaite, le popup de combat reste affiché avec le résultat
+          jusqu'à ce que tu cliques sur "Continuer" — tu as toujours le temps de
+          voir ce qui vient de se passer.
+        </p>
       </section>
 
       <section>
@@ -110,8 +128,18 @@ const RulesScreen = ({ onBack }) => {
         <h3>Objets & trésors</h3>
         <p>
           Potions, améliorations d'arme et bombes s'obtiennent en ouvrant des
-          coffres. Le magasin permet d'en acheter un par tour. Un mimic peut
-          surgir d'un coffre — combat immédiat et obligatoire.
+          coffres. Un mimic peut surgir d'un coffre — combat immédiat et
+          obligatoire.
+        </p>
+        <p>
+          Le magasin ne s'ouvre que si tu termines ton tour dessus (pas juste en
+          passant), et un seul achat est possible par tour.
+        </p>
+        <p>
+          Utiliser un objet est libre pendant un combat, sauf les bombes (aucun
+          effet en plein affrontement). En dehors d'un combat, ça consomme ton
+          tour, et un seul objet est utilisable par tour — l'objet acheté au
+          magasin ne sera donc utilisable qu'au tour suivant.
         </p>
       </section>
 
@@ -132,10 +160,14 @@ const RulesScreen = ({ onBack }) => {
           <li>Rat — 1 point</li>
           <li>Blob — 2 points</li>
           <li>Horde de rats — 4 points</li>
-          <li>Mimic — 5 points</li>
-          <li>Méga-blob — 6 points</li>
-          <li>Boss — 10 points</li>
+          <li>Mimic — 6 points</li>
+          <li>Méga-blob — 7 points</li>
+          <li>Boss — 12 points</li>
         </ul>
+        <p>
+          Ramasser la clé pour la première fois rapporte 1 point, et explorer le
+          donjon en rapporte aussi un peu : +1 point tous les 5 tuiles révélées.
+        </p>
         <p>
           Chaque étage réussi ajoute un bonus de rapidité (100 moins le nombre
           de tours utilisés). Les meilleurs scores apparaissent dans le
