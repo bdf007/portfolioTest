@@ -1,6 +1,5 @@
 import React from "react";
 import {
-  heroImage,
   shopImage,
   coffreFermeImage,
   coffreOuvertImage,
@@ -18,7 +17,7 @@ import {
   getBlobImage,
 } from "./images";
 
-const Tile = ({ tile, isHeroHere, heroIsDead, hasGroundLoot, exitReady }) => {
+const Tile = ({ tile, isHeroHere, hasGroundLoot, exitReady }) => {
   return (
     <div className={`tile ${isHeroHere ? "hero-position" : ""}`}>
       {tile?.revealed && <img src={solImage} alt="Sol" className="sol-image" />}
@@ -97,10 +96,6 @@ const Tile = ({ tile, isHeroHere, heroIsDead, hasGroundLoot, exitReady }) => {
           alt="Case cachée"
           className="back-tile-image"
         />
-      )}
-
-      {isHeroHere && !heroIsDead && (
-        <img src={heroImage} alt="Héros" className="hero-image" />
       )}
     </div>
   );

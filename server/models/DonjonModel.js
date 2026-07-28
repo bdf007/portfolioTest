@@ -45,6 +45,7 @@ const DungeonSchema = new mongoose.Schema(
       gold: { type: Number, default: 0 },
       hasLegs: { type: Boolean, default: true },
       inventory: [String],
+      spriteId: { type: Number, default: null }, // 1-4, choisi à la création/recréation
     },
 
     boss: {
@@ -89,6 +90,7 @@ const DungeonSchema = new mongoose.Schema(
       heroIsDead: { type: Boolean, default: false },
       deathCause: { type: String, default: null },
       pendingGouffreFall: { type: mongoose.Schema.Types.Mixed, default: null },
+      usedSpriteIds: { type: [Number], default: [] },
       tilesRevealedCount: { type: Number, default: 0 },
       heroConfirmed: { type: Boolean, default: false },
       livesRemaining: { type: Number, default: 1 },
@@ -261,6 +263,7 @@ DungeonSchema.statics.createGameForUser = async function (
       gold: 0,
       hasLegs: true,
       inventory: [],
+      spriteId: null,
     },
     boss: { type: "goblin", ...generateBossStats() },
     gameState: {
@@ -281,6 +284,7 @@ DungeonSchema.statics.createGameForUser = async function (
       lastItemUseTurn: -1,
       floorRecap: null,
       pendingGouffreFall: null,
+      usedSpriteIds: [],
       tilesRevealedCount: 0,
       floor: 1,
       pendingCombat: null,

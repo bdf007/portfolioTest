@@ -436,6 +436,7 @@ exports.recreateHero = async (req, res) => {
     game.hero.bodyParts = { tete: 0, torse: 0, jambes: 0 };
     game.hero.weaponDie = 1;
     game.hero.hasLegs = true;
+    game.hero.spriteId = null; // nouveau choix d'apparence obligatoire
     game.gameState.heroConfirmed = false;
 
     game.gameState.currentTile = { ...game.gameState.entryTile };
@@ -477,7 +478,7 @@ exports.getLeaderboard = async (req, res) => {
       .limit(10)
       .populate("userId", "username")
       .select(
-        "gameState.score gameState.floor gameState.deathCause difficulty status userId createdAt",
+        "gameState.score gameState.floor gameState.deathCause hero.spriteId difficulty status userId createdAt",
       );
 
     const leaderboard = topGames.map((g) => ({
@@ -490,6 +491,7 @@ exports.getLeaderboard = async (req, res) => {
         g.status === "abandoned"
           ? "Abandon volontaire"
           : g.gameState.deathCause || "Cause inconnue",
+      spriteId: g.hero?.spriteId || 1,
     }));
 
     res.json({ leaderboard, difficulty });
@@ -656,11 +658,12 @@ function buildEnemyFromTile(game, enemyType, x, y) {
     return {
       bodyParts: { ...tile.mergedStats.bodyParts },
       weaponDie: tile.mergedStats.weaponDie,
+      color: tile.color, // pour le sprite du méga-blob en combat
     };
   }
   const tile = game.tiles.find((t) => t.position.x === x && t.position.y === y);
   const weaponDie = enemyType === "monstre" ? 2 : 1;
-  return { pv: tile.value, weaponDie };
+  return { pv: tile.value, weaponDie, color: tile.color }; // color utile pour un blob seul
 }
 
 // Réécrit l'état actuel de l'ennemi (dégâts subis) sur sa source persistante,
@@ -1039,8 +1042,57 @@ exports.confirmHero = async (req, res) => {
         .status(400)
         .json({ error: "Lancez d'abord les dés du héros." });
     }
+    if (!game.hero.spriteId) {
+      return res
+        .status(400)
+        .json({ error: "Choisissez d'abord l'apparence de votre héros." });
+    }
 
     game.gameState.heroConfirmed = true;
+    if (!game.gameState.usedSpriteIds) game.gameState.usedSpriteIds = [];
+    if (!game.gameState.usedSpriteIds.includes(game.hero.spriteId)) {
+      game.gameState.usedSpriteIds.push(game.hero.spriteId);
+    }
+    await game.save();
+
+    res.json({ gameData: game });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// Choix de l'apparence du héros (1 à 4) — verrouillée à la confirmation,
+// grisée pour les recréations suivantes tant qu'il reste des sprites libres.
+exports.chooseHeroSprite = async (req, res) => {
+  try {
+    const { gameId, spriteId } = req.body;
+    const game = await Donjon.findOne({ _id: gameId, userId: req.user._id });
+    if (!game) return res.status(404).json({ error: "Partie introuvable." });
+
+    if (game.gameState.heroConfirmed) {
+      return res.status(400).json({ error: "Le héros est déjà confirmé." });
+    }
+    if (![1, 2, 3, 4].includes(spriteId)) {
+      return res.status(400).json({ error: "Apparence invalide." });
+    }
+
+    const used = game.gameState.usedSpriteIds || [];
+    // Si les 4 apparences ont déjà servi (4 vies épuisées en Facile, par
+    // exemple), on les rend de nouveau disponibles plutôt que de bloquer.
+    const stillAvailable = used.length < 4 ? used : [];
+    if (stillAvailable.includes(spriteId)) {
+      return res
+        .status(400)
+        .json({
+          error: "Cette apparence est déjà utilisée par une vie précédente.",
+        });
+    }
+    if (used.length >= 4) {
+      game.gameState.usedSpriteIds = [];
+      game.markModified("gameState.usedSpriteIds");
+    }
+
+    game.hero.spriteId = spriteId;
     await game.save();
 
     res.json({ gameData: game });

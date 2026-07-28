@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import { HERO_SPRITES } from "./images";
 
 const API = process.env.REACT_APP_API_URL;
 
@@ -84,7 +85,14 @@ const LeaderboardScreen = ({ onBack }) => {
                 {leaderboard.map((entry, i) => (
                   <tr key={i}>
                     <td>{i + 1}</td>
-                    <td>{entry.username}</td>
+                    <td className="leaderboard-player-cell">
+                      <img
+                        src={HERO_SPRITES[entry.spriteId] || HERO_SPRITES[1]}
+                        alt=""
+                        className="leaderboard-sprite"
+                      />
+                      {entry.username}
+                    </td>
                     <td>{entry.score}</td>
                     <td>{entry.floor}</td>
                     <td className="leaderboard-cause">
@@ -109,6 +117,11 @@ const LeaderboardScreen = ({ onBack }) => {
               <li key={i} className="leaderboard-card">
                 <div className="leaderboard-card-top">
                   <span className="leaderboard-card-rank">#{i + 1}</span>
+                  <img
+                    src={HERO_SPRITES[entry.spriteId] || HERO_SPRITES[1]}
+                    alt=""
+                    className="leaderboard-sprite"
+                  />
                   <span className="leaderboard-card-username">
                     {entry.username}
                   </span>

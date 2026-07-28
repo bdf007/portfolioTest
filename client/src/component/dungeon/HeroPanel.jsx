@@ -1,4 +1,5 @@
 import React from "react";
+import { HERO_SPRITES } from "./images";
 
 const HeroPanel = ({
   hero,
@@ -8,17 +9,53 @@ const HeroPanel = ({
   onCreateHero,
   onRerollHero,
   onConfirmHero,
+  onChooseSprite,
 }) => {
-  const { rerollsRemaining } = gameState;
+  const { rerollsRemaining, usedSpriteIds } = gameState;
+  const usedList = (usedSpriteIds || []).length >= 4 ? [] : usedSpriteIds || [];
 
   return (
     <div className="hero-info">
       <h3>Création du héros</h3>
 
+      <div className="sprite-picker">
+        <p className="sprite-picker-label">
+          Apparence :{" "}
+          {hero.spriteId ? `n°${hero.spriteId} sélectionnée` : "à choisir"}
+        </p>
+        <div className="sprite-picker-options">
+          {[1, 2, 3, 4].map((id) => {
+            const isUsed = usedList.includes(id) && hero.spriteId !== id;
+            const isSelected = hero.spriteId === id;
+            return (
+              <button
+                key={id}
+                className={`sprite-option ${isSelected ? "sprite-option-selected" : ""} ${
+                  isUsed ? "sprite-option-used" : ""
+                }`}
+                onClick={() => !isUsed && onChooseSprite(id)}
+                disabled={isUsed}
+                title={
+                  isUsed
+                    ? "Déjà utilisée par une vie précédente"
+                    : `Apparence ${id}`
+                }
+              >
+                <img src={HERO_SPRITES[id]} alt={`Apparence ${id}`} />
+                {isSelected && <span className="sprite-option-check">✓</span>}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       {!heroReady ? (
         <>
           <p>Essais de dés restants : {rerollsRemaining}</p>
-          <button onClick={onCreateHero} disabled={rerollsRemaining <= 0}>
+          <button
+            onClick={onCreateHero}
+            disabled={rerollsRemaining <= 0 || !hero.spriteId}
+          >
             Créer mon héros (lancer les dés)
           </button>
         </>
