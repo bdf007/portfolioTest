@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect, useContext, useRef } from "react";
 import axios from "axios";
 
 import { UserContext } from "../../context/UserContext";
@@ -37,6 +37,7 @@ const Dungeon = () => {
   const [isBugReportOpen, setIsBugReportOpen] = useState(false);
   const [isHeroWalking, setIsHeroWalking] = useState(false);
   const [heroFacing, setHeroFacing] = useState("bas");
+  const walkingTimeoutRef = useRef(null);
 
   // Une fois l'animation de marche terminée (héros à l'arrêt), il revient
   // face à la caméra plutôt que de rester figé dans sa dernière direction.
@@ -211,6 +212,7 @@ const Dungeon = () => {
     if (!gameData || movesRemaining <= 0 || isBusy) return;
     if (selectedDirection !== null && direction !== selectedDirection) return;
 
+    if (walkingTimeoutRef.current) clearTimeout(walkingTimeoutRef.current);
     setIsBusy(true);
     setIsHeroWalking(true);
     setHeroFacing(direction);
@@ -221,13 +223,22 @@ const Dungeon = () => {
         direction,
       })
       .then((res) => {
-        const { gameData: updatedGame, message, stopped } = res.data;
+        const {
+          gameData: updatedGame,
+          message,
+          stopped,
+          direction: actualDirection,
+        } = res.data;
 
         setGameData(updatedGame);
         setHeroPosition([
           updatedGame.gameState.currentTile.x,
           updatedGame.gameState.currentTile.y,
         ]);
+        // Le serveur renvoie toujours la direction réelle du pas (post-rebond
+        // éventuel), y compris sur le tout dernier pas où lockedDirection est
+        // vidé — contrairement à lui, "direction" ne ment jamais.
+        if (actualDirection) setHeroFacing(actualDirection);
         setTileMessage(message);
         setError(null);
 
@@ -247,7 +258,10 @@ const Dungeon = () => {
       })
       .finally(() => {
         setIsBusy(false);
-        setIsHeroWalking(false);
+        walkingTimeoutRef.current = setTimeout(
+          () => setIsHeroWalking(false),
+          450,
+        );
       });
   };
 
@@ -265,6 +279,7 @@ const Dungeon = () => {
     if (!gameData || movesRemaining <= 0 || isBusy) return;
     if (selectedDirection !== null && direction !== selectedDirection) return;
 
+    if (walkingTimeoutRef.current) clearTimeout(walkingTimeoutRef.current);
     setIsBusy(true);
     setIsHeroWalking(true);
     setHeroFacing(direction);
@@ -280,7 +295,12 @@ const Dungeon = () => {
           gameId: gameData._id,
           direction: currentDirection,
         });
-        const { gameData: updatedGame, message, stopped } = res.data;
+        const {
+          gameData: updatedGame,
+          message,
+          stopped,
+          direction: actualDirection,
+        } = res.data;
 
         setGameData(updatedGame);
         setHeroPosition([
@@ -289,19 +309,15 @@ const Dungeon = () => {
         ]);
         if (message) collectedMessages.push(message);
 
-        const gs = updatedGame.gameState;
-        // Le serveur renvoie la direction effective (post-rebond éventuel) dans
-        // lockedDirection tant que le mouvement continue — on la reprend pour
-        // le pas suivant plutôt que de s'entêter sur la direction d'origine.
-        // On garde la direction affichée synchronisée, y compris sur ce
-        // dernier pas où lockedDirection retombe à null côté serveur (sinon
-        // le sprite repasse "de face" juste avant d'arriver).
-        if (gs.lockedDirection) {
-          currentDirection = gs.lockedDirection;
-          setHeroFacing(gs.lockedDirection);
-        } else {
-          setHeroFacing(currentDirection);
+        // Le serveur renvoie toujours la direction réelle du pas (post-rebond
+        // éventuel, jamais vidée contrairement à lockedDirection) — on la
+        // reprend pour l'affichage ET pour orienter le pas suivant.
+        if (actualDirection) {
+          currentDirection = actualDirection;
+          setHeroFacing(actualDirection);
         }
+
+        const gs = updatedGame.gameState;
 
         const needsPlayerChoice =
           gs.pendingTrapChoice ||
