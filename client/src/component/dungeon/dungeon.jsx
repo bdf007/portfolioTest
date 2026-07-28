@@ -11,6 +11,7 @@ import CombatPanel from "./CombatPanel";
 import CombatResultPanel from "./CombatResultPanel";
 import TrapChoicePanel from "./TrapChoicePanel";
 import GouffreFallPanel from "./GouffreFallPanel";
+import BugReportForm from "./BugReportForm";
 import EnemyChoicePanel from "./EnemyChoicePanel";
 import { KeyPanel, ChestPanel, ShopPanel } from "./InteractionPanels";
 import InventoryPanel from "./InventoryPanel";
@@ -33,6 +34,7 @@ const Dungeon = () => {
   const [error, setError] = useState(null);
   const [isBusy, setIsBusy] = useState(false);
   const [isInventoryOpen, setIsInventoryOpen] = useState(false);
+  const [isBugReportOpen, setIsBugReportOpen] = useState(false);
   const [interactionDismissed, setInteractionDismissed] = useState(false);
   const [combatResultOverlay, setCombatResultOverlay] = useState(null);
 
@@ -871,9 +873,20 @@ const Dungeon = () => {
           <span className="hero-stats-sep">·</span>
           <span className="dungeon-username">{user?.username}</span>
         </div>
-        <button onClick={returnToStartScreen} className="save-and-quit-button">
-          💾 Sauvegarder et quitter
-        </button>
+        <div className="dungeon-header-actions">
+          <button
+            onClick={returnToStartScreen}
+            className="save-and-quit-button"
+          >
+            💾 Sauvegarder et quitter
+          </button>
+          <button
+            onClick={() => setIsBugReportOpen(true)}
+            className="bug-report-button"
+          >
+            🐛 Signaler un bug
+          </button>
+        </div>
       </div>
 
       {heroReady && heroConfirmed && (
@@ -891,7 +904,11 @@ const Dungeon = () => {
           }
         />
 
-        {isInventoryOpen ? (
+        {isBugReportOpen ? (
+          <ActionOverlay onClose={() => setIsBugReportOpen(false)}>
+            <BugReportForm onClose={() => setIsBugReportOpen(false)} />
+          </ActionOverlay>
+        ) : isInventoryOpen ? (
           <ActionOverlay onClose={() => setIsInventoryOpen(false)}>
             <InventoryPanel
               inventory={gameData.hero.inventory}
