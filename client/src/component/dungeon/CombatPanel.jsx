@@ -1,5 +1,12 @@
 import React from "react";
-import { chestMimicImage } from "./images";
+import {
+  ratImage,
+  bigRatImage,
+  bossDragonImage,
+  chestMimicImage,
+  getBlobImage,
+  getHeroSprite,
+} from "./images";
 
 const ENEMY_DISPLAY_NAMES = {
   rat: "rat",
@@ -9,6 +16,26 @@ const ENEMY_DISPLAY_NAMES = {
   "monstre-tresor": "mimic",
   boss: "boss",
 };
+
+function getEnemySprite(pendingCombat) {
+  const { enemyType, enemy } = pendingCombat;
+  switch (enemyType) {
+    case "rat":
+      return ratImage;
+    case "horde-rats":
+      return bigRatImage;
+    case "monstre":
+      return getBlobImage({ type: "monstre", color: enemy.color });
+    case "monstre-gelatineux":
+      return getBlobImage({ type: "monstre-gelatineux", color: enemy.color });
+    case "monstre-tresor":
+      return chestMimicImage;
+    case "boss":
+      return bossDragonImage;
+    default:
+      return null;
+  }
+}
 
 const CombatPanel = ({
   pendingCombat,
@@ -23,6 +50,8 @@ const CombatPanel = ({
     pendingCombat.attacksHero > 0 &&
     !pendingCombat.mandatory;
 
+  const enemySprite = getEnemySprite(pendingCombat);
+
   return (
     <div className="combat-panel">
       <h4>
@@ -35,9 +64,26 @@ const CombatPanel = ({
           ⚠️ Combat obligatoire, impossible de fuir !
         </p>
       )}
-      {pendingCombat.enemyType === "monstre-tresor" && (
-        <img src={chestMimicImage} alt="Mimic" className="mimic-image" />
-      )}
+
+      <div className="combat-vs-row">
+        <img
+          src={getHeroSprite(hero.spriteId)}
+          alt="Héros"
+          className="combat-vs-sprite"
+        />
+        <span className="combat-vs-label">VS</span>
+        {enemySprite && (
+          <img
+            src={enemySprite}
+            alt={
+              ENEMY_DISPLAY_NAMES[pendingCombat.enemyType] ||
+              pendingCombat.enemyType
+            }
+            className="combat-vs-sprite"
+          />
+        )}
+      </div>
+
       <p>
         Vos PV — Tête : {hero.bodyParts?.tete ?? 0} | Torse :{" "}
         {hero.bodyParts?.torse ?? 0} | Jambes : {hero.bodyParts?.jambes ?? 0}

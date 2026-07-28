@@ -1,8 +1,46 @@
 @import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@400;500&display=swap");
 
-/* ==========================================================================
-   Base / layout global
-   ========================================================================== */
+/* ============================================================================
+   SOMMAIRE
+   ============================================================================
+   1. Base / layout global
+   2. Footer
+   3. Navbar
+   4. Composant partagé : Terminal
+   5. Composant partagé : Panneau CRUD
+   6. Composant partagé : Grille média
+   7. Page : Home
+   8. Page : Education
+   9. Page : Experience
+   10. Page : About
+   11. Page : Contact
+   12. Page : Project
+   13. Page : Ludothèque
+   14. Page : Dungeon
+       14.1 Tokens & layout général
+       14.2 En-tête
+       14.3 Boutons partagés
+       14.4 Barre de stats
+       14.5 Sélecteur d'apparence du héros
+       14.6 Sprite animé du héros (plateau)
+       14.7 Fiche de personnage (référence)
+       14.8 Plateau / tuiles
+       14.9 Popup superposé (combat, pièges, inventaire...)
+       14.10 Combat
+       14.11 Déplacement
+       14.12 Messages
+       14.13 Écran de démarrage
+       14.14 Règles
+       14.15 Classement
+       14.16 Écrans de fin / transition
+       14.17 Notes de mise à jour
+       14.18 Mobile
+   15. Page : Admin
+   ============================================================================ */
+
+/* ============================================================================
+   1. BASE / LAYOUT GLOBAL
+   ============================================================================ */
 
 .App {
   display: flex;
@@ -124,7 +162,9 @@ textarea {
   }
 }
 
-/* ---------- Footer ---------- */
+/* ============================================================================
+   2. FOOTER
+   ============================================================================ */
 
 .footer-bs {
   flex-shrink: 0;
@@ -187,7 +227,9 @@ textarea {
   text-decoration: underline;
 }
 
-/* ---------- Navbar ---------- */
+/* ============================================================================
+   3. NAVBAR
+   ============================================================================ */
 
 .app-navbar {
   background: linear-gradient(to bottom, var(--bg-dark), var(--text-muted));
@@ -244,9 +286,10 @@ textarea {
     opacity: 1;
   }
 }
-/* ==========================================================================
-   Composant partagé : fenêtre "terminal" (About, Education, Experience...)
-   ========================================================================== */
+
+/* ============================================================================
+   4. COMPOSANT PARTAGÉ : TERMINAL (About, Education, Experience...)
+   ============================================================================ */
 
 .terminal {
   width: 100%;
@@ -350,10 +393,10 @@ textarea {
   }
 }
 
-/* ==========================================================================
-   Composant partagé : panneau CRUD (formulaire admin + liste "log")
+/* ============================================================================
+   5. COMPOSANT PARTAGÉ : PANNEAU CRUD (formulaire admin + liste "log")
    Utilisé par About / Education / Experience
-   ========================================================================== */
+   ============================================================================ */
 
 .uploader {
   width: 100%;
@@ -526,9 +569,9 @@ textarea {
   }
 }
 
-/* ==========================================================================
-   Composant partagé : grille média (Technologies, Certificats)
-   ========================================================================== */
+/* ============================================================================
+   6. COMPOSANT PARTAGÉ : GRILLE MÉDIA (Technologies, Certificats)
+   ============================================================================ */
 
 .media-loading {
   display: flex;
@@ -581,9 +624,9 @@ textarea {
   }
 }
 
-/* ==========================================================================
-   Page : Home (préfixe .home-page)
-   ========================================================================== */
+/* ============================================================================
+   7. PAGE : HOME (préfixe .home-page)
+   ============================================================================ */
 
 .home-page {
   min-height: 100vh;
@@ -647,9 +690,9 @@ textarea {
   }
 }
 
-/* ==========================================================================
-   Page : Education (préfixe .education-page)
-   ========================================================================== */
+/* ============================================================================
+   8. PAGE : EDUCATION (préfixe .education-page)
+   ============================================================================ */
 
 .education-page {
   min-height: 100vh;
@@ -708,9 +751,9 @@ textarea {
   padding: 1.5rem;
 }
 
-/* ==========================================================================
-   Page : Experience (préfixe .experience-page)
-   ========================================================================== */
+/* ============================================================================
+   9. PAGE : EXPERIENCE (préfixe .experience-page)
+   ============================================================================ */
 
 .experience-page {
   min-height: 100vh;
@@ -727,9 +770,9 @@ textarea {
   font-family: "Space Grotesk", sans-serif;
 }
 
-/* ==========================================================================
-   Page : About (préfixe .about-page)
-   ========================================================================== */
+/* ============================================================================
+   10. PAGE : ABOUT (préfixe .about-page)
+   ============================================================================ */
 
 .about-page {
   min-height: 100vh;
@@ -746,9 +789,9 @@ textarea {
   font-family: "Space Grotesk", sans-serif;
 }
 
-/* ==========================================================================
-   Page : Contact (préfixe .contact-page)
-   ========================================================================== */
+/* ============================================================================
+   11. PAGE : CONTACT (préfixe .contact-page)
+   ============================================================================ */
 
 .contact-page {
   min-height: 100vh;
@@ -784,9 +827,9 @@ textarea {
   }
 }
 
-/* ==========================================================================
-   Page : Project (préfixe .project-page / .project-uploader)
-   ========================================================================== */
+/* ============================================================================
+   12. PAGE : PROJECT (préfixe .project-page / .project-uploader)
+   ============================================================================ */
 
 .project-page {
   min-height: 100vh;
@@ -832,9 +875,9 @@ textarea {
   }
 }
 
-/* ==========================================================================
-   Page : Ludothèque (préfixe .ludotheque-page)
-   ========================================================================== */
+/* ============================================================================
+   13. PAGE : LUDOTHÈQUE (préfixe .ludotheque-page)
+   ============================================================================ */
 
 .ludotheque-page {
   min-height: 100vh;
@@ -943,9 +986,11 @@ textarea {
   }
 }
 
-/* ==========================================================================
-   Page : Dungeon (préfixe .dungeon-page)
-   ========================================================================== */
+/* ============================================================================
+   14. PAGE : DUNGEON (préfixe .dungeon-page)
+   ============================================================================ */
+
+/* ---------- 14.1 Tokens & layout général ---------- */
 
 :root {
   /* Tokens additionnels, dérivés de la palette existante */
@@ -970,11 +1015,107 @@ textarea {
   font-family: "Space Grotesk", sans-serif;
 }
 
+/* Mobile d'abord (empilement naturel dans l'ordre du DOM : entête, barre de
+   stats, plateau, déplacement, messages, inventaire, fiche), desktop ensuite
+   en grille 2 colonnes. */
+.dungeon-board {
+  width: 100%;
+  max-width: 1100px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 1.1rem;
+}
+
+@media (min-width: 900px) {
+  .dungeon-board {
+    display: grid;
+    grid-template-columns: 340px 1fr;
+    grid-template-areas:
+      "header header"
+      "statsbar statsbar"
+      "side board";
+    align-items: start;
+    gap: 1rem 1.5rem;
+  }
+  .dungeon-header {
+    grid-area: header;
+  }
+  .hero-stats-bar {
+    grid-area: statsbar;
+    justify-content: flex-start;
+  }
+  .board-wrapper {
+    grid-area: board;
+  }
+  .board-controls {
+    grid-area: side;
+  }
+}
+
+.board-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+/* ---------- 14.2 En-tête ---------- */
+
+.dungeon-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.6rem 1rem;
+  border-bottom: 1px solid var(--border-subtle);
+  padding-bottom: 0.75rem;
+}
+
+.game-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--accent-light);
+  margin: 0;
+}
+
+.dungeon-header-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  text-transform: capitalize;
+}
+
+.dungeon-username {
+  color: var(--accent-light);
+  text-transform: none;
+  font-weight: 600;
+}
+
 .dungeon-header-actions {
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
   align-items: flex-end;
+}
+
+.save-and-quit-button {
+  background: transparent;
+  border: 1px solid var(--border-subtle);
+  color: var(--text-light);
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 0.85rem;
+  padding: 0.5rem 0.9rem;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.save-and-quit-button:hover {
+  border-color: var(--accent);
+  color: var(--accent-light);
 }
 
 .bug-report-button {
@@ -1013,175 +1154,7 @@ textarea {
   margin-bottom: 0.6rem;
 }
 
-/* --------------------------------------------------------------------------
-   Layout général — mobile d'abord (empilement naturel dans l'ordre du DOM :
-   entête, barre de stats, plateau, déplacement, messages, inventaire, fiche),
-   desktop ensuite en grille 2 colonnes.
-   -------------------------------------------------------------------------- */
-
-.dungeon-board {
-  width: 100%;
-  max-width: 1100px;
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 1.1rem;
-}
-
-.dungeon-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 0.6rem 1rem;
-  border-bottom: 1px solid var(--border-subtle);
-  padding-bottom: 0.75rem;
-}
-
-.game-title {
-  font-size: 1.3rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  color: var(--accent-light);
-  margin: 0;
-}
-
-.dungeon-header-meta {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  font-family: "JetBrains Mono", monospace;
-  font-size: 0.8rem;
-  color: var(--text-muted);
-  text-transform: capitalize;
-}
-
-.dungeon-username {
-  color: var(--accent-light);
-  text-transform: none;
-  font-weight: 600;
-}
-
-.save-and-quit-button {
-  background: transparent;
-  border: 1px solid var(--border-subtle);
-  color: var(--text-light);
-  font-family: "Space Grotesk", sans-serif;
-  font-size: 0.85rem;
-  padding: 0.5rem 0.9rem;
-  border-radius: 6px;
-  cursor: pointer;
-}
-.save-and-quit-button:hover {
-  border-color: var(--accent);
-  color: var(--accent-light);
-}
-@media (min-width: 900px) {
-  .dungeon-board {
-    display: grid;
-    grid-template-columns: 340px 1fr;
-    grid-template-areas:
-      "header header"
-      "statsbar statsbar"
-      "side board";
-    align-items: start;
-    gap: 1rem 1.5rem;
-  }
-  .dungeon-header {
-    grid-area: header;
-  }
-  .hero-stats-bar {
-    grid-area: statsbar;
-    justify-content: flex-start;
-  }
-  .board-wrapper {
-    grid-area: board;
-  }
-  .board-controls {
-    grid-area: side;
-  }
-}
-
-.board-controls {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.6rem;
-}
-
-/* --------------------------------------------------------------------------
-   Barre de stats compacte (au-dessus du plateau)
-   -------------------------------------------------------------------------- */
-
-.hero-stats-bar {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-  background: var(--bg-panel);
-  border: 1px solid var(--border-subtle);
-  border-radius: 8px;
-  padding: 0.5rem 0.8rem;
-  font-family: "JetBrains Mono", monospace;
-  font-size: 0.82rem;
-  color: var(--text-light);
-}
-
-.hero-stats-sep {
-  color: var(--text-muted);
-}
-
-/* --------------------------------------------------------------------------
-   Fiche de personnage (référence : difficulté, or, clé, création du héros)
-   -------------------------------------------------------------------------- */
-
-.hero-reference-panel {
-  display: flex;
-  flex-direction: column;
-  gap: 0.9rem;
-}
-
-.hero-info {
-  background: var(--bg-panel);
-  color: var(--text-light);
-  border: 1px solid var(--border-subtle);
-  border-radius: 10px;
-  padding: 1rem 1.1rem;
-  text-align: left;
-}
-
-.hero-info h3 {
-  margin: 0 0 0.6rem;
-  font-size: 0.95rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--accent-light);
-  border-bottom: 1px solid var(--border-subtle);
-  padding-bottom: 0.4rem;
-}
-
-.hero-info p {
-  margin: 0.3rem 0;
-  font-size: 0.88rem;
-  color: var(--text-light);
-}
-
-.key-owned-indicator {
-  color: var(--text-gold) !important;
-  font-weight: 600;
-}
-
-.hero-confirm-actions {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-  margin-top: 0.5rem;
-}
-
-/* --------------------------------------------------------------------------
-   Boutons
-   -------------------------------------------------------------------------- */
+/* ---------- 14.3 Boutons partagés ---------- */
 
 .dungeon-page button {
   font-family: "Space Grotesk", sans-serif;
@@ -1246,9 +1219,196 @@ textarea {
   flex-shrink: 0;
 }
 
-/* --------------------------------------------------------------------------
-   Plateau + superposition (combat, pièges, ennemis, inventaire...)
-   -------------------------------------------------------------------------- */
+/* ---------- 14.4 Barre de stats (au-dessus du plateau) ---------- */
+
+.hero-stats-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  padding: 0.5rem 0.8rem;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.82rem;
+  color: var(--text-light);
+}
+
+.hero-stats-sep {
+  color: var(--text-muted);
+}
+
+/* ---------- 14.5 Sélecteur d'apparence du héros ---------- */
+
+.sprite-picker {
+  margin-bottom: 0.8rem;
+}
+.sprite-picker-label {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin: 0 0 0.4rem;
+}
+.sprite-picker-options {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.sprite-option {
+  padding: 0.3rem;
+  border-radius: 6px;
+  border: 2px solid var(--border-subtle);
+  background: transparent;
+  position: relative;
+}
+.sprite-option img {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  image-rendering: pixelated;
+  display: block;
+}
+.sprite-option-selected {
+  border-color: var(--accent) !important;
+  background: rgba(69, 162, 158, 0.15) !important;
+  box-shadow: 0 0 0 2px var(--accent);
+}
+.sprite-option-check {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background: var(--accent);
+  color: var(--bg-dark);
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+  line-height: 1;
+}
+.sprite-option-used {
+  opacity: 0.3;
+  cursor: not-allowed;
+  filter: grayscale(1);
+}
+
+/* ---------- 14.6 Sprite animé du héros (plateau) ---------- */
+
+.hero-sprite-overlay {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  width: 8.5%; /* ~60% d'une case sur 8 (100% / 8 × 0.6) */
+  aspect-ratio: 26 / 36;
+  height: auto;
+  z-index: 3;
+  background-repeat: no-repeat;
+  background-size: 300% 400%;
+  background-position: 0% 0%;
+  image-rendering: pixelated;
+  filter: drop-shadow(0 0 5px rgba(102, 252, 241, 0.6));
+  pointer-events: none;
+  transition:
+    left 0.45s linear,
+    top 0.45s linear;
+}
+
+.hero-sprite-overlay.facing-bas {
+  background-position-y: 0%;
+}
+.hero-sprite-overlay.facing-gauche {
+  background-position-y: 33.3333%;
+}
+.hero-sprite-overlay.facing-droite {
+  background-position-y: 66.6667%;
+}
+.hero-sprite-overlay.facing-haut {
+  background-position-y: 100%;
+}
+
+@keyframes hero-walk-cycle {
+  0% {
+    background-position-x: 0%;
+  }
+  33% {
+    background-position-x: 50%;
+  }
+  66% {
+    background-position-x: 100%;
+  }
+  100% {
+    background-position-x: 0%;
+  }
+}
+
+.hero-sprite-overlay.walking {
+  animation: hero-walk-cycle 0.45s steps(1) infinite;
+}
+
+/* Petite vignette du sprite héros dans le classement */
+.leaderboard-player-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.leaderboard-sprite {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  image-rendering: pixelated;
+  border-radius: 4px;
+}
+
+/* ---------- 14.7 Fiche de personnage (référence : difficulté, or, clé, création) ---------- */
+
+.hero-reference-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.hero-info {
+  background: var(--bg-panel);
+  color: var(--text-light);
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  padding: 1rem 1.1rem;
+  text-align: left;
+}
+
+.hero-info h3 {
+  margin: 0 0 0.6rem;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--accent-light);
+  border-bottom: 1px solid var(--border-subtle);
+  padding-bottom: 0.4rem;
+}
+
+.hero-info p {
+  margin: 0.3rem 0;
+  font-size: 0.88rem;
+  color: var(--text-light);
+}
+
+.key-owned-indicator {
+  color: var(--text-gold) !important;
+  font-weight: 600;
+}
+
+.hero-confirm-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: 0.5rem;
+}
+
+/* ---------- 14.8 Plateau / tuiles ---------- */
 
 .board-wrapper {
   position: relative;
@@ -1257,6 +1417,7 @@ textarea {
 }
 
 .board-grid {
+  position: relative;
   display: grid;
   grid-template-columns: repeat(8, minmax(0, 1fr));
   grid-template-rows: repeat(8, minmax(0, 1fr));
@@ -1313,6 +1474,17 @@ textarea {
   z-index: 2;
 }
 
+/* Monstres/coffres : légèrement plus petits que la valeur par défaut (80%),
+   ces sprites-là étant dessinés à ras bord sans marge interne. */
+.monster-image,
+.rat-image,
+.boss-image,
+.chest-image {
+  width: 65% !important;
+  height: 65% !important;
+  margin: 17.5% !important;
+}
+
 .hero-image {
   z-index: 3;
   filter: drop-shadow(0 0 5px rgba(102, 252, 241, 0.6));
@@ -1335,8 +1507,10 @@ textarea {
   box-shadow: 0 0 8px rgba(240, 198, 116, 0.7);
 }
 
-/* Popup superposé (combat, pièges, ennemis, coffre, clé, magasin, mort,
-   inventaire) — sur mobile ET desktop, toujours par-dessus le plateau */
+/* ---------- 14.9 Popup superposé (combat, pièges, ennemis, coffre, clé,
+   magasin, mort, inventaire) — sur mobile ET desktop, toujours par-dessus
+   le plateau ---------- */
+
 .action-overlay-backdrop {
   position: absolute;
   inset: 0;
@@ -1406,61 +1580,7 @@ textarea {
   color: var(--text-lightRed);
 }
 
-/* --------------------------------------------------------------------------
-   Déplacement compact (une seule ligne d'icônes)
-   -------------------------------------------------------------------------- */
-
-.movement-info-compact {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.4rem;
-  flex-wrap: wrap;
-  position: relative;
-  padding: 0.3rem 0;
-}
-
-.movement-info-compact button {
-  width: 44px;
-  height: 44px;
-  padding: 0;
-  font-size: 1.2rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.moves-remaining-badge {
-  font-family: "JetBrains Mono", monospace;
-  font-size: 0.75rem;
-  background: var(--accent);
-  color: var(--bg-dark);
-  border-radius: 999px;
-  padding: 0.15rem 0.5rem;
-  margin-left: 0.3rem;
-}
-
-.movement-row {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.4rem;
-  flex-wrap: wrap;
-}
-
-.movement-row-run-all {
-  margin-top: 0.3rem;
-}
-
-.movement-row-label {
-  font-size: 0.72rem;
-  color: var(--text-muted);
-  margin-right: 0.2rem;
-}
-
-/* --------------------------------------------------------------------------
-   Combat / pièges / ennemis — accent de danger
-   -------------------------------------------------------------------------- */
+/* ---------- 14.10 Combat ---------- */
 
 .mandatory-warning {
   background: rgba(255, 95, 86, 0.12);
@@ -1537,9 +1657,57 @@ textarea {
   font-size: 0.85rem;
 }
 
-/* --------------------------------------------------------------------------
-   Messages
-   -------------------------------------------------------------------------- */
+/* ---------- 14.11 Déplacement (une seule ligne d'icônes) ---------- */
+
+.movement-info-compact {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  position: relative;
+  padding: 0.3rem 0;
+}
+
+.movement-info-compact button {
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.moves-remaining-badge {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.75rem;
+  background: var(--accent);
+  color: var(--bg-dark);
+  border-radius: 999px;
+  padding: 0.15rem 0.5rem;
+  margin-left: 0.3rem;
+}
+
+.movement-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.movement-row-run-all {
+  margin-top: 0.3rem;
+}
+
+.movement-row-label {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin-right: 0.2rem;
+}
+
+/* ---------- 14.12 Messages ---------- */
 
 .tile-message {
   font-style: italic;
@@ -1556,9 +1724,14 @@ textarea {
   margin: 0;
 }
 
-/* --------------------------------------------------------------------------
-   Écran de démarrage
-   -------------------------------------------------------------------------- */
+/* ---------- 14.13 Écran de démarrage ---------- */
+
+.start-screen-top-links {
+  display: flex;
+  gap: 0.6rem;
+  align-self: flex-start;
+  flex-wrap: wrap;
+}
 
 .start-screen {
   max-width: 640px;
@@ -1615,22 +1788,7 @@ textarea {
   align-self: flex-start;
 }
 
-.leaderboard-cause {
-  font-size: 0.72rem;
-  color: var(--text-muted);
-  max-width: 180px;
-}
-
-/* ==========================================================================
-   Rules
-   ========================================================================== */
-
-.start-screen-top-links {
-  display: flex;
-  gap: 0.6rem;
-  align-self: flex-start;
-  flex-wrap: wrap;
-}
+/* ---------- 14.14 Règles ---------- */
 
 .rules-screen {
   max-width: 640px;
@@ -1681,9 +1839,7 @@ textarea {
   color: var(--text-gold);
 }
 
-/* --------------------------------------------------------------------------
-   Classement
-   -------------------------------------------------------------------------- */
+/* ---------- 14.15 Classement ---------- */
 
 .leaderboard-screen {
   max-width: 640px;
@@ -1696,21 +1852,6 @@ textarea {
   color: var(--text-light);
   text-align: left;
   box-sizing: border-box;
-}
-
-.leaderboard-table-wrapper {
-  width: 100%;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  margin-top: 1rem;
-}
-
-.leaderboard-table {
-  width: 100%;
-  min-width: 480px; /* force le scroll interne plutôt que d'écraser les colonnes */
-  border-collapse: collapse;
-  font-family: "JetBrains Mono", monospace;
-  font-size: 0.82rem;
 }
 
 .leaderboard-tabs,
@@ -1726,8 +1867,16 @@ textarea {
   color: var(--bg-dark) !important;
 }
 
+.leaderboard-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin-top: 1rem;
+}
+
 .leaderboard-table {
   width: 100%;
+  min-width: 480px; /* force le scroll interne plutôt que d'écraser les colonnes */
   border-collapse: collapse;
   margin-top: 1rem;
   font-family: "JetBrains Mono", monospace;
@@ -1748,6 +1897,12 @@ textarea {
 .leaderboard-table tr:nth-child(1) td {
   color: var(--text-gold);
   font-weight: 600;
+}
+
+.leaderboard-cause {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  max-width: 180px;
 }
 
 /* Table = desktop, cartes = mobile — un seul des deux visible à la fois */
@@ -1809,9 +1964,7 @@ textarea {
   }
 }
 
-/* --------------------------------------------------------------------------
-   Écrans de fin / transition
-   -------------------------------------------------------------------------- */
+/* ---------- 14.16 Écrans de fin / transition ---------- */
 
 .victory-screen,
 .game-over-screen,
@@ -1861,9 +2014,31 @@ textarea {
   flex-wrap: wrap;
 }
 
-/* --------------------------------------------------------------------------
-   Mobile
-   -------------------------------------------------------------------------- */
+/* ---------- 14.17 Notes de mise à jour ---------- */
+
+.patch-version-subtitle {
+  color: var(--text-gold);
+  font-style: italic;
+  font-size: 0.85rem;
+  margin-top: -0.4rem;
+  margin-bottom: 0.8rem;
+}
+
+.patch-fixes-label {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin: 1rem 0 0.3rem;
+}
+
+.patch-fixes-list {
+  margin: 0;
+  padding-left: 1.3rem;
+  font-size: 0.85rem;
+  color: var(--text-light);
+  line-height: 1.6;
+}
+
+/* ---------- 14.18 Mobile ---------- */
 
 @media (max-width: 700px) {
   .dungeon-page {
@@ -1877,9 +2052,9 @@ textarea {
   }
 }
 
-/* ==========================================================================
-   Page : Admin (préfixe .admin-page)
-   ========================================================================== */
+/* ============================================================================
+   15. PAGE : ADMIN (préfixe .admin-page)
+   ============================================================================ */
 
 .admin-page {
   min-height: 100vh;

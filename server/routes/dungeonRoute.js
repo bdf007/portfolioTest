@@ -14,6 +14,7 @@ router.post("/abandon-game", GameController.abandonGame);
 router.post("/roll-three-dices", GameController.rollThreeDices);
 router.post("/roll-weapon-die", GameController.rollWeaponDie);
 router.post("/confirm-hero", GameController.confirmHero);
+router.post("/choose-hero-sprite", GameController.chooseHeroSprite);
 
 router.post("/roll-dice", GameController.rollDice);
 router.post("/move-one-step", GameController.moveOneStep);

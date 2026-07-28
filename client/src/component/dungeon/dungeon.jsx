@@ -35,6 +35,16 @@ const Dungeon = () => {
   const [isBusy, setIsBusy] = useState(false);
   const [isInventoryOpen, setIsInventoryOpen] = useState(false);
   const [isBugReportOpen, setIsBugReportOpen] = useState(false);
+  const [isHeroWalking, setIsHeroWalking] = useState(false);
+  const [heroFacing, setHeroFacing] = useState("bas");
+
+  // Une fois l'animation de marche terminée (héros à l'arrêt), il revient
+  // face à la caméra plutôt que de rester figé dans sa dernière direction.
+  useEffect(() => {
+    if (!isHeroWalking) {
+      setHeroFacing("bas");
+    }
+  }, [isHeroWalking]);
   const [interactionDismissed, setInteractionDismissed] = useState(false);
   const [combatResultOverlay, setCombatResultOverlay] = useState(null);
 
@@ -144,6 +154,21 @@ const Dungeon = () => {
       });
   };
 
+  const chooseHeroSprite = (spriteId) => {
+    axios
+      .post(`${API}/api/dungeon/choose-hero-sprite`, {
+        gameId: gameData._id,
+        spriteId,
+      })
+      .then((res) => setGameData(res.data.gameData))
+      .catch((err) => {
+        console.error(err);
+        setError(
+          err.response?.data?.error || "Erreur lors du choix d'apparence",
+        );
+      });
+  };
+
   // ---------------------------------------------------------------------
   // Déplacement
   // ---------------------------------------------------------------------
@@ -187,6 +212,8 @@ const Dungeon = () => {
     if (selectedDirection !== null && direction !== selectedDirection) return;
 
     setIsBusy(true);
+    setIsHeroWalking(true);
+    setHeroFacing(direction);
 
     axios
       .post(`${API}/api/dungeon/move-one-step`, {
@@ -218,18 +245,29 @@ const Dungeon = () => {
         console.error(err);
         setError(err.response?.data?.error || "Erreur lors du déplacement");
       })
-      .finally(() => setIsBusy(false));
+      .finally(() => {
+        setIsBusy(false);
+        setIsHeroWalking(false);
+      });
   };
 
   // Déroule automatiquement tous les mouvements restants dans une direction,
   // en s'arrêtant net dès qu'une décision du joueur devient nécessaire
   // (piège, ennemi, gouffre, mort...) — même logique que le pas-à-pas,
   // simplement enchaînée en boucle côté client.
+  // Petite pause entre deux pas d'un déplacement automatique : sans elle, les
+  // requêtes s'enchaînent plus vite que le cycle de marche (0,45s) n'a le
+  // temps de se jouer, et le héros semble juste "téléporter" d'un bout à
+  // l'autre du trajet.
+  const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
   const runAllMoves = async (direction) => {
     if (!gameData || movesRemaining <= 0 || isBusy) return;
     if (selectedDirection !== null && direction !== selectedDirection) return;
 
     setIsBusy(true);
+    setIsHeroWalking(true);
+    setHeroFacing(direction);
     setError(null);
 
     let keepGoing = true;
@@ -255,7 +293,15 @@ const Dungeon = () => {
         // Le serveur renvoie la direction effective (post-rebond éventuel) dans
         // lockedDirection tant que le mouvement continue — on la reprend pour
         // le pas suivant plutôt que de s'entêter sur la direction d'origine.
-        if (gs.lockedDirection) currentDirection = gs.lockedDirection;
+        // On garde la direction affichée synchronisée, y compris sur ce
+        // dernier pas où lockedDirection retombe à null côté serveur (sinon
+        // le sprite repasse "de face" juste avant d'arriver).
+        if (gs.lockedDirection) {
+          currentDirection = gs.lockedDirection;
+          setHeroFacing(gs.lockedDirection);
+        } else {
+          setHeroFacing(currentDirection);
+        }
 
         const needsPlayerChoice =
           gs.pendingTrapChoice ||
@@ -268,6 +314,7 @@ const Dungeon = () => {
           keepGoing = false; // popup à afficher, on ne va pas plus loin sans le joueur
         } else if (stopped && gs.movesRemaining === 0) {
           keepGoing = false;
+          await sleep(450); // laisse le dernier pas s'afficher avant la révélation
           const revealRes = await axios.post(`${API}/api/dungeon/reveal-tile`, {
             gameId: gameData._id,
           });
@@ -280,8 +327,9 @@ const Dungeon = () => {
             collectedMessages.push(revealRes.data.message);
         } else if (gs.movesRemaining <= 0) {
           keepGoing = false;
+        } else {
+          await sleep(450); // laisse le temps à un cycle de marche complet de se jouer
         }
-        // sinon : encore des mouvements, rien de bloquant → on continue la boucle
       } catch (err) {
         console.error(err);
         setError(err.response?.data?.error || "Erreur lors du déplacement");
@@ -294,6 +342,7 @@ const Dungeon = () => {
     }
 
     setIsBusy(false);
+    setIsHeroWalking(false);
   };
 
   const stopMovement = () => {
@@ -764,6 +813,7 @@ const Dungeon = () => {
             onCreateHero={createHero}
             onRerollHero={rerollHero}
             onConfirmHero={confirmHero}
+            onChooseSprite={chooseHeroSprite}
           />
         ),
       };
@@ -902,6 +952,9 @@ const Dungeon = () => {
           exitReady={
             gameData.gameState.keyFound && gameData.gameState.bossDefeated
           }
+          heroSpriteId={gameData.hero.spriteId}
+          heroFacing={heroFacing}
+          heroIsWalking={isHeroWalking}
         />
 
         {isBugReportOpen ? (

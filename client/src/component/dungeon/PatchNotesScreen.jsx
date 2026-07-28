@@ -7,7 +7,49 @@ const PatchNotesScreen = ({ onBack }) => {
       <button onClick={onBack}>← Retour</button>
 
       <section>
-        <h3>Aujourd'hui</h3>
+        <h3>Version 1.2 — 28 juillet 2026</h3>
+        <p className="patch-version-subtitle">Personnalisation du héros</p>
+
+        <p>
+          <strong>Apparence du héros</strong> : choisis parmi 4 sprites à la
+          création (et à chaque recréation après une mort). Une apparence déjà
+          utilisée par une vie précédente de la même partie est grisée,
+          indisponible.
+        </p>
+
+        <p>
+          <strong>Marche animée</strong> : le héros s'oriente désormais dans la
+          bonne direction et anime son cycle de marche pendant les déplacements,
+          au lieu d'un sprite fixe.
+        </p>
+
+        <p>
+          <strong>Nom du héros</strong> : reprend automatiquement ton pseudo, au
+          lieu du nom générique "Hero".
+        </p>
+
+        <p>
+          <strong>Classement</strong> : affiche maintenant l'apparence du héros
+          à côté du pseudo, ainsi que la cause précise de chaque fin de partie
+          (type de mort, ou abandon).
+        </p>
+
+        <p>
+          <strong>Signaler un bug</strong> : nouveau bouton dédié, accessible à
+          tout moment en jeu — plus besoin de passer par la page Contact du
+          site.
+        </p>
+
+        <p>
+          <strong>Correctif</strong> : le résultat du dernier combat d'une
+          partie terminée ne reste plus affiché par erreur au moment d'en
+          démarrer une nouvelle.
+        </p>
+      </section>
+
+      <section>
+        <h3>Version 1.1 — 27 juillet 2026</h3>
+        <p className="patch-version-subtitle">Rythme de jeu et équilibrage</p>
 
         <p>
           <strong>Gouffre</strong> : la découverte d'un gouffre ne tue plus
@@ -47,53 +89,41 @@ const PatchNotesScreen = ({ onBack }) => {
 
         <p>
           <strong>Objets</strong> : les utiliser en dehors d'un combat consomme
-          désormais le tour (comme acheter ou ouvrir un coffre). En combat, ça
-          reste libre et sans conséquence.
+          désormais le tour (comme acheter ou ouvrir un coffre), et un seul
+          objet est utilisable par tour. En combat, les bombes n'ont plus
+          d'effet (elles ne servent qu'à révéler des cases).
+        </p>
+
+        <p>
+          <strong>Bloqué face à un ennemi</strong> : un héros incapable de se
+          déplacer (sans jambes, mauvais lancer) et resté sur la case d'un
+          ennemi après avoir décliné un premier affrontement peut désormais
+          tenter de se dissimuler (1D6, 50 %) plutôt que de rester bloqué sans
+          aucune option.
         </p>
 
         <p>
           <strong>Petit plus</strong> : un message s'affiche si le lancer de dé,
           réduit par la perte des jambes, tombe à 0 mouvement.
         </p>
-      </section>
 
-      <section>
-        <h3>Correctifs découverts pendant les tests</h3>
-
-        <p>
-          <strong>Rebond sur les murs</strong> : lors d'un déplacement complet
-          en un clic, le héros suit désormais correctement le rebond sur un mur
-          d'une case à l'autre, au lieu de rester bloqué à osciller contre le
-          mur.
+        <p className="patch-fixes-label">
+          Correctifs découverts pendant les tests :
         </p>
-
-        <p>
-          <strong>Messages du trajet</strong> : lors d'un déplacement complet en
-          un clic, tous les événements survenus en route (comme la récupération
-          d'un trésor perdu) restent désormais affichés à la fin, au lieu de
-          disparaître, écrasés par le message de l'étape suivante.
-        </p>
-
-        <p>
-          <strong>Magasin bloqué</strong> : corrigé un cas où le magasin
-          refusait de s'ouvrir même en y terminant son tour, si un popup avait
-          déjà été fermé manuellement sur cette case lors d'un tour précédent.
-        </p>
-
-        <p>
-          <strong>Bloqué face à un ennemi</strong> : un héros incapable de se
-          déplacer (sans jambes, mauvais lancer) et resté sur la case d'un
-          ennemi après avoir décliné un premier affrontement ne reste plus
-          jamais sans option — voir "Ennemis & combat" dans les règles pour le
-          détail du nouveau choix proposé.
-        </p>
-
-        <p>
-          <strong>Un seul objet par tour</strong> : hors combat, impossible d'en
-          utiliser un second dans le même tour (les boutons se grisent
-          directement dans l'inventaire). En combat, les bombes sont désormais
-          grisées elles aussi — elles n'ont aucun effet en plein affrontement.
-        </p>
+        <ul className="patch-fixes-list">
+          <li>
+            Rebond sur les murs correctement suivi lors d'un déplacement en un
+            clic
+          </li>
+          <li>
+            Messages du trajet (comme la récupération d'un trésor) qui ne
+            disparaissaient plus
+          </li>
+          <li>
+            Magasin qui refusait parfois de s'ouvrir même en y terminant son
+            tour
+          </li>
+        </ul>
       </section>
     </div>
   );
