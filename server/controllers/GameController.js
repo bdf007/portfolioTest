@@ -1958,6 +1958,7 @@ exports.revealTile = async (req, res) => {
     // Perd son inventaire et sa clé (nouvel étage = nouveau donjon).
     function advanceToNextFloor(game) {
       game.gameState.floor = (game.gameState.floor || 1) + 1;
+      game.gameState.solVariant = Math.floor(Math.random() * 5); // 5 variantes dans SOL_VARIANTS (images.js)
 
       game.tiles = Donjon.generateTiles(game.difficulty);
       game.boss = { type: "goblin", ...Donjon.generateBossStats() };

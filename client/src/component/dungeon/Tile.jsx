@@ -6,7 +6,6 @@ import {
   gouffreImage,
   herseImage,
   keyImage,
-  solImage,
   ratImage,
   bigRatImage,
   bossDragonImage,
@@ -15,12 +14,15 @@ import {
   closeExitDoorImage,
   openExitDoorImage,
   getBlobImage,
+  getSolVariant,
 } from "./images";
 
-const Tile = ({ tile, isHeroHere, hasGroundLoot, exitReady }) => {
+const Tile = ({ tile, isHeroHere, hasGroundLoot, exitReady, solVariant }) => {
   return (
     <div className={`tile ${isHeroHere ? "hero-position" : ""}`}>
-      {tile?.revealed && <img src={solImage} alt="Sol" className="sol-image" />}
+      {tile?.revealed && (
+        <img src={getSolVariant(solVariant)} alt="Sol" className="sol-image" />
+      )}
 
       {tile?.revealed && tile.type === "rat" && !tile.cleared && (
         <img src={ratImage} alt="Rat" className="rat-image" />

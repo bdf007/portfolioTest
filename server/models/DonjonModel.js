@@ -91,6 +91,7 @@ const DungeonSchema = new mongoose.Schema(
       deathCause: { type: String, default: null },
       pendingGouffreFall: { type: mongoose.Schema.Types.Mixed, default: null },
       usedSpriteIds: { type: [Number], default: [] },
+      solVariant: { type: Number, default: 0 }, // index dans SOL_VARIANTS, tiré au sort par étage
       tilesRevealedCount: { type: Number, default: 0 },
       heroConfirmed: { type: Boolean, default: false },
       livesRemaining: { type: Number, default: 1 },
@@ -287,6 +288,7 @@ DungeonSchema.statics.createGameForUser = async function (
       usedSpriteIds: [],
       tilesRevealedCount: 0,
       floor: 1,
+      solVariant: Math.floor(Math.random() * 5), // 5 variantes dans SOL_VARIANTS (images.js)
       pendingCombat: null,
       pendingTrapChoice: null,
       pendingEnemyChoice: null,
