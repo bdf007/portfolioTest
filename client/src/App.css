@@ -1198,15 +1198,21 @@ textarea {
   gap: 0.4rem;
 }
 
-.inventory-empty {
-  color: var(--text-muted);
-  font-style: italic;
-  font-size: 0.85rem;
-  margin: 0.5rem 0 0;
+.inventory-item-icon {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+  image-rendering: pixelated;
+  vertical-align: middle;
+  margin-right: 0.3rem;
 }
 
 .backpack-icon {
-  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+  image-rendering: pixelated;
+  vertical-align: middle;
 }
 
 /* ---------- 14.4 Barre de stats (au-dessus du plateau) ---------- */
@@ -1228,6 +1234,19 @@ textarea {
 
 .hero-stats-sep {
   color: var(--text-muted);
+}
+
+.hero-stats-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.hero-stats-item-icon {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+  image-rendering: pixelated;
 }
 
 /* ---------- 14.5 Sélecteur d'apparence du héros ---------- */

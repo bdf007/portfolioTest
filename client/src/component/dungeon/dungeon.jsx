@@ -15,6 +15,7 @@ import BugReportForm from "./BugReportForm";
 import EnemyChoicePanel from "./EnemyChoicePanel";
 import { KeyPanel, ChestPanel, ShopPanel } from "./InteractionPanels";
 import InventoryPanel from "./InventoryPanel";
+import { inventoryImage } from "./images";
 import DungeonGrid from "./DungeonGrid";
 import ActionOverlay from "./ActionOverlay";
 import { VictoryScreen, GameOverScreen, DefeatScreen } from "./EndScreens";
@@ -971,6 +972,7 @@ const Dungeon = () => {
           heroSpriteId={gameData.hero.spriteId}
           heroFacing={heroFacing}
           heroIsWalking={isHeroWalking}
+          solVariant={gameData.gameState.solVariant}
         />
 
         {isBugReportOpen ? (
@@ -1030,23 +1032,7 @@ const Dungeon = () => {
             className="inventory-toggle-button"
             onClick={() => setIsInventoryOpen(true)}
           >
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="#a9714a"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="backpack-icon"
-            >
-              <path d="M6 8a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2Z" />
-              <path d="M9 6V4a3 3 0 0 1 6 0v2" />
-              <path d="M8 12h8" />
-              <path d="M9 16h2" />
-              <path d="M13 16h2" />
-            </svg>{" "}
+            <img src={inventoryImage} alt="" className="backpack-icon" />{" "}
             Inventaire
           </button>
         )}

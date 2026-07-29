@@ -7,6 +7,38 @@ const PatchNotesScreen = ({ onBack }) => {
       <button onClick={onBack}>← Retour</button>
 
       <section>
+        <h3>Version 1.3 — 29 juillet 2026</h3>
+        <p className="patch-version-subtitle">Décor et objets</p>
+
+        <p>
+          <strong>Sols variés</strong> : chaque étage tire désormais l'une de
+          ses 5 textures de sol possibles, pour casser la monotonie visuelle
+          d'un étage à l'autre.
+        </p>
+
+        <p>
+          <strong>Icônes d'objets</strong> : potions, amélioration d'arme et
+          bombes ont maintenant leur propre icône, dans l'inventaire comme dans
+          la barre de statistiques — plus besoin d'ouvrir l'inventaire pour
+          savoir d'un coup d'œil ce que tu portes sur toi.
+        </p>
+
+        <p>
+          <strong>Classement</strong> : à score strictement égal, le premier
+          arrivé garde sa place — un nouveau score identique ne délogera plus
+          quelqu'un déjà classé, il faut désormais le battre pour prendre sa
+          place.
+        </p>
+
+        <p>
+          <strong>Déplacement</strong> : plusieurs corrections sur l'animation
+          du héros — orientation correcte tout au long d'un déplacement (y
+          compris après un rebond sur un mur ou sur le tout dernier pas), et
+          retour face à la caméra une fois immobile.
+        </p>
+      </section>
+
+      <section>
         <h3>Version 1.2 — 28 juillet 2026</h3>
         <p className="patch-version-subtitle">Personnalisation du héros</p>
 
@@ -14,7 +46,8 @@ const PatchNotesScreen = ({ onBack }) => {
           <strong>Apparence du héros</strong> : choisis parmi 4 sprites à la
           création (et à chaque recréation après une mort). Une apparence déjà
           utilisée par une vie précédente de la même partie est grisée,
-          indisponible.
+          indisponible — sauf si les 4 ont déjà servi, auquel cas elles
+          redeviennent toutes disponibles.
         </p>
 
         <p>

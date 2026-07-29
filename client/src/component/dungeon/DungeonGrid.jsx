@@ -11,6 +11,7 @@ const DungeonGrid = ({
   heroSpriteId,
   heroFacing,
   heroIsWalking,
+  solVariant,
 }) => {
   const grid = Array.from({ length: 8 }, () => Array(8).fill(null));
 
@@ -39,6 +40,7 @@ const DungeonGrid = ({
               isHeroHere={isHeroHere}
               hasGroundLoot={hasGroundLoot}
               exitReady={exitReady}
+              solVariant={solVariant}
             />
           );
         }),

@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { ITEM_ICONS } from "./images";
 
 const ITEM_LABELS = {
   potionCoffre: "Potion (+1)",
@@ -56,6 +57,13 @@ const InventoryPanel = ({
       <ul>
         {Object.entries(counts).map(([itemKey, count]) => (
           <li key={itemKey}>
+            {ITEM_ICONS[itemKey] && (
+              <img
+                src={ITEM_ICONS[itemKey]}
+                alt=""
+                className="inventory-item-icon"
+              />
+            )}
             {ITEM_LABELS[itemKey] || itemKey} × {count}
             {(itemKey === "potionCoffre" || itemKey === "potionSimple") && (
               <span className="item-actions">

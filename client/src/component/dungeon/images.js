@@ -19,16 +19,26 @@ import bigRedBlobImage from "../../assets/bigRedBlob.png";
 import bigGreenBlobImage from "../../assets/bigGreenBlob.png";
 import bossDragonImage from "../../assets/bossDragon.png";
 import chestMimicImage from "../../assets/chestMimic.png";
-import openExitDoorImage from "../../assets/openExitDoor.png";
-import closeExitDoorImage from "../../assets/closeExitDoor.png";
-import openStartDoorImage from "../../assets/openStartDoor.png";
 import backTileImage from "../../assets/backTile.png";
+import openStartDoorImage from "../../assets/openStartDoor.png";
+import closeExitDoorImage from "../../assets/closeExitDoor.png";
+import openExitDoorImage from "../../assets/openExitDoor.png";
 // Spritesheets de marche animée : 3 colonnes (frames) × 4 lignes
 // (bas, gauche, droite, haut — ordre standard RPG Maker)
 import hero1WalkSheet from "../../assets/hero1_walk.png";
 import hero2WalkSheet from "../../assets/hero2_walk.png";
 import hero3WalkSheet from "../../assets/hero3_walk.png";
 import hero4WalkSheet from "../../assets/hero4_walk.png";
+
+import bombImage from "../../assets/bomb.png";
+import inventoryImage from "../../assets/inventory.png";
+import sol2Image from "../../assets/sol2.png";
+import sol3Image from "../../assets/sol3.png";
+import sol4Image from "../../assets/sol4.png";
+import sol5Image from "../../assets/sol5.png";
+import potionSimpleIcon from "../../assets/potion_simple.png";
+import potionTripleIcon from "../../assets/potion_triple.png";
+import potionWeaponIcon from "../../assets/potion_weapon.png";
 
 export {
   heroImage,
@@ -43,10 +53,10 @@ export {
   bigRatImage,
   bossDragonImage,
   chestMimicImage,
-  openExitDoorImage,
-  closeExitDoorImage,
-  openStartDoorImage,
   backTileImage,
+  openStartDoorImage,
+  closeExitDoorImage,
+  openExitDoorImage,
 };
 
 const BLOB_IMAGES = {
@@ -81,3 +91,33 @@ export const HERO_WALK_SHEETS = {
 export function getHeroWalkSheet(spriteId) {
   return HERO_WALK_SHEETS[spriteId] || hero1WalkSheet;
 }
+
+export { inventoryImage };
+
+// 5 variantes de sol (sol.png + sol2 à sol5), une seule choisie par étage
+// (côté serveur, pour rester stable si la page est rechargée) — pas un choix
+// aléatoire par tuile, qui ferait un patchwork incohérent.
+export const SOL_VARIANTS = [
+  solImage,
+  sol2Image,
+  sol3Image,
+  sol4Image,
+  sol5Image,
+];
+
+export function getSolVariant(index) {
+  return SOL_VARIANTS[index % SOL_VARIANTS.length] || solImage;
+}
+
+// Icônes d'objets pour l'inventaire — potionCoffre/potionSimple partagent la
+// même icône (même effet), pareil pour armeCoffre/armeBonus, et les deux
+// types de bombes partagent l'icône générique de bombe.
+export const ITEM_ICONS = {
+  potionCoffre: potionSimpleIcon,
+  potionSimple: potionSimpleIcon,
+  potionTriple: potionTripleIcon,
+  armeCoffre: potionWeaponIcon,
+  armeBonus: potionWeaponIcon,
+  bombeCarre: bombImage,
+  bombeLigne: bombImage,
+};
