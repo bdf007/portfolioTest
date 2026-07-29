@@ -19,6 +19,12 @@ const NavBarre = () => {
   const navigate = useNavigate();
   const { user, setUser } = useContext(UserContext);
   const [isOpen, setIsOpen] = useState(false);
+  const isGamer = user?.role === "gamer";
+
+  // Un gamer n'a accès qu'à Contact parmi les liens "vitrine" du portfolio
+  const visibleNavLinks = isGamer
+    ? NAV_LINKS.filter((link) => link.to === "/Contact")
+    : NAV_LINKS;
 
   const handleLogout = async (e) => {
     e.preventDefault();
@@ -37,10 +43,16 @@ const NavBarre = () => {
       <div className="container-fluid">
         <Link
           className="navbar-brand app-navbar-brand"
-          to="/"
+          to={isGamer ? "/Dungeon" : "/"}
           onClick={() => setIsOpen(false)}
         >
-          <span className="app-navbar-prompt">~$</span> Christophe Midelet
+          {isGamer ? (
+            "Skip the Dungeon"
+          ) : (
+            <>
+              <span className="app-navbar-prompt">~$</span> Christophe Midelet
+            </>
+          )}
         </Link>
         <button
           className="navbar-toggler"
@@ -57,7 +69,7 @@ const NavBarre = () => {
           id="navbarNav"
         >
           <ul className="navbar-nav ms-auto">
-            {NAV_LINKS.map((link) => (
+            {visibleNavLinks.map((link) => (
               <li className="nav-item" key={link.to}>
                 <NavLink
                   className="nav-link app-nav-link"
@@ -71,15 +83,28 @@ const NavBarre = () => {
 
             {user && (
               <>
-                <li className="nav-item">
-                  <NavLink
-                    className="nav-link app-nav-link"
-                    to="/Dungeon"
-                    onClick={() => setIsOpen(false)}
-                  >
-                    Dungeon
-                  </NavLink>
-                </li>
+                {!isGamer && user.role !== "user" && (
+                  <li className="nav-item">
+                    <NavLink
+                      className="nav-link app-nav-link"
+                      to="/Dungeon"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      Dungeon
+                    </NavLink>
+                  </li>
+                )}
+                {user.role === "admin" && (
+                  <li className="nav-item">
+                    <NavLink
+                      className="nav-link app-nav-link"
+                      to="/AdminDungeon"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      Admin Donjon
+                    </NavLink>
+                  </li>
+                )}
                 <li className="nav-item">
                   <span
                     className="nav-link app-nav-link app-nav-logout"
@@ -94,12 +119,20 @@ const NavBarre = () => {
             {!user && (
               <>
                 <li className="nav-item">
-                  <Link className="nav-link app-nav-link" to="/signup">
+                  <Link
+                    className="nav-link app-nav-link"
+                    to="/signup"
+                    onClick={() => setIsOpen(false)}
+                  >
                     Sign Up
                   </Link>
                 </li>
                 <li className="nav-item">
-                  <Link className="nav-link app-nav-link" to="/login">
+                  <Link
+                    className="nav-link app-nav-link"
+                    to="/login"
+                    onClick={() => setIsOpen(false)}
+                  >
                     Login
                   </Link>
                 </li>

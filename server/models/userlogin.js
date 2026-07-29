@@ -20,7 +20,7 @@ const userSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      default: "user",
+      default: "gamer",
     },
     hashedPassword: {
       type: String,
@@ -28,7 +28,7 @@ const userSchema = new mongoose.Schema(
     },
     salt: String,
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 // virtual field

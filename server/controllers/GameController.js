@@ -455,6 +455,63 @@ exports.recreateHero = async (req, res) => {
 // Création / reprise / abandon de partie
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// Administration (réservé aux comptes "admin")
+// ---------------------------------------------------------------------------
+
+// Liste TOUTES les parties, tous statuts confondus — pour faire le ménage.
+exports.getAllGamesAdmin = async (req, res) => {
+  try {
+    if (req.user.role !== "admin") {
+      return res
+        .status(403)
+        .json({ error: "Accès réservé aux administrateurs." });
+    }
+
+    const games = await Donjon.find({})
+      .sort({ updatedAt: -1 })
+      .populate("userId", "username")
+      .select(
+        "gameState.score gameState.floor difficulty status hero.spriteId userId createdAt updatedAt",
+      );
+
+    const formatted = games.map((g) => ({
+      id: g._id,
+      username: g.userId?.username || "Joueur inconnu",
+      difficulty: g.difficulty,
+      status: g.status,
+      score: g.gameState?.score || 0,
+      floor: g.gameState?.floor || 1,
+      spriteId: g.hero?.spriteId || 1,
+      createdAt: g.createdAt,
+      updatedAt: g.updatedAt,
+    }));
+
+    res.json({ games: formatted });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// Supprime une partie quelconque, peu importe son propriétaire ou son statut.
+exports.deleteGameAdmin = async (req, res) => {
+  try {
+    if (req.user.role !== "admin") {
+      return res
+        .status(403)
+        .json({ error: "Accès réservé aux administrateurs." });
+    }
+
+    const { gameId } = req.params;
+    const deleted = await Donjon.findByIdAndDelete(gameId);
+    if (!deleted) return res.status(404).json({ error: "Partie introuvable." });
+
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
 // Classement des meilleurs scores, tous joueurs confondus (toutes parties,
 // peu importe leur statut : le score reflète la progression atteinte).
 exports.getLeaderboard = async (req, res) => {
@@ -474,7 +531,7 @@ exports.getLeaderboard = async (req, res) => {
     }
 
     const topGames = await Donjon.find(filter)
-      .sort({ "gameState.score": -1 })
+      .sort({ "gameState.score": -1, createdAt: 1 }) // à score égal, le plus ancien garde sa place
       .limit(10)
       .populate("userId", "username")
       .select(

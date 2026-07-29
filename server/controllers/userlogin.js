@@ -96,3 +96,31 @@ exports.deleteUserById = async (req, res) => {
     console.log(error);
   }
 };
+
+// Modifie le rôle d'un utilisateur (réservé aux admins, protégé par
+// adminAuthMiddleware côté route).
+exports.updateUserRole = async (req, res) => {
+  try {
+    const { role } = req.body;
+    const validRoles = ["user", "gamer", "admin"]; // ajuste ici si tu ajoutes d'autres rôles un jour
+
+    if (!validRoles.includes(role)) {
+      return res.status(400).json({ error: "Rôle invalide." });
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(
+      req.params.id,
+      { role },
+      { new: true },
+    ).select("-hashedPassword -salt");
+
+    if (!updatedUser) {
+      return res.status(404).json({ error: "Utilisateur introuvable." });
+    }
+
+    res.json(updatedUser);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};

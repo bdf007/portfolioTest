@@ -22,6 +22,7 @@ import Experience from "./pages/Experience";
 import Project from "./pages/Project";
 import Contact from "./pages/Contact";
 import Ludotheque from "./pages/Ludotheque";
+import AdminDungeon from "./pages/AdminDungeon";
 import DungeonPage from "./pages/Dungeon";
 import Footer from "./component/footer";
 
@@ -61,6 +62,8 @@ function App() {
     return <div className="app-loading">Chargement...</div>;
   }
 
+  const isGamer = user?.role === "gamer";
+
   return (
     <Router>
       <UserContext.Provider value={{ user, setUser }}>
@@ -70,14 +73,51 @@ function App() {
 
           <main className="app-main">
             <Routes>
-              <Route path="/" element={user ? <Admin /> : <Home />} />
-              <Route path="/About" element={<About />} />
-              <Route path="/Education" element={<Education />} />
-              <Route path="/Experience" element={<Experience />} />
-              <Route path="/Project" element={<Project />} />
-              <Route path="/Contact" element={<Contact />} />
-              <Route path="/Ludotheque" element={<Ludotheque />} />
-              {user && <Route path="/Dungeon" element={<DungeonPage />} />}
+              {/* "/" reste TOUJOURS enregistrée, quel que soit le rôle — un
+                  joueur y est redirigé directement vers le donjon, pour
+                  éviter qu'elle manque et que la route "*" boucle dessus
+                  indéfiniment. */}
+              <Route
+                path="/"
+                element={
+                  isGamer ? (
+                    <Navigate to="/Dungeon" />
+                  ) : user ? (
+                    <Admin />
+                  ) : (
+                    <Home />
+                  )
+                }
+              />
+
+              {(!user || (user && user.role !== "gamer")) && (
+                <>
+                  <Route path="/About" element={<About />} />
+                  <Route path="/Education" element={<Education />} />
+                  <Route path="/Experience" element={<Experience />} />
+                  <Route path="/Project" element={<Project />} />
+                  <Route path="/Contact" element={<Contact />} />
+                  <Route path="/Ludotheque" element={<Ludotheque />} />
+                </>
+              )}
+
+              {user && (user.role === "gamer" || user.role === "admin") && (
+                <>
+                  <Route path="/Contact" element={<Contact />} />
+                  <Route path="/Dungeon" element={<DungeonPage />} />
+                </>
+              )}
+
+              <Route
+                path="/AdminDungeon"
+                element={
+                  user?.role === "admin" ? (
+                    <AdminDungeon />
+                  ) : (
+                    <Navigate to="/" />
+                  )
+                }
+              />
 
               {!user && (
                 <>

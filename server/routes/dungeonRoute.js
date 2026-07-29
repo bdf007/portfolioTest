@@ -9,6 +9,8 @@ router.use(authMiddleware);
 router.post("/create-game", GameController.createGame);
 router.post("/my-games", GameController.getMyGames);
 router.post("/leaderboard", GameController.getLeaderboard);
+router.get("/admin/games", GameController.getAllGamesAdmin);
+router.delete("/admin/games/:gameId", GameController.deleteGameAdmin);
 router.post("/abandon-game", GameController.abandonGame);
 
 router.post("/roll-three-dices", GameController.rollThreeDices);
