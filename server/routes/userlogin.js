@@ -8,6 +8,7 @@ const {
   logout,
   getLoggedInUser,
   getAllUsers,
+  updateUserRole,
   deleteUserById,
 } = require("../controllers/userlogin");
 // import middlewares
@@ -22,6 +23,9 @@ router.get("/logout", logout);
 router.get("/user", authMiddleware, userById, getLoggedInUser);
 // get all users
 router.get("/users", adminAuthMiddleware, getAllUsers);
+// update user role
+router.put("/user/:id/role", adminAuthMiddleware, updateUserRole);
+
 // delete user by id
 router.delete("/user/:id", adminAuthMiddleware, deleteUserById);
 

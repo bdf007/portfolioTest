@@ -1,40 +1,46 @@
-import React from "react";
+import React, { useContext } from "react";
 import { Link } from "react-router-dom";
+import { UserContext } from "../context/UserContext";
 import "../App.css";
 
+const FOOTER_LINKS = [
+  { to: "/", label: "Home" },
+  { to: "/About", label: "À propos" },
+  { to: "/Education", label: "Éducation" },
+  { to: "/Experience", label: "Expérience" },
+  { to: "/Project", label: "Projets" },
+  { to: "/Contact", label: "Contact" },
+];
+
 const Footer = () => {
-  // Scroll to the top of the page
+  const { user } = useContext(UserContext);
+  const isGamer = user?.role === "gamer";
+
+  const visibleLinks = isGamer
+    ? FOOTER_LINKS.filter((link) => link.to === "/Contact")
+    : FOOTER_LINKS;
+
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
+
   return (
     <footer className="footer-bs">
       <nav className="footer-nav" aria-label="Navigation du pied de page">
-        <Link className="footer-link" to="/">
-          Home
-        </Link>
-        <Link className="footer-link" to="/About" onClick={scrollToTop}>
-          À propos
-        </Link>
-        <Link className="footer-link" to="/Education" onClick={scrollToTop}>
-          Éducation
-        </Link>
-        <Link className="footer-link" to="/Experience" onClick={scrollToTop}>
-          Expérience
-        </Link>
-        <Link className="footer-link" to="/Project" onClick={scrollToTop}>
-          Projets
-        </Link>
-        <Link className="footer-link" to="/Contact" onClick={scrollToTop}>
-          Contact
-        </Link>
+        {visibleLinks.map((link) => (
+          <Link
+            key={link.to}
+            className="footer-link"
+            to={link.to}
+            onClick={scrollToTop}
+          >
+            {link.label}
+          </Link>
+        ))}
       </nav>
 
       <p className="footer-text">
-        <Link to="/Login" className="footer-inline-link" onClick={scrollToTop}>
-          site
-        </Link>{" "}
-        réalisé avec MongoDB, Express, React, NodeJS
+        site réalisé avec MongoDB, Express, React, NodeJS
       </p>
 
       <p className="footer-social">
