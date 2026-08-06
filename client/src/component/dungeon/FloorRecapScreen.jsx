@@ -8,6 +8,7 @@ const FloorRecapScreen = ({ recap, onContinue, onSaveAndQuit }) => {
     totalScore,
     livesRemaining,
     nextFloor,
+    victory,
   } = recap;
 
   return (
@@ -17,10 +18,18 @@ const FloorRecapScreen = ({ recap, onContinue, onSaveAndQuit }) => {
       <p>Bonus de rapidité : +{turnBonus} points</p>
       <p className="final-score">Score total : {totalScore}</p>
       <p>❤️ Vies restantes : {livesRemaining}</p>
-      <p>Prochaine étape : étage {nextFloor}</p>
+      {victory ? (
+        <p>🏆 C'était le dernier étage — vous avez triomphé du donjon !</p>
+      ) : (
+        <p>Prochaine étape : étage {nextFloor}</p>
+      )}
 
       <div className="floor-recap-actions">
-        <button onClick={onContinue}>Continuer vers l'étage {nextFloor}</button>
+        <button onClick={onContinue}>
+          {victory
+            ? "🏆 Voir la victoire"
+            : `Continuer vers l'étage ${nextFloor}`}
+        </button>
         <button onClick={onSaveAndQuit}>💾 Sauvegarder et quitter</button>
       </div>
     </div>

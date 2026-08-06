@@ -34,6 +34,7 @@ router.post("/recreate-hero", GameController.recreateHero);
 
 router.post("/buy-item", GameController.buyItem);
 router.post("/use-item", GameController.useItem);
+router.post("/use-radar-pieges", GameController.useRadarPieges);
 
 router.post("/start-combat", GameController.startCombat);
 router.post("/decline-combat", GameController.declineCombat);

@@ -10,9 +10,14 @@ const RulesScreen = ({ onBack }) => {
         <h3>Objectif</h3>
         <p>
           Récupère la clé, vaincs le boss, puis atteins la sortie. Une fois ces
-          trois conditions réunies, tu descends à l'étage suivant plutôt que de
-          terminer la partie — l'aventure continue jusqu'à ce que tu n'aies plus
-          de vies, ou que tu choisisses d'abandonner.
+          trois conditions réunies, tu descends à l'étage suivant — sauf si
+          c'était le dernier étage de ta difficulté, auquel cas tu remportes la
+          partie.
+        </p>
+        <p>
+          Nombre d'étages à boucler pour gagner : <strong>10</strong> en Facile,{" "}
+          <strong>6</strong> en Moyen, <strong>4</strong> en Difficile,{" "}
+          <strong>2</strong> en Épique — moins de vies, moins d'étages à tenir.
         </p>
       </section>
 
@@ -140,6 +145,13 @@ const RulesScreen = ({ onBack }) => {
           effet en plein affrontement). En dehors d'un combat, ça consomme ton
           tour, et un seul objet est utilisable par tour — l'objet acheté au
           magasin ne sera donc utilisable qu'au tour suivant.
+        </p>
+        <p>
+          Le <strong>détecteur de pièges</strong> est à part : pas besoin de le
+          trouver, il est disponible dès le début. Gratuit la première fois,
+          puis +5 points à chaque utilisation suivante. Il révèle brièvement
+          l'emplacement des pièges cachés de l'étage — un bon filet de sécurité
+          en Épique, où un gouffre inconnu peut coûter la partie.
         </p>
       </section>
 

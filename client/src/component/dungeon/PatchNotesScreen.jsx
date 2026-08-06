@@ -7,6 +7,31 @@ const PatchNotesScreen = ({ onBack }) => {
       <button onClick={onBack}>← Retour</button>
 
       <section>
+        <h3>Version 1.4 — 6 août 2026</h3>
+        <p className="patch-version-subtitle">La victoire, enfin</p>
+
+        <p>
+          <strong>Correctif majeur</strong> : il était jusqu'ici impossible de
+          gagner une partie — le donjon enchaînait les étages à l'infini, sans
+          jamais déclencher l'écran de victoire. Chaque difficulté a désormais
+          un nombre d'étages précis à boucler pour triompher : Facile 10, Moyen
+          6, Difficile 4, Épique 2 (moins d'étages sur les difficultés qui
+          laissent le moins de vies, pour ne pas cumuler les pénalités). Les
+          victoires apparaissent bien sûr dans le classement, avec leur propre
+          icône 🏆.
+        </p>
+
+        <p>
+          <strong>Détecteur de pièges</strong> : nouvelle capacité, disponible à
+          tout moment hors combat (pas besoin de la trouver ni de la porter dans
+          l'inventaire). Révèle brièvement l'emplacement de tous les pièges de
+          l'étage en cours — un vrai coup de pouce en Épique, où la moindre case
+          cachée peut être fatale. Gratuite la première fois, puis +5 points de
+          score à chaque utilisation suivante.
+        </p>
+      </section>
+
+      <section>
         <h3>Version 1.3 — 29 juillet 2026</h3>
         <p className="patch-version-subtitle">Décor et objets</p>
 

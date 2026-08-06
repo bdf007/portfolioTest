@@ -17,7 +17,20 @@ import {
   getSolVariant,
 } from "./images";
 
-const Tile = ({ tile, isHeroHere, hasGroundLoot, exitReady, solVariant }) => {
+const Tile = ({
+  tile,
+  isHeroHere,
+  hasGroundLoot,
+  exitReady,
+  solVariant,
+  trapFlash,
+}) => {
+  // Flash du détecteur de pièges : affiche temporairement le sprite du piège
+  // même si la case n'est pas (encore) révélée — sans jamais modifier
+  // tile.revealed, l'effet redevient invisible tout seul après 1,5s (géré
+  // côté front dans index.jsx).
+  const isFlashingTrap = trapFlash && !tile?.revealed && tile?.type === "piège";
+
   return (
     <div className={`tile ${isHeroHere ? "hero-position" : ""}`}>
       {tile?.revealed && (
@@ -70,12 +83,24 @@ const Tile = ({ tile, isHeroHere, hasGroundLoot, exitReady, solVariant }) => {
         />
       )}
 
-      {tile?.revealed && tile.type === "piège" && tile.value === -1 && (
-        <img src={gouffreImage} alt="Gouffre" className="goufre-image" />
-      )}
-      {tile?.revealed && tile.type === "piège" && tile.value === -2 && (
-        <img src={herseImage} alt="Herse" className="herse-image" />
-      )}
+      {(tile?.revealed || isFlashingTrap) &&
+        tile.type === "piège" &&
+        tile.value === -1 && (
+          <img
+            src={gouffreImage}
+            alt="Gouffre"
+            className={`goufre-image ${isFlashingTrap ? "trap-flash" : ""}`}
+          />
+        )}
+      {(tile?.revealed || isFlashingTrap) &&
+        tile.type === "piège" &&
+        tile.value === -2 && (
+          <img
+            src={herseImage}
+            alt="Herse"
+            className={`herse-image ${isFlashingTrap ? "trap-flash" : ""}`}
+          />
+        )}
 
       {tile?.revealed && tile.type === "entrée" && (
         <img src={openStartDoorImage} alt="Entrée" className="door-image" />
