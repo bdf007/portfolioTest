@@ -92,6 +92,7 @@ const DungeonSchema = new mongoose.Schema(
       pendingGouffreFall: { type: mongoose.Schema.Types.Mixed, default: null },
       usedSpriteIds: { type: [Number], default: [] },
       solVariant: { type: Number, default: 0 }, // index dans SOL_VARIANTS, tiré au sort par étage
+      radarUsedCount: { type: Number, default: 0 }, // 1ère gratuite, +5 à chaque suivante
       tilesRevealedCount: { type: Number, default: 0 },
       heroConfirmed: { type: Boolean, default: false },
       livesRemaining: { type: Number, default: 1 },
@@ -142,10 +143,10 @@ const DIFFICULTY_CONFIG = {
 // Nombre d'essais de dés à la création/recréation du héros, et nombre de vies
 // (recréations possibles) autorisées avant la fin définitive de la partie.
 const DIFFICULTY_RULES = {
-  facile: { maxRerolls: 4, maxLives: 4 },
-  moyen: { maxRerolls: 3, maxLives: 3 },
-  difficile: { maxRerolls: 2, maxLives: 2 },
-  epique: { maxRerolls: 1, maxLives: 1 },
+  facile: { maxRerolls: 4, maxLives: 4, maxFloors: 10 },
+  moyen: { maxRerolls: 3, maxLives: 3, maxFloors: 6 },
+  difficile: { maxRerolls: 2, maxLives: 2, maxFloors: 4 },
+  epique: { maxRerolls: 1, maxLives: 1, maxFloors: 2 },
 };
 
 function rollD6() {
@@ -289,6 +290,7 @@ DungeonSchema.statics.createGameForUser = async function (
       tilesRevealedCount: 0,
       floor: 1,
       solVariant: Math.floor(Math.random() * 5), // 5 variantes dans SOL_VARIANTS (images.js)
+      radarUsedCount: 0,
       pendingCombat: null,
       pendingTrapChoice: null,
       pendingEnemyChoice: null,

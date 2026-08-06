@@ -96,7 +96,12 @@ const LeaderboardScreen = ({ onBack }) => {
                     <td>{entry.score}</td>
                     <td>{entry.floor}</td>
                     <td className="leaderboard-cause">
-                      {entry.status === "abandoned" ? "🏳️" : "💀"} {entry.cause}
+                      {entry.status === "victory"
+                        ? "🏆"
+                        : entry.status === "abandoned"
+                          ? "🏳️"
+                          : "💀"}{" "}
+                      {entry.cause}
                     </td>
                   </tr>
                 ))}
@@ -132,7 +137,12 @@ const LeaderboardScreen = ({ onBack }) => {
                 <div className="leaderboard-card-bottom">
                   <span>Étage {entry.floor}</span>
                   <span>
-                    {entry.status === "abandoned" ? "🏳️" : "💀"} {entry.cause}
+                    {entry.status === "victory"
+                      ? "🏆"
+                      : entry.status === "abandoned"
+                        ? "🏳️"
+                        : "💀"}{" "}
+                    {entry.cause}
                   </span>
                 </div>
               </li>

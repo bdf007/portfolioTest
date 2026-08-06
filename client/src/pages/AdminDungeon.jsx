@@ -13,13 +13,18 @@ const ROLES = ["user", "gamer", "admin"];
 const STATUS_FILTERS = [
   { value: "all", label: "Tous les statuts" },
   { value: "in_progress", label: "En cours" },
-  { value: "finished", label: "Terminées (mort ou abandon)" },
+  { value: "finished", label: "Terminées" },
 ];
 
 const matchesStatusFilter = (game, filter) => {
   if (filter === "all") return true;
-  if (filter === "finished")
-    return game.status === "defeat" || game.status === "abandoned";
+  if (filter === "finished") {
+    return (
+      game.status === "victory" ||
+      game.status === "defeat" ||
+      game.status === "abandoned"
+    );
+  }
   return game.status === filter;
 };
 

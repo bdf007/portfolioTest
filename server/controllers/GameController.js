@@ -525,7 +525,10 @@ exports.getLeaderboard = async (req, res) => {
 
     // Comptent pour le classement : la mort définitive (plus de vies) ET
     // l'abandon volontaire — mais pas les parties encore en cours.
-    const filter = { status: { $in: ["defeat", "abandoned"] }, difficulty };
+    const filter = {
+      status: { $in: ["defeat", "abandoned", "victory"] },
+      difficulty,
+    };
     if (scope === "mine") {
       filter.userId = req.user._id;
     }
@@ -545,9 +548,11 @@ exports.getLeaderboard = async (req, res) => {
       difficulty: g.difficulty,
       status: g.status,
       cause:
-        g.status === "abandoned"
-          ? "Abandon volontaire"
-          : g.gameState.deathCause || "Cause inconnue",
+        g.status === "victory"
+          ? "Victoire !"
+          : g.status === "abandoned"
+            ? "Abandon volontaire"
+            : g.gameState.deathCause || "Cause inconnue",
       spriteId: g.hero?.spriteId || 1,
     }));
 
@@ -568,6 +573,9 @@ exports.dismissFloorRecap = async (req, res) => {
     const game = await Donjon.findOne({ _id: gameId, userId: req.user._id });
     if (!game) return res.status(404).json({ error: "Partie introuvable." });
 
+    if (game.gameState.floorRecap?.victory) {
+      game.status = "victory";
+    }
     game.gameState.floorRecap = null;
     await game.save();
 
@@ -2002,18 +2010,42 @@ exports.revealTile = async (req, res) => {
         game.gameState.score = (game.gameState.score || 0) + turnBonus;
         const floorReached = game.gameState.floor;
         const turnsTaken = game.gameState.turnCount;
-        advanceToNextFloor(game);
 
-        game.gameState.floorRecap = {
-          completedFloor: floorReached,
-          turnsTaken,
-          turnBonus,
-          totalScore: game.gameState.score,
-          livesRemaining: game.gameState.livesRemaining,
-          nextFloor: game.gameState.floor,
-        };
+        const rules =
+          Donjon.DIFFICULTY_RULES[game.difficulty] ||
+          Donjon.DIFFICULTY_RULES.facile;
+        const isFinalFloor = floorReached >= rules.maxFloors;
 
-        message = `🎉 Vous atteignez la sortie de l'étage ${floorReached} ! +${turnBonus} points de rapidité. Direction l'étage ${game.gameState.floor} !`;
+        if (isFinalFloor) {
+          // Dernier étage de la difficulté : le statut "victory" n'est posé
+          // qu'à la fermeture du récapitulatif (dismissFloorRecap), pas ici
+          // — sinon le front, qui vérifie "victory" avant "floorRecap",
+          // saute directement à l'écran de victoire sans jamais montrer le
+          // bilan de ce dernier étage.
+          game.gameState.floorRecap = {
+            completedFloor: floorReached,
+            turnsTaken,
+            turnBonus,
+            totalScore: game.gameState.score,
+            livesRemaining: game.gameState.livesRemaining,
+            nextFloor: null,
+            victory: true,
+          };
+          message = `🎉 Vous atteignez la sortie du dernier étage (${floorReached}) ! +${turnBonus} points de rapidité. Victoire !`;
+        } else {
+          advanceToNextFloor(game);
+
+          game.gameState.floorRecap = {
+            completedFloor: floorReached,
+            turnsTaken,
+            turnBonus,
+            totalScore: game.gameState.score,
+            livesRemaining: game.gameState.livesRemaining,
+            nextFloor: game.gameState.floor,
+          };
+
+          message = `🎉 Vous atteignez la sortie de l'étage ${floorReached} ! +${turnBonus} points de rapidité. Direction l'étage ${game.gameState.floor} !`;
+        }
       } else {
         const missing = [];
         if (!game.gameState.keyFound) missing.push("la clé");
@@ -2198,6 +2230,59 @@ exports.buyItem = async (req, res) => {
 // ---------------------------------------------------------------------------
 // Utilisation des objets de l'inventaire
 // ---------------------------------------------------------------------------
+
+// Capacité toujours disponible (pas un objet d'inventaire) : révèle
+// temporairement (côté front uniquement, 1,5s) l'emplacement des pièges de
+// l'étage. Aucune tuile n'est modifiée côté serveur — l'effet est purement
+// informatif et visuel. Coût progressif pour éviter le spam une fois qu'on a
+// un peu d'avance au score : gratuite la 1ère fois, puis +5 par utilisation
+// suivante (0, 5, 10, 15...).
+const RADAR_PIEGES_STEP = 5;
+
+exports.useRadarPieges = async (req, res) => {
+  try {
+    const { gameId } = req.body;
+    const game = await Donjon.findOne({ _id: gameId, userId: req.user._id });
+    if (!game) return res.status(404).json({ error: "Partie introuvable." });
+
+    if (game.gameState.pendingCombat?.started) {
+      return res
+        .status(400)
+        .json({ error: "Cette capacité n'a aucun effet en plein combat." });
+    }
+
+    const usedCount = game.gameState.radarUsedCount || 0;
+    const cost = usedCount * RADAR_PIEGES_STEP;
+
+    if ((game.gameState.score || 0) < cost) {
+      return res
+        .status(400)
+        .json({
+          error: `Pas assez de points (coûte ${cost} points cette fois-ci).`,
+        });
+    }
+
+    game.gameState.score -= cost;
+    game.gameState.radarUsedCount = usedCount + 1;
+
+    // Consomme le tour, comme les objets utilisés hors combat.
+    game.gameState.movesRemaining = 0;
+    game.gameState.lockedDirection = null;
+    game.gameState.lastItemUseTurn = game.gameState.turnCount;
+
+    const trapCount = game.tiles.filter((t) => t.type === "piège").length;
+    const costLabel = cost > 0 ? `-${cost} pts` : "gratuit";
+    const message =
+      trapCount > 0
+        ? `📡 (${costLabel}) Un flash révèle ${trapCount} piège${trapCount > 1 ? "s" : ""} sur cet étage !`
+        : `📡 (${costLabel}) Aucun piège détecté sur cet étage.`;
+
+    await game.save();
+    res.json({ gameData: game, message });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
 
 exports.useItem = async (req, res) => {
   try {

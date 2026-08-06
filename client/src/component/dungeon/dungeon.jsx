@@ -38,6 +38,7 @@ const Dungeon = () => {
   const [isBugReportOpen, setIsBugReportOpen] = useState(false);
   const [isHeroWalking, setIsHeroWalking] = useState(false);
   const [heroFacing, setHeroFacing] = useState("bas");
+  const [trapFlash, setTrapFlash] = useState(false);
   const walkingTimeoutRef = useRef(null);
 
   // Une fois l'animation de marche terminée (héros à l'arrêt), il revient
@@ -710,6 +711,29 @@ const Dungeon = () => {
   const usePotion = (itemKey, bodyPart) => useItem(itemKey, { bodyPart });
   const useBombeLigne = (itemKey, direction) => useItem(itemKey, { direction });
 
+  const useRadar = () => {
+    if (isBusy) return;
+    setIsBusy(true);
+    axios
+      .post(`${API}/api/dungeon/use-radar-pieges`, { gameId: gameData._id })
+      .then((res) => {
+        setGameData(res.data.gameData);
+        setTileMessage(res.data.message);
+        // Flash purement visuel côté front — aucune tuile n'est marquée
+        // "revealed" côté serveur, l'effet s'efface tout seul après 1,5s.
+        setTrapFlash(true);
+        setTimeout(() => setTrapFlash(false), 1500);
+      })
+      .catch((err) => {
+        console.error(err);
+        setError(
+          err.response?.data?.error ||
+            "Erreur lors de l'utilisation de la capacité",
+        );
+      })
+      .finally(() => setIsBusy(false));
+  };
+
   // ---------------------------------------------------------------------
   // Helpers d'affichage
   // ---------------------------------------------------------------------
@@ -785,6 +809,7 @@ const Dungeon = () => {
 
   const pendingTrap = gameData.gameState.pendingTrapChoice;
   const pendingCombat = gameData.gameState.pendingCombat;
+  const radarCost = (gameData.gameState.radarUsedCount || 0) * 5;
   const pendingEnemyChoice = gameData.gameState.pendingEnemyChoice;
   const pendingGouffreFall = gameData.gameState.pendingGouffreFall;
   const heroIsDead = gameData.gameState.heroIsDead;
@@ -973,6 +998,7 @@ const Dungeon = () => {
           heroFacing={heroFacing}
           heroIsWalking={isHeroWalking}
           solVariant={gameData.gameState.solVariant}
+          trapFlash={trapFlash}
         />
 
         {isBugReportOpen ? (
@@ -1028,13 +1054,32 @@ const Dungeon = () => {
         {error && <p className="dungeon-error-message">{error}</p>}
 
         {heroReady && heroConfirmed && (
-          <button
-            className="inventory-toggle-button"
-            onClick={() => setIsInventoryOpen(true)}
-          >
-            <img src={inventoryImage} alt="" className="backpack-icon" />{" "}
-            Inventaire
-          </button>
+          <div className="ability-buttons-row">
+            <button
+              className="inventory-toggle-button"
+              onClick={() => setIsInventoryOpen(true)}
+            >
+              <img src={inventoryImage} alt="" className="backpack-icon" />{" "}
+              Inventaire
+            </button>
+            <button
+              className="radar-button"
+              onClick={useRadar}
+              disabled={
+                isBusy ||
+                pendingCombat?.started ||
+                (gameData.gameState.score || 0) < radarCost
+              }
+              title={
+                radarCost > 0
+                  ? `Révèle temporairement les pièges de l'étage (-${radarCost} points)`
+                  : "Révèle temporairement les pièges de l'étage (gratuit la 1ère fois)"
+              }
+            >
+              📡 Détecter les pièges (
+              {radarCost > 0 ? `-${radarCost} pts` : "gratuit"})
+            </button>
+          </div>
         )}
       </div>
     </div>
