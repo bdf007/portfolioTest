@@ -1,15 +1,38 @@
 const Game = require("../models/game");
 const mongoose = require("mongoose");
+const {
+  uploadBase64Image,
+  getFreshImageLink,
+  deleteFile,
+} = require("../services/pcloud");
+
+const PCLOUD_SUBFOLDER = "ludotheque";
 
 exports.createGame = async (req, res) => {
-  const newGame = new Game(req.body);
-  await newGame.save();
+  try {
+    const gameData = { ...req.body };
 
-  res.status(200).json({
-    message: "Game created successfully",
-    //  send back the new game
-    game: newGame,
-  });
+    if (gameData.imageData) {
+      const fileid = await uploadBase64Image(
+        gameData.imageData,
+        `game-${Date.now()}.webp`,
+        PCLOUD_SUBFOLDER,
+      );
+      gameData.pcloudFileId = fileid;
+    }
+    delete gameData.imageData;
+
+    const newGame = new Game(gameData);
+    await newGame.save();
+
+    res.status(200).json({
+      message: "Game created successfully",
+      game: newGame,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal server error" });
+  }
 };
 
 // get all games with the status accepted but dont send back the imageData
@@ -24,7 +47,9 @@ exports.getGamesWithoutImageData = async (req, res) => {
 
 exports.getGames = async (req, res) => {
   try {
-    const games = await Game.find({});
+    // imageData n'est plus renvoyé : les images passent désormais par
+    // /api/games/image/:id, plus besoin d'alourdir la réponse avec le Base64
+    const games = await Game.find({}).select("-imageData");
     res.status(200).json(games);
   } catch (error) {
     console.log(error);
@@ -40,7 +65,12 @@ exports.deleteGameById = async (req, res) => {
         error: "ID does not exist",
       });
     }
-    const deletedGame = await Game.findByIdAndRemove(id);
+
+    if (gameToDelete.pcloudFileId) {
+      await deleteFile(gameToDelete.pcloudFileId);
+    }
+
+    await Game.findByIdAndRemove(id);
     res.json({ message: "Game deleted successfully" });
   } catch (error) {
     console.error(error);
@@ -49,6 +79,7 @@ exports.deleteGameById = async (req, res) => {
     });
   }
 };
+
 exports.updateGameById = async (req, res) => {
   try {
     const id = req.params.id;
@@ -58,8 +89,24 @@ exports.updateGameById = async (req, res) => {
         error: "ID does not exist",
       });
     }
-    // if the game exists, update it
-    const updatedGame = await Game.findByIdAndUpdate(id, req.body, {
+
+    const updateData = { ...req.body };
+
+    // Une nouvelle image a été envoyée : on l'upload et on remplace l'ancienne
+    if (updateData.imageData) {
+      const fileid = await uploadBase64Image(
+        updateData.imageData,
+        `game-${Date.now()}.webp`,
+        PCLOUD_SUBFOLDER,
+      );
+      if (gameToUpdate.pcloudFileId) {
+        await deleteFile(gameToUpdate.pcloudFileId);
+      }
+      updateData.pcloudFileId = fileid;
+    }
+    delete updateData.imageData;
+
+    const updatedGame = await Game.findByIdAndUpdate(id, updateData, {
       new: true,
     });
     res.status(200).json({
@@ -78,9 +125,8 @@ exports.updateGameById = async (req, res) => {
 exports.getGameById = async (req, res) => {
   try {
     const id = req.params.id;
-    // convert the id to a mongoose object
     const _id = new mongoose.Types.ObjectId(id);
-    const gameInfo = await Game.findById(_id);
+    const gameInfo = await Game.findById(_id).select("-imageData");
     if (!gameInfo) {
       return res.status(404).json({
         error: "Game not found",
@@ -102,5 +148,38 @@ exports.getAGameRamdomly = async (req, res) => {
     res.status(200).json(randomGame);
   } catch (error) {
     console.log(error);
+  }
+};
+
+/**
+ * Route-relais pour l'image d'un jeu. URL stable pour le frontend
+ * (/api/games/image/:id), qui redemande un lien pCloud frais à chaque appel
+ * et redirige dessus (les liens pCloud expirent, celui-ci non).
+ * Fallback sur l'ancien Base64 pour les jeux pas encore migrés.
+ */
+exports.getGameImage = async (req, res) => {
+  try {
+    const game = await Game.findById(req.params.id).select(
+      "pcloudFileId imageData",
+    );
+    if (!game) return res.status(404).end();
+
+    if (game.pcloudFileId) {
+      const url = await getFreshImageLink(game.pcloudFileId);
+      return res.redirect(url);
+    }
+
+    if (game.imageData) {
+      const matches = game.imageData.match(/^data:(.+);base64,(.+)$/);
+      if (matches) {
+        res.set("Content-Type", matches[1]);
+        return res.send(Buffer.from(matches[2], "base64"));
+      }
+    }
+
+    return res.status(404).end();
+  } catch (error) {
+    console.error(error);
+    res.status(500).end();
   }
 };

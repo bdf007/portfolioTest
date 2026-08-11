@@ -17,25 +17,6 @@
    12. Page : Project
    13. Page : Ludothèque
    14. Page : Dungeon
-       14.1 Tokens & layout général
-       14.2 En-tête
-       14.3 Boutons partagés
-       14.4 Barre de stats
-       14.5 Sélecteur d'apparence du héros
-       14.6 Sprite animé du héros (plateau)
-       14.7 Fiche de personnage (référence)
-       14.8 Plateau / tuiles
-       14.9 Popup superposé (combat, pièges, inventaire...)
-       14.10 Combat
-       14.11 Déplacement
-       14.12 Messages
-       14.13 Écran de démarrage
-       14.14 Règles
-       14.15 Classement
-       14.16 Écrans de fin / transition
-       14.17 Notes de mise à jour
-       14.18 Mobile
-       14-19 radar pièges
    15. Page : Admin
    16. Page : Admin Dungeon
    ============================================================================ */
@@ -72,8 +53,6 @@ body {
   background-color: darkgray;
 }
 
-/* Le contenu routé grandit pour occuper l'espace disponible,
-   le footer reste toujours juste après lui, jamais superposé. */
 .app-main {
   flex: 1 0 auto;
 }
@@ -111,8 +90,6 @@ body {
   overflow-y: auto;
 }
 
-/* Rhabille les champs de formulaire Bootstrap par défaut (blancs) en thème sombre,
-   sans toucher au JSX de GamePopup */
 .popup-content input,
 .popup-content textarea,
 .popup-content select {
@@ -263,7 +240,7 @@ textarea {
 
 @media (max-width: 991.98px) {
   .app-navbar .navbar-collapse {
-    display: block !important; /* on annule le display:none de Bootstrap pour animer nous-mêmes */
+    display: block !important;
     overflow: hidden;
     max-height: 0;
     opacity: 0;
@@ -273,7 +250,7 @@ textarea {
   }
 
   .app-navbar .navbar-collapse.show {
-    max-height: 400px; /* assez grand pour contenir tous les liens du menu */
+    max-height: 400px;
     opacity: 1;
   }
 }
@@ -386,7 +363,6 @@ textarea {
 
 /* ============================================================================
    5. COMPOSANT PARTAGÉ : PANNEAU CRUD (formulaire admin + liste "log")
-   Utilisé par About / Education / Experience
    ============================================================================ */
 
 .uploader {
@@ -731,7 +707,6 @@ textarea {
   border-color: var(--accent);
 }
 
-/* recolore la flèche par défaut de Bootstrap (SVG sombre) en teal clair */
 .education-page .accordion-button::after {
   filter: invert(72%) sepia(11%) saturate(1147%) hue-rotate(126deg)
     brightness(94%) contrast(89%);
@@ -897,8 +872,6 @@ textarea {
   color: var(--accent);
 }
 
-/* Rhabille les form-control / form-select / textarea Bootstrap par défaut
-   (blancs) en thème sombre, sans toucher au JSX ni à la logique du composant */
 .ludotheque-page input.form-control,
 .ludotheque-page select.form-select,
 .ludotheque-page textarea,
@@ -922,7 +895,6 @@ textarea {
   font-size: 0.85rem;
 }
 
-/* Tableaux : fond sombre, texte clair, les badges gardent leurs couleurs propres */
 .ludotheque-page table {
   background: var(--bg-panel);
   color: var(--text-light);
@@ -946,6 +918,100 @@ textarea {
   object-fit: cover;
 }
 
+/* ---------- Sélecteur de couverture (formulaire d'ajout de jeu) ---------- */
+
+.game-cover-preview {
+  margin-bottom: 0.6rem;
+}
+
+.game-cover-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.game-cover-picker {
+  display: inline-block;
+  background: transparent;
+  color: var(--accent-light);
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  padding: 0.4rem 0.9rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+  margin-bottom: 0.8rem;
+}
+
+.game-cover-picker:hover {
+  background: var(--accent);
+  color: var(--bg-dark);
+}
+
+.game-cover-picker:focus-within,
+.game-cover-input:focus + .game-cover-picker {
+  outline: 2px solid var(--accent-light);
+  outline-offset: 2px;
+}
+
+.game-cover-cropper {
+  position: relative;
+  width: 100%;
+  height: 280px;
+  background: var(--bg-dark);
+  border-radius: 6px;
+  margin-bottom: 0.6rem;
+  overflow: hidden;
+}
+
+.game-cover-aspect-picker {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-bottom: 0.6rem;
+}
+
+.game-cover-aspect-btn {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: var(--text-muted);
+  border-radius: 6px;
+  padding: 0.3rem 0.7rem;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.game-cover-aspect-btn:hover {
+  border-color: var(--accent);
+  color: var(--text-light);
+}
+
+.game-cover-aspect-btn.is-active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--bg-dark);
+  font-weight: 600;
+}
+
+.game-cover-zoom {
+  width: 100%;
+  margin-bottom: 0.8rem;
+  accent-color: var(--accent);
+}
+
+.game-cover-crop-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  margin-bottom: 0.8rem;
+}
+
 @media screen and (max-width: 600px) {
   .ludotheque-thumbnail {
     max-width: 64px;
@@ -953,7 +1019,7 @@ textarea {
   }
 
   .ludotheque-page .table-responsive {
-    overflow-x: hidden; /* on force le tableau à tenir dans l'écran plutôt que scroller */
+    overflow-x: hidden;
   }
 
   .ludotheque-page table {
@@ -981,10 +1047,7 @@ textarea {
    14. PAGE : DUNGEON (préfixe .dungeon-page)
    ============================================================================ */
 
-/* ---------- 14.1 Tokens & layout général ---------- */
-
 :root {
-  /* Tokens additionnels, dérivés de la palette existante */
   --text-gold: #f0c674;
   --bg-stone: #12151c;
   --border-subtle: rgba(255, 255, 255, 0.08);
@@ -1006,9 +1069,6 @@ textarea {
   font-family: "Space Grotesk", sans-serif;
 }
 
-/* Mobile d'abord (empilement naturel dans l'ordre du DOM : entête, barre de
-   stats, plateau, déplacement, messages, inventaire, fiche), desktop ensuite
-   en grille 2 colonnes. */
 .dungeon-board {
   width: 100%;
   max-width: 1100px;
@@ -1050,8 +1110,6 @@ textarea {
   align-items: center;
   gap: 0.6rem;
 }
-
-/* ---------- 14.2 En-tête ---------- */
 
 .dungeon-header {
   display: flex;
@@ -1145,8 +1203,6 @@ textarea {
   margin-bottom: 0.6rem;
 }
 
-/* ---------- 14.3 Boutons partagés ---------- */
-
 .dungeon-page button {
   font-family: "Space Grotesk", sans-serif;
   font-weight: 600;
@@ -1216,8 +1272,6 @@ textarea {
   vertical-align: middle;
 }
 
-/* ---------- 14.4 Barre de stats (au-dessus du plateau) ---------- */
-
 .hero-stats-bar {
   display: flex;
   align-items: center;
@@ -1249,8 +1303,6 @@ textarea {
   object-fit: contain;
   image-rendering: pixelated;
 }
-
-/* ---------- 14.5 Sélecteur d'apparence du héros ---------- */
 
 .sprite-picker {
   margin-bottom: 0.8rem;
@@ -1307,12 +1359,10 @@ textarea {
   filter: grayscale(1);
 }
 
-/* ---------- 14.6 Sprite animé du héros (plateau) ---------- */
-
 .hero-sprite-overlay {
   position: absolute;
   transform: translate(-50%, -50%);
-  width: 8.5%; /* ~60% d'une case sur 8 (100% / 8 × 0.6) */
+  width: 8.5%;
   aspect-ratio: 26 / 36;
   height: auto;
   z-index: 3;
@@ -1359,7 +1409,6 @@ textarea {
   animation: hero-walk-cycle 0.45s steps(1) infinite;
 }
 
-/* Petite vignette du sprite héros dans le classement */
 .leaderboard-player-cell {
   display: flex;
   align-items: center;
@@ -1372,8 +1421,6 @@ textarea {
   image-rendering: pixelated;
   border-radius: 4px;
 }
-
-/* ---------- 14.7 Fiche de personnage (référence : difficulté, or, clé, création) ---------- */
 
 .hero-reference-panel {
   display: flex;
@@ -1417,8 +1464,6 @@ textarea {
   flex-wrap: wrap;
   margin-top: 0.5rem;
 }
-
-/* ---------- 14.8 Plateau / tuiles ---------- */
 
 .board-wrapper {
   position: relative;
@@ -1484,8 +1529,6 @@ textarea {
   z-index: 2;
 }
 
-/* Monstres/coffres : légèrement plus petits que la valeur par défaut (80%),
-   ces sprites-là étant dessinés à ras bord sans marge interne. */
 .monster-image,
 .rat-image,
 .boss-image,
@@ -1516,10 +1559,6 @@ textarea {
   z-index: 4;
   box-shadow: 0 0 8px rgba(240, 198, 116, 0.7);
 }
-
-/* ---------- 14.9 Popup superposé (combat, pièges, ennemis, coffre, clé,
-   magasin, mort, inventaire) — sur mobile ET desktop, toujours par-dessus
-   le plateau ---------- */
 
 .action-overlay-backdrop {
   position: absolute;
@@ -1557,8 +1596,6 @@ textarea {
   color: var(--text-muted);
 }
 
-/* Contenu des panneaux affichés DANS le popup — pas de fond/bordure propre,
-   le popup fournit déjà le cadre visuel */
 .combat-choice,
 .combat-panel,
 .trap-choice-popup,
@@ -1590,8 +1627,6 @@ textarea {
   color: var(--text-lightRed);
 }
 
-/* ---------- 14.10 Combat ---------- */
-
 .mandatory-warning {
   background: rgba(255, 95, 86, 0.12);
   border: 1px solid var(--text-lightRed);
@@ -1609,7 +1644,6 @@ textarea {
   margin: 0.4rem 0;
 }
 
-/* Journal de combat : un bloc par round, le plus récent en premier */
 .combat-panel ul.combat-log {
   list-style: none;
   margin: 0.75rem 0 0;
@@ -1667,8 +1701,6 @@ textarea {
   font-size: 0.85rem;
 }
 
-/* ---------- 14.11 Déplacement (une seule ligne d'icônes) ---------- */
-
 .movement-info-compact {
   display: flex;
   align-items: center;
@@ -1717,8 +1749,6 @@ textarea {
   margin-right: 0.2rem;
 }
 
-/* ---------- 14.12 Messages ---------- */
-
 .tile-message {
   font-style: italic;
   color: var(--accent-light);
@@ -1733,8 +1763,6 @@ textarea {
   text-align: center;
   margin: 0;
 }
-
-/* ---------- 14.13 Écran de démarrage ---------- */
 
 .start-screen-top-links {
   display: flex;
@@ -1798,8 +1826,6 @@ textarea {
   align-self: flex-start;
 }
 
-/* ---------- 14.14 Règles ---------- */
-
 .rules-screen {
   max-width: 640px;
   margin: 0 auto;
@@ -1849,8 +1875,6 @@ textarea {
   color: var(--text-gold);
 }
 
-/* ---------- 14.15 Classement ---------- */
-
 .leaderboard-screen {
   max-width: 640px;
   width: 100%;
@@ -1886,7 +1910,7 @@ textarea {
 
 .leaderboard-table {
   width: 100%;
-  min-width: 480px; /* force le scroll interne plutôt que d'écraser les colonnes */
+  min-width: 480px;
   border-collapse: collapse;
   margin-top: 1rem;
   font-family: "JetBrains Mono", monospace;
@@ -1915,7 +1939,6 @@ textarea {
   max-width: 180px;
 }
 
-/* Table = desktop, cartes = mobile — un seul des deux visible à la fois */
 .leaderboard-cards {
   display: none;
 }
@@ -1974,8 +1997,6 @@ textarea {
   }
 }
 
-/* ---------- 14.16 Écrans de fin / transition ---------- */
-
 .victory-screen,
 .game-over-screen,
 .floor-recap-screen {
@@ -2024,8 +2045,6 @@ textarea {
   flex-wrap: wrap;
 }
 
-/* ---------- 14.17 Notes de mise à jour ---------- */
-
 .patch-version-subtitle {
   color: var(--text-gold);
   font-style: italic;
@@ -2048,8 +2067,6 @@ textarea {
   line-height: 1.6;
 }
 
-/* ---------- 14.18 Mobile ---------- */
-
 @media (max-width: 700px) {
   .dungeon-page {
     padding: 2rem 1rem 3rem;
@@ -2061,8 +2078,6 @@ textarea {
     font-size: 1.05rem;
   }
 }
-
-/* ------------ 14.19 radar pièges --------------- */
 
 @keyframes trap-flash-pulse {
   0% {
@@ -2156,7 +2171,7 @@ td {
 }
 
 /* ============================================================================
-   15. PAGE : ADMIN dungeon (préfixe .admin-games)
+   16. PAGE : ADMIN DUNGEON (préfixe .admin-games)
    ============================================================================ */
 
 .admin-games-table-wrapper {

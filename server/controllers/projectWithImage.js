@@ -1,5 +1,12 @@
 const Project = require("../models/projectWithimage");
 const mongoose = require("mongoose");
+const {
+  uploadBase64Image,
+  getFreshImageLink,
+  deleteFile,
+} = require("../services/pcloud");
+
+const PCLOUD_SUBFOLDER = "projets";
 
 exports.getProjectWithImage = async (req, res) => {
   try {
@@ -11,7 +18,6 @@ exports.getProjectWithImage = async (req, res) => {
       linkToProject: project.linkToProject,
       description: project.description,
       orderList: project.orderList,
-      imageData: project.imageData,
     }));
     res.json(mappedProjects);
   } catch (error) {
@@ -31,13 +37,22 @@ exports.postProjectWithImage = async (req, res) => {
       imageData,
     } = req.body;
 
+    let pcloudFileId;
+    if (imageData) {
+      pcloudFileId = await uploadBase64Image(
+        imageData,
+        `project-${Date.now()}.webp`,
+        PCLOUD_SUBFOLDER,
+      );
+    }
+
     const project = new Project({
       title,
       textProject,
       linkToProject,
       description,
       orderList,
-      imageData,
+      pcloudFileId,
     });
 
     await project.save();
@@ -52,7 +67,7 @@ exports.postProjectWithImage = async (req, res) => {
 exports.getProjectWithImageById = async (req, res) => {
   try {
     const id = req.params.id;
-    const project = await Project.findById(id);
+    const project = await Project.findById(id).select("-imageData");
     res.json(project);
   } catch (error) {
     console.error("Error retrieving project:", error);
@@ -64,14 +79,12 @@ exports.updateProjectWithImageById = async (req, res) => {
   try {
     const id = req.params.id;
 
-    // Check if the provided id is a valid ObjectId format
     if (!mongoose.isValidObjectId(id)) {
       return res.status(400).json({
         error: "Invalid ID format",
       });
     }
 
-    // Check if the project ID exists
     const project = await Project.findById(id);
     if (!project) {
       return res.status(404).json({
@@ -79,12 +92,27 @@ exports.updateProjectWithImageById = async (req, res) => {
       });
     }
 
-    // If the project exists, update it
+    const updateData = { ...req.body };
+
+    // Une nouvelle image a été envoyée : on l'upload et on remplace l'ancienne
+    if (updateData.imageData) {
+      const fileid = await uploadBase64Image(
+        updateData.imageData,
+        `project-${Date.now()}.webp`,
+        PCLOUD_SUBFOLDER,
+      );
+      if (project.pcloudFileId) {
+        await deleteFile(project.pcloudFileId);
+      }
+      updateData.pcloudFileId = fileid;
+    }
+    delete updateData.imageData;
+
     const updatedProject = await Project.findByIdAndUpdate(
       id,
-      { $set: req.body },
-      { new: true }
-    );
+      { $set: updateData },
+      { new: true },
+    ).select("-imageData");
 
     res.json(updatedProject);
   } catch (error) {
@@ -98,14 +126,52 @@ exports.updateProjectWithImageById = async (req, res) => {
 exports.deleteProjectWithImageById = async (req, res) => {
   try {
     const id = req.params.id;
-    const deleteProject = await Project.findByIdAndDelete(id);
+    const projectToDelete = await Project.findById(id);
 
-    if (!deleteProject) {
+    if (!projectToDelete) {
       return res.status(404).json({ error: "No project found" });
     }
+
+    if (projectToDelete.pcloudFileId) {
+      await deleteFile(projectToDelete.pcloudFileId);
+    }
+
+    await Project.findByIdAndDelete(id);
 
     res.json({ message: "Project deleted" });
   } catch (err) {
     console.log(err);
+  }
+};
+
+/**
+ * Route-relais pour l'image d'un projet. URL stable pour le frontend,
+ * redemande un lien pCloud frais à chaque appel. Fallback sur l'ancien
+ * Base64 pour les entrées pas encore migrées.
+ */
+exports.getProjectImage = async (req, res) => {
+  try {
+    const project = await Project.findById(req.params.id).select(
+      "pcloudFileId imageData",
+    );
+    if (!project) return res.status(404).end();
+
+    if (project.pcloudFileId) {
+      const url = await getFreshImageLink(project.pcloudFileId);
+      return res.redirect(url);
+    }
+
+    if (project.imageData) {
+      const matches = project.imageData.match(/^data:(.+);base64,(.+)$/);
+      if (matches) {
+        res.set("Content-Type", matches[1]);
+        return res.send(Buffer.from(matches[2], "base64"));
+      }
+    }
+
+    return res.status(404).end();
+  } catch (error) {
+    console.error(error);
+    res.status(500).end();
   }
 };

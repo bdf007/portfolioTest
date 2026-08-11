@@ -16,8 +16,12 @@ const projectSchema = new mongoose.Schema({
     trim: true,
   },
   imageData: {
-    type: String, // Store the image data as a string
-    required: true,
+    // Legacy : Base64, uniquement pour les entrées pas encore migrées vers pCloud
+    type: String,
+  },
+  pcloudFileId: {
+    // Nouveau : identifiant du fichier stocké sur pCloud
+    type: Number,
   },
   description: String,
   uploadDate: {

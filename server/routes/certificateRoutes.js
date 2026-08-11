@@ -8,6 +8,7 @@ const {
   getCertificateById,
   updateCertificateById,
   deleteCertificateById,
+  getCertificateImage,
 } = require("../controllers/certificate");
 const { adminAuthMiddleware } = require("../middlewares/auth");
 
@@ -33,5 +34,8 @@ router.delete(
   adminAuthMiddleware,
   deleteCertificateById,
 );
+
+// GET route for the image proxy (public, no auth needed)
+router.get("/image/:id", getCertificateImage);
 
 module.exports = router;

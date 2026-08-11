@@ -14,6 +14,9 @@ const CertificateUploader = () => {
   const [editingcertificate, setEditingcertificate] = useState(null);
   const { user } = useContext(UserContext);
 
+  const getCertificateImageUrl = (id) =>
+    `${process.env.REACT_APP_API_URL}/api/certificate/image/${id}`;
+
   const fetchcertificates = async () => {
     try {
       const response = await axios.get(
@@ -75,7 +78,7 @@ const CertificateUploader = () => {
           title,
           link,
           description,
-          imageData: selectedFile ? base64data : editingcertificate.imageData,
+          imageData: selectedFile ? base64data : undefined,
         };
 
         await axios.put(
@@ -84,24 +87,7 @@ const CertificateUploader = () => {
         );
 
         toast.success("Certificate updated successfully");
-        setListOfcertificates((prevCertificates) => {
-          const updatedCertificates = prevCertificates.map((certificate) => {
-            if (certificate._id === editingcertificate._id) {
-              return {
-                ...certificate,
-                title,
-                link,
-                description,
-                imageData: selectedFile
-                  ? base64data
-                  : editingcertificate.imageData,
-              };
-            }
-            return certificate;
-          });
-          return updatedCertificates;
-        });
-
+        fetchcertificates();
         setEditingcertificate(null);
       } else {
         const certificateData = {
@@ -147,7 +133,9 @@ const CertificateUploader = () => {
     setTitle(certificate.title);
     setLink(certificate.link);
     setDescription(certificate.description);
-    setPreviewUrl(certificate.imageData);
+    // imageData n'existe plus dans la réponse de l'API : on prévisualise
+    // via la route-relais plutôt que via un champ qui n'arrive plus.
+    setPreviewUrl(getCertificateImageUrl(certificate._id));
   };
 
   const resetForm = () => {
@@ -175,7 +163,7 @@ const CertificateUploader = () => {
               className="field-file"
               onChange={handleFileInputChange}
             />
-            {selectedFile && (
+            {(selectedFile || previewUrl) && (
               <div className="form-group">
                 <img src={previewUrl} alt="Preview" className="field-preview" />
               </div>
@@ -232,15 +220,21 @@ const CertificateUploader = () => {
               <a href={certificate.link} target="_blank" rel="noreferrer">
                 <img
                   className="media-card-img"
-                  src={certificate.imageData}
+                  src={getCertificateImageUrl(certificate._id)}
                   alt={certificate.description || ""}
+                  onError={(e) => {
+                    e.target.style.display = "none";
+                  }}
                 />
               </a>
             ) : (
               <img
                 className="media-card-img"
-                src={certificate.imageData}
+                src={getCertificateImageUrl(certificate._id)}
                 alt={certificate.description || ""}
+                onError={(e) => {
+                  e.target.style.display = "none";
+                }}
               />
             )}
             <h5 className="media-card-title">{certificate.title || ""}</h5>

@@ -8,6 +8,7 @@ const {
   getProjectWithImageById,
   updateProjectWithImageById,
   deleteProjectWithImageById,
+  getProjectImage,
 } = require("../controllers/projectWithImage");
 
 // API routes
@@ -34,5 +35,8 @@ router.delete(
   adminAuthMiddleware,
   deleteProjectWithImageById,
 );
+
+// GET route for the image proxy (public, no auth needed)
+router.get("/image/:id", getProjectImage);
 
 module.exports = router;

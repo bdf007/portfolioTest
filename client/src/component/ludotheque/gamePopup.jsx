@@ -4,6 +4,7 @@ import { toast } from "react-toastify";
 
 const GamePopup = ({ game, onClose, user, onUpdate }) => {
   const [editing, setEditing] = useState(false);
+  const [imageError, setImageError] = useState(false);
   const [updatedTitle, setUpdatedTitle] = useState(game.title);
   const [updatedGenre, setUpdatedGenre] = useState(game.genre);
   const [updatedDescription, setUpdatedDescription] = useState(
@@ -15,6 +16,10 @@ const GamePopup = ({ game, onClose, user, onUpdate }) => {
   const [updatedMaxPlayer, setUpdatedMaxPlayer] = useState(game.maxPlayer);
   const [updatedAge, setUpdatedAge] = useState(game.minAge);
   const [updatedDuration, setUpdatedDuration] = useState(game.duration);
+
+  // URL stable côté front : le backend redemande un lien frais à pCloud
+  // à chaque appel, donc pas besoin de gérer l'expiration ici.
+  const imageUrl = `${process.env.REACT_APP_API_URL}/api/games/image/${game._id}`;
 
   const updateGame = async () => {
     try {
@@ -65,11 +70,12 @@ const GamePopup = ({ game, onClose, user, onUpdate }) => {
               />
             </div>
             <div className="form-group d-flex justify-content-between">
-              {game.imageData && (
+              {!imageError && (
                 <img
-                  src={game.imageData}
+                  src={imageUrl}
                   alt={game.title}
                   className="img-fluid rounded mx-auto d-block"
+                  onError={() => setImageError(true)}
                 />
               )}
             </div>
@@ -200,11 +206,12 @@ const GamePopup = ({ game, onClose, user, onUpdate }) => {
         ) : (
           <div>
             <h2 className="text-center">{game.title}</h2>
-            {game.imageData && (
+            {!imageError && (
               <img
-                src={game.imageData}
+                src={imageUrl}
                 alt={game.title}
                 className="img-fluid rounded mx-auto d-block"
+                onError={() => setImageError(true)}
               />
             )}
             <p>

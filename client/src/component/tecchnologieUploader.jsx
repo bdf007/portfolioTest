@@ -15,6 +15,9 @@ const TechnologieUploader = () => {
   const [editingtechnologie, setEditingtechnologie] = useState(null);
   const { user } = useContext(UserContext);
 
+  const getTechnologieImageUrl = (id) =>
+    `${process.env.REACT_APP_API_URL}/api/technologie/image/${id}`;
+
   const fetchtechnologies = async () => {
     try {
       const response = await axios.get(
@@ -91,23 +94,7 @@ const TechnologieUploader = () => {
         );
 
         toast.success("Technologie updated successfully");
-        setListOftechnologies((prevTechnologies) => {
-          const updatedTechnologies = prevTechnologies.map((technologie) => {
-            if (technologie._id === editingtechnologie._id) {
-              return {
-                ...technologie,
-                title,
-                link,
-                description,
-                orderList,
-                imageData: base64data || editingtechnologie.imageData,
-              };
-            }
-            return technologie;
-          });
-          return updatedTechnologies;
-        });
-
+        fetchtechnologies();
         setEditingtechnologie(null);
       } else {
         const technologieData = {
@@ -155,7 +142,9 @@ const TechnologieUploader = () => {
     setLink(technologie.link);
     setDescription(technologie.description);
     setOrderList(technologie.orderList);
-    setPreviewUrl(technologie.imageData);
+    // imageData n'existe plus dans la réponse de l'API : on prévisualise
+    // via la route-relais plutôt que via un champ qui n'arrive plus.
+    setPreviewUrl(getTechnologieImageUrl(technologie._id));
     const fileInput = document.getElementById("file");
     if (fileInput) {
       fileInput.value = "";
@@ -271,8 +260,11 @@ const TechnologieUploader = () => {
           <div className="media-card" key={technologie._id}>
             <img
               className="media-card-img"
-              src={technologie.imageData}
+              src={getTechnologieImageUrl(technologie._id)}
               alt={technologie.description || ""}
+              onError={(e) => {
+                e.target.style.display = "none";
+              }}
             />
             <h5 className="media-card-title">{technologie.title || ""}</h5>
 

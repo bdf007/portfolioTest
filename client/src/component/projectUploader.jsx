@@ -16,6 +16,9 @@ const ProjectUploader = () => {
   const { user } = useContext(UserContext);
   const [editingProject, setEditingProject] = useState(null);
 
+  const getProjectImageUrl = (id) =>
+    `${process.env.REACT_APP_API_URL}/api/project/image/${id}`;
+
   const fetchProjects = async () => {
     try {
       const response = await axios.get(
@@ -84,7 +87,7 @@ const ProjectUploader = () => {
           linkToProject,
           description,
           orderList,
-          imageData: base64data || null,
+          imageData: base64data || undefined,
         };
 
         await axios.put(
@@ -93,24 +96,7 @@ const ProjectUploader = () => {
         );
 
         toast.success("Project updated successfully");
-        setListOfProjects((prevProjects) => {
-          const updatedProjects = prevProjects.map((project) => {
-            if (project._id === editingProject._id) {
-              return {
-                ...project,
-                title,
-                textProject,
-                linkToProject,
-                description,
-                orderList,
-                imageData: base64data || null,
-              };
-            }
-            return project;
-          });
-          return updatedProjects;
-        });
-
+        fetchProjects();
         setEditingProject(null);
       } else {
         const newProjectData = {
@@ -161,7 +147,9 @@ const ProjectUploader = () => {
     setDescription(project.description);
     setOrderList(project.orderList);
     setEditingProject(project);
-    setPreviewUrl(project.imageData);
+    // imageData n'existe plus dans la réponse de l'API : on prévisualise
+    // via la route-relais plutôt que via un champ qui n'arrive plus.
+    setPreviewUrl(getProjectImageUrl(project._id));
     const fileInput = document.getElementById("file");
     if (fileInput) {
       fileInput.value = "";
@@ -293,18 +281,19 @@ const ProjectUploader = () => {
           {listOfProjects.map((project) => {
             const imgSrc =
               editingProject && editingProject._id === project._id
-                ? previewUrl || project.imageData
-                : project.imageData;
+                ? previewUrl || getProjectImageUrl(project._id)
+                : getProjectImageUrl(project._id);
 
             return (
               <div className="entry" key={project._id}>
-                {imgSrc && (
-                  <img
-                    className="entry-image"
-                    src={imgSrc}
-                    alt={project.description || ""}
-                  />
-                )}
+                <img
+                  className="entry-image"
+                  src={imgSrc}
+                  alt={project.description || ""}
+                  onError={(e) => {
+                    e.target.style.display = "none";
+                  }}
+                />
                 <h3 className="entry-title">
                   #{" "}
                   {project.linkToProject ? (
