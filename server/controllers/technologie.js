@@ -5,7 +5,7 @@ const {
   uploadBase64Image,
   getFreshImageLink,
   deleteFile,
-} = require("../services/Pcloud");
+} = require("../services/pcloud");
 
 const PCLOUD_SUBFOLDER = "technologies";
 

@@ -15,7 +15,7 @@
 require("dotenv").config();
 const mongoose = require("mongoose");
 const connection = require("../config/db");
-const { uploadBase64Image } = require("../services/Pcloud");
+const { uploadBase64Image } = require("../services/pcloud");
 
 const Game = require("../models/game");
 const Technologie = require("../models/technologies");
