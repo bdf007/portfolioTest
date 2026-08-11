@@ -2,7 +2,7 @@ const Project = require("../models/projectWithimage");
 const mongoose = require("mongoose");
 const {
   uploadBase64Image,
-  getFreshImageLink,
+  getImageStream,
   deleteFile,
 } = require("../services/pcloud");
 
@@ -157,8 +157,12 @@ exports.getProjectImage = async (req, res) => {
     if (!project) return res.status(404).end();
 
     if (project.pcloudFileId) {
-      const url = await getFreshImageLink(project.pcloudFileId);
-      return res.redirect(url);
+      const { contentType, stream } = await getImageStream(
+        project.pcloudFileId,
+      );
+      res.set("Content-Type", contentType);
+      res.set("Cache-Control", "no-store");
+      return stream.pipe(res);
     }
 
     if (project.imageData) {

@@ -2,7 +2,7 @@ const Game = require("../models/game");
 const mongoose = require("mongoose");
 const {
   uploadBase64Image,
-  getFreshImageLink,
+  getImageStream,
   deleteFile,
 } = require("../services/pcloud");
 
@@ -165,8 +165,10 @@ exports.getGameImage = async (req, res) => {
     if (!game) return res.status(404).end();
 
     if (game.pcloudFileId) {
-      const url = await getFreshImageLink(game.pcloudFileId);
-      return res.redirect(url);
+      const { contentType, stream } = await getImageStream(game.pcloudFileId);
+      res.set("Content-Type", contentType);
+      res.set("Cache-Control", "no-store");
+      return stream.pipe(res);
     }
 
     if (game.imageData) {

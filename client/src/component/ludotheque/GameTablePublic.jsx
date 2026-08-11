@@ -74,6 +74,17 @@ const GameTablePublic = ({ games, totalCount, show, onOpenPopup }) => {
                   style={{ cursor: "pointer" }}
                 >
                   <h6 className="text-decoration-underline">{game.title}</h6>
+                  <p>
+                    <img
+                      loading="lazy"
+                      src={`${process.env.REACT_APP_API_URL}/api/games/image/${game._id}`}
+                      alt={game.title}
+                      className="img-thumbnail rounded ludotheque-thumbnail"
+                      onError={(e) => {
+                        e.target.style.display = "none";
+                      }}
+                    />
+                  </p>
                   <p className="fst-italic">
                     {game.editor ? `par ${game.editor}` : ""}
                   </p>

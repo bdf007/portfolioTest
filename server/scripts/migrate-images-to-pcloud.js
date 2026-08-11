@@ -44,10 +44,12 @@ const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 async function migrateCollection({ model, subfolder, prefix, label }) {
   console.log(`\n=== ${label} ===`);
 
-  const toMigrate = await model.find({
-    imageData: { $exists: true, $ne: null },
-    $or: [{ pcloudFileId: { $exists: false } }, { pcloudFileId: null }],
-  });
+  const toMigrate = await model
+    .find({
+      imageData: { $exists: true, $ne: null },
+      $or: [{ pcloudFileId: { $exists: false } }, { pcloudFileId: null }],
+    })
+    .limit(1);
 
   if (toMigrate.length === 0) {
     console.log("Rien à migrer.");

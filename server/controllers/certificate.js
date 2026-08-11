@@ -3,7 +3,7 @@ const mongoose = require("mongoose");
 require("dotenv").config();
 const {
   uploadBase64Image,
-  getFreshImageLink,
+  getImageStream,
   deleteFile,
 } = require("../services/pcloud");
 
@@ -143,8 +143,12 @@ exports.getCertificateImage = async (req, res) => {
     if (!certificate) return res.status(404).end();
 
     if (certificate.pcloudFileId) {
-      const url = await getFreshImageLink(certificate.pcloudFileId);
-      return res.redirect(url);
+      const { contentType, stream } = await getImageStream(
+        certificate.pcloudFileId,
+      );
+      res.set("Content-Type", contentType);
+      res.set("Cache-Control", "no-store");
+      return stream.pipe(res);
     }
 
     if (certificate.imageData) {
