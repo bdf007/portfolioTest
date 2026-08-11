@@ -313,17 +313,33 @@ const GameForm = ({
               </div>
             )}
 
-            <input
-              type="file"
-              id="file"
-              accept="image/*"
-              capture="environment"
-              className="game-cover-input"
-              onChange={handleRawFilePick}
-            />
-            <label htmlFor="file" className="game-cover-picker">
-              {selectedFile ? "Changer l'image" : "Choisir / prendre une photo"}
-            </label>
+            <div className="game-cover-picker-group">
+              <div className="game-cover-picker-item">
+                <input
+                  type="file"
+                  id="file"
+                  accept="image/*"
+                  className="game-cover-input"
+                  onChange={handleRawFilePick}
+                />
+                <label htmlFor="file" className="game-cover-picker">
+                  Galerie
+                </label>
+              </div>
+              <div className="game-cover-picker-item">
+                <input
+                  type="file"
+                  id="file-camera"
+                  accept="image/*"
+                  capture="environment"
+                  className="game-cover-input"
+                  onChange={handleRawFilePick}
+                />
+                <label htmlFor="file-camera" className="game-cover-picker">
+                  Appareil photo
+                </label>
+              </div>
+            </div>
           </>
         )}
       </div>

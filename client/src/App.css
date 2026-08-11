@@ -896,13 +896,13 @@ textarea {
 }
 
 .ludotheque-page table {
-  background: var(--bg-panel);
-  color: var(--text-light);
-}
-
-.ludotheque-page .table-striped > tbody > tr:nth-of-type(odd) > * {
-  background: rgba(255, 255, 255, 0.03);
-  color: var(--text-light);
+  --bs-table-bg: var(--bg-panel);
+  --bs-table-color: var(--text-light);
+  --bs-table-striped-bg: var(--bg-dark);
+  --bs-table-striped-color: var(--text-light);
+  --bs-table-border-color: rgba(255, 255, 255, 0.08);
+  --bs-table-hover-bg: rgba(255, 255, 255, 0.05);
+  --bs-table-hover-color: var(--text-light);
 }
 
 .ludotheque-page th,
@@ -951,6 +951,21 @@ textarea {
 .game-cover-picker:hover {
   background: var(--accent);
   color: var(--bg-dark);
+}
+
+.game-cover-picker-group {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.8rem;
+}
+
+.game-cover-picker-item {
+  display: flex;
+}
+
+.game-cover-picker-group .game-cover-picker {
+  margin-bottom: 0;
 }
 
 .game-cover-picker:focus-within,
@@ -1040,6 +1055,9 @@ textarea {
     font-size: 0.65rem;
     padding: 0.25em 0.4em;
     white-space: normal;
+    max-width: 100%;
+    word-break: break-word;
+    display: inline-block;
   }
 }
 
