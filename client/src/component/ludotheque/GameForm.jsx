@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import Cropper from "react-easy-crop";
+import { toast } from "react-toastify";
 
 // ---------- Utilitaire de rognage (canvas) ----------
 
@@ -8,7 +9,6 @@ const createImage = (url) =>
     const image = new Image();
     image.addEventListener("load", () => resolve(image));
     image.addEventListener("error", (error) => reject(error));
-    image.setAttribute("crossOrigin", "anonymous");
     image.src = url;
   });
 
@@ -132,10 +132,10 @@ const GameForm = ({
         rawFile.name.replace(/\.[^/.]+$/, "") + ".jpg",
       );
       onFileSelected(croppedFile);
+      cancelCropping();
     } catch (err) {
       console.error(err);
-    } finally {
-      cancelCropping();
+      toast.error("Le rognage a échoué, réessaie.");
     }
   };
 
