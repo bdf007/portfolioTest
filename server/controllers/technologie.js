@@ -3,7 +3,7 @@ require("dotenv").config();
 const mongoose = require("mongoose");
 const {
   uploadBase64Image,
-  getFreshImageLink,
+  getImageStream,
   deleteFile,
 } = require("../services/pcloud");
 
@@ -146,8 +146,12 @@ exports.getTechnologieImage = async (req, res) => {
     if (!technologie) return res.status(404).end();
 
     if (technologie.pcloudFileId) {
-      const url = await getFreshImageLink(technologie.pcloudFileId);
-      return res.redirect(url);
+      const { contentType, stream } = await getImageStream(
+        technologie.pcloudFileId,
+      );
+      res.set("Content-Type", contentType);
+      res.set("Cache-Control", "no-store");
+      return stream.pipe(res);
     }
 
     if (technologie.imageData) {

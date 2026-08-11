@@ -25,7 +25,6 @@ function getAuthToken() {
  * Upload une image encodée en Base64 (data URI) vers pCloud, dans le
  * sous-dossier `subfolder` indiqué (ex: "ludotheque" -> /PortfolioSite/ludotheque).
  * Retourne le fileid pCloud du fichier créé.
- *
  */
 async function uploadBase64Image(base64String, filename, subfolder) {
   const matches = base64String.match(/^data:(.+);base64,(.+)$/);
@@ -77,6 +76,21 @@ async function getFreshImageLink(fileid) {
   return `https://${data.hosts[0]}${data.path}`;
 }
 
+/**
+ * Récupère l'image directement depuis pCloud, côté serveur, et renvoie
+ * le flux + le type de contenu — pour la retransmettre nous-mêmes au
+ * navigateur plutôt que de le rediriger vers pCloud (plus robuste,
+ * fonctionne uniformément sur tous les navigateurs/appareils).
+ */
+async function getImageStream(fileid) {
+  const url = await getFreshImageLink(fileid);
+  const response = await axios.get(url, { responseType: "stream" });
+  return {
+    contentType: response.headers["content-type"] || "image/webp",
+    stream: response.data,
+  };
+}
+
 async function deleteFile(fileid) {
   if (!fileid) return;
   const access_token = getAuthToken();
@@ -89,5 +103,6 @@ module.exports = {
   getAuthToken,
   uploadBase64Image,
   getFreshImageLink,
+  getImageStream,
   deleteFile,
 };
