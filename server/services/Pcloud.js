@@ -25,6 +25,7 @@ function getAuthToken() {
  * Upload une image encodée en Base64 (data URI) vers pCloud, dans le
  * sous-dossier `subfolder` indiqué (ex: "ludotheque" -> /PortfolioSite/ludotheque).
  * Retourne le fileid pCloud du fichier créé.
+ *
  */
 async function uploadBase64Image(base64String, filename, subfolder) {
   const matches = base64String.match(/^data:(.+);base64,(.+)$/);
