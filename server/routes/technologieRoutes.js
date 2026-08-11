@@ -8,6 +8,7 @@ const {
   getTechnologieById,
   updateTechnologieById,
   deleteTechnologieById,
+  getTechnologieImage,
 } = require("../controllers/technologie");
 
 const { adminAuthMiddleware } = require("../middlewares/auth");
@@ -34,5 +35,8 @@ router.delete(
   adminAuthMiddleware,
   deleteTechnologieById,
 );
+
+// GET route for the image proxy (public, no auth needed)
+router.get("/image/:id", getTechnologieImage);
 
 module.exports = router;

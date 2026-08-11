@@ -34,8 +34,13 @@ const gameSchema = new mongoose.Schema({
     type: Number,
   },
   imageData: {
+    // Legacy : Base64, uniquement pour les jeux pas encore migrés vers pCloud
     type: String,
     trim: true,
+  },
+  pcloudFileId: {
+    // Nouveau : identifiant du fichier stocké sur pCloud
+    type: Number,
   },
   addBy: {
     type: mongoose.Schema.Types.ObjectId,

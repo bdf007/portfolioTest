@@ -2,7 +2,11 @@ import React, { useState, useContext, useEffect } from "react";
 import axios from "axios";
 import { UserContext } from "../context/UserContext";
 import { toast } from "react-toastify";
-import GamePopup from "../component/gamePopup";
+import GamePopup from "../component/ludotheque/gamePopup";
+import GameForm from "../component/ludotheque/GameForm";
+import GameSearchPanel from "../component/ludotheque/GameSearchPanel";
+import GameTablePublic from "../component/ludotheque/GameTablePublic";
+import GameTableAdmin from "../component/ludotheque/GameTableAdmin";
 import "../App.css";
 
 //design
@@ -23,7 +27,6 @@ const Ludotheque = () => {
   const [minAge, setMinAge] = useState(0);
   const [duration, setDuration] = useState(0);
   const [selectedFile, setSelectedFile] = useState(null);
-  const [status, setStatus] = useState("in pending"); // "in pending" | "accepted" | "rejected"
   const [listOfGames, setListOfGames] = useState([]);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [selectedGame, setSelectedGame] = useState(null);
@@ -67,10 +70,10 @@ const Ludotheque = () => {
 
   const [showScrollButton, setShowScrollButton] = useState(false);
 
+  const isAdmin = user && user.role === "admin";
+
   const getListOfGames = async () => {
     try {
-      const isAdmin = user?.role === "admin";
-
       const endpoint = isAdmin ? "/api/games" : "/api/games/noimage";
 
       const response = await axios.get(
@@ -91,11 +94,11 @@ const Ludotheque = () => {
       toast.error("Erreur lors de la récupération des jeux");
     }
   };
-  const openGamePopup = async (gameId) => {
+
+  const openGamePopup = async (game) => {
     try {
-      gameId = gameId._id;
       const res = await axios.get(
-        `${process.env.REACT_APP_API_URL}/api/game/${gameId}`,
+        `${process.env.REACT_APP_API_URL}/api/game/${game._id}`,
       );
       setSelectedGame(res.data);
       setIsPopupOpen(true);
@@ -108,6 +111,7 @@ const Ludotheque = () => {
     setSelectedGame(null);
     setIsPopupOpen(false);
   };
+
   const handleRandomGame = async () => {
     try {
       const response = await axios.get(
@@ -122,49 +126,8 @@ const Ludotheque = () => {
     }
   };
 
-  const handleTitleChange = (e) => {
-    setTitle(e.target.value);
-  };
-
-  const handleGenreChange = (e) => {
-    setGenre(e.target.value);
-  };
-
-  const handleDescriptionChange = (e) => {
-    setDescription(e.target.value);
-  };
-
-  const handleDateChange = (e) => {
-    setDate(e.target.value);
-  };
-
-  const handleEditorChange = (e) => {
-    setEditor(e.target.value);
-  };
-
-  const handleMinPlayerChange = (e) => {
-    setMinPlayer(e.target.value);
-  };
-
-  const handleMaxPlayerChange = (e) => {
-    setMaxPlayer(e.target.value);
-  };
-
-  const handleMinAgeChange = (e) => {
-    setMinAge(e.target.value);
-  };
-
-  const handleDurationChange = (e) => {
-    setDuration(e.target.value);
-  };
-
-  const handleFileInputChange = (e) => {
-    const file = e.target.files[0];
+  const handleFileSelected = (file) => {
     setSelectedFile(file);
-  };
-
-  const handleStatusChange = (e) => {
-    setStatus(e.target.value);
   };
 
   const handleUploadGame = async (e) => {
@@ -223,7 +186,7 @@ const Ludotheque = () => {
         duration,
         imageData: base64WebpData,
         addBy: user._id,
-        status,
+        status: "in pending",
       };
 
       const response = await axios.post(
@@ -240,18 +203,14 @@ const Ludotheque = () => {
     }
   };
 
-  const updateGameStatus = async (id) => {
+  // Reçoit maintenant le statut choisi directement (plus de state partagé)
+  const updateGameStatus = async (id, newStatus) => {
     try {
-      const gameStatus = {
-        status,
-      };
-      await axios.put(
-        `${process.env.REACT_APP_API_URL}/api/game/${id}`,
-        gameStatus,
-      );
+      await axios.put(`${process.env.REACT_APP_API_URL}/api/game/${id}`, {
+        status: newStatus,
+      });
       toast.success("Status du jeu mis à jour avec succès");
       getListOfGames();
-      resetForm();
     } catch (error) {
       console.log(error);
       toast.error("Erreur lors de la mise à jour du status du jeu");
@@ -300,82 +259,70 @@ const Ludotheque = () => {
     setMinAge("");
     setDuration("");
     setSelectedFile(null);
-    setStatus("in pending");
     resetFilter();
   };
 
   const handleSearchTitle = (e) => {
-    e.preventDefault();
     const value = e.target.value;
     setSearchTitle(value);
     localStorage.setItem("searchTitle", value);
   };
 
   const handleSearchGenre = (e) => {
-    e.preventDefault();
     const value = e.target.value;
     setSearchGenre(value);
     localStorage.setItem("searchGenre", value);
   };
 
   const handleSearchDate = (e) => {
-    e.preventDefault();
     const value = e.target.value;
     setSearchDate(value);
     localStorage.setItem("searchDate", value);
   };
 
   const handleSearchEditor = (e) => {
-    e.preventDefault();
     const value = e.target.value;
     setSearchEditor(value);
     localStorage.setItem("searchEditor", value);
   };
 
   const handleSeachMinPlayer = (e) => {
-    e.preventDefault();
     const value = e.target.value;
     setSearchMinPlayer(value);
     localStorage.setItem("searchMinPlayer", value);
   };
 
   const handleSeachMaxPlayer = (e) => {
-    e.preventDefault();
     const value = e.target.value;
     setSearchMaxPlayer(value);
     localStorage.setItem("searchMaxPlayer", value);
   };
 
   const handleSeachMinAge = (e) => {
-    e.preventDefault();
     const value = e.target.value;
     setSearchMinAge(value);
     localStorage.setItem("searchMinAge", value);
   };
 
   const handleSeachMaxAge = (e) => {
-    e.preventDefault();
     const value = e.target.value;
     setSearchMaxAge(value);
     localStorage.setItem("searchMaxAge", value);
   };
 
   const handleSeachMinDuration = (e) => {
-    e.preventDefault();
     const value = e.target.value;
     setSearchMinDuration(value);
     localStorage.setItem("searchMinDuration", value);
   };
 
   const handleSeachMaxDuration = (e) => {
-    e.preventDefault();
     const value = e.target.value;
     setSearchMaxDuration(value);
     localStorage.setItem("searchMaxDuration", value);
   };
 
   const handleSearchStatus = (e) => {
-    e.preventDefault();
     const value = e.target.value;
     if (value === "Tous") {
       setSearchStatus("");
@@ -384,30 +331,30 @@ const Ludotheque = () => {
     setSearchStatus(value);
   };
 
+  // Retire les accents avant de comparer, pour que "cesar" trouve "César"
+  const normalizeText = (str) =>
+    str
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase();
+
   // Helper const to check if all words in the search term are present in the target string
   const containsAllWords = (target, searchTerm) => {
-    const searchWords = searchTerm.split(" ");
-    return searchWords.every((word) => target.includes(word));
+    const normalizedTarget = normalizeText(target);
+    const searchWords = normalizeText(searchTerm).split(" ");
+    return searchWords.every((word) => normalizedTarget.includes(word));
   };
 
   const filteredGames = listOfGames.filter((game) => {
     const matchesSearchTitle =
-      !searchTitle ||
-      (game.title &&
-        containsAllWords(game.title.toLowerCase(), searchTitle.toLowerCase()));
+      !searchTitle || (game.title && containsAllWords(game.title, searchTitle));
     const matchesSearchdate =
       !searchDate || game.date === parseInt(searchDate, 10);
     const matchesSearchEditor =
       !searchEditor ||
-      (game.editor &&
-        containsAllWords(
-          game.editor.toLowerCase(),
-          searchEditor.toLowerCase(),
-        ));
+      (game.editor && containsAllWords(game.editor, searchEditor));
     const matchesSearchGenre =
-      !searchGenre ||
-      (game.genre &&
-        containsAllWords(game.genre.toLowerCase(), searchGenre.toLowerCase()));
+      !searchGenre || (game.genre && containsAllWords(game.genre, searchGenre));
     const matchesSearchMinPlayer =
       !searchMinPlayer || game.minPlayer === parseInt(searchMinPlayer, 10);
     const matchesSearchMaxPlayer =
@@ -446,8 +393,7 @@ const Ludotheque = () => {
   };
 
   const handleScroll = () => {
-    const scrollY = window.scrollY;
-    setShowScrollButton(scrollY > 100);
+    setShowScrollButton(window.scrollY > 100);
   };
 
   useEffect(() => {
@@ -461,20 +407,17 @@ const Ludotheque = () => {
   const handleResize = () => {
     const newWidth = window.innerWidth;
     setWidth(newWidth);
-    if (newWidth < 768) {
-      setShow(false);
-    } else {
-      setShow(true);
-    }
+    setShow(newWidth >= 768);
   };
+
   // Callback function to update the game list
   const handleGameUpdate = () => {
-    getListOfGames(); // Refresh the list of games
+    getListOfGames();
   };
-  useEffect(() => {
-    handleResize(); // Call it on initial render
-    window.addEventListener("resize", handleResize); // Attach it to the resize event
 
+  useEffect(() => {
+    handleResize();
+    window.addEventListener("resize", handleResize);
     return () => {
       window.removeEventListener("resize", handleResize);
     };
@@ -483,11 +426,8 @@ const Ludotheque = () => {
   useEffect(() => {
     getListOfGames();
     resetFilter();
-    if (!user || user.role !== "admin") {
-      return;
-    }
     //eslint-disable-next-line
-  }, [setListOfGames, user]);
+  }, [user]);
 
   return (
     <div className="ludotheque-page">
@@ -496,145 +436,39 @@ const Ludotheque = () => {
         <div>
           <div className="col-12 col-md-6 mx-auto">
             <div className="d-flex justify-content-around">
-              {user &&
-                user.role === "admin" &&
+              {isAdmin &&
                 (addNewGame ? (
                   <>
                     <CancelOutlinedIcon
                       onClick={() => cancelEditing()}
                       className="icon-button"
                     />
-                    <form>
-                      {selectedFile && (
-                        <>
-                          <div className="form-group">
-                            <label htmlFor="title">Titre</label>
-                            <input
-                              type="text"
-                              id="title"
-                              value={title}
-                              className="form-control"
-                              placeholder="titre"
-                              onChange={handleTitleChange}
-                            />
-                          </div>
-                          <div className="form-group">
-                            <label htmlFor="genre">Genre</label>
-                            <input
-                              type="text"
-                              id="genre"
-                              value={genre}
-                              className="form-control"
-                              placeholder="genre"
-                              onChange={handleGenreChange}
-                            />
-                          </div>
-                          <div className="form-group">
-                            <label htmlFor="description">Résumé</label>
-                            <textarea
-                              type="text"
-                              id="description"
-                              value={description}
-                              placeholder="description"
-                              onChange={handleDescriptionChange}
-                            />
-                          </div>
-                          <div className="form-group">
-                            <label htmlFor="date">Date</label>
-                            <input
-                              type="number"
-                              id="date"
-                              value={date}
-                              className="form-control"
-                              placeholder="date"
-                              onChange={handleDateChange}
-                            />
-                          </div>
-                          <div className="form-group">
-                            <label htmlFor="editor">Editeur</label>
-                            <input
-                              type="text"
-                              id="editor"
-                              value={editor}
-                              className="form-control"
-                              placeholder="editeur"
-                              onChange={handleEditorChange}
-                            />
-                          </div>
-                          <div className="form-group">
-                            <label htmlFor="minPlayer">Nombre de joueurs</label>
-                            <label htmlFor="minPlayer">min:</label>
-                            <input
-                              type="number"
-                              id="minPlayer"
-                              value={minPlayer}
-                              className="form-control"
-                              placeholder="nombre de joueur minimum"
-                              onChange={handleMinPlayerChange}
-                            />
-                            <label htmlFor="maxPlayer">max:</label>
-                            <input
-                              type="number"
-                              id="maxPlayer"
-                              value={maxPlayer}
-                              className="form-control"
-                              placeholder="nombre de joueur maximum"
-                              onChange={handleMaxPlayerChange}
-                            />
-                          </div>
-                          <div className="form-group">
-                            <label htmlFor="minAge">Age minimum</label>
-                            <input
-                              type="number"
-                              id="minAge"
-                              value={minAge}
-                              className="form-control"
-                              placeholder="age minimum"
-                              onChange={handleMinAgeChange}
-                            />
-                          </div>
-                          <div className="form-group">
-                            <label htmlFor="duration">Durée</label>
-                            <input
-                              type="number"
-                              id="duration"
-                              value={duration}
-                              className="form-control"
-                              placeholder="durée"
-                              onChange={handleDurationChange}
-                            />
-                          </div>
-                        </>
-                      )}
-                      <div className="form-group">
-                        <label htmlFor="file">Couverture</label>
-                        <input
-                          type="file"
-                          id="file"
-                          accept="image/*"
-                          className="form-control"
-                          placeholder="couverture"
-                          onChange={handleFileInputChange}
-                        />
-                      </div>
-                      <div className="d-flex justify-content-around">
-                        {selectedFile && (
-                          <button
-                            type="submit"
-                            className="btn btn-success"
-                            onClick={handleUploadGame}
-                          >
-                            Ajouter
-                          </button>
-                        )}
-                        <button
-                          className="btn btn-warning"
-                          onClick={() => cancelEditing()}
-                        >
-                          Annuler
-                        </button>
-                      </div>
-                    </form>
+                    <GameForm
+                      title={title}
+                      genre={genre}
+                      description={description}
+                      date={date}
+                      editor={editor}
+                      minPlayer={minPlayer}
+                      maxPlayer={maxPlayer}
+                      minAge={minAge}
+                      duration={duration}
+                      selectedFile={selectedFile}
+                      onTitleChange={(e) => setTitle(e.target.value)}
+                      onGenreChange={(e) => setGenre(e.target.value)}
+                      onDescriptionChange={(e) =>
+                        setDescription(e.target.value)
+                      }
+                      onDateChange={(e) => setDate(e.target.value)}
+                      onEditorChange={(e) => setEditor(e.target.value)}
+                      onMinPlayerChange={(e) => setMinPlayer(e.target.value)}
+                      onMaxPlayerChange={(e) => setMaxPlayer(e.target.value)}
+                      onMinAgeChange={(e) => setMinAge(e.target.value)}
+                      onDurationChange={(e) => setDuration(e.target.value)}
+                      onFileSelected={handleFileSelected}
+                      onSubmit={handleUploadGame}
+                      onCancel={cancelEditing}
+                    />
                   </>
                 ) : (
                   showSearch === false && (
@@ -649,211 +483,40 @@ const Ludotheque = () => {
                 ))}
 
               {showSearch ? (
-                <div className="d-flex justify-content-around">
-                  <CancelOutlinedIcon
-                    onClick={() => {
-                      setShowSearch(!showSearch);
-                      resetFilter();
-                    }}
-                    className="icon-button"
-                  />
-                  <div className="table-responsive">
-                    <table>
-                      <thead>
-                        <tr>
-                          <td
-                            colSpan="2"
-                            className={`text-center ${
-                              filteredGames.length === 0 &&
-                              "bg-danger text-white"
-                            }`}
-                          >
-                            <span
-                              className={`badge ${
-                                filteredGames.length === 0
-                                  ? "bg-danger"
-                                  : "bg-primary"
-                              }`}
-                            >
-                              {filteredGames.length}
-                            </span>{" "}
-                            {filteredGames.length === 0 ||
-                            filteredGames.length === 1
-                              ? "jeu"
-                              : "jeux"}{" "}
-                            {show && <span>correspondant à la recherche</span>}
-                            sur{" "}
-                            <span
-                              className={`badge ${
-                                filteredGames.length !== 0 && "bg-success"
-                              }`}
-                            >
-                              {listOfGames.length}{" "}
-                            </span>
-                            <br />
-                            <button
-                              className="btn btn-success"
-                              onClick={handleRandomGame}
-                            >
-                              Jeu aléatoire
-                            </button>
-                          </td>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr>
-                          <td>
-                            <label htmlFor="title">Titre</label>
-                            <input
-                              type="text"
-                              value={searchTitle}
-                              className="form-control"
-                              placeholder="recherche par titre"
-                              onChange={handleSearchTitle}
-                            />
-                          </td>
-                          <td>
-                            <label htmlFor="genre">Genre</label>
-                            <input
-                              type="text"
-                              value={searchGenre}
-                              className="form-control"
-                              placeholder="recherche par genre"
-                              onChange={handleSearchGenre}
-                            />
-                          </td>
-                        </tr>
-                        <tr>
-                          <td>
-                            <label htmlFor="date">Date</label>
-                            <input
-                              type="number"
-                              value={searchDate}
-                              className="form-control"
-                              placeholder="recherche par date"
-                              onChange={handleSearchDate}
-                            />
-                          </td>
-                          <td>
-                            <label htmlFor="editor">Editeur</label>
-                            <input
-                              type="text"
-                              value={searchEditor}
-                              className="form-control"
-                              placeholder="recherche par editeur"
-                              onChange={handleSearchEditor}
-                            />
-                          </td>
-                        </tr>
-                        <tr>
-                          <td>
-                            <label htmlFor="minPlayer">nb joueur min:</label>
-                            <input
-                              type="number"
-                              id="minPlayer"
-                              value={searchMinPlayer}
-                              className="form-control"
-                              placeholder="nombre de joueur minimum"
-                              onChange={handleSeachMinPlayer}
-                            />
-                            <label htmlFor="minAge">Age minimum</label>
-                            <input
-                              type="number"
-                              id="minAge"
-                              value={searchMinAge}
-                              className="form-control"
-                              placeholder="age minimum"
-                              onChange={handleSeachMinAge}
-                            />
-                          </td>
-                          <td>
-                            <label htmlFor="maxPlayer">nb joueur max:</label>
-                            <input
-                              type="number"
-                              id="maxPlayer"
-                              value={searchMaxPlayer}
-                              className="form-control"
-                              placeholder="nombre de joueur maximum"
-                              onChange={handleSeachMaxPlayer}
-                            />
-
-                            <label htmlFor="maxAge">Age maximum</label>
-                            <input
-                              type="number"
-                              id="maxAge"
-                              value={searchMaxAge}
-                              className="form-control"
-                              placeholder="age maximum"
-                              onChange={handleSeachMaxAge}
-                            />
-                          </td>
-                        </tr>
-                        <tr>
-                          <td>
-                            <label htmlFor="minDuration">durée min : </label>
-                            <input
-                              type="number"
-                              id="minDuration"
-                              value={searchMinDuration}
-                              className="form-control"
-                              placeholder="durée min"
-                              onChange={handleSeachMinDuration}
-                            />
-                          </td>
-                          <td>
-                            <label htmlFor="maxDuration">durée max : </label>
-                            <input
-                              type="number"
-                              id="maxDuration"
-                              value={searchMaxDuration}
-                              className="form-control"
-                              placeholder="durée max"
-                              onChange={handleSeachMaxDuration}
-                            />
-                          </td>
-                        </tr>
-                        {user && user.role === "admin" && (
-                          <tr>
-                            <td colSpan="2">
-                              <label htmlFor="status">Status</label>
-                              <select
-                                value={searchStatus}
-                                className="form-select"
-                                onChange={handleSearchStatus}
-                              >
-                                <option value="">Tous</option>
-                                <option value="in pending">En attente</option>
-                                <option value="accepted">Accepté</option>
-                                <option value="rejected">Refusé</option>
-                              </select>
-                            </td>
-                          </tr>
-                        )}
-                        <tr>
-                          <td className="text-center">
-                            <button
-                              className="btn btn-danger"
-                              onClick={() => {
-                                setShowSearch(!showSearch);
-                                resetFilter();
-                              }}
-                            >
-                              annuler la recherche
-                            </button>
-                          </td>
-                          <td className="text-center">
-                            <button
-                              className="btn btn-warning"
-                              onClick={resetFilter}
-                            >
-                              reset Filter
-                            </button>
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
+                <GameSearchPanel
+                  searchTitle={searchTitle}
+                  searchGenre={searchGenre}
+                  searchDate={searchDate}
+                  searchEditor={searchEditor}
+                  searchMinPlayer={searchMinPlayer}
+                  searchMaxPlayer={searchMaxPlayer}
+                  searchMinAge={searchMinAge}
+                  searchMaxAge={searchMaxAge}
+                  searchMinDuration={searchMinDuration}
+                  searchMaxDuration={searchMaxDuration}
+                  searchStatus={searchStatus}
+                  onSearchTitle={handleSearchTitle}
+                  onSearchGenre={handleSearchGenre}
+                  onSearchDate={handleSearchDate}
+                  onSearchEditor={handleSearchEditor}
+                  onSeachMinPlayer={handleSeachMinPlayer}
+                  onSeachMaxPlayer={handleSeachMaxPlayer}
+                  onSeachMinAge={handleSeachMinAge}
+                  onSeachMaxAge={handleSeachMaxAge}
+                  onSeachMinDuration={handleSeachMinDuration}
+                  onSeachMaxDuration={handleSeachMaxDuration}
+                  onSearchStatus={handleSearchStatus}
+                  filteredCount={filteredGames.length}
+                  totalCount={listOfGames.length}
+                  show={show}
+                  isAdmin={isAdmin}
+                  onRandomGame={handleRandomGame}
+                  onClose={() => {
+                    setShowSearch(!showSearch);
+                    resetFilter();
+                  }}
+                  onResetFilter={resetFilter}
+                />
               ) : (
                 addNewGame === false && (
                   <SearchOutlinedIcon
@@ -871,432 +534,25 @@ const Ludotheque = () => {
       </div>
 
       <div className="table-responsive">
-        {!user || user.role !== "admin" ? (
-          <table className="table table-striped table-bordered table-hover align-middle text-center">
-            <thead>
-              <tr>
-                <th scope="col">
-                  <p className="text-bold ">Titre</p>
-                  <p className="fst-italic">Editeur </p>
-                  {!show && <p className="fst-italic">Age minimum</p>}
-                </th>
-                <th scope="col">
-                  <p>genre</p>
-                  {!show && <p>durée minimum</p>}
-                </th>
-                {show === true && (
-                  <>
-                    <th scope="col">
-                      <p>description</p>
-                      <p className="fst-italic">date de sortie</p>
-                    </th>
-                    <th scope="col">
-                      <p>age minimum</p>
-                    </th>
-                  </>
-                )}
-                <th scope="col">
-                  <p>nombre de joueurs</p>
-                </th>
-                {show === true && (
-                  <th scope="col">
-                    <p>durée minimum</p>
-                  </th>
-                )}
-              </tr>
-            </thead>
-            <tbody>
-              {!listOfGames || listOfGames.length === 0 ? (
-                <tr>
-                  {show === true ? (
-                    <td colSpan="7">Aucun jeu</td>
-                  ) : (
-                    <td colSpan="3">Aucun jeu</td>
-                  )}
-                </tr>
-              ) : (
-                filteredGames.map((game) => (
-                  <tr key={game._id}>
-                    <th className="text-justify">
-                      <span
-                        onClick={() => openGamePopup(game)}
-                        className="badge bg-success text-wrap"
-                        style={{ cursor: "pointer" }}
-                      >
-                        <h6 className="text-decoration-underline">
-                          {game.title}
-                        </h6>
-                        <p className="fst-italic">
-                          {game.editor ? `par ${game.editor}` : ""}
-                        </p>
-                      </span>
-                      <>
-                        <br />
-                        {!show &&
-                          (game.minAge >= 18 ? (
-                            <p className="badge bg-danger text-white fw-lighter fst-italic">
-                              interdit aux mineurs
-                            </p>
-                          ) : (
-                            <p className="fw-lighter fst-italic">
-                              {" "}
-                              à partir de{" "}
-                              <span className="badge bg-info">
-                                {game.minAge}
-                              </span>{" "}
-                              ans
-                            </p>
-                          ))}
-                      </>
-                    </th>
-                    <td>
-                      <p className="badge bg-warning text-dark text-wrap">
-                        {game.genre}
-                      </p>
-                      {!show && (
-                        <>
-                          <br />
-                          <p className="badge bg-primary">
-                            {game.duration} min
-                          </p>
-                        </>
-                      )}
-                    </td>
-                    {show === true && (
-                      <>
-                        <td className="text-justify">
-                          <p>
-                            {game.description
-                              ? game.description
-                              : "pas de résumé renseigné"}
-                          </p>
-                          <p className="fst-italic">
-                            {game.date ? `édité en ${game.date}` : ""}
-                          </p>
-                        </td>
-                        <td>
-                          <span
-                            className={`badge ${
-                              game.minAge >= 18
-                                ? "bg-danger text-white"
-                                : "bg-info text-dark"
-                            }`}
-                          >
-                            {game.minAge >= 18
-                              ? "interdit aux mineurs"
-                              : `${game.minAge} ans`}
-                          </span>
-                        </td>
-                      </>
-                    )}
-                    {game.minPlayer === 1 &&
-                    (game.maxPlayer === null ||
-                      game.maxPlayer === 0 ||
-                      game.maxPlayer === 1) ? (
-                      <td>solo</td>
-                    ) : game.minPlayer === game.maxPlayer ? (
-                      <td>
-                        <span className="badge bg-danger">
-                          {game.minPlayer}
-                        </span>{" "}
-                        joueurs
-                      </td>
-                    ) : game.minPlayer < game.maxPlayer ? (
-                      <td>
-                        De{" "}
-                        <span className="badge bg-danger">
-                          {game.minPlayer}
-                        </span>{" "}
-                        à{" "}
-                        <span className="badge bg-danger">
-                          {game.maxPlayer}
-                        </span>{" "}
-                        joueurs
-                      </td>
-                    ) : (
-                      <td>
-                        De{" "}
-                        <span className="badge bg-danger">
-                          {game.maxPlayer}
-                        </span>{" "}
-                        à{" "}
-                        <span className="badge bg-danger">
-                          {game.minPlayer}
-                        </span>{" "}
-                        joueurs
-                      </td>
-                    )}
-                    {show === true && (
-                      <>
-                        <td>
-                          <span className="badge bg-primary">
-                            {game.duration}
-                          </span>
-                          min
-                        </td>
-                      </>
-                    )}
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+        {!isAdmin ? (
+          <GameTablePublic
+            games={filteredGames}
+            totalCount={listOfGames.length}
+            show={show}
+            onOpenPopup={openGamePopup}
+          />
         ) : (
-          <table className="table table-striped table-bordered table-hover align-middle text-center">
-            <thead>
-              <tr key="0">
-                <th scope="col">
-                  <p>titre</p>
-                  <p className="fst-italic">Editeur</p>
-                  {!show && <p className="fst-italic">Age minimum</p>}
-                </th>
-                <th scope="col">
-                  <p>genre</p>
-                  {!show && <p>durée minimum</p>}
-                </th>
-                {show === true && (
-                  <>
-                    <th scope="col">
-                      <p>description</p>
-                      <p className="fst-italic">date de sortie</p>
-                    </th>
-                    <th scope="col">
-                      <p>age minimum</p>
-                    </th>
-                  </>
-                )}
-                <th scope="col">
-                  <p>nombre de joueurs</p>
-                </th>
-                {show === true && (
-                  <>
-                    <th scope="col">
-                      <p>durée</p>
-                    </th>
-                    <th scope="col">
-                      <p>Status</p>
-                    </th>
-                    {user && user.role === "admin" && show === true && (
-                      <th scope="col">
-                        <p>action</p>
-                      </th>
-                    )}
-                  </>
-                )}
-              </tr>
-            </thead>
-            <tbody>
-              {!listOfGames || listOfGames.length === 0 ? (
-                <tr>
-                  {show === true ? (
-                    <td colSpan="8">
-                      <div className="entry-loading">
-                        <div
-                          className="spinner-border text-primary"
-                          role="status"
-                        >
-                          <span className="sr-only">Loading...</span>
-                        </div>
-                      </div>
-                    </td>
-                  ) : (
-                    <td colSpan="3">
-                      <div className="entry-loading">
-                        <div
-                          className="spinner-border text-primary"
-                          role="status"
-                        >
-                          <span className="sr-only">Loading...</span>
-                        </div>
-                      </div>
-                    </td>
-                  )}
-                </tr>
-              ) : (
-                filteredGames.map((game) => (
-                  <tr key={game._id}>
-                    <th className="text-justify">
-                      <span
-                        onClick={() => openGamePopup(game)}
-                        className="badge bg-success text-wrap"
-                        style={{ cursor: "pointer" }}
-                      >
-                        <h6 className="text-decoration-underline">
-                          {game.title}
-                        </h6>
-                        <p>
-                          <img
-                            loading="lazy"
-                            src={game.imageData}
-                            alt={game.title}
-                            className="img-thumbnail rounded ludotheque-thumbnail"
-                          />
-                        </p>
-                        <p className="fst-italic">
-                          {game.editor ? `par ${game.editor}` : ""}
-                        </p>
-                      </span>
-                      <>
-                        <br />
-                        {!show &&
-                          (game.minAge >= 18 ? (
-                            <p className="badge bg-danger text-white fw-lighter fst-italic">
-                              interdit aux mineurs
-                            </p>
-                          ) : (
-                            <p className="fw-lighter fst-italic">
-                              {" "}
-                              à partir de{" "}
-                              <span className="badge bg-info">
-                                {game.minAge}
-                              </span>{" "}
-                              ans
-                            </p>
-                          ))}
-                      </>
-                    </th>
-                    <td>
-                      <p className="badge bg-warning text-dark text-wrap">
-                        {game.genre}
-                      </p>
-                      {!show && (
-                        <>
-                          <br />
-                          <p className="badge bg-primary">
-                            {game.duration} min
-                          </p>
-                        </>
-                      )}
-                    </td>
-
-                    {show === true && (
-                      <>
-                        <td className="text-justify">
-                          <p>
-                            {game.description
-                              ? game.description
-                              : "pas de résumé renseigné"}
-                          </p>
-                          <p className="fst-italic">
-                            {game.date ? `édité en ${game.date}` : ""}
-                          </p>
-                        </td>
-                        <td>
-                          <span
-                            className={`badge ${
-                              game.minAge >= 18
-                                ? "bg-danger text-white"
-                                : "bg-info text-dark"
-                            }`}
-                          >
-                            {game.minAge >= 18
-                              ? "interdit aux mineurs"
-                              : `${game.minAge} ans`}
-                          </span>
-                        </td>
-                      </>
-                    )}
-                    {game.minPlayer === 1 &&
-                    (game.maxPlayer === null ||
-                      game.maxPlayer === 0 ||
-                      game.maxPlayer === 1) ? (
-                      <td>solo</td>
-                    ) : game.minPlayer === game.maxPlayer ? (
-                      <td>
-                        <span className="badge bg-danger">
-                          {game.minPlayer}
-                        </span>{" "}
-                        joueurs
-                      </td>
-                    ) : game.minPlayer < game.maxPlayer ? (
-                      <td>
-                        De{" "}
-                        <span className="badge bg-danger">
-                          {game.minPlayer}
-                        </span>{" "}
-                        à{" "}
-                        <span className="badge bg-danger">
-                          {game.maxPlayer}
-                        </span>{" "}
-                        joueurs
-                      </td>
-                    ) : (
-                      <td>
-                        De{" "}
-                        <span className="badge bg-danger">
-                          {game.maxPlayer}
-                        </span>{" "}
-                        à{" "}
-                        <span className="badge bg-danger">
-                          {game.minPlayer}
-                        </span>{" "}
-                        joueurs
-                      </td>
-                    )}
-                    {show === true && (
-                      <>
-                        <td>
-                          <span className="badge bg-primary">
-                            {game.duration}
-                            min
-                          </span>{" "}
-                        </td>
-
-                        <td className="text-center">
-                          {game.status === "in pending" ? (
-                            <p className="list-inline bg-warning">
-                              En attente de validation
-                            </p>
-                          ) : game.status === "accepted" ? (
-                            <p className="list-inline text-success">
-                              Jeu accepté
-                            </p>
-                          ) : (
-                            <p className="list-inline bg-danger text-white">
-                              Jeu refusé
-                            </p>
-                          )}
-                          {user && user.role === "admin" && (
-                            <>
-                              <select
-                                value={status}
-                                onChange={handleStatusChange}
-                              >
-                                <option value="in pending">En attente</option>
-                                <option value="accepted">Accepté</option>
-                                <option value="rejected">Refusé</option>
-                              </select>
-
-                              <button
-                                type="button"
-                                className="btn btn-success"
-                                onClick={() => updateGameStatus(game._id)}
-                              >
-                                Mettre à jour
-                              </button>
-                            </>
-                          )}
-                        </td>
-                        <td>
-                          {user && user.role === "admin" && (
-                            <button
-                              type="button"
-                              className="btn btn-danger"
-                              onClick={() => deleteGameById(game._id)}
-                            >
-                              supprimer
-                            </button>
-                          )}
-                        </td>
-                      </>
-                    )}
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+          <GameTableAdmin
+            games={filteredGames}
+            totalCount={listOfGames.length}
+            show={show}
+            onOpenPopup={openGamePopup}
+            onUpdateStatus={updateGameStatus}
+            onDelete={deleteGameById}
+          />
         )}
       </div>
+
       {showScrollButton && (
         <button className="scroll-to-top" onClick={scrollToTop}>
           <ArrowUpwardIcon />

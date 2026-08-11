@@ -1,6 +1,13 @@
 const Technologie = require("../models/technologies");
 require("dotenv").config();
 const mongoose = require("mongoose");
+const {
+  uploadBase64Image,
+  getFreshImageLink,
+  deleteFile,
+} = require("../services/pcloud");
+
+const PCLOUD_SUBFOLDER = "technologies";
 
 exports.getTechnologie = async (req, res) => {
   try {
@@ -11,7 +18,6 @@ exports.getTechnologie = async (req, res) => {
       link: technologie.link,
       description: technologie.description,
       orderList: technologie.orderList,
-      imageData: technologie.imageData,
     }));
     res.json(mappedTechnologies);
   } catch (error) {
@@ -24,12 +30,21 @@ exports.postTechnologie = async (req, res) => {
   try {
     const { title, link, description, orderList, imageData } = req.body;
 
+    let pcloudFileId;
+    if (imageData) {
+      pcloudFileId = await uploadBase64Image(
+        imageData,
+        `technologie-${Date.now()}.webp`,
+        PCLOUD_SUBFOLDER,
+      );
+    }
+
     const technologie = new Technologie({
       title,
       link,
       description,
       orderList,
-      imageData,
+      pcloudFileId,
       uploadDate: new Date(),
     });
 
@@ -45,7 +60,7 @@ exports.postTechnologie = async (req, res) => {
 exports.getTechnologieById = async (req, res) => {
   try {
     const id = req.params.id;
-    const technologie = await Technologie.findById(id);
+    const technologie = await Technologie.findById(id).select("-imageData");
     res.json(technologie);
   } catch (error) {
     console.error("Error retrieving technologie:", error);
@@ -56,25 +71,39 @@ exports.getTechnologieById = async (req, res) => {
 exports.updateTechnologieById = async (req, res) => {
   try {
     const id = req.params.id;
-    // Check if the provided id is a valid ObjectId format
     if (!mongoose.isValidObjectId(id)) {
       return res.status(400).json({
         error: "Invalid ID format",
       });
     }
-    // Check if the technologie Id exists
     const technologie = await Technologie.findById(id);
     if (!technologie) {
       return res.status(404).json({
         error: "ID does not exist",
       });
     }
-    // if the technologie exists, update it
+
+    const updateData = { ...req.body };
+
+    // Une nouvelle image a été envoyée : on l'upload et on remplace l'ancienne
+    if (updateData.imageData) {
+      const fileid = await uploadBase64Image(
+        updateData.imageData,
+        `technologie-${Date.now()}.webp`,
+        PCLOUD_SUBFOLDER,
+      );
+      if (technologie.pcloudFileId) {
+        await deleteFile(technologie.pcloudFileId);
+      }
+      updateData.pcloudFileId = fileid;
+    }
+    delete updateData.imageData;
+
     const updatedTechnologie = await Technologie.findByIdAndUpdate(
       id,
-      { $set: req.body },
-      { new: true }
-    );
+      { $set: updateData },
+      { new: true },
+    ).select("-imageData");
     res.json(updatedTechnologie);
   } catch (error) {
     console.error(error);
@@ -87,13 +116,51 @@ exports.updateTechnologieById = async (req, res) => {
 exports.deleteTechnologieById = async (req, res) => {
   try {
     const id = req.params.id;
-    const deleteTechnologie = await Technologie.findByIdAndDelete(id);
+    const technologieToDelete = await Technologie.findById(id);
 
-    if (!deleteTechnologie) {
+    if (!technologieToDelete) {
       return res.status(404).json({ error: "No technologie found" });
     }
+
+    if (technologieToDelete.pcloudFileId) {
+      await deleteFile(technologieToDelete.pcloudFileId);
+    }
+
+    await Technologie.findByIdAndDelete(id);
     res.json({ message: "Technologie deleted" });
   } catch (err) {
     console.log(err);
+  }
+};
+
+/**
+ * Route-relais pour l'image d'une technologie. URL stable pour le frontend,
+ * redemande un lien pCloud frais à chaque appel (les liens pCloud expirent,
+ * celui-ci non). Fallback sur l'ancien Base64 pour les entrées pas migrées.
+ */
+exports.getTechnologieImage = async (req, res) => {
+  try {
+    const technologie = await Technologie.findById(req.params.id).select(
+      "pcloudFileId imageData",
+    );
+    if (!technologie) return res.status(404).end();
+
+    if (technologie.pcloudFileId) {
+      const url = await getFreshImageLink(technologie.pcloudFileId);
+      return res.redirect(url);
+    }
+
+    if (technologie.imageData) {
+      const matches = technologie.imageData.match(/^data:(.+);base64,(.+)$/);
+      if (matches) {
+        res.set("Content-Type", matches[1]);
+        return res.send(Buffer.from(matches[2], "base64"));
+      }
+    }
+
+    return res.status(404).end();
+  } catch (error) {
+    console.error(error);
+    res.status(500).end();
   }
 };
