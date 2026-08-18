@@ -1,4 +1,6 @@
 const mongoose = require("mongoose");
+const enemyBalance = require("./enemyBalance");
+const gameConfig = require("./gameConfig");
 
 const DungeonSchema = new mongoose.Schema(
   {
@@ -18,11 +20,21 @@ const DungeonSchema = new mongoose.Schema(
       enum: ["facile", "moyen", "difficile", "epique"],
       default: "facile",
     },
+    // "normal" = plateau classique 8x8 en une pièce, "aventure" = donjon en
+    // salles reliées par des portes (15x15). Les 4 difficultés s'appliquent
+    // identiquement aux deux modes (mêmes vies/essais/étages à boucler),
+    // seule la structure du plateau change.
+    mode: {
+      type: String,
+      enum: ["normal", "aventure"],
+      default: "normal",
+    },
 
     tiles: [
       {
         type: { type: String }, // "type" est un mot réservé Mongoose -> imbrication obligatoire
         value: Number,
+        weaponDie: Number, // PC individuel — rat/monstre seuls (les fusions utilisent mergedStats.weaponDie)
         position: { x: Number, y: Number },
         revealed: { type: Boolean, default: false },
         cleared: { type: Boolean, default: false }, // true = ne bloque plus le passage
@@ -133,21 +145,11 @@ const DungeonSchema = new mongoose.Schema(
 
 // NB: le nombre exact de tuiles "trésor"/"magasin" a été simplifié par rapport
 // au tableau brut du PDF (colonnes ambiguës à l'extraction) : ajuste si besoin.
-const DIFFICULTY_CONFIG = {
-  facile: { monstres: 3, rats: 3, herses: 3, gouffres: 0, tresor: 10 },
-  moyen: { monstres: 6, rats: 6, herses: 3, gouffres: 2, tresor: 10 },
-  difficile: { monstres: 9, rats: 9, herses: 5, gouffres: 5, tresor: 10 },
-  epique: { monstres: 9, rats: 9, herses: 5, gouffres: 5, tresor: 10 },
-};
-
-// Nombre d'essais de dés à la création/recréation du héros, et nombre de vies
-// (recréations possibles) autorisées avant la fin définitive de la partie.
-const DIFFICULTY_RULES = {
-  facile: { maxRerolls: 4, maxLives: 4, maxFloors: 10 },
-  moyen: { maxRerolls: 3, maxLives: 3, maxFloors: 6 },
-  difficile: { maxRerolls: 2, maxLives: 2, maxFloors: 4 },
-  epique: { maxRerolls: 1, maxLives: 1, maxFloors: 2 },
-};
+// Toutes les valeurs ci-dessous vivent maintenant dans gameConfig.js —
+// modifiable sans toucher à ce fichier.
+const DIFFICULTY_CONFIG = gameConfig.DIFFICULTY_CONFIG;
+const ADVENTURE_CONTENT_SCALE = gameConfig.ADVENTURE_CONTENT_SCALE;
+const DIFFICULTY_RULES = gameConfig.DIFFICULTY_RULES;
 
 function rollD6() {
   return Math.floor(Math.random() * 6) + 1;
@@ -193,9 +195,27 @@ function generateTiles(difficulty) {
   tiles.push({ type: "boss", value: 20, position: pickFreePosition() });
   tiles.push({ type: "magasin", value: null, position: pickFreePosition() });
 
-  // Tuiles selon la difficulté
-  addTiles("monstre", cfg.monstres, 5); // blob
-  addTiles("rat", cfg.rats, 3);
+  // Tuiles selon la difficulté — rats et blobs tirent chacun leurs propres
+  // PV et PC (équilibrage centralisé dans enemyBalance.js), plutôt qu'une
+  // valeur identique pour tous.
+  for (let i = 0; i < cfg.monstres; i++) {
+    const stats = enemyBalance.generateBlobStats(difficulty);
+    tiles.push({
+      type: "monstre",
+      value: stats.pv,
+      weaponDie: stats.weaponDie,
+      position: pickFreePosition(),
+    });
+  }
+  for (let i = 0; i < cfg.rats; i++) {
+    const stats = enemyBalance.generateRatStats(difficulty);
+    tiles.push({
+      type: "rat",
+      value: stats.pv,
+      weaponDie: stats.weaponDie,
+      position: pickFreePosition(),
+    });
+  }
   addTiles("piège", cfg.herses, -2); // herse
   addTiles("piège", cfg.gouffres, -1); // gouffre
   addTiles("coffre", cfg.tresor, 10);
@@ -213,14 +233,289 @@ function generateTiles(difficulty) {
 }
 
 // ---------------------------------------------------------------------------
+// Génération du mode Aventure : donjon en salles reliées, plutôt qu'une
+// grande pièce unique. Algorithme repris du portage JS de Generation.cs
+// (Unity) qu'on a déjà testé séparément — grille de 5×5 emplacements de
+// salle possibles, remplie par une marche aléatoire biaisée dans une
+// direction générale, sans forcément toutes les remplir.
+// ---------------------------------------------------------------------------
+
+const ADVENTURE_ROOM_GRID_SIZE = 5; // 5x5 emplacements de salle possibles
+const ADVENTURE_ROOM_SIZE = 3; // chaque salle générée = 3x3 cases
+
+const ADV_DIRECTIONS = {
+  north: { x: 0, y: 1 },
+  south: { x: 0, y: -1 },
+  east: { x: 1, y: 0 },
+  west: { x: -1, y: 0 },
+};
+
+// Place les salles sur la grille 5×5 — retourne uniquement la structure
+// (quelles salles existent, laquelle est le départ, laquelle est la
+// sortie), pas encore le contenu des cases. Le nombre cible de salles est
+// tiré dans la fourchette de la difficulté (voir gameConfig.js).
+function generateAdventureRoomsOnce(difficulty) {
+  const roomsToGenerate = gameConfig.getAdventureRoomCount(difficulty);
+  const roomMap = Array.from({ length: ADVENTURE_ROOM_GRID_SIZE }, () =>
+    Array(ADVENTURE_ROOM_GRID_SIZE).fill(false),
+  );
+  let roomCount = 0;
+  let firstRoomPos = null;
+  const center = Math.floor(ADVENTURE_ROOM_GRID_SIZE / 2);
+
+  function checkRoom(rx, ry, remaining, generalDirection, firstRoom = false) {
+    if (roomCount >= roomsToGenerate) return;
+    if (
+      rx < 0 ||
+      rx >= ADVENTURE_ROOM_GRID_SIZE ||
+      ry < 0 ||
+      ry >= ADVENTURE_ROOM_GRID_SIZE
+    )
+      return;
+    if (!firstRoom && remaining <= 0) return;
+    if (roomMap[rx][ry] === true) return;
+
+    if (firstRoom) firstRoomPos = { rx, ry };
+
+    roomCount++;
+    roomMap[rx][ry] = true;
+
+    const isDir = (d) =>
+      generalDirection &&
+      generalDirection.x === d.x &&
+      generalDirection.y === d.y;
+    const north = Math.random() > (isDir(ADV_DIRECTIONS.north) ? 0.2 : 0.8);
+    const south = Math.random() > (isDir(ADV_DIRECTIONS.south) ? 0.2 : 0.8);
+    const east = Math.random() > (isDir(ADV_DIRECTIONS.east) ? 0.2 : 0.8);
+    const west = Math.random() > (isDir(ADV_DIRECTIONS.west) ? 0.2 : 0.8);
+    const maxRemaining = Math.floor(roomsToGenerate / 4);
+
+    if (north || firstRoom) {
+      checkRoom(
+        rx,
+        ry + 1,
+        firstRoom ? maxRemaining : remaining - 1,
+        firstRoom ? ADV_DIRECTIONS.north : generalDirection,
+      );
+    }
+    if (south || firstRoom) {
+      checkRoom(
+        rx,
+        ry - 1,
+        firstRoom ? maxRemaining : remaining - 1,
+        firstRoom ? ADV_DIRECTIONS.south : generalDirection,
+      );
+    }
+    if (east || firstRoom) {
+      checkRoom(
+        rx + 1,
+        ry,
+        firstRoom ? maxRemaining : remaining - 1,
+        firstRoom ? ADV_DIRECTIONS.east : generalDirection,
+      );
+    }
+    if (west || firstRoom) {
+      checkRoom(
+        rx - 1,
+        ry,
+        firstRoom ? maxRemaining : remaining - 1,
+        firstRoom ? ADV_DIRECTIONS.west : generalDirection,
+      );
+    }
+  }
+
+  checkRoom(center, center, 0, null, true);
+
+  const rooms = [];
+  for (let rx = 0; rx < ADVENTURE_ROOM_GRID_SIZE; rx++) {
+    for (let ry = 0; ry < ADVENTURE_ROOM_GRID_SIZE; ry++) {
+      if (roomMap[rx][ry]) rooms.push({ rx, ry });
+    }
+  }
+
+  // Salle de sortie = la plus éloignée de la salle de départ (distance sur
+  // la grille de salles, pas sur les cases) — pour garantir un vrai trajet
+  // à parcourir plutôt qu'une sortie toute proche par hasard.
+  let exitRoom = rooms[0];
+  let maxDist = -1;
+  for (const r of rooms) {
+    const dist = Math.hypot(r.rx - firstRoomPos.rx, r.ry - firstRoomPos.ry);
+    if (dist > maxDist) {
+      maxDist = dist;
+      exitRoom = r;
+    }
+  }
+
+  return { rooms, roomMap, firstRoomPos, exitRoom };
+}
+
+// Détecte une symétrie de rotation à 4 branches autour du centre — une
+// propriété que le hasard produit très rarement pour une disposition de
+// salles quelconque, mais qui caractérise justement une croix à 4 branches
+// (dont la croix gammée en fait partie). Un chevauchement élevé après
+// rotation de 90° déclenche une nouvelle génération, par précaution — quitte
+// à écarter aussi, de temps en temps, une simple croix parfaitement
+// symétrique tout à fait innocente : le coût d'un faux positif est nul, le
+// coût d'un faux négatif ne l'est pas.
+function has4FoldRotationalSymmetry(roomMap) {
+  const size = ADVENTURE_ROOM_GRID_SIZE;
+  const center = Math.floor(size / 2);
+
+  let total = 0;
+  let matches = 0;
+
+  for (let x = 0; x < size; x++) {
+    for (let y = 0; y < size; y++) {
+      if (!roomMap[x][y]) continue;
+      total++;
+
+      // Rotation de 90° autour du centre : (dx,dy) -> (dy,-dx)
+      const dx = x - center;
+      const dy = y - center;
+      const rx = center + dy;
+      const ry = center - dx;
+
+      if (rx >= 0 && rx < size && ry >= 0 && ry < size && roomMap[rx][ry]) {
+        matches++;
+      }
+    }
+  }
+
+  if (total < 8) return false; // trop peu de salles pour qu'un motif inquiétant se forme
+  return matches / total > 0.85;
+}
+
+function generateAdventureRooms(difficulty) {
+  let result = generateAdventureRoomsOnce(difficulty);
+  let attempts = 1;
+
+  while (has4FoldRotationalSymmetry(result.roomMap) && attempts < 20) {
+    result = generateAdventureRoomsOnce(difficulty);
+    attempts++;
+  }
+
+  return result;
+}
+
+// Construit le tableau de tuiles final (même format que generateTiles) à
+// partir de la structure de salles — remplit chaque salle générée avec le
+// catalogue existant (monstres, coffres, pièges...), les emplacements non
+// générés restant simplement absents du tableau (donc infranchissables,
+// pas besoin d'un type de tuile "mur" séparé).
+function generateAdventureTiles(difficulty = "facile") {
+  const baseCfg = DIFFICULTY_CONFIG[difficulty] || DIFFICULTY_CONFIG.facile;
+  const cfg = {
+    monstres: Math.round(baseCfg.monstres * ADVENTURE_CONTENT_SCALE),
+    rats: Math.round(baseCfg.rats * ADVENTURE_CONTENT_SCALE),
+    herses: Math.round(baseCfg.herses * ADVENTURE_CONTENT_SCALE),
+    gouffres: Math.round(baseCfg.gouffres * ADVENTURE_CONTENT_SCALE),
+    tresor: Math.round(baseCfg.tresor * ADVENTURE_CONTENT_SCALE),
+  };
+  const { rooms, firstRoomPos, exitRoom } = generateAdventureRooms(difficulty);
+
+  // Chaque salle générée occupe un bloc de 3x3 cases, dont les coordonnées
+  // de départ sont (rx * 3, ry * 3).
+  const roomTilePositions = [];
+  for (const room of rooms) {
+    for (let dx = 0; dx < ADVENTURE_ROOM_SIZE; dx++) {
+      for (let dy = 0; dy < ADVENTURE_ROOM_SIZE; dy++) {
+        roomTilePositions.push({
+          x: room.rx * ADVENTURE_ROOM_SIZE + dx,
+          y: room.ry * ADVENTURE_ROOM_SIZE + dy,
+          isFirstRoom:
+            room.rx === firstRoomPos.rx && room.ry === firstRoomPos.ry,
+          isExitRoom: room.rx === exitRoom.rx && room.ry === exitRoom.ry,
+        });
+      }
+    }
+  }
+
+  const centerOffset = Math.floor(ADVENTURE_ROOM_SIZE / 2); // case centrale d'une salle 3x3
+
+  const entryPos = {
+    x: firstRoomPos.rx * ADVENTURE_ROOM_SIZE + centerOffset,
+    y: firstRoomPos.ry * ADVENTURE_ROOM_SIZE + centerOffset,
+  };
+  const exitPos = {
+    x: exitRoom.rx * ADVENTURE_ROOM_SIZE + centerOffset,
+    y: exitRoom.ry * ADVENTURE_ROOM_SIZE + centerOffset,
+  };
+
+  const usedPositions = new Set([
+    `${entryPos.x},${entryPos.y}`,
+    `${exitPos.x},${exitPos.y}`,
+  ]);
+  const freePositions = roomTilePositions
+    .map((p) => ({ x: p.x, y: p.y }))
+    .filter((p) => !usedPositions.has(`${p.x},${p.y}`));
+
+  const pickFreePosition = () => {
+    const idx = Math.floor(Math.random() * freePositions.length);
+    const [pos] = freePositions.splice(idx, 1);
+    usedPositions.add(`${pos.x},${pos.y}`);
+    return pos;
+  };
+
+  const tiles = [];
+  tiles.push({
+    type: "entrée",
+    value: null,
+    position: entryPos,
+    revealed: true,
+    cleared: true,
+  });
+  tiles.push({ type: "sortie", value: null, position: exitPos });
+
+  const addTiles = (type, count, value) => {
+    for (let i = 0; i < count && freePositions.length > 0; i++) {
+      tiles.push({ type, value, position: pickFreePosition() });
+    }
+  };
+
+  tiles.push({ type: "clé", value: null, position: pickFreePosition() });
+  tiles.push({ type: "boss", value: 20, position: pickFreePosition() });
+  tiles.push({ type: "magasin", value: null, position: pickFreePosition() });
+
+  for (let i = 0; i < cfg.monstres && freePositions.length > 0; i++) {
+    const stats = enemyBalance.generateBlobStats(difficulty);
+    tiles.push({
+      type: "monstre",
+      value: stats.pv,
+      weaponDie: stats.weaponDie,
+      position: pickFreePosition(),
+    });
+  }
+  for (let i = 0; i < cfg.rats && freePositions.length > 0; i++) {
+    const stats = enemyBalance.generateRatStats(difficulty);
+    tiles.push({
+      type: "rat",
+      value: stats.pv,
+      weaponDie: stats.weaponDie,
+      position: pickFreePosition(),
+    });
+  }
+  addTiles("piège", cfg.herses, -2);
+  addTiles("piège", cfg.gouffres, -1);
+  addTiles("coffre", cfg.tresor, 10);
+
+  // Complète le reste des cases des salles générées avec des tuiles vierges
+  while (freePositions.length > 0) {
+    tiles.push({
+      type: "tuile-vide",
+      value: null,
+      position: pickFreePosition(),
+    });
+  }
+
+  return tiles;
+}
+
+// ---------------------------------------------------------------------------
 // Génération du boss (dés 3D6 + dé arme, comme un héros)
 // ---------------------------------------------------------------------------
 
-function generateBossStats() {
-  return {
-    bodyParts: { tete: rollD6(), torse: rollD6(), jambes: rollD6() },
-    weaponDie: Math.floor(Math.random() * 3) + 1, // PC 1-3
-  };
+function generateBossStats(difficulty = "facile") {
+  return enemyBalance.generateBossStats(difficulty);
 }
 
 // ---------------------------------------------------------------------------
@@ -228,16 +523,8 @@ function generateBossStats() {
 // 2 bombes carrées, 2 bombes lignes = 15 cartes)
 // ---------------------------------------------------------------------------
 
-const TREASURE_CARD_POOL = [
-  ...Array(5).fill("potion"),
-  ...Array(3).fill("arme"),
-  ...Array(3).fill("monstre"),
-  ...Array(2).fill("bombe_carre"),
-  ...Array(2).fill("bombe_ligne"),
-];
-
 function buildShuffledTreasureDeck() {
-  const deck = [...TREASURE_CARD_POOL];
+  const deck = gameConfig.buildTreasureCardPool();
   for (let i = deck.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [deck[i], deck[j]] = [deck[j], deck[i]];
@@ -249,15 +536,31 @@ DungeonSchema.statics.createGameForUser = async function (
   userId,
   difficulty = "facile",
   heroName = "Hero",
+  mode = "normal",
 ) {
   const rules = DIFFICULTY_RULES[difficulty] || DIFFICULTY_RULES.facile;
+
+  const tiles =
+    mode === "aventure"
+      ? generateAdventureTiles(difficulty)
+      : generateTiles(difficulty);
+  // La position d'entrée est toujours (0,0) pour le mode classique, mais
+  // calculée dynamiquement en Aventure (centre de la grille de salles) — on
+  // la déduit systématiquement des tuiles plutôt que de la coder en dur,
+  // pour ne jamais désynchroniser le héros de sa vraie case de départ.
+  const entryTileData = tiles.find((t) => t.type === "entrée");
+  const startPos = entryTileData
+    ? { x: entryTileData.position.x, y: entryTileData.position.y }
+    : { x: 0, y: 0 };
 
   return this.create({
     userId,
     difficulty,
+    mode,
     status: "in_progress",
-    tiles: generateTiles(difficulty),
+    tiles,
     treasureDeck: buildShuffledTreasureDeck(),
+    shopStock: gameConfig.SHOP_CONFIG,
     hero: {
       name: heroName,
       bodyParts: { tete: 0, torse: 0, jambes: 0 }, // à définir via roll-three-dices
@@ -267,10 +570,10 @@ DungeonSchema.statics.createGameForUser = async function (
       inventory: [],
       spriteId: null,
     },
-    boss: { type: "goblin", ...generateBossStats() },
+    boss: { type: "goblin", ...generateBossStats(difficulty) },
     gameState: {
-      currentTile: { x: 0, y: 0 },
-      entryTile: { x: 0, y: 0 },
+      currentTile: { x: startPos.x, y: startPos.y },
+      entryTile: { x: startPos.x, y: startPos.y },
       previousTile: null,
       keyFound: false,
       bossDefeated: false,
@@ -302,6 +605,8 @@ DungeonSchema.statics.createGameForUser = async function (
 const DonjonModel = mongoose.model("Donjon", DungeonSchema);
 DonjonModel.buildShuffledTreasureDeck = buildShuffledTreasureDeck;
 DonjonModel.generateTiles = generateTiles;
+DonjonModel.generateAdventureTiles = generateAdventureTiles;
+DonjonModel.generateAdventureRooms = generateAdventureRooms;
 DonjonModel.generateBossStats = generateBossStats;
 DonjonModel.DIFFICULTY_RULES = DIFFICULTY_RULES;
 module.exports = DonjonModel;

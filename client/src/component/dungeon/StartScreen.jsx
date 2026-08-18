@@ -10,10 +10,20 @@ const DIFFICULTIES = [
   { key: "epique", label: "Épique" },
 ];
 
+const MODES = [
+  { key: "normal", label: "Classique", hint: "Un plateau, une salle unique" },
+  {
+    key: "aventure",
+    label: "Aventure",
+    hint: "Donjon en salles reliées par des portes",
+  },
+];
+
 const StartScreen = ({ activeGames, onResume, onAbandon, onStartNew }) => {
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [showRules, setShowRules] = useState(false);
   const [showPatchNotes, setShowPatchNotes] = useState(false);
+  const [selectedMode, setSelectedMode] = useState("normal");
 
   if (showLeaderboard) {
     return <LeaderboardScreen onBack={() => setShowLeaderboard(false)} />;
@@ -54,8 +64,10 @@ const StartScreen = ({ activeGames, onResume, onAbandon, onStartNew }) => {
             {activeGames.map((game) => (
               <li key={game._id}>
                 <span>
-                  {game.difficulty} — Étage {game.gameState.floor} — Score{" "}
-                  {game.gameState.score} — Or : {game.hero.gold} PO
+                  {game.difficulty}
+                  {game.mode === "aventure" ? " (Aventure)" : ""} — Étage{" "}
+                  {game.gameState.floor} — Score {game.gameState.score} — Or :{" "}
+                  {game.hero.gold} PO
                 </span>
                 <button onClick={() => onResume(game)}>Reprendre</button>
                 <button onClick={() => onAbandon(game._id)} className="danger">
@@ -69,10 +81,25 @@ const StartScreen = ({ activeGames, onResume, onAbandon, onStartNew }) => {
 
       <div className="new-game-picker">
         <h2>Nouvelle partie</h2>
+
+        <p>Choisissez le mode :</p>
+        <div className="difficulty-picker">
+          {MODES.map(({ key, label, hint }) => (
+            <button
+              key={key}
+              onClick={() => setSelectedMode(key)}
+              className={selectedMode === key ? "active-tab" : ""}
+              title={hint}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+
         <p>Choisissez la difficulté :</p>
         <div className="difficulty-picker">
           {DIFFICULTIES.map(({ key, label }) => (
-            <button key={key} onClick={() => onStartNew(key)}>
+            <button key={key} onClick={() => onStartNew(key, selectedMode)}>
               {label}
             </button>
           ))}

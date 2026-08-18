@@ -1,4 +1,6 @@
 const Donjon = require("../models/DonjonModel");
+const enemyBalance = require("../models/enemyBalance");
+const gameConfig = require("../models/gameConfig");
 
 // ---------------------------------------------------------------------------
 // Constantes / helpers
@@ -85,6 +87,54 @@ const BODY_PART_ORDER_LOW_TO_HIGH = ["jambes", "torse", "tete"];
 
 function isInBounds(x, y) {
   return x >= 0 && x <= 7 && y >= 0 && y <= 7;
+}
+
+// En Aventure, le plateau n'est pas un rectangle plein — "être dans les
+// limites" veut dire "une tuile existe à cette position" (les emplacements
+// de salle non générés sont absents du tableau). Pour les autres
+// difficultés, comportement inchangé (bornes numériques fixes).
+function isValidPosition(x, y, game) {
+  if (game.mode === "aventure") {
+    return game.tiles.some((t) => t.position.x === x && t.position.y === y);
+  }
+  return isInBounds(x, y);
+}
+
+// Taille d'une salle en mode Aventure (doit correspondre à
+// ADVENTURE_ROOM_SIZE dans DonjonModel.js).
+const ADVENTURE_ROOM_SIZE = 3;
+
+function roomCoordsOf(x, y) {
+  return {
+    rx: Math.floor(x / ADVENTURE_ROOM_SIZE),
+    ry: Math.floor(y / ADVENTURE_ROOM_SIZE),
+  };
+}
+
+// Un déplacement entre deux salles DIFFÉRENTES n'est autorisé qu'au point
+// central de leur bordure commune (la "porte") — jamais sur toute la
+// largeur de la salle, sinon deux salles adjacentes ne seraient jamais
+// vraiment séparées par un mur. Un déplacement à l'intérieur d'une même
+// salle reste toujours libre.
+function canCrossToRoom(fromX, fromY, toX, toY) {
+  const from = roomCoordsOf(fromX, fromY);
+  const to = roomCoordsOf(toX, toY);
+  if (from.rx === to.rx && from.ry === to.ry) return true;
+
+  if (fromX !== toX) {
+    // Déplacement est/ouest : la porte est au centre vertical de la bordure.
+    return fromY % ADVENTURE_ROOM_SIZE === 1 && toY % ADVENTURE_ROOM_SIZE === 1;
+  }
+  // Déplacement nord/sud : la porte est au centre horizontal de la bordure.
+  return fromX % ADVENTURE_ROOM_SIZE === 1 && toX % ADVENTURE_ROOM_SIZE === 1;
+}
+
+// Même règle que canCrossToRoom, mais neutre (toujours vrai) hors mode
+// Aventure — évite d'appliquer une logique de salles là où elle n'a aucun
+// sens (mode classique, plateau plein sans notion de salle).
+function canCrossForJump(game, fromX, fromY, toX, toY) {
+  if (game.mode !== "aventure") return true;
+  return canCrossToRoom(fromX, fromY, toX, toY);
 }
 
 // Un atterrissage n'est physiquement impossible que sur un AUTRE gouffre révélé
@@ -261,6 +311,10 @@ function checkAndMergeRats(game, justRevealedTile) {
   if (otherRats.length < 2) return false;
 
   const [first, second] = otherRats;
+  const sourceTiles = [justRevealedTile, first, second];
+  const pvList = sourceTiles.map((t) => t.value);
+  const pcList = sourceTiles.map((t) => t.weaponDie || 1);
+
   [first, second].forEach((t) => {
     t.type = "tuile-vide";
     t.cleared = true;
@@ -268,10 +322,7 @@ function checkAndMergeRats(game, justRevealedTile) {
 
   justRevealedTile.type = "horde-rats";
   justRevealedTile.cleared = false;
-  justRevealedTile.mergedStats = {
-    bodyParts: { tete: rollD6(), torse: rollD6(), jambes: rollD6() },
-    weaponDie: 1, // la horde n'a pas d'arme : 1 seul point de combat
-  };
+  justRevealedTile.mergedStats = enemyBalance.mergeStats(pvList, pcList);
 
   return true;
 }
@@ -290,6 +341,10 @@ function checkAndMergeBlobs(game, justRevealedTile) {
   if (sameColorOthers.length < 2) return false;
 
   const [first, second] = sameColorOthers;
+  const sourceTiles = [justRevealedTile, first, second];
+  const pvList = sourceTiles.map((t) => t.value);
+  const pcList = sourceTiles.map((t) => t.weaponDie || 1);
+
   [first, second].forEach((t) => {
     t.type = "tuile-vide";
     t.cleared = true;
@@ -297,10 +352,7 @@ function checkAndMergeBlobs(game, justRevealedTile) {
 
   justRevealedTile.type = "monstre-gelatineux";
   justRevealedTile.cleared = false;
-  justRevealedTile.mergedStats = {
-    bodyParts: { tete: rollD6(), torse: rollD6(), jambes: rollD6() },
-    weaponDie: Math.floor(Math.random() * 3) + 1,
-  };
+  justRevealedTile.mergedStats = enemyBalance.mergeStats(pvList, pcList);
 
   return true;
 }
@@ -472,13 +524,14 @@ exports.getAllGamesAdmin = async (req, res) => {
       .sort({ updatedAt: -1 })
       .populate("userId", "username")
       .select(
-        "gameState.score gameState.floor difficulty status hero.spriteId userId createdAt updatedAt",
+        "gameState.score gameState.floor difficulty mode status hero.spriteId userId createdAt updatedAt",
       );
 
     const formatted = games.map((g) => ({
       id: g._id,
       username: g.userId?.username || "Joueur inconnu",
       difficulty: g.difficulty,
+      mode: g.mode || "normal",
       status: g.status,
       score: g.gameState?.score || 0,
       floor: g.gameState?.floor || 1,
@@ -516,18 +569,35 @@ exports.deleteGameAdmin = async (req, res) => {
 // peu importe leur statut : le score reflète la progression atteinte).
 exports.getLeaderboard = async (req, res) => {
   try {
-    const { difficulty, scope } = req.body;
+    const { difficulty, scope, mode } = req.body;
     const validDifficulties = ["facile", "moyen", "difficile", "epique"];
+    const gameMode = mode === "aventure" ? "aventure" : "normal";
 
     if (!validDifficulties.includes(difficulty)) {
       return res.status(400).json({ error: "Difficulté invalide." });
     }
 
     // Comptent pour le classement : la mort définitive (plus de vies) ET
-    // l'abandon volontaire — mais pas les parties encore en cours.
+    // l'abandon volontaire — mais pas les parties encore en cours. Normal et
+    // Aventure ont des classements séparés (plateaux trop différents pour
+    // que les scores soient comparables).
+    //
+    // Piège évité ici : { mode: "normal" } ne retrouve QUE les parties où ce
+    // champ a été explicitement écrit en base. Contrairement à la lecture
+    // d'une partie unique (où Mongoose applique la valeur par défaut au
+    // document chargé en mémoire), une requête .find() est évaluée par
+    // MongoDB directement sur les données stockées, AVANT toute application
+    // de valeur par défaut — les vieilles parties normales (créées avant
+    // l'ajout de ce champ) n'ont tout simplement pas "mode" en base, donc ne
+    // remontent pas si on ne teste que l'égalité stricte. D'où le $or.
+    const modeFilter =
+      gameMode === "aventure"
+        ? { mode: "aventure" }
+        : { $or: [{ mode: "normal" }, { mode: { $exists: false } }] };
     const filter = {
       status: { $in: ["defeat", "abandoned", "victory"] },
       difficulty,
+      ...modeFilter,
     };
     if (scope === "mine") {
       filter.userId = req.user._id;
@@ -601,12 +671,13 @@ exports.getMyGames = async (req, res) => {
 
 exports.createGame = async (req, res) => {
   try {
-    const { difficulty } = req.body;
+    const { difficulty, mode } = req.body;
     const heroName = req.user.username || "Hero";
     const gameData = await Donjon.createGameForUser(
       req.user._id,
       difficulty,
       heroName,
+      mode || "normal",
     );
     res.status(201).json(gameData);
   } catch (err) {
@@ -727,8 +798,17 @@ function buildEnemyFromTile(game, enemyType, x, y) {
     };
   }
   const tile = game.tiles.find((t) => t.position.x === x && t.position.y === y);
-  const weaponDie = enemyType === "monstre" ? 2 : 1;
-  return { pv: tile.value, weaponDie, color: tile.color }; // color utile pour un blob seul
+  // Filet de sécurité pour les tuiles rat/monstre créées AVANT le
+  // rééquilibrage (enemyBalance.js) — elles n'ont jamais eu de weaponDie
+  // stocké dessus. Sans ce repli, un combat sur une telle tuile calculerait
+  // des dégâts avec undefined (NaN silencieux), pas juste un affichage vide.
+  // Valeurs reprises de l'ancien comportement fixe (monstre=2, rat=1).
+  const fallbackWeaponDie = enemyType === "monstre" ? 2 : 1;
+  return {
+    pv: tile.value,
+    weaponDie: tile.weaponDie ?? fallbackWeaponDie,
+    color: tile.color,
+  };
 }
 
 // Réécrit l'état actuel de l'ennemi (dégâts subis) sur sa source persistante,
@@ -873,7 +953,11 @@ exports.resolveEnemyChoice = async (req, res) => {
           }
         } else {
           game.gameState.lockedDirection =
-            game.gameState.movesRemaining > 0 ? pending.direction : null;
+            game.mode === "aventure"
+              ? null
+              : game.gameState.movesRemaining > 0
+                ? pending.direction
+                : null;
           const recovered = collectGroundLoot(
             game,
             pending.landingTo.x,
@@ -1284,8 +1368,19 @@ exports.moveOneStep = async (req, res) => {
     let nx = startX + dx;
     let ny = startY + dy;
 
-    // Rebond sur un mur du plateau
-    if (!isInBounds(nx, ny)) {
+    if (game.mode === "aventure") {
+      // Pas de rebond : une direction bloquée (mur/pas de salle) est
+      // simplement refusée, sans consommer de pas ni changer de direction.
+      if (
+        !isValidPosition(nx, ny, game) ||
+        !canCrossToRoom(startX, startY, nx, ny)
+      ) {
+        return res
+          .status(400)
+          .json({ error: "Impossible d'avancer dans cette direction." });
+      }
+    } else if (!isInBounds(nx, ny)) {
+      // Rebond sur un mur du plateau (comportement historique, hors Aventure)
       dir = OPPOSITE[dir];
       ({ dx, dy } = DELTAS[dir]);
       nx = startX + dx;
@@ -1327,7 +1422,8 @@ exports.moveOneStep = async (req, res) => {
         const landingY = ny + dy;
         const landingTile = tileAt(landingX, landingY);
         const canLand =
-          isInBounds(landingX, landingY) &&
+          isValidPosition(landingX, landingY, game) &&
+          canCrossForJump(game, nx, ny, landingX, landingY) &&
           !isTileBlockedForLanding(landingTile);
         const movesLeft = game.gameState.movesRemaining;
 
@@ -1355,7 +1451,9 @@ exports.moveOneStep = async (req, res) => {
       const landingY = ny + dy;
       const landingTile = tileAt(landingX, landingY);
       const canLand =
-        isInBounds(landingX, landingY) && !isTileBlockedForLanding(landingTile);
+        isValidPosition(landingX, landingY, game) &&
+        canCrossForJump(game, nx, ny, landingX, landingY) &&
+        !isTileBlockedForLanding(landingTile);
       const movesLeft = game.gameState.movesRemaining;
       const canJumpSafe = game.hero.hasLegs && canLand && movesLeft >= 3;
       const canJumpRisky = game.hero.hasLegs && canLand && movesLeft === 2;
@@ -1366,6 +1464,7 @@ exports.moveOneStep = async (req, res) => {
         if (canJumpSafe) options.push("jump_safe");
         if (canJumpRisky) options.push("jump_risky");
       } else {
+        options.push("stop"); // ne pas aller dans cette direction, sans conséquence
         if (canJumpSafe) options.push("jump_safe");
         if (canJumpRisky) options.push("jump_risky");
         options.push("walk"); // toujours possible pour une herse
@@ -1406,7 +1505,11 @@ exports.moveOneStep = async (req, res) => {
 
     if (game.gameState.movesRemaining <= 0) response.stopped = true;
     game.gameState.lockedDirection =
-      game.gameState.movesRemaining > 0 ? dir : null;
+      game.mode === "aventure"
+        ? null
+        : game.gameState.movesRemaining > 0
+          ? dir
+          : null;
 
     await game.save();
 
@@ -1760,7 +1863,11 @@ exports.resolveTrapChoice = async (req, res) => {
 
     game.gameState.pendingTrapChoice = null;
     game.gameState.lockedDirection =
-      game.gameState.movesRemaining > 0 ? pending.direction : null;
+      game.mode === "aventure"
+        ? null
+        : game.gameState.movesRemaining > 0
+          ? pending.direction
+          : null;
     const stopped =
       game.gameState.movesRemaining <= 0 ||
       heroDied ||
@@ -1968,20 +2075,29 @@ exports.revealTile = async (req, res) => {
       game.gameState.floor = (game.gameState.floor || 1) + 1;
       game.gameState.solVariant = Math.floor(Math.random() * 5); // 5 variantes dans SOL_VARIANTS (images.js)
 
-      game.tiles = Donjon.generateTiles(game.difficulty);
-      game.boss = { type: "goblin", ...Donjon.generateBossStats() };
-      game.treasureDeck = Donjon.buildShuffledTreasureDeck();
-      game.shopStock = {
-        potionSimple: { price: 2, stock: 4 },
-        potionTriple: { price: 10, stock: 2 },
-        armeBonus: { price: 5, stock: 2 },
+      game.tiles =
+        game.mode === "aventure"
+          ? Donjon.generateAdventureTiles(game.difficulty)
+          : Donjon.generateTiles(game.difficulty);
+      game.boss = {
+        type: "goblin",
+        ...Donjon.generateBossStats(game.difficulty),
       };
+      game.treasureDeck = Donjon.buildShuffledTreasureDeck();
+      game.shopStock = gameConfig.SHOP_CONFIG;
 
       game.hero.inventory = []; // perd ses objets
       // gold, bodyParts, weaponDie, hasLegs : conservés tels quels
 
-      game.gameState.currentTile = { x: 0, y: 0 };
-      game.gameState.entryTile = { x: 0, y: 0 };
+      // La position d'entrée est toujours (0,0) en mode classique, mais calculée
+      // dynamiquement en Aventure (centre de la grille de salles) — déduite des
+      // tuiles plutôt que codée en dur, comme à la création de partie.
+      const entryTileData = game.tiles.find((t) => t.type === "entrée");
+      const startPos = entryTileData
+        ? { x: entryTileData.position.x, y: entryTileData.position.y }
+        : { x: 0, y: 0 };
+      game.gameState.currentTile = { x: startPos.x, y: startPos.y };
+      game.gameState.entryTile = { x: startPos.x, y: startPos.y };
       game.gameState.previousTile = null;
       game.gameState.keyFound = false; // perd la clé
       game.gameState.bossDefeated = false;
@@ -2129,10 +2245,7 @@ exports.openChest = async (req, res) => {
 
     if (card === "monstre") {
       // Le mimic attaque immédiatement, combat obligatoire, initiative à l'ennemi
-      const enemy = {
-        bodyParts: { tete: rollD6(), torse: rollD6(), jambes: rollD6() },
-        weaponDie: Math.floor(Math.random() * 3) + 1,
-      };
+      const enemy = enemyBalance.generateMimicStats(game.difficulty);
 
       game.gameState.pendingCombat = {
         x,
@@ -2390,9 +2503,22 @@ exports.useItem = async (req, res) => {
         for (let dx = -1; dx <= 1; dx++) {
           for (let dy = -1; dy <= 1; dy++) {
             if (dx === 0 && dy === 0) continue;
+            const tx = x + dx;
+            const ty = y + dy;
+
+            if (game.mode === "aventure") {
+              const sameRoom =
+                Math.floor(x / ADVENTURE_ROOM_SIZE) ===
+                  Math.floor(tx / ADVENTURE_ROOM_SIZE) &&
+                Math.floor(y / ADVENTURE_ROOM_SIZE) ===
+                  Math.floor(ty / ADVENTURE_ROOM_SIZE);
+              const isCardinal = dx === 0 || dy === 0; // exclut les diagonales, sans passage possible
+              if (!sameRoom && !(isCardinal && canCrossToRoom(x, y, tx, ty)))
+                continue; // bloqué par un mur
+            }
+
             const t = game.tiles.find(
-              (tile) =>
-                tile.position.x === x + dx && tile.position.y === y + dy,
+              (tile) => tile.position.x === tx && tile.position.y === ty,
             );
             if (t && revealTileAndCheckMerge(game, t)) mergeHappened = true;
           }
@@ -2419,13 +2545,34 @@ exports.useItem = async (req, res) => {
         const { dx, dy } = deltas[direction];
         let mergeHappened = false;
 
-        for (let i = -7; i <= 7; i++) {
-          const t = game.tiles.find(
-            (tile) =>
-              tile.position.x === x + dx * i && tile.position.y === y + dy * i,
-          );
-          if (t && revealTileAndCheckMerge(game, t)) mergeHappened = true;
+        const tileAtPos = (px, py) =>
+          game.tiles.find((t) => t.position.x === px && t.position.y === py);
+
+        if (game.mode === "aventure") {
+          // Le plateau est creux ET les salles sont séparées par des murs
+          // (portes uniquement au centre des bordures, cf. canCrossToRoom) —
+          // la ligne s'arrête au premier obstacle dans chaque sens, qu'il
+          // s'agisse d'une case inexistante ou d'un mur entre deux salles.
+          for (const sign of [1, -1]) {
+            let prevX = x;
+            let prevY = y;
+            for (let i = 1; i <= 14; i++) {
+              const curX = x + dx * i * sign;
+              const curY = y + dy * i * sign;
+              const t = tileAtPos(curX, curY);
+              if (!t || !canCrossToRoom(prevX, prevY, curX, curY)) break;
+              if (revealTileAndCheckMerge(game, t)) mergeHappened = true;
+              prevX = curX;
+              prevY = curY;
+            }
+          }
+        } else {
+          for (let i = -7; i <= 7; i++) {
+            const t = tileAtPos(x + dx * i, y + dy * i);
+            if (t && revealTileAndCheckMerge(game, t)) mergeHappened = true;
+          }
         }
+
         message = mergeHappened
           ? "Une explosion linéaire révèle tout l'alignement... et provoque le regroupement de monstres visibles !"
           : "Une explosion linéaire révèle tout l'alignement, sans rien déclencher.";

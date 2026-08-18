@@ -1067,8 +1067,9 @@ textarea {
 
 :root {
   --text-gold: #f0c674;
-  --bg-stone: #12151c;
+  --bg-stone: #424344;
   --border-subtle: rgba(255, 255, 255, 0.08);
+  --bg-red: #3e0704; /* IGNORE */
 }
 
 .dungeon-page {
@@ -1380,7 +1381,7 @@ textarea {
 .hero-sprite-overlay {
   position: absolute;
   transform: translate(-50%, -50%);
-  width: 8.5%;
+  /* width: 8.5%; */
   aspect-ratio: 26 / 36;
   height: auto;
   z-index: 3;
@@ -1492,8 +1493,9 @@ textarea {
 .board-grid {
   position: relative;
   display: grid;
-  grid-template-columns: repeat(8, minmax(0, 1fr));
-  grid-template-rows: repeat(8, minmax(0, 1fr));
+  /* grid-template-columns / grid-template-rows fixées dynamiquement en style
+     inline selon gridSize (8 par défaut, 15 en mode Aventure) — plus de
+     valeur figée ici */
   width: min(90vw, 560px);
   aspect-ratio: 1 / 1;
   gap: 2px;
@@ -1510,6 +1512,14 @@ textarea {
   overflow: hidden;
   border-radius: 3px;
   background: var(--bg-panel);
+}
+
+/* Emplacement de salle non générée en mode Aventure — rien à afficher du
+   tout, pas même le fond/la bordure habituels d'une case. */
+.tile-void {
+  background: transparent;
+  border: none;
+  box-shadow: none;
 }
 
 .tile img {
@@ -1529,6 +1539,37 @@ textarea {
   margin: 0 !important;
   object-fit: cover;
   z-index: 1;
+}
+
+.tile.wall-haut {
+  border-top: 3px solid var(--bg-red);
+}
+.tile.wall-bas {
+  border-bottom: 3px solid var(--bg-red);
+}
+.tile.wall-gauche {
+  border-left: 3px solid var(--bg-red);
+}
+.tile.wall-droite {
+  border-right: 3px solid var(--bg-red);
+}
+
+.board-viewport {
+  position: relative;
+  width: min(90vw, 560px);
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  border-radius: 10px;
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-stone);
+  box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.5);
+}
+
+.board-viewport-inner {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transition: transform 0.45s linear; /* synchronisé avec le glissement du héros */
 }
 
 .sol-image {
@@ -2141,6 +2182,44 @@ textarea {
 .radar-button:hover:not(:disabled) {
   border-color: var(--accent);
   color: var(--accent-light);
+}
+
+.minimap-grid {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 5;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  grid-template-rows: repeat(5, 1fr);
+  gap: 1px;
+  width: 60px;
+  height: 60px;
+  padding: 3px;
+  background: rgba(11, 12, 16, 0.85);
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+}
+
+.minimap-cell {
+  border-radius: 1px;
+}
+
+.minimap-empty {
+  background: transparent;
+}
+
+.minimap-unexplored {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.minimap-explored {
+  background: var(--text-light);
+}
+
+.minimap-current {
+  background: var(--accent-light);
+  box-shadow: 0 0 4px var(--accent-light);
 }
 
 /* ============================================================================
