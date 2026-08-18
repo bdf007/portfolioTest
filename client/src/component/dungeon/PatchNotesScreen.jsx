@@ -7,6 +7,43 @@ const PatchNotesScreen = ({ onBack }) => {
       <button onClick={onBack}>← Retour</button>
 
       <section>
+        <h3>Version 1.5 — 18 août 2026</h3>
+        <p className="patch-version-subtitle">
+          Le mode Aventure, et un vrai équilibrage des ennemis
+        </p>
+
+        <p>
+          <strong>Nouveau mode Aventure</strong> : en plus du mode Classique
+          (une seule salle), choisis désormais un vrai donjon en plusieurs
+          pièces reliées par des portes. Chaque salle ne communique avec sa
+          voisine qu'en un point précis — repère les murs à l'écran. Le
+          déplacement change de logique en Aventure : plus de rebond, une
+          direction bloquée est simplement indisponible, et tu peux changer de
+          sens à chaque pas. Une caméra te suit dans le donjon, et une
+          mini-carte en coin d'écran révèle les salles explorées au fur et à
+          mesure. Les 4 difficultés (Facile à Épique) s'appliquent identiquement
+          aux deux modes — mêmes vies, mêmes essais, même nombre d'étages à
+          boucler.
+        </p>
+
+        <p>
+          <strong>Rééquilibrage complet des ennemis</strong> : rats, blobs,
+          mimics et boss ont désormais chacun leurs propres PV et PC, tirés dans
+          une fourchette qui monte avec la difficulté — deux ennemis du même
+          type ne sont plus forcément identiques. La fusion (horde de rats,
+          méga-blob) répartit maintenant les vraies stats des monstres fusionnés
+          plutôt que de retirer des valeurs au hasard.
+        </p>
+
+        <p>
+          <strong>Petits ajustements</strong> : l'étiquette "Normal" devient
+          "Classique" à l'affichage, et le classement est désormais séparé entre
+          les deux modes (les plateaux sont trop différents pour que les scores
+          soient comparables).
+        </p>
+      </section>
+
+      <section>
         <h3>Version 1.4 — 6 août 2026</h3>
         <p className="patch-version-subtitle">La victoire, enfin</p>
 

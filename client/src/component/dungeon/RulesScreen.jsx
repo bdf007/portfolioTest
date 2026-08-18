@@ -46,6 +46,31 @@ const RulesScreen = ({ onBack }) => {
       </section>
 
       <section>
+        <h3>Mode</h3>
+        <p>
+          Deux choix indépendants à la création : le <strong>mode</strong>{" "}
+          (structure du plateau) et la <strong>difficulté</strong> (densité de
+          monstres/pièges, vies, essais) — les mêmes réglages de difficulté
+          s'appliquent quel que soit le mode choisi.
+        </p>
+        <ul>
+          <li>
+            <strong>Classique</strong> — une seule grande salle, comme le jeu de
+            plateau d'origine
+          </li>
+          <li>
+            <strong>Aventure</strong> — un vrai donjon en plusieurs salles
+            reliées par des portes. Chaque salle ne communique avec sa voisine
+            qu'en un point précis (le reste est un mur) — repère les murs à
+            l'écran, même sur les cases pas encore explorées. Le déplacement ne
+            fait jamais rebondir : une direction bloquée est juste indisponible,
+            et tu peux changer de sens à chaque pas. Une caméra te suit et une
+            mini-carte en coin d'écran montre les salles déjà visitées.
+          </li>
+        </ul>
+      </section>
+
+      <section>
         <h3>Déplacement</h3>
         <p>
           Lance le dé, choisis une direction, avance case par case. Un mur te
@@ -92,6 +117,11 @@ const RulesScreen = ({ onBack }) => {
       <section>
         <h3>Ennemis & combat</h3>
         <p>
+          Chaque rat, blob, mimic ou boss tire ses propres PV et PC dans une
+          fourchette qui monte avec la difficulté — deux ennemis du même type
+          peuvent donc avoir des stats différentes.
+        </p>
+        <p>
           Face à un ennemi déjà connu, quatre choix s'offrent à toi : tenter de
           le contourner furtivement (garanti à 3 mouvements, risqué à 2),
           l'affronter directement, ou t'arrêter net sans agir.
@@ -124,8 +154,10 @@ const RulesScreen = ({ onBack }) => {
         <p>
           3 rats révélés fusionnent en une horde redoutable, jamais fuyable. 3
           monstres gélatineux de la même couleur fusionnent en un méga-blob plus
-          puissant. Les bombes révèlent des cases sans rien déclencher, mais
-          peuvent quand même provoquer ces fusions.
+          puissant. Les PV des 3 fusionnés sont répartis sur les 3 parties du
+          corps du résultat (rien n'est perdu), et le PC devient la moyenne des
+          3 arrondie au-dessus. Les bombes révèlent des cases sans rien
+          déclencher, mais peuvent quand même provoquer ces fusions.
         </p>
       </section>
 
@@ -183,7 +215,7 @@ const RulesScreen = ({ onBack }) => {
         <p>
           Chaque étage réussi ajoute un bonus de rapidité (100 moins le nombre
           de tours utilisés). Les meilleurs scores apparaissent dans le
-          classement.
+          classement — séparé entre mode Classique et mode Aventure.
         </p>
       </section>
     </div>

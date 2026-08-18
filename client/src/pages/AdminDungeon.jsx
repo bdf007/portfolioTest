@@ -51,6 +51,7 @@ const AdminDungeon = () => {
   const [usernameFilter, setUsernameFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [difficultyFilter, setDifficultyFilter] = useState("all");
+  const [modeFilter, setModeFilter] = useState("all");
 
   const getUsers = async () => {
     try {
@@ -160,7 +161,8 @@ const AdminDungeon = () => {
         (g) =>
           (usernameFilter === "all" || g.username === usernameFilter) &&
           matchesStatusFilter(g, statusFilter) &&
-          (difficultyFilter === "all" || g.difficulty === difficultyFilter),
+          (difficultyFilter === "all" || g.difficulty === difficultyFilter) &&
+          (modeFilter === "all" || (g.mode || "normal") === modeFilter),
       )
     : [];
 
@@ -309,6 +311,17 @@ const AdminDungeon = () => {
                         </option>
                       ))}
                     </select>
+
+                    <select
+                      className="field-input"
+                      style={{ width: "auto", marginBottom: 0 }}
+                      value={modeFilter}
+                      onChange={(e) => setModeFilter(e.target.value)}
+                    >
+                      <option value="all">Tous modes</option>
+                      <option value="normal">Normal</option>
+                      <option value="aventure">Aventure</option>
+                    </select>
                   </div>
 
                   <div className="admin-games-table-wrapper">
@@ -319,6 +332,7 @@ const AdminDungeon = () => {
                           <th>#perso</th>
                           <th>Joueur</th>
                           <th>Diff.</th>
+                          <th>Mode</th>
                           <th>Statut</th>
                           <th>Score</th>
                           <th>Activité</th>
@@ -352,6 +366,9 @@ const AdminDungeon = () => {
                               </div>
                             </td>
                             <td>{g.difficulty}</td>
+                            <td>
+                              {g.mode === "aventure" ? "Aventure" : "Classique"}
+                            </td>
                             <td>{g.status}</td>
                             <td>{g.score}</td>
                             <td>{formatCompactDate(g.updatedAt)}</td>
@@ -408,6 +425,9 @@ const AdminDungeon = () => {
                         </div>
                         <div className="admin-game-card-body">
                           <span>{g.difficulty}</span>
+                          <span>
+                            {g.mode === "aventure" ? "Aventure" : "Classique"}
+                          </span>
                           <span>{g.status}</span>
                           <span>Score {g.score}</span>
                           <span>Général {g.rank ? `#${g.rank}` : "-"}</span>

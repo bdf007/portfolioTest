@@ -24,15 +24,39 @@ const Tile = ({
   exitReady,
   solVariant,
   trapFlash,
+  walls,
 }) => {
+  // En Aventure, un emplacement sans salle générée n'a tout simplement pas
+  // de tuile (tile === null) — à distinguer d'une case qui existe mais
+  // n'est pas encore explorée (tile existe, juste tile.revealed === false).
+  // Le premier cas ne doit rien afficher du tout (pas même la texture
+  // "case cachée"), le second garde le comportement habituel.
+  const isVoid = tile === null || tile === undefined;
+
   // Flash du détecteur de pièges : affiche temporairement le sprite du piège
   // même si la case n'est pas (encore) révélée — sans jamais modifier
   // tile.revealed, l'effet redevient invisible tout seul après 1,5s (géré
   // côté front dans index.jsx).
   const isFlashingTrap = trapFlash && !tile?.revealed && tile?.type === "piège";
 
+  // Une bordure épaisse marque les côtés murés (mode Aventure) — son
+  // absence signale naturellement une porte ou l'intérieur d'une salle,
+  // sans avoir besoin de dessiner la porte elle-même.
+  const wallClasses = walls
+    ? [
+        walls.haut && "wall-haut",
+        walls.bas && "wall-bas",
+        walls.gauche && "wall-gauche",
+        walls.droite && "wall-droite",
+      ]
+        .filter(Boolean)
+        .join(" ")
+    : "";
+
   return (
-    <div className={`tile ${isHeroHere ? "hero-position" : ""}`}>
+    <div
+      className={`tile ${isVoid ? "tile-void" : ""} ${isHeroHere ? "hero-position" : ""} ${wallClasses}`}
+    >
       {tile?.revealed && (
         <img src={getSolVariant(solVariant)} alt="Sol" className="sol-image" />
       )}
@@ -117,7 +141,7 @@ const Tile = ({
         <div className="ground-loot-marker" title="Trésor perdu ici" />
       )}
 
-      {!tile?.revealed && !isHeroHere && (
+      {!isVoid && !tile?.revealed && !isHeroHere && (
         <img
           src={backTileImage}
           alt="Case cachée"

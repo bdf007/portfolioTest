@@ -4,6 +4,7 @@ const MovementPanel = ({
   movesRemaining,
   selectedDirection,
   isBusy,
+  blockedDirections = [],
   onRollDice,
   onMoveOneStep,
   onRunAllMoves,
@@ -12,7 +13,8 @@ const MovementPanel = ({
   const directionDisabled = (dir) =>
     movesRemaining <= 0 ||
     isBusy ||
-    (selectedDirection !== null && selectedDirection !== dir);
+    (selectedDirection !== null && selectedDirection !== dir) ||
+    blockedDirections.includes(dir);
 
   return (
     <div className="movement-info-compact">

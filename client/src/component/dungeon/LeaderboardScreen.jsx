@@ -11,8 +11,14 @@ const DIFFICULTIES = [
   { key: "epique", label: "Épique" },
 ];
 
+const MODES = [
+  { key: "normal", label: "Classique" },
+  { key: "aventure", label: "Aventure" },
+];
+
 const LeaderboardScreen = ({ onBack }) => {
   const [difficulty, setDifficulty] = useState("facile");
+  const [mode, setMode] = useState("normal");
   const [scope, setScope] = useState("global"); // "global" | "mine"
   const [leaderboard, setLeaderboard] = useState(null);
   const [error, setError] = useState(null);
@@ -22,13 +28,13 @@ const LeaderboardScreen = ({ onBack }) => {
     setError(null);
 
     axios
-      .post(`${API}/api/dungeon/leaderboard`, { difficulty, scope })
+      .post(`${API}/api/dungeon/leaderboard`, { difficulty, scope, mode })
       .then((res) => setLeaderboard(res.data.leaderboard))
       .catch((err) => {
         console.error(err);
         setError("Impossible de charger le classement.");
       });
-  }, [difficulty, scope]);
+  }, [difficulty, scope, mode]);
 
   return (
     <div className="leaderboard-screen">
@@ -50,6 +56,19 @@ const LeaderboardScreen = ({ onBack }) => {
         >
           Mon classement
         </button>
+      </div>
+
+      <div className="leaderboard-tabs">
+        {MODES.map(({ key, label }) => (
+          <button
+            key={key}
+            onClick={() => setMode(key)}
+            className={mode === key ? "active-tab" : ""}
+            disabled={mode === key}
+          >
+            {label}
+          </button>
+        ))}
       </div>
 
       <div className="leaderboard-tabs">

@@ -12,6 +12,7 @@ import CombatResultPanel from "./CombatResultPanel";
 import TrapChoicePanel from "./TrapChoicePanel";
 import GouffreFallPanel from "./GouffreFallPanel";
 import BugReportForm from "./BugReportForm";
+import Minimap from "./Minimap";
 import EnemyChoicePanel from "./EnemyChoicePanel";
 import { KeyPanel, ChestPanel, ShopPanel } from "./InteractionPanels";
 import InventoryPanel from "./InventoryPanel";
@@ -23,6 +24,9 @@ import FloorRecapScreen from "./FloorRecapScreen";
 import StartScreen from "./StartScreen";
 
 const API = process.env.REACT_APP_API_URL;
+// Nombre de cases visibles à la fois en Aventure (plateau réel : 15x15) —
+// ajustable, 9 donne un bon compromis contexte/taille de case.
+const ADVENTURE_VIEWPORT_TILES = 9;
 
 const Dungeon = () => {
   const { user } = useContext(UserContext);
@@ -85,9 +89,9 @@ const Dungeon = () => {
       .catch((err) => console.error(err));
   };
 
-  const startNewGame = (difficulty) => {
+  const startNewGame = (difficulty, mode = "normal") => {
     axios
-      .post(`${API}/api/dungeon/create-game`, { difficulty })
+      .post(`${API}/api/dungeon/create-game`, { difficulty, mode })
       .then((res) => {
         setGameData(res.data);
         const { x, y } = res.data.gameState.currentTile;
@@ -810,6 +814,43 @@ const Dungeon = () => {
   const pendingTrap = gameData.gameState.pendingTrapChoice;
   const pendingCombat = gameData.gameState.pendingCombat;
   const radarCost = (gameData.gameState.radarUsedCount || 0) * 5;
+
+  // En Aventure, le plateau n'est pas un rectangle plein — on grise les
+  // flèches qui mèneraient vers une case inexistante (mur/pas de salle),
+  // plutôt que de laisser cliquer pour se le faire refuser par le serveur.
+  const ADVENTURE_ROOM_SIZE = 3;
+  const canCrossToRoomFront = (fromX, fromY, toX, toY) => {
+    const sameRoom =
+      Math.floor(fromX / ADVENTURE_ROOM_SIZE) ===
+        Math.floor(toX / ADVENTURE_ROOM_SIZE) &&
+      Math.floor(fromY / ADVENTURE_ROOM_SIZE) ===
+        Math.floor(toY / ADVENTURE_ROOM_SIZE);
+    if (sameRoom) return true;
+    if (fromX !== toX)
+      return (
+        fromY % ADVENTURE_ROOM_SIZE === 1 && toY % ADVENTURE_ROOM_SIZE === 1
+      );
+    return fromX % ADVENTURE_ROOM_SIZE === 1 && toX % ADVENTURE_ROOM_SIZE === 1;
+  };
+
+  const blockedDirections =
+    gameData.mode === "aventure"
+      ? ["haut", "bas", "gauche", "droite"].filter((dir) => {
+          const { dx, dy } = {
+            haut: { dx: 0, dy: -1 },
+            bas: { dx: 0, dy: 1 },
+            gauche: { dx: -1, dy: 0 },
+            droite: { dx: 1, dy: 0 },
+          }[dir];
+          const { x, y } = gameData.gameState.currentTile;
+          const tx = x + dx;
+          const ty = y + dy;
+          const tileExists = gameData.tiles.some(
+            (t) => t.position.x === tx && t.position.y === ty,
+          );
+          return !tileExists || !canCrossToRoomFront(x, y, tx, ty);
+        })
+      : [];
   const pendingEnemyChoice = gameData.gameState.pendingEnemyChoice;
   const pendingGouffreFall = gameData.gameState.pendingGouffreFall;
   const heroIsDead = gameData.gameState.heroIsDead;
@@ -962,6 +1003,12 @@ const Dungeon = () => {
           <span>Étage {gameData.gameState.floor}</span>
           <span className="hero-stats-sep">·</span>
           <span>{gameData.difficulty}</span>
+          {gameData.mode === "aventure" && (
+            <>
+              <span className="hero-stats-sep">·</span>
+              <span>Aventure</span>
+            </>
+          )}
           <span className="hero-stats-sep">·</span>
           <span className="dungeon-username">{user?.username}</span>
         </div>
@@ -986,20 +1033,54 @@ const Dungeon = () => {
       )}
 
       <div className="board-wrapper">
-        <DungeonGrid
-          tiles={gameData.tiles}
-          heroPosition={heroPosition}
-          heroIsDead={heroIsDead}
-          groundLoot={gameData.gameState.groundLoot}
-          exitReady={
-            gameData.gameState.keyFound && gameData.gameState.bossDefeated
-          }
-          heroSpriteId={gameData.hero.spriteId}
-          heroFacing={heroFacing}
-          heroIsWalking={isHeroWalking}
-          solVariant={gameData.gameState.solVariant}
-          trapFlash={trapFlash}
-        />
+        {gameData.mode === "aventure" ? (
+          <div className="board-viewport">
+            <div
+              className="board-viewport-inner"
+              style={{
+                width: `${(15 / ADVENTURE_VIEWPORT_TILES) * 100}%`,
+                height: `${(15 / ADVENTURE_VIEWPORT_TILES) * 100}%`,
+                transform: `translate(${-((heroPosition[0] + 0.5 - ADVENTURE_VIEWPORT_TILES / 2) / 15) * 100}%, ${-((heroPosition[1] + 0.5 - ADVENTURE_VIEWPORT_TILES / 2) / 15) * 100}%)`,
+              }}
+            >
+              <DungeonGrid
+                tiles={gameData.tiles}
+                heroPosition={heroPosition}
+                heroIsDead={heroIsDead}
+                groundLoot={gameData.gameState.groundLoot}
+                exitReady={
+                  gameData.gameState.keyFound && gameData.gameState.bossDefeated
+                }
+                heroSpriteId={gameData.hero.spriteId}
+                heroFacing={heroFacing}
+                heroIsWalking={isHeroWalking}
+                solVariant={gameData.gameState.solVariant}
+                trapFlash={trapFlash}
+                gridSize={15}
+                isAventure={true}
+                fillParent={true}
+              />
+            </div>
+            <Minimap tiles={gameData.tiles} heroPosition={heroPosition} />
+          </div>
+        ) : (
+          <DungeonGrid
+            tiles={gameData.tiles}
+            heroPosition={heroPosition}
+            heroIsDead={heroIsDead}
+            groundLoot={gameData.gameState.groundLoot}
+            exitReady={
+              gameData.gameState.keyFound && gameData.gameState.bossDefeated
+            }
+            heroSpriteId={gameData.hero.spriteId}
+            heroFacing={heroFacing}
+            heroIsWalking={isHeroWalking}
+            solVariant={gameData.gameState.solVariant}
+            trapFlash={trapFlash}
+            gridSize={8}
+            isAventure={false}
+          />
+        )}
 
         {isBugReportOpen ? (
           <ActionOverlay onClose={() => setIsBugReportOpen(false)}>
@@ -1043,6 +1124,7 @@ const Dungeon = () => {
             movesRemaining={movesRemaining}
             selectedDirection={selectedDirection}
             isBusy={isBusy}
+            blockedDirections={blockedDirections}
             onRollDice={rollMoveDice}
             onMoveOneStep={moveOneStep}
             onRunAllMoves={runAllMoves}
