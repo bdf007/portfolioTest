@@ -851,6 +851,28 @@ const Dungeon = () => {
           return !tileExists || !canCrossToRoomFront(x, y, tx, ty);
         })
       : [];
+  // Stats affichées dans les panneaux de rencontre (1ère fois ou déjà
+  // révélé) — lues directement depuis les données déjà connues côté front
+  // (game.boss pour le boss, la tuile elle-même sinon), sans appel serveur.
+  const getEnemyStatsForDisplay = (enemyType, x, y) => {
+    if (enemyType === "boss") {
+      return {
+        bodyParts: gameData.boss.bodyParts,
+        weaponDie: gameData.boss.weaponDie,
+      };
+    }
+    const tile = gameData.tiles.find(
+      (t) => t.position.x === x && t.position.y === y,
+    );
+    if (!tile) return null;
+    return tile.mergedStats
+      ? {
+          bodyParts: tile.mergedStats.bodyParts,
+          weaponDie: tile.mergedStats.weaponDie,
+        }
+      : { pv: tile.value, weaponDie: tile.weaponDie };
+  };
+
   const pendingEnemyChoice = gameData.gameState.pendingEnemyChoice;
   const pendingGouffreFall = gameData.gameState.pendingGouffreFall;
   const heroIsDead = gameData.gameState.heroIsDead;
@@ -921,6 +943,11 @@ const Dungeon = () => {
           <CombatChoicePanel
             enemyType={pendingCombat.enemyType}
             forced={pendingCombat.forced}
+            stats={getEnemyStatsForDisplay(
+              pendingCombat.enemyType,
+              pendingCombat.x,
+              pendingCombat.y,
+            )}
             onStartCombat={startCombat}
             onDeclineCombat={declineCombat}
             onAttemptHide={attemptHideForced}
@@ -963,6 +990,11 @@ const Dungeon = () => {
           <EnemyChoicePanel
             pendingEnemyChoice={pendingEnemyChoice}
             isBusy={isBusy}
+            stats={getEnemyStatsForDisplay(
+              pendingEnemyChoice.enemyType,
+              pendingEnemyChoice.enemyX,
+              pendingEnemyChoice.enemyY,
+            )}
             onResolve={resolveEnemyChoice}
           />
         ),

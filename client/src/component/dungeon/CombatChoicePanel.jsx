@@ -12,6 +12,7 @@ const ENEMY_DISPLAY_NAMES = {
 const CombatChoicePanel = ({
   enemyType,
   forced,
+  stats,
   onStartCombat,
   onDeclineCombat,
   onAttemptHide,
@@ -21,6 +22,25 @@ const CombatChoicePanel = ({
       <p>
         Un {ENEMY_DISPLAY_NAMES[enemyType] || enemyType} vous barre la route !
       </p>
+
+      {stats && (
+        <div className="enemy-stats-preview">
+          {stats.bodyParts ? (
+            <>
+              <span>🗡️ PC : {stats.weaponDie}</span>
+              <span>❤️ Tête : {stats.bodyParts.tete}</span>
+              <span>❤️ Torse : {stats.bodyParts.torse}</span>
+              <span>❤️ Jambes : {stats.bodyParts.jambes}</span>
+            </>
+          ) : (
+            <>
+              <span>🗡️ PC : {stats.weaponDie}</span>
+              <span>❤️ PV : {stats.pv}</span>
+            </>
+          )}
+        </div>
+      )}
+
       {forced && (
         <p className="mandatory-warning">
           ⚠️ Toujours au contact, impossible de vous éloigner — combattez, ou

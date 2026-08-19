@@ -9,7 +9,7 @@ const ENEMY_DISPLAY_NAMES = {
   boss: "boss",
 };
 
-const EnemyChoicePanel = ({ pendingEnemyChoice, isBusy, onResolve }) => {
+const EnemyChoicePanel = ({ pendingEnemyChoice, isBusy, stats, onResolve }) => {
   const { options, enemyType } = pendingEnemyChoice;
 
   return (
@@ -17,6 +17,25 @@ const EnemyChoicePanel = ({ pendingEnemyChoice, isBusy, onResolve }) => {
       <p>
         Un {ENEMY_DISPLAY_NAMES[enemyType] || enemyType} vous barre la route !
       </p>
+
+      {stats && (
+        <div className="enemy-stats-preview">
+          {stats.bodyParts ? (
+            <>
+              <span>🗡️ PC : {stats.weaponDie}</span>
+              <span>❤️ Tête : {stats.bodyParts.tete}</span>
+              <span>❤️ Torse : {stats.bodyParts.torse}</span>
+              <span>❤️ Jambes : {stats.bodyParts.jambes}</span>
+            </>
+          ) : (
+            <>
+              <span>🗡️ PC : {stats.weaponDie}</span>
+              <span>❤️ PV : {stats.pv}</span>
+            </>
+          )}
+        </div>
+      )}
+
       {options.includes("sneak_safe") && (
         <button onClick={() => onResolve("sneak_safe")} disabled={isBusy}>
           Se faufiler (garanti, 3 mvts)
