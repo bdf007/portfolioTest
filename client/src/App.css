@@ -1597,6 +1597,18 @@ textarea {
   margin: 17.5% !important;
 }
 
+.enemy-stats-preview {
+  display: flex;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 6px;
+  padding: 0.5rem 0.7rem;
+  margin: 0.5rem 0;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.82rem;
+}
+
 .hero-image {
   z-index: 3;
   filter: drop-shadow(0 0 5px rgba(102, 252, 241, 0.6));
