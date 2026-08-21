@@ -95,15 +95,26 @@ const NavBarre = () => {
                   </li>
                 )}
                 {user.role === "admin" && (
-                  <li className="nav-item">
-                    <NavLink
-                      className="nav-link app-nav-link"
-                      to="/AdminDungeon"
-                      onClick={() => setIsOpen(false)}
-                    >
-                      Admin Donjon
-                    </NavLink>
-                  </li>
+                  <>
+                    <li className="nav-item">
+                      <NavLink
+                        className="nav-link app-nav-link"
+                        to="/AdminDungeon"
+                        onClick={() => setIsOpen(false)}
+                      >
+                        Admin Donjon
+                      </NavLink>
+                    </li>
+                    <li className="nav-item">
+                      <NavLink
+                        className="nav-link app-nav-link"
+                        to="/Arpg"
+                        onClick={() => setIsOpen(false)}
+                      >
+                        ARPG
+                      </NavLink>
+                    </li>
+                  </>
                 )}
                 <li className="nav-item">
                   <span

@@ -50,6 +50,9 @@ const gameRoutes = require("./routes/game");
 // get the dungeon routes
 const dungeonRoutes = require("./routes/dungeonRoute");
 
+// get the arpg routes
+const arpgRoutes = require("./routes/arpg");
+
 // middleware
 app.use(json({ limit: "10mb" }));
 app.use(
@@ -99,6 +102,9 @@ app.use("/api/", gameRoutes);
 
 // use the dungeon routes
 app.use("/api/dungeon", dungeonRoutes);
+
+// use the arpg routes
+app.use("/api/arpg", arpgRoutes);
 
 // Serve the React app
 app.get("/*", (req, res) => {

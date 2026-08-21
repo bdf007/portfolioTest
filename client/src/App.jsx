@@ -24,6 +24,7 @@ import Contact from "./pages/Contact";
 import Ludotheque from "./pages/Ludotheque";
 import AdminDungeon from "./pages/AdminDungeon";
 import DungeonPage from "./pages/Dungeon";
+import ArpgPage from "./pages/Arpg";
 import Footer from "./component/footer";
 
 // API functions
@@ -116,6 +117,12 @@ function App() {
                   ) : (
                     <Navigate to="/" />
                   )
+                }
+              />
+              <Route
+                path="/Arpg"
+                element={
+                  user?.role === "admin" ? <ArpgPage /> : <Navigate to="/" />
                 }
               />
 
