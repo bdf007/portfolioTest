@@ -6,8 +6,8 @@ import enemy1Spritesheet from "../../assets/enemy1_walk.png";
 import enemy2Spritesheet from "../../assets/enemy2_walk.png";
 import goblin2Spritesheet from "../../assets/goblin2_walk.png";
 import bat1Spritesheet from "../../assets/bat1_fly.png";
-import wallCaveSprite from "../../assets/wall_cave.png";
-import floorCaveSprite from "../../assets/floor_cave.png";
+// import wallCaveSprite from "../../assets/wall_cave.png";
+// import floorCaveSprite from "../../assets/floor_cave.png";
 
 /**
  * Registre centralisé des sprites du jeu. Chaque entrée porte ses PROPRES
@@ -178,24 +178,24 @@ export const SPRITE_REGISTRY = {
     animations: STANDARD_ANIMATION_FRAMES_4X4,
     hitbox: computeSafeHitbox(16, 16, 2),
   },
-  wallCave: {
-    key: "wallCave",
-    path: wallCaveSprite,
-    frameWidth: 32,
-    frameHeight: 32,
-    scale: 1,
-    animations: null,
-    hitbox: computeSafeHitbox(32, 32, 1),
-  },
-  floorCave: {
-    key: "floorCave",
-    path: floorCaveSprite,
-    frameWidth: 32,
-    frameHeight: 32,
-    scale: 1,
-    animations: null,
-    hitbox: computeSafeHitbox(32, 32, 1),
-  },
+  // wallCave: {
+  //   key: "wallCave",
+  //   path: wallCaveSprite,
+  //   frameWidth: 32,
+  //   frameHeight: 32,
+  //   scale: 1,
+  //   animations: null,
+  //   hitbox: computeSafeHitbox(32, 32, 1),
+  // },
+  // floorCave: {
+  //   key: "floorCave",
+  //   path: floorCaveSprite,
+  //   frameWidth: 32,
+  //   frameHeight: 32,
+  //   scale: 1,
+  //   animations: null,
+  //   hitbox: computeSafeHitbox(32, 32, 1),
+  // },
 };
 
 /**
