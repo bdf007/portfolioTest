@@ -1,5 +1,8 @@
 import Phaser from "phaser";
-import { getUniqueTexturesToLoad } from "../spriteRegistry";
+import {
+  getUniqueTexturesToLoad,
+  getTileImagesToLoad,
+} from "../spriteRegistry";
 
 /**
  * Précharge tous les sprites listés dans spriteRegistry.js avant de
@@ -8,7 +11,9 @@ import { getUniqueTexturesToLoad } from "../spriteRegistry";
  * getUniqueTexturesToLoad, qui dédoublonne par `key`).
  *
  * Ajouter un nouveau sprite au jeu = ajouter une entrée dans
- * spriteRegistry.js, rien à toucher ici.
+ * spriteRegistry.js, rien à toucher ici. Meme principe pour les images
+ * de tuiles (getTileImagesToLoad) - chargees comme de simples images
+ * (this.load.image), pas des spritesheets.
  */
 export default class BootScene extends Phaser.Scene {
   constructor() {
@@ -21,6 +26,9 @@ export default class BootScene extends Phaser.Scene {
         frameWidth: entry.frameWidth,
         frameHeight: entry.frameHeight,
       });
+    }
+    for (const { key, path } of getTileImagesToLoad()) {
+      this.load.image(key, path);
     }
   }
 

@@ -1,4 +1,4 @@
-const { createRng } = require('./rng');
+const { createRng } = require("./rng");
 
 /**
  * Table des objets du jeu - même principe que enemyStats.js/questTypes.js :
@@ -26,59 +26,64 @@ const { createRng } = require('./rng');
  */
 const ITEM_TYPES = {
   healthPotion: {
-    id: 'healthPotion',
-    category: 'consumable',
-    name: 'Potion de soin',
+    id: "healthPotion",
+    category: "consumable",
+    name: "Potion de soin",
     description: "Restaure 30 PV à l'usage.",
     effect: { heal: 30 },
     stackable: true,
+    price: 15, // vendable en boutique - cf. shopGenerator.js. Absent = jamais en vente (or, objets de quete)
   },
 
   ironSword: {
-    id: 'ironSword',
-    category: 'equipment',
-    slot: 'weapon',
-    name: 'Épée de fer',
-    description: '+5 dégâts au corps à corps.',
+    id: "ironSword",
+    category: "equipment",
+    slot: "weapon",
+    name: "Épée de fer",
+    description: "+5 dégâts au corps à corps.",
     statBonus: { meleeDamage: 5 },
     stackable: false,
+    price: 60,
   },
 
   huntingBow: {
-    id: 'huntingBow',
-    category: 'equipment',
-    slot: 'weapon',
-    name: 'Arc de chasse',
-    description: '+4 dégâts à distance.',
+    id: "huntingBow",
+    category: "equipment",
+    slot: "weapon",
+    name: "Arc de chasse",
+    description: "+4 dégâts à distance.",
     statBonus: { rangedDamage: 4 },
     stackable: false,
+    price: 55,
   },
 
   leatherArmor: {
-    id: 'leatherArmor',
-    category: 'equipment',
-    slot: 'armor',
-    name: 'Armure de cuir',
-    description: '+3 défense.',
+    id: "leatherArmor",
+    category: "equipment",
+    slot: "armor",
+    name: "Armure de cuir",
+    description: "+3 défense.",
     statBonus: { defense: 3 },
     stackable: false,
+    price: 45,
   },
 
   vitalityCharm: {
-    id: 'vitalityCharm',
-    category: 'equipment',
-    slot: 'accessory',
-    name: 'Charme de vitalité',
-    description: '+20 PV maximum.',
+    id: "vitalityCharm",
+    category: "equipment",
+    slot: "accessory",
+    name: "Charme de vitalité",
+    description: "+20 PV maximum.",
     statBonus: { maxHp: 20 },
     stackable: false,
+    price: 70,
   },
 
   gold: {
-    id: 'gold',
-    category: 'currency',
-    name: 'Or',
-    description: 'Monnaie du jeu.',
+    id: "gold",
+    category: "currency",
+    name: "Or",
+    description: "Monnaie du jeu.",
     stackable: true,
   },
 
@@ -86,10 +91,10 @@ const ITEM_TYPES = {
   // de type "en rapporter N" ne sait encore l'exploiter (cf. commentaire
   // en tete de fichier)
   ancientRelic: {
-    id: 'ancientRelic',
-    category: 'questItem',
-    name: 'Relique ancienne',
-    description: 'Un artefact qui semble important.',
+    id: "ancientRelic",
+    category: "questItem",
+    name: "Relique ancienne",
+    description: "Un artefact qui semble important.",
     stackable: false,
   },
 };
@@ -105,26 +110,26 @@ const ITEM_TYPES = {
  */
 const LOOT_TABLES = {
   chestStandard: [
-    { itemId: 'healthPotion', weight: 35 },
-    { itemId: 'gold', weight: 35, quantityRange: [5, 20] },
-    { itemId: 'ironSword', weight: 10 },
-    { itemId: 'huntingBow', weight: 10 },
-    { itemId: 'leatherArmor', weight: 8 },
-    { itemId: 'vitalityCharm', weight: 2 },
+    { itemId: "healthPotion", weight: 35 },
+    { itemId: "gold", weight: 35, quantityRange: [5, 20] },
+    { itemId: "ironSword", weight: 10 },
+    { itemId: "huntingBow", weight: 10 },
+    { itemId: "leatherArmor", weight: 8 },
+    { itemId: "vitalityCharm", weight: 2 },
   ],
 
   enemyDrop: [
     { itemId: null, weight: 50 }, // la plupart des ennemis ne laissent rien
-    { itemId: 'gold', weight: 35, quantityRange: [1, 5] },
-    { itemId: 'healthPotion', weight: 15 },
+    { itemId: "gold", weight: 35, quantityRange: [1, 5] },
+    { itemId: "healthPotion", weight: 15 },
   ],
 
   bossDrop: [
-    { itemId: 'ironSword', weight: 25 },
-    { itemId: 'huntingBow', weight: 25 },
-    { itemId: 'leatherArmor', weight: 20 },
-    { itemId: 'vitalityCharm', weight: 10 },
-    { itemId: 'gold', weight: 20, quantityRange: [50, 100] },
+    { itemId: "ironSword", weight: 25 },
+    { itemId: "huntingBow", weight: 25 },
+    { itemId: "leatherArmor", weight: 20 },
+    { itemId: "vitalityCharm", weight: 10 },
+    { itemId: "gold", weight: 20, quantityRange: [50, 100] },
   ],
 
   // recompense de quete : l'XP reste la recompense principale (deja geree
@@ -133,11 +138,11 @@ const LOOT_TABLES = {
   // chaque quete en garantie d'equipement gratuit
   questReward: [
     { itemId: null, weight: 60 },
-    { itemId: 'gold', weight: 20, quantityRange: [10, 30] },
-    { itemId: 'healthPotion', weight: 10 },
-    { itemId: 'ironSword', weight: 4 },
-    { itemId: 'huntingBow', weight: 4 },
-    { itemId: 'leatherArmor', weight: 2 },
+    { itemId: "gold", weight: 20, quantityRange: [10, 30] },
+    { itemId: "healthPotion", weight: 10 },
+    { itemId: "ironSword", weight: 4 },
+    { itemId: "huntingBow", weight: 4 },
+    { itemId: "leatherArmor", weight: 2 },
   ],
 };
 
@@ -162,7 +167,10 @@ function rollLoot(tableName, rng) {
     if (roll < entry.weight) {
       if (!entry.itemId) return null;
       const quantity = entry.quantityRange
-        ? entry.quantityRange[0] + Math.floor(rng() * (entry.quantityRange[1] - entry.quantityRange[0] + 1))
+        ? entry.quantityRange[0] +
+          Math.floor(
+            rng() * (entry.quantityRange[1] - entry.quantityRange[0] + 1),
+          )
         : 1;
       return { itemId: entry.itemId, quantity };
     }
@@ -172,4 +180,15 @@ function rollLoot(tableName, rng) {
   return null; // filet de securite (ne devrait jamais arriver si les poids sont corrects)
 }
 
-module.exports = { ITEM_TYPES, LOOT_TABLES, rollLoot };
+/**
+ * Liste des clés d'objets vendables en boutique - tout objet ayant un
+ * `price` defini (equipement/consommables ci-dessus) - l'or et les
+ * objets de quete n'en ont volontairement pas, donc jamais achetables.
+ */
+function getPurchasableItemIds() {
+  return Object.values(ITEM_TYPES)
+    .filter((item) => typeof item.price === "number")
+    .map((item) => item.id);
+}
+
+module.exports = { ITEM_TYPES, LOOT_TABLES, rollLoot, getPurchasableItemIds };

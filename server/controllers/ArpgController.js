@@ -1,8 +1,17 @@
 const { getBiomeForDepth } = require("../services/generation/biomeConfig");
 const { generateCave } = require("../services/generation/caveGenerator");
 const { generateRooms } = require("../services/generation/roomGenerator");
+const {
+  generateCaveChain,
+} = require("../services/generation/caveChainGenerator");
 const { generateBSP } = require("../services/generation/bspGenerator");
 const { generateTown } = require("../services/generation/townGenerator");
+const {
+  generateDrunkardWalk,
+} = require("../services/generation/drunkardWalkGenerator");
+const { generateMaze } = require("../services/generation/mazeGenerator");
+const { generateNoiseCave } = require("../services/generation/noiseGenerator");
+const { generateVoronoi } = require("../services/generation/voronoiGenerator");
 const { generateEnemySpawns } = require("../services/generation/enemySpawner");
 const {
   findSpawnTile,
@@ -13,6 +22,7 @@ const {
 const { getEnemyStatsForDepth } = require("../services/generation/enemyStats");
 const {
   generateQuestForNpc,
+  generateObtainItemQuest,
   getFixedQuest,
 } = require("../services/generation/questTypes");
 const {
@@ -20,7 +30,8 @@ const {
   reachableFloorSet,
 } = require("../services/generation/bossRoom");
 const { generateChests } = require("../services/generation/chestGenerator");
-const { rollLoot } = require("../services/generation/itemTypes");
+const { generateShopStock } = require("../services/generation/shopGenerator");
+const { rollLoot, LOOT_TABLES } = require("../services/generation/itemTypes");
 const { createRng } = require("../services/generation/rng");
 const ArpgGame = require("../models/ArpgModel");
 
@@ -63,6 +74,15 @@ async function getLevel(req, res) {
       case "randomwalk":
         grid = generateRooms({ width: 40, height: 40, seed });
         break;
+      case "cavechain":
+        grid = generateCaveChain({
+          width: 40,
+          height: 40,
+          seed,
+          roomCount: 8,
+          roomSize: 5,
+        });
+        break;
       case "bsp":
         // niveaux plus grands et plus ouverts en fin de progression, cf.
         // /areas/phaser-arpg.md - d'où une grille plus large que les deux
@@ -75,11 +95,38 @@ async function getLevel(req, res) {
         // sur les ennemis, geree entierement en amont
         grid = generateTown({ width: 40, height: 40, seed });
         break;
+      case "drunkardwalk":
+        grid = generateDrunkardWalk({ width: 40, height: 40, seed });
+        break;
+      case "maze":
+        // passageWidth:2 (pas le defaut 1 du generateur, "labyrinthe pur"
+        // traditionnel) - un couloir d'une seule case serait tres
+        // inconfortable pour l'esquive/les projectiles/le deplacement
+        // des ennemis une fois le niveau reellement jouable
+        grid = generateMaze({ width: 40, height: 40, seed, passageWidth: 2 });
+        break;
+      case "noise":
+        // seul generateur qui peut echouer (retourne null si le ratio de
+        // sol minimal n'est pas atteint apres ses propres tentatives
+        // internes) - repli sur l'automate cellulaire (fiable, jamais
+        // echoue) avec la meme seed plutot que de laisser une valeur
+        // invalide se propager
+        grid = generateNoiseCave({ width: 40, height: 40, seed });
+        if (!grid) {
+          console.warn(
+            `[ArpgController] noise a echoue pour la seed "${seed}", repli sur cellular`,
+          );
+          grid = generateCave({ width: 40, height: 40, seed });
+        }
+        break;
+      case "voronoi":
+        grid = generateVoronoi({ width: 40, height: 40, seed });
+        break;
       default:
         throw new Error(`Générateur inconnu pour le biome ${biome.id}`);
     }
 
-    const playerSpawn = findSpawnTile(grid);
+    const playerSpawn = findSpawnTile(grid, seed);
 
     // salle de boss : remplace le calcul normal de la sortie (qui se
     // retrouve A L'INTERIEUR de la salle scellee, cf. carveBossRoom) et
@@ -131,45 +178,108 @@ async function getLevel(req, res) {
           )
         : null;
 
-    // PNJ de quete : pour l'instant, uniquement dans les villes (un par
-    // ville, garanti) - d'autres conditions d'apparition (aleatoire sur
-    // un etage normal, sous condition) sont prevues plus tard mais pas
-    // construites ici. Case distincte de la remontee (jamais la meme,
-    // cf. findNearbyFloorTile) ; objectif tire de facon seedee (meme
-    // seed = meme quete, comme le reste de la generation).
-    let questNpc = null;
+    // PNJ de quete : pour l'instant, uniquement dans les villes -
+    // plusieurs par ville desormais (1 a 3, comme les coffres), places de
+    // facon dispersee (meme algorithme que les coffres, pas la recherche
+    // "proche du spawn" a un seul point d'avant, qui ne passait pas a
+    // l'echelle pour plusieurs PNJ). D'autres conditions d'apparition
+    // (aleatoire sur un etage normal, sous condition) sont prevues plus
+    // tard mais pas construites ici.
+    let questNpcs = [];
     if (biome.id === "town") {
-      const npcTile = findNearbyFloorTile(
+      const npcCountRng = createRng(seed + "-quest-npc-count");
+      const npcCount = 1 + Math.floor(npcCountRng() * 3); // 1 a 3
+
+      let npcPositions = generateEnemySpawns({
         grid,
+        seed: seed + "-quest-npc-positions",
         playerSpawn,
-        upstairsTile ? [upstairsTile] : [],
-      );
-      if (npcTile) {
-        // une quete ecrite a la main pour CET etage precis prend le pas
-        // sur le tirage aleatoire, si elle existe (cf. FIXED_QUESTS dans
-        // questTypes.js) - sinon, comportement habituel
-        const fixedQuest = getFixedQuest(depth);
+        enemyCount: npcCount,
+        minDistanceFromPlayer: 3,
+        minDistanceBetweenEnemies: 4,
+      });
+      // evite toute coincidence avec la case de remontee - rare, mais
+      // plus simple a filtrer apres coup qu'a exclure a priori (le
+      // pire cas est un PNJ de moins que demande, jamais un crash)
+      if (upstairsTile) {
+        npcPositions = npcPositions.filter(
+          (p) => !(p.x === upstairsTile.x && p.y === upstairsTile.y),
+        );
+      }
+
+      // bassin de types cible = fusion du biome qui precede ET de celui
+      // qui suit la ville - pas un sens fige (le passage par une ville
+      // impliquera generalement un changement de biome, mais rien
+      // n'empeche la quete de faire reference a l'un OU l'autre selon
+      // le tirage seede). Deduplique (Set) au cas ou les deux listes
+      // se recoupent, pour ne pas fausser les probabilites de tirage.
+      const prevBiome = getBiomeForDepth(depth - 1);
+      const nextBiome = getBiomeForDepth(depth + 1);
+      const enemyTypePool = [
+        ...new Set([
+          ...(prevBiome.enemyTypes || []),
+          ...(nextBiome.enemyTypes || []),
+        ]),
+      ];
+
+      // quete "recuperer tel objet sur le boss" : eligible seulement si
+      // cette ville se trouve APRES au moins un boss deja vaincu (sinon
+      // non-sens narratif - rien a recuperer sur un boss jamais
+      // rencontre). ~25% de chance par PNJ eligible, sinon quete
+      // habituelle. Bassin = butin possible du boss, or exclu (recuperer
+      // "de l'or" n'a pas de sens pour ce type de quete).
+      const earliestBossDepth = Math.min(...BOSS_DEPTHS);
+      const obtainItemEligible = depth > earliestBossDepth;
+      const bossItemPool = LOOT_TABLES.bossDrop
+        .map((entry) => entry.itemId)
+        .filter((id) => id && id !== "gold");
+
+      questNpcs = npcPositions.map((pos, npcIndex) => {
+        // une quete ecrite a la main pour CE PNJ precis prend le pas sur
+        // le tirage aleatoire, si elle existe (cf. FIXED_QUESTS dans
+        // questTypes.js) - sinon, comportement habituel. Seed DISTINCTE
+        // par PNJ (inclut son index), pour que plusieurs PNJ du meme
+        // etage n'aient jamais la meme quete par coincidence.
+        const fixedQuest = getFixedQuest(depth, npcIndex);
         let quest;
         if (fixedQuest) {
           quest = fixedQuest;
         } else {
-          // bassin de types cible = fusion du biome qui precede ET de celui
-          // qui suit la ville - pas un sens fige (le passage par une ville
-          // impliquera generalement un changement de biome, mais rien
-          // n'empeche la quete de faire reference a l'un OU l'autre selon
-          // le tirage seede). Deduplique (Set) au cas ou les deux listes
-          // se recoupent, pour ne pas fausser les probabilites de tirage.
-          const prevBiome = getBiomeForDepth(depth - 1);
-          const nextBiome = getBiomeForDepth(depth + 1);
-          const enemyTypePool = [
-            ...new Set([
-              ...(prevBiome.enemyTypes || []),
-              ...(nextBiome.enemyTypes || []),
-            ]),
-          ];
-          quest = generateQuestForNpc(seed, enemyTypePool);
+          const npcSeed = `${seed}-npc-${npcIndex}`;
+          const obtainChanceRng = createRng(`${npcSeed}-obtain-chance`);
+          const useObtainItem = obtainItemEligible && obtainChanceRng() < 0.25;
+          quest = useObtainItem
+            ? generateObtainItemQuest(npcSeed, bossItemPool)
+            : generateQuestForNpc(npcSeed, enemyTypePool);
         }
-        questNpc = { x: npcTile.x, y: npcTile.y, ...quest };
+        return { x: pos.x, y: pos.y, npcIndex, ...quest };
+      });
+    }
+
+    // hub de voyage rapide - uniquement dans les villes. Ne transporte
+    // aucune donnee de destinations : le CLIENT connait deja tous les
+    // etages visites (this.visitedFloors), le serveur n'a qu'a placer le
+    // point d'interaction, en evitant la remontee et les PNJ de quete.
+    let travelHubTile = null;
+    if (biome.id === "town") {
+      const excludeTiles = [];
+      if (upstairsTile) excludeTiles.push(upstairsTile);
+      for (const npc of questNpcs) excludeTiles.push({ x: npc.x, y: npc.y });
+      travelHubTile = findNearbyFloorTile(grid, playerSpawn, excludeTiles);
+    }
+
+    // boutique - uniquement dans les villes, stock genere de facon
+    // seedee (cf. shopGenerator.js) - evite tous les autres landmarks
+    // deja places (remontee, PNJ de quete, hub)
+    let shop = null;
+    if (biome.id === "town") {
+      const excludeTiles = [];
+      if (upstairsTile) excludeTiles.push(upstairsTile);
+      if (travelHubTile) excludeTiles.push(travelHubTile);
+      for (const npc of questNpcs) excludeTiles.push({ x: npc.x, y: npc.y });
+      const shopTile = findNearbyFloorTile(grid, playerSpawn, excludeTiles);
+      if (shopTile) {
+        shop = { x: shopTile.x, y: shopTile.y, stock: generateShopStock(seed) };
       }
     }
 
@@ -237,7 +347,9 @@ async function getLevel(req, res) {
       playerSpawn,
       exitTile,
       upstairsTile,
-      questNpc,
+      questNpcs,
+      travelHubTile,
+      shop,
       bossDoorTile,
       boss,
       enemies,

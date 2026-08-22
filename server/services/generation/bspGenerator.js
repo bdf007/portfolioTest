@@ -1,4 +1,4 @@
-const { createRng } = require('./rng');
+const { createRng } = require("./rng");
 
 const WALL = 1;
 const FLOOR = 0;
@@ -59,23 +59,35 @@ function splitNode(region, rng, minLeafSize, depth, maxDepth) {
 
   if (splitVertically) {
     const splitX = minLeafSize + Math.floor(rng() * (w - 2 * minLeafSize));
-    node.left = splitNode({ x, y, w: splitX, h }, rng, minLeafSize, depth + 1, maxDepth);
+    node.left = splitNode(
+      { x, y, w: splitX, h },
+      rng,
+      minLeafSize,
+      depth + 1,
+      maxDepth,
+    );
     node.right = splitNode(
       { x: x + splitX, y, w: w - splitX, h },
       rng,
       minLeafSize,
       depth + 1,
-      maxDepth
+      maxDepth,
     );
   } else {
     const splitY = minLeafSize + Math.floor(rng() * (h - 2 * minLeafSize));
-    node.left = splitNode({ x, y, w, h: splitY }, rng, minLeafSize, depth + 1, maxDepth);
+    node.left = splitNode(
+      { x, y, w, h: splitY },
+      rng,
+      minLeafSize,
+      depth + 1,
+      maxDepth,
+    );
     node.right = splitNode(
       { x, y: y + splitY, w, h: h - splitY },
       rng,
       minLeafSize,
       depth + 1,
-      maxDepth
+      maxDepth,
     );
   }
 
@@ -164,11 +176,23 @@ function connectRooms(node, grid, width, height, corridorWidth, rng) {
     return roomCenter(node.room);
   }
 
-  const leftPoint = node.left ? connectRooms(node.left, grid, width, height, corridorWidth, rng) : null;
-  const rightPoint = node.right ? connectRooms(node.right, grid, width, height, corridorWidth, rng) : null;
+  const leftPoint = node.left
+    ? connectRooms(node.left, grid, width, height, corridorWidth, rng)
+    : null;
+  const rightPoint = node.right
+    ? connectRooms(node.right, grid, width, height, corridorWidth, rng)
+    : null;
 
   if (leftPoint && rightPoint) {
-    carveCorridor(grid, width, height, leftPoint, rightPoint, corridorWidth, rng);
+    carveCorridor(
+      grid,
+      width,
+      height,
+      leftPoint,
+      rightPoint,
+      corridorWidth,
+      rng,
+    );
     return leftPoint;
   }
 
@@ -180,7 +204,8 @@ function carveAllRooms(node, grid, width, height) {
     const { x, y, w, h } = node.room;
     for (let ty = y; ty < y + h; ty++) {
       for (let tx = x; tx < x + w; tx++) {
-        if (tx >= 0 && tx < width && ty >= 0 && ty < height) grid[ty][tx] = FLOOR;
+        if (tx >= 0 && tx < width && ty >= 0 && ty < height)
+          grid[ty][tx] = FLOOR;
       }
     }
     return;
@@ -211,14 +236,20 @@ function generateBSP({
 }) {
   if (width < minLeafSize * 2 || height < minLeafSize * 2) {
     throw new Error(
-      `generateBSP: grille (${width}x${height}) trop petite pour minLeafSize=${minLeafSize}`
+      `generateBSP: grille (${width}x${height}) trop petite pour minLeafSize=${minLeafSize}`,
     );
   }
 
   const rng = createRng(String(seed));
   const grid = createGrid(width, height, WALL);
 
-  const root = splitNode({ x: 0, y: 0, w: width, h: height }, rng, minLeafSize, 0, maxDepth);
+  const root = splitNode(
+    { x: 0, y: 0, w: width, h: height },
+    rng,
+    minLeafSize,
+    0,
+    maxDepth,
+  );
   createRooms(root, rng, roomMargin);
   carveAllRooms(root, grid, width, height);
   connectRooms(root, grid, width, height, corridorWidth, rng);

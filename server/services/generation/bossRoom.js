@@ -1,4 +1,4 @@
-const { findExitTile } = require('./spawnUtils');
+const { findExitTile } = require("./spawnUtils");
 
 const WALL = 1;
 const FLOOR = 0;
@@ -14,7 +14,12 @@ function reachableFloorSet(grid, from) {
   const stack = [from];
   while (stack.length > 0) {
     const { x, y } = stack.pop();
-    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+    for (const [dx, dy] of [
+      [1, 0],
+      [-1, 0],
+      [0, 1],
+      [0, -1],
+    ]) {
       const nx = x + dx;
       const ny = y + dy;
       if (nx < 0 || ny < 0 || nx >= width || ny >= height) continue;

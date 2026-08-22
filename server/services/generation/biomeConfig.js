@@ -16,34 +16,84 @@ const BIOMES = [
   {
     id: "cave",
     minDepth: 1,
-    maxDepth: 5,
+    maxDepth: 2,
     generator: "cellular",
     tileset: "cave",
     enemyBaseCount: 5,
-    enemyTypes: ["goblin", "bat1"],
-    chestCount: 2,
+    enemyTypes: ["bat1", "goblin2"],
+    chestCount: [1, 3], // tire au sort a chaque generation - pas un nombre fige
+  },
+  {
+    id: "cavechain",
+    minDepth: 3,
+    maxDepth: 4,
+    generator: "cavechain",
+    tileset: "cavechain",
+    enemyBaseCount: 8,
+    enemyTypes: ["naga1", "naga2", "naga3"],
+    chestCount: [1, 3],
   },
   {
     id: "ruins",
-    minDepth: 6,
+    minDepth: 5,
     maxDepth: 6,
     generator: "randomwalk",
     tileset: "ruins",
     enemyBaseCount: 7,
     enemyTypes: ["enemyDefault"],
-    chestCount: 2,
+    chestCount: [1, 3],
+  },
+  {
+    id: "drunkardwalk",
+    minDepth: 7,
+    maxDepth: 8,
+    generator: "drunkardwalk",
+    tileset: "drunkardwalk",
+    enemyBaseCount: 9,
+    enemyTypes: ["enemyDefault"],
+    chestCount: [2, 3],
+  },
+  {
+    id: "maze",
+    minDepth: 9,
+    maxDepth: 11,
+    generator: "maze",
+    tileset: "maze",
+    enemyBaseCount: 9,
+    enemyTypes: ["enemyDefault"],
+    chestCount: [2, 3],
+  },
+  {
+    id: "noise",
+    minDepth: 12,
+    maxDepth: 13,
+    generator: "noise",
+    tileset: "noise",
+    enemyBaseCount: 10,
+    enemyTypes: ["enemyDefault"],
+    chestCount: [2, 4],
+  },
+  {
+    id: "voronoi",
+    minDepth: 14,
+    maxDepth: 15,
+    generator: "voronoi",
+    tileset: "voronoi",
+    enemyBaseCount: 11,
+    enemyTypes: ["enemyDefault"],
+    chestCount: [2, 4],
   },
   {
     id: "temple",
-    minDepth: 7,
+    minDepth: 16,
     maxDepth: MAX_DEPTH,
     generator: "bsp",
     tileset: "temple",
     enemyBaseCount: 10,
-    enemyTypes: ["goblin2", "enemy2"],
-    chestCount: 3,
+    enemyTypes: ["enemyDefault"],
+    chestCount: [2, 4],
   },
-  // D'autres biomes sont prevus entre depth 7 et MAX_DEPTH (l'enchainement
+  // D'autres biomes sont prevus entre depth 10 et MAX_DEPTH (l'enchainement
   // exact reste a definir) - le jour venu, reduire la plage de `temple`
   // et inserer les nouvelles entrees ici, chacune avec sa propre plage
   // finie. Aucun changement necessaire au mecanisme des villes
@@ -69,7 +119,7 @@ const TOWN_BIOME = {
   tileset: "town",
   enemyBaseCount: 0,
   enemyTypes: [],
-  chestCount: 0, // zone sure, pas de butin de donjon (une boutique viendra separement)
+  chestCount: [0, 0], // zone sure, pas de butin de donjon (une boutique viendra separement)
 };
 
 const TOWN_INTERVAL = 10;

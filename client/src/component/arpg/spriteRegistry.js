@@ -1,13 +1,67 @@
+// import hero
 import hero1Spritesheet from "../../assets/hero1_walk.png";
 import hero2Spritesheet from "../../assets/hero2_walk.png";
 import hero3Spritesheet from "../../assets/hero3_walk.png";
 import hero4Spritesheet from "../../assets/hero4_walk.png";
+// import enemy
 import enemy1Spritesheet from "../../assets/enemy1_walk.png";
 import enemy2Spritesheet from "../../assets/enemy2_walk.png";
 import goblin2Spritesheet from "../../assets/goblin2_walk.png";
 import bat1Spritesheet from "../../assets/bat1_fly.png";
-// import wallCaveSprite from "../../assets/wall_cave.png";
-// import floorCaveSprite from "../../assets/floor_cave.png";
+import kobold1Spritesheet from "../../assets/$Kobold_1.png";
+import kobold2Spritesheet from "../../assets/$Kobold_2.png";
+import kobold3Spritesheet from "../../assets/$Kobold_3.png";
+import naga1Spritesheet from "../../assets/$Naga_1.png";
+import naga2Spritesheet from "../../assets/$Naga_2.png";
+import naga3Spritesheet from "../../assets/$Naga_3.png";
+import naga4Spritesheet from "../../assets/$Naga_4.png";
+import naga5Spritesheet from "../../assets/$Naga_5.png";
+import naga6Spritesheet from "../../assets/$Naga_6.png";
+import naga7Spritesheet from "../../assets/$Naga_7.png";
+import orc1Spritesheet from "../../assets/$Orc_1.png";
+import orc2Spritesheet from "../../assets/$Orc_2.png";
+import orc3Spritesheet from "../../assets/$Orc_3.png";
+import orc4Spritesheet from "../../assets/$Orc_4.png";
+import orc5Spritesheet from "../../assets/$Orc_5.png";
+import orc6Spritesheet from "../../assets/$Orc_6.png";
+import orc7Spritesheet from "../../assets/$Orc_7.png";
+import orc8Spritesheet from "../../assets/$Orc_8.png";
+// import tiles
+import wallCaveSprite from "../../assets/wall_cave.png";
+import floorCaveSprite from "../../assets/floor_cave.png";
+// import animation effects
+import meleeSlashSpritesheet from "../../assets/melee_slash_effect.png";
+// import town PNJ spritesheets here when available
+import town1NPCf1Spritesheet from "../../assets/town1_F1_walk.png";
+import town1NPCf2Spritesheet from "../../assets/town1_F2_walk.png";
+import town1NPCf3Spritesheet from "../../assets/town1_F3_walk.png";
+import town1NPCf4Spritesheet from "../../assets/town1_F4_walk.png";
+import town1NPCf5Spritesheet from "../../assets/town1_F5_walk.png";
+import town1NPCm1Spritesheet from "../../assets/town1_M1_walk.png";
+import town1NPCm2Spritesheet from "../../assets/town1_M2_walk.png";
+import town1NPCm3Spritesheet from "../../assets/town1_M3_walk.png";
+import town1NPCm4Spritesheet from "../../assets/town1_M4_walk.png";
+import town1NPCm5Spritesheet from "../../assets/town1_M5_walk.png";
+import town2NPCf1Spritesheet from "../../assets/town2_F1_walk.png";
+import town2NPCf2Spritesheet from "../../assets/town2_F2_walk.png";
+import town2NPCf3Spritesheet from "../../assets/town2_F3_walk.png";
+import town2NPCf4Spritesheet from "../../assets/town2_F4_walk.png";
+import town2NPCf5Spritesheet from "../../assets/town2_F5_walk.png";
+import town2NPCm1Spritesheet from "../../assets/town2_M1_walk.png";
+import town2NPCm2Spritesheet from "../../assets/town2_M2_walk.png";
+import town2NPCm3Spritesheet from "../../assets/town2_M3_walk.png";
+import town2NPCm4Spritesheet from "../../assets/town2_M4_walk.png";
+import town2NPCm5Spritesheet from "../../assets/town2_M5_walk.png";
+import town3NPCf1Spritesheet from "../../assets/town3_F1_walk.png";
+import town3NPCf2Spritesheet from "../../assets/town3_F2_walk.png";
+import town3NPCf3Spritesheet from "../../assets/town3_F3_walk.png";
+import town3NPCf4Spritesheet from "../../assets/town3_F4_walk.png";
+import town3NPCf5Spritesheet from "../../assets/town3_F5_walk.png";
+import town3NPCm1Spritesheet from "../../assets/town3_M1_walk.png";
+import town3NPCm2Spritesheet from "../../assets/town3_M2_walk.png";
+import town3NPCm3Spritesheet from "../../assets/town3_M3_walk.png";
+import town3NPCm4Spritesheet from "../../assets/town3_M4_walk.png";
+import town3NPCm5Spritesheet from "../../assets/town3_M5_walk.png";
 
 /**
  * Registre centralisé des sprites du jeu. Chaque entrée porte ses PROPRES
@@ -138,9 +192,9 @@ export const SPRITE_REGISTRY = {
     path: hero1Spritesheet,
     frameWidth: HERO_FRAME_W,
     frameHeight: HERO_FRAME_H,
-    scale: 1.1,
+    scale: 1,
     animations: STANDARD_ANIMATION_FRAMES,
-    hitbox: computeSafeHitbox(HERO_FRAME_W, HERO_FRAME_H, 1.1),
+    hitbox: computeSafeHitbox(HERO_FRAME_W, HERO_FRAME_H, 1),
   },
   enemy1: {
     key: "enemy1",
@@ -178,24 +232,460 @@ export const SPRITE_REGISTRY = {
     animations: STANDARD_ANIMATION_FRAMES_4X4,
     hitbox: computeSafeHitbox(16, 16, 2),
   },
-  // wallCave: {
-  //   key: "wallCave",
-  //   path: wallCaveSprite,
-  //   frameWidth: 32,
-  //   frameHeight: 32,
-  //   scale: 1,
-  //   animations: null,
-  //   hitbox: computeSafeHitbox(32, 32, 1),
-  // },
-  // floorCave: {
-  //   key: "floorCave",
-  //   path: floorCaveSprite,
-  //   frameWidth: 32,
-  //   frameHeight: 32,
-  //   scale: 1,
-  //   animations: null,
-  //   hitbox: computeSafeHitbox(32, 32, 1),
-  // },
+  kobold1: {
+    key: "kobold1",
+    path: kobold1Spritesheet,
+    frameWidth: 32,
+    frameHeight: 40,
+    scale: 0.8,
+    animations: STANDARD_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(32, 40, 0.8),
+  },
+  kobold2: {
+    key: "kobold2",
+    path: kobold2Spritesheet,
+    frameWidth: 32,
+    frameHeight: 40,
+    scale: 0.8,
+    animations: STANDARD_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(32, 40, 0.8),
+  },
+  kobold3: {
+    key: "kobold3",
+    path: kobold3Spritesheet,
+    frameWidth: 32,
+    frameHeight: 40,
+    scale: 0.8,
+    animations: STANDARD_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(32, 40, 0.8),
+  },
+  naga1: {
+    key: "naga1",
+    path: naga1Spritesheet,
+    frameWidth: 32,
+    frameHeight: 40,
+    scale: 0.8,
+    animations: STANDARD_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(32, 40, 0.8),
+  },
+  naga2: {
+    key: "naga2",
+    path: naga2Spritesheet,
+    frameWidth: 32,
+    frameHeight: 40,
+    scale: 0.8,
+    animations: STANDARD_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(32, 40, 0.8),
+  },
+  naga3: {
+    key: "naga3",
+    path: naga3Spritesheet,
+    frameWidth: 32,
+    frameHeight: 40,
+    scale: 0.8,
+    animations: STANDARD_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(32, 40, 0.8),
+  },
+  naga4: {
+    key: "naga4",
+    path: naga4Spritesheet,
+    frameWidth: 32,
+    frameHeight: 40,
+    scale: 0.8,
+    animations: STANDARD_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(32, 40, 0.8),
+  },
+  naga5: {
+    key: "naga5",
+    path: naga5Spritesheet,
+    frameWidth: 32,
+    frameHeight: 40,
+    scale: 0.8,
+    animations: STANDARD_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(32, 40, 0.8),
+  },
+  naga6: {
+    key: "naga6",
+    path: naga6Spritesheet,
+    frameWidth: 32,
+    frameHeight: 40,
+    scale: 0.8,
+    animations: STANDARD_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(32, 40, 0.8),
+  },
+  naga7: {
+    key: "naga7",
+    path: naga7Spritesheet,
+    frameWidth: 32,
+    frameHeight: 40,
+    scale: 0.8,
+    animations: STANDARD_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(32, 40, 0.8),
+  },
+  orc1: {
+    key: "orc1",
+    path: orc1Spritesheet,
+    frameWidth: 32,
+    frameHeight: 40,
+    scale: 0.8,
+    animations: STANDARD_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(32, 40, 0.8),
+  },
+  orc2: {
+    key: "orc2",
+    path: orc2Spritesheet,
+    frameWidth: 32,
+    frameHeight: 40,
+    scale: 0.8,
+    animations: STANDARD_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(32, 40, 0.8),
+  },
+  orc3: {
+    key: "orc3",
+    path: orc3Spritesheet,
+    frameWidth: 32,
+
+    frameHeight: 40,
+    scale: 0.8,
+    animations: STANDARD_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(32, 40, 0.8),
+  },
+  orc4: {
+    key: "orc4",
+    path: orc4Spritesheet,
+    frameWidth: 32,
+    frameHeight: 40,
+    scale: 0.8,
+    animations: STANDARD_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(32, 40, 0.8),
+  },
+  orc5: {
+    key: "orc5",
+    path: orc5Spritesheet,
+    frameWidth: 32,
+    frameHeight: 40,
+    scale: 0.8,
+    animations: STANDARD_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(32, 40, 0.8),
+  },
+  orc6: {
+    key: "orc6",
+    path: orc6Spritesheet,
+    frameWidth: 32,
+    frameHeight: 40,
+    scale: 0.8,
+    animations: STANDARD_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(32, 40, 0.8),
+  },
+  orc7: {
+    key: "orc7",
+    path: orc7Spritesheet,
+    frameWidth: 32,
+    frameHeight: 40,
+    scale: 0.8,
+    animations: STANDARD_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(32, 40, 0.8),
+  },
+  orc8: {
+    key: "orc8",
+    path: orc8Spritesheet,
+    frameWidth: 32,
+    frameHeight: 40,
+    scale: 0.8,
+    animations: STANDARD_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(32, 40, 0.8),
+  },
+
+  NPC_town1_F1: {
+    key: "NPC_town1_F1",
+    path: town1NPCf1Spritesheet,
+    frameWidth: 32,
+    frameHeight: 40,
+    scale: 1,
+    animations: STANDARD_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(32, 40, 1),
+  },
+  NPC_town1_F2: {
+    key: "NPC_town1_F2",
+    path: town1NPCf2Spritesheet,
+    frameWidth: 32,
+    frameHeight: 40,
+    scale: 1,
+    animations: STANDARD_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(32, 40, 1),
+  },
+  NPC_town1_F3: {
+    key: "NPC_town1_F3",
+    path: town1NPCf3Spritesheet,
+    frameWidth: 32,
+    frameHeight: 40,
+    scale: 1,
+    animations: STANDARD_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(32, 40, 1),
+  },
+  NPC_town1_F4: {
+    key: "NPC_town1_F4",
+    path: town1NPCf4Spritesheet,
+    frameWidth: 32,
+    frameHeight: 40,
+    scale: 1,
+    animations: STANDARD_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(32, 40, 1),
+  },
+  NPC_town1_F5: {
+    key: "NPC_town1_F5",
+    path: town1NPCf5Spritesheet,
+    frameWidth: 32,
+    frameHeight: 40,
+    scale: 1,
+    animations: STANDARD_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(32, 40, 1),
+  },
+  NPC_town1_M1: {
+    key: "NPC_town1_M1",
+    path: town1NPCm1Spritesheet,
+    frameWidth: 32,
+    frameHeight: 40,
+    scale: 1,
+    animations: STANDARD_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(32, 40, 1),
+  },
+  NPC_town1_M2: {
+    key: "NPC_town1_M2",
+    path: town1NPCm2Spritesheet,
+    frameWidth: 32,
+    frameHeight: 40,
+    scale: 1,
+    animations: STANDARD_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(32, 40, 1),
+  },
+  NPC_town1_M3: {
+    key: "NPC_town1_M3",
+    path: town1NPCm3Spritesheet,
+    frameWidth: 32,
+    frameHeight: 40,
+    scale: 1,
+    animations: STANDARD_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(32, 40, 1),
+  },
+  NPC_town1_M4: {
+    key: "NPC_town1_M4",
+    path: town1NPCm4Spritesheet,
+    frameWidth: 32,
+    frameHeight: 40,
+    scale: 1,
+    animations: STANDARD_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(32, 40, 1),
+  },
+  NPC_town1_M5: {
+    key: "NPC_town1_M5",
+    path: town1NPCm5Spritesheet,
+    frameWidth: 32,
+    frameHeight: 40,
+    scale: 1,
+    animations: STANDARD_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(32, 40, 1),
+  },
+  NPC_town2_F1: {
+    key: "NPC_town2_F1",
+    path: town2NPCf1Spritesheet,
+    frameWidth: 32,
+    frameHeight: 40,
+    scale: 1,
+    animations: STANDARD_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(32, 40, 1),
+  },
+  NPC_town2_F2: {
+    key: "NPC_town2_F2",
+    path: town2NPCf2Spritesheet,
+    frameWidth: 32,
+    frameHeight: 40,
+    scale: 1,
+    animations: STANDARD_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(32, 40, 1),
+  },
+  NPC_town2_F3: {
+    key: "NPC_town2_F3",
+    path: town2NPCf3Spritesheet,
+    frameWidth: 32,
+    frameHeight: 40,
+    scale: 1,
+    animations: STANDARD_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(32, 40, 1),
+  },
+  NPC_town2_F4: {
+    key: "NPC_town2_F4",
+    path: town2NPCf4Spritesheet,
+    frameWidth: 32,
+    frameHeight: 40,
+    scale: 1,
+    animations: STANDARD_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(32, 40, 1),
+  },
+  NPC_town2_F5: {
+    key: "NPC_town2_F5",
+    path: town2NPCf5Spritesheet,
+    frameWidth: 32,
+    frameHeight: 40,
+    scale: 1,
+    animations: STANDARD_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(32, 40, 1),
+  },
+  NPC_town2_M1: {
+    key: "NPC_town2_M1",
+    path: town2NPCm1Spritesheet,
+    frameWidth: 32,
+    frameHeight: 40,
+    scale: 1,
+    animations: STANDARD_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(32, 40, 1),
+  },
+  NPC_town2_M2: {
+    key: "NPC_town2_M2",
+    path: town2NPCm2Spritesheet,
+    frameWidth: 32,
+    frameHeight: 40,
+    scale: 1,
+    animations: STANDARD_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(32, 40, 1),
+  },
+  NPC_town2_M3: {
+    key: "NPC_town2_M3",
+    path: town2NPCm3Spritesheet,
+    frameWidth: 32,
+    frameHeight: 40,
+    scale: 1,
+    animations: STANDARD_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(32, 40, 1),
+  },
+  NPC_town2_M4: {
+    key: "NPC_town2_M4",
+    path: town2NPCm4Spritesheet,
+    frameWidth: 32,
+    frameHeight: 40,
+    scale: 1,
+    animations: STANDARD_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(32, 40, 1),
+  },
+  NPC_town2_M5: {
+    key: "NPC_town2_M5",
+    path: town2NPCm5Spritesheet,
+    frameWidth: 32,
+    frameHeight: 40,
+    scale: 1,
+    animations: STANDARD_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(32, 40, 1),
+  },
+  NPC_town3_F1: {
+    key: "NPC_town3_F1",
+    path: town3NPCf1Spritesheet,
+    frameWidth: 32,
+    frameHeight: 40,
+    scale: 1,
+    animations: STANDARD_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(32, 40, 1),
+  },
+  NPC_town3_F2: {
+    key: "NPC_town3_F2",
+    path: town3NPCf2Spritesheet,
+    frameWidth: 32,
+    frameHeight: 40,
+    scale: 1,
+    animations: STANDARD_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(32, 40, 1),
+  },
+  NPC_town3_F3: {
+    key: "NPC_town3_F3",
+    path: town3NPCf3Spritesheet,
+    frameWidth: 32,
+    frameHeight: 40,
+    scale: 1,
+    animations: STANDARD_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(32, 40, 1),
+  },
+  NPC_town3_F4: {
+    key: "NPC_town3_F4",
+    path: town3NPCf4Spritesheet,
+    frameWidth: 32,
+    frameHeight: 40,
+    scale: 1,
+    animations: STANDARD_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(32, 40, 1),
+  },
+  NPC_town3_F5: {
+    key: "NPC_town3_F5",
+    path: town3NPCf5Spritesheet,
+    frameWidth: 32,
+    frameHeight: 40,
+    scale: 1,
+    animations: STANDARD_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(32, 40, 1),
+  },
+  NPC_town3_M1: {
+    key: "NPC_town3_M1",
+    path: town3NPCm1Spritesheet,
+    frameWidth: 32,
+    frameHeight: 40,
+    scale: 1,
+    animations: STANDARD_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(32, 40, 1),
+  },
+  NPC_town3_M2: {
+    key: "NPC_town3_M2",
+    path: town3NPCm2Spritesheet,
+    frameWidth: 32,
+    frameHeight: 40,
+    scale: 1,
+    animations: STANDARD_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(32, 40, 1),
+  },
+  NPC_town3_M3: {
+    key: "NPC_town3_M3",
+    path: town3NPCm3Spritesheet,
+    frameWidth: 32,
+    frameHeight: 40,
+    scale: 1,
+    animations: STANDARD_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(32, 40, 1),
+  },
+  NPC_town3_M4: {
+    key: "NPC_town3_M4",
+    path: town3NPCm4Spritesheet,
+    frameWidth: 32,
+    frameHeight: 40,
+    scale: 1,
+    animations: STANDARD_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(32, 40, 1),
+  },
+  NPC_town3_M5: {
+    key: "NPC_town3_M5",
+    path: town3NPCm5Spritesheet,
+    frameWidth: 32,
+    frameHeight: 40,
+    scale: 1,
+    animations: STANDARD_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(32, 40, 1),
+  },
+
+  // effet visuel de coup en melee (eclair de griffe/lame qui s'estompe,
+  // 4 lignes = 4 directions bas/gauche/droite/haut, 4 colonnes = frames
+  // de l'estompage) - PAS une entite de jeu comme les heros/ennemis
+  // ci-dessus : jamais resolue via resolveEnemySprite/resolveHeroSprite,
+  // referencee directement par sa cle dans MainScene.performMeleeAttack.
+  // `oneShot: true` fait jouer ses animations une seule fois (repeat: 0)
+  // plutot qu'en boucle, cf. MainScene.createAnimationsForEntry - sans
+  // ca, un cycle de marche infini n'aurait aucun sens pour un flash de
+  // degats. Pas de hitbox : jamais de corps physique pour un effet
+  // purement visuel.
+  meleeSlashEffect: {
+    key: "meleeSlashEffect",
+    path: meleeSlashSpritesheet,
+    frameWidth: 96,
+    frameHeight: 96,
+    scale: 0.5, // a ajuster une fois vu en jeu - frame source bien plus grande que le heros
+    oneShot: true,
+    animations: STANDARD_ANIMATION_FRAMES_4X4,
+  },
 };
 
 /**
@@ -264,6 +754,41 @@ export function getUniqueTexturesToLoad() {
     if (!seen.has(entry.key)) {
       seen.set(entry.key, entry);
     }
+  }
+  return [...seen.values()];
+}
+
+/**
+ * Registre des VRAIES images de tuiles (sol/mur), par biome - distinct
+ * de SPRITE_REGISTRY (personnages) : une simple image, jamais de
+ * spritesheet ni d'animation. Un biome absent d'ici continue d'afficher
+ * des couleurs pleines (cf. TILESET_COLORS dans MainScene.js) - c'est le
+ * repli normal, pas une erreur. Ajouter un biome ici = fournir
+ * `wallKey`/`floorKey` correspondant a des imports ajoutes en haut de ce
+ * fichier, et le tour est joue : MainScene.js detecte automatiquement
+ * leur presence au chargement du niveau.
+ */
+export const TILE_IMAGE_REGISTRY = {
+  cave: { wallKey: "wall_cave", floorKey: "floor_cave" },
+};
+
+const TILE_IMAGE_PATHS = {
+  wall_cave: wallCaveSprite,
+  floor_cave: floorCaveSprite,
+};
+
+/**
+ * Liste {key, path} de toutes les images de tuiles a charger - separee
+ * de getUniqueTexturesToLoad() (spritesheets) car il s'agit d'images
+ * simples (this.load.image, pas this.load.spritesheet), cf. BootScene.js.
+ */
+export function getTileImagesToLoad() {
+  const seen = new Map();
+  for (const { wallKey, floorKey } of Object.values(TILE_IMAGE_REGISTRY)) {
+    if (wallKey && !seen.has(wallKey))
+      seen.set(wallKey, { key: wallKey, path: TILE_IMAGE_PATHS[wallKey] });
+    if (floorKey && !seen.has(floorKey))
+      seen.set(floorKey, { key: floorKey, path: TILE_IMAGE_PATHS[floorKey] });
   }
   return [...seen.values()];
 }

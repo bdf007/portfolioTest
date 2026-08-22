@@ -1,4 +1,4 @@
-import { resolveItemDef } from './itemDefs';
+import { resolveItemDef } from "./itemDefs";
 
 /**
  * Calcule la somme des bonus de stats de tout l'équipement actuellement
