@@ -1,17 +1,43 @@
 const FLOOR = 0;
+const { createRng } = require("./rng");
 
 /**
- * Trouve la première case de sol en partant du centre de la grille et en
- * s'éloignant en spirale - utilisé aussi bien pour le spawn du joueur que
- * comme point de référence pour le placement des ennemis (enemySpawner.js
- * a besoin de connaître le spawn joueur pour respecter sa distance
- * minimale).
+ * Trouve la première case de sol en partant d'un COIN de la grille (choisi
+ * au hasard parmi les 4, de façon seedée) et en s'éloignant en spirale -
+ * utilisé aussi bien pour le spawn du joueur que comme point de référence
+ * pour le placement des ennemis (enemySpawner.js a besoin de connaître le
+ * spawn joueur pour respecter sa distance minimale).
+ *
+ * Partir d'un coin plutôt que du centre est un choix délibéré : le joueur
+ * découvre alors le niveau en s'en éloignant progressivement, plutôt que
+ * de démarrer au beau milieu d'une carte déjà générée - narrativement
+ * plus cohérent. La case la plus éloignée (cf. findExitTile, qui sert de
+ * sortie) se retrouve alors naturellement proche du coin opposé.
+ *
+ * @param {number[][]} grid
+ * @param {string} [seed] pour varier le coin choisi d'un niveau à l'autre
+ *   (même seed = même coin, comme le reste de la génération) - si absente,
+ *   repli déterministe sur le premier coin (haut-gauche) plutôt que de
+ *   planter, pour tout appelant qui ne fournirait pas encore de seed.
  */
-function findSpawnTile(grid) {
+function findSpawnTile(grid, seed) {
   const height = grid.length;
   const width = grid[0].length;
-  const cx = Math.floor(width / 2);
-  const cy = Math.floor(height / 2);
+
+  const corners = [
+    { x: 2, y: 2 }, // haut-gauche
+    { x: width - 3, y: 2 }, // haut-droite
+    { x: 2, y: height - 3 }, // bas-gauche
+    { x: width - 3, y: height - 3 }, // bas-droite
+  ];
+
+  const anchor = seed
+    ? corners[
+        Math.floor(createRng(String(seed) + "-spawn-corner")() * corners.length)
+      ]
+    : corners[0];
+  const cx = Math.max(0, Math.min(width - 1, anchor.x));
+  const cy = Math.max(0, Math.min(height - 1, anchor.y));
 
   if (grid[cy][cx] === FLOOR) return { x: cx, y: cy };
 

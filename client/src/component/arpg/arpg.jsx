@@ -6,6 +6,9 @@ import Minimap from "./Minimap";
 import CharacterSelectScreen from "./CharacterSelectScreen";
 import GameListScreen from "./GameListScreen";
 import InventoryScreen from "./InventoryScreen";
+import TravelHubScreen from "./TravelHubScreen";
+import ShopScreen from "./ShopScreen";
+import { resolveItemDef } from "./itemDefs";
 import { fetchMyGames, abandonGame } from "../../api/arpgClient";
 
 /**
@@ -50,6 +53,8 @@ export default function Arpg() {
     accessory: null,
   });
   const [inventoryOpen, setInventoryOpen] = useState(false);
+  const [travelDestinations, setTravelDestinations] = useState(null); // null = ferme, tableau = ouvert avec ces destinations
+  const [shopStock, setShopStock] = useState(null); // null = ferme, tableau = ouvert avec ce stock
   const [minimapVisible, setMinimapVisible] = useState(true);
 
   const loadGamesList = () => {
@@ -135,6 +140,10 @@ export default function Arpg() {
       scene.events.on("quests-updated", (qs) => setQuests(qs));
       scene.events.on("upstairs-prompt", (show) => setUpstairsPrompt(!!show));
       scene.events.on("inventory-updated", (inv) => setInventory(inv));
+      scene.events.on("travel-hub", (destinations) =>
+        setTravelDestinations(destinations),
+      );
+      scene.events.on("shop", (stock) => setShopStock(stock));
       scene.events.on("equipment-updated", (eq) => setEquipped(eq));
       scene.events.on("quit-to-menu", () => {
         setPhase("picker");
@@ -157,6 +166,11 @@ export default function Arpg() {
   const handleAcceptQuest = () => {
     const scene = gameRef.current?.scene.getScene("MainScene");
     if (scene) scene.acceptQuest();
+  };
+
+  const handleTurnInQuest = () => {
+    const scene = gameRef.current?.scene.getScene("MainScene");
+    if (scene) scene.turnInQuest();
   };
 
   const handleCloseDialog = () => {
@@ -204,6 +218,26 @@ export default function Arpg() {
     setInventoryOpen(false);
     const scene = gameRef.current?.scene.getScene("MainScene");
     if (scene) scene.unpauseGame("inventory");
+  };
+
+  const handleTravelToDepth = (depth) => {
+    const scene = gameRef.current?.scene.getScene("MainScene");
+    if (scene) scene.travelToDepth(depth); // la scene emet 'travel-hub': null, pas besoin de setTravelDestinations ici
+  };
+
+  const handleCloseTravelHub = () => {
+    const scene = gameRef.current?.scene.getScene("MainScene");
+    if (scene) scene.closeTravelHub();
+  };
+
+  const handleBuyItem = (index) => {
+    const scene = gameRef.current?.scene.getScene("MainScene");
+    if (scene) scene.buyItem(index);
+  };
+
+  const handleCloseShop = () => {
+    const scene = gameRef.current?.scene.getScene("MainScene");
+    if (scene) scene.closeShop();
   };
 
   const handleResumeGame = (game) => {
@@ -264,14 +298,23 @@ export default function Arpg() {
         <span>XP : {xp}</span>
         {Object.entries(quests)
           .filter(([, q]) => q.accepted)
-          .map(([questDepth, q]) => (
-            <span key={questDepth}>
-              Quête (étage {questDepth}) :{" "}
-              {q.completed
-                ? "Terminée"
-                : `${q.killCount}/${q.target} ${q.targetEnemyType}`}
-            </span>
-          ))}
+          .map(([questKey, q]) => {
+            const hasTargetItem =
+              q.questId === "obtainItem" &&
+              inventory.some((i) => i.itemId === q.targetItemId);
+            return (
+              <span key={questKey}>
+                Quête (étage {questKey.split("-")[0]}) :{" "}
+                {q.completed
+                  ? "Terminée"
+                  : q.questId === "obtainItem"
+                    ? hasTargetItem
+                      ? `Prêt à rendre : ${resolveItemDef(q.targetItemId).name}`
+                      : `Trouver : ${resolveItemDef(q.targetItemId).name}`
+                    : `${q.killCount}/${q.target} ${q.targetEnemyType}`}
+              </span>
+            );
+          })}
         <button
           onClick={() => setMinimapVisible((v) => !v)}
           style={{
@@ -416,6 +459,22 @@ export default function Arpg() {
                   Accepter
                 </button>
               )}
+              {npcDialog.canTurnIn && (
+                <button
+                  onClick={handleTurnInQuest}
+                  style={{
+                    padding: "6px 14px",
+                    fontSize: 13,
+                    borderRadius: 6,
+                    border: "1px solid #8a7050",
+                    background: "#3a2f20",
+                    color: "#f0e6d0",
+                    cursor: "pointer",
+                  }}
+                >
+                  Rendre
+                </button>
+              )}
               <button
                 onClick={handleCloseDialog}
                 style={{
@@ -491,6 +550,21 @@ export default function Arpg() {
             onUnequip={handleUnequip}
             onUse={handleUseConsumable}
             onClose={handleCloseInventory}
+          />
+        )}
+        {travelDestinations && (
+          <TravelHubScreen
+            destinations={travelDestinations}
+            onTravel={handleTravelToDepth}
+            onClose={handleCloseTravelHub}
+          />
+        )}
+        {shopStock && (
+          <ShopScreen
+            stock={shopStock}
+            inventory={inventory}
+            onBuy={handleBuyItem}
+            onClose={handleCloseShop}
           />
         )}
       </div>

@@ -14,61 +14,61 @@
  */
 export const ITEM_DEFS = {
   healthPotion: {
-    id: 'healthPotion',
-    category: 'consumable',
-    name: 'Potion de soin',
+    id: "healthPotion",
+    category: "consumable",
+    name: "Potion de soin",
     description: "Restaure 30 PV à l'usage.",
     effect: { heal: 30 },
     stackable: true,
   },
   ironSword: {
-    id: 'ironSword',
-    category: 'equipment',
-    slot: 'weapon',
-    name: 'Épée de fer',
-    description: '+5 dégâts au corps à corps.',
+    id: "ironSword",
+    category: "equipment",
+    slot: "weapon",
+    name: "Épée de fer",
+    description: "+5 dégâts au corps à corps.",
     statBonus: { meleeDamage: 5 },
     stackable: false,
   },
   huntingBow: {
-    id: 'huntingBow',
-    category: 'equipment',
-    slot: 'weapon',
-    name: 'Arc de chasse',
-    description: '+4 dégâts à distance.',
+    id: "huntingBow",
+    category: "equipment",
+    slot: "weapon",
+    name: "Arc de chasse",
+    description: "+4 dégâts à distance.",
     statBonus: { rangedDamage: 4 },
     stackable: false,
   },
   leatherArmor: {
-    id: 'leatherArmor',
-    category: 'equipment',
-    slot: 'armor',
-    name: 'Armure de cuir',
-    description: '+3 défense.',
+    id: "leatherArmor",
+    category: "equipment",
+    slot: "armor",
+    name: "Armure de cuir",
+    description: "+3 défense.",
     statBonus: { defense: 3 },
     stackable: false,
   },
   vitalityCharm: {
-    id: 'vitalityCharm',
-    category: 'equipment',
-    slot: 'accessory',
-    name: 'Charme de vitalité',
-    description: '+20 PV maximum.',
+    id: "vitalityCharm",
+    category: "equipment",
+    slot: "accessory",
+    name: "Charme de vitalité",
+    description: "+20 PV maximum.",
     statBonus: { maxHp: 20 },
     stackable: false,
   },
   gold: {
-    id: 'gold',
-    category: 'currency',
-    name: 'Or',
-    description: 'Monnaie du jeu.',
+    id: "gold",
+    category: "currency",
+    name: "Or",
+    description: "Monnaie du jeu.",
     stackable: true,
   },
   ancientRelic: {
-    id: 'ancientRelic',
-    category: 'questItem',
-    name: 'Relique ancienne',
-    description: 'Un artefact qui semble important.',
+    id: "ancientRelic",
+    category: "questItem",
+    name: "Relique ancienne",
+    description: "Un artefact qui semble important.",
     stackable: false,
   },
 };
@@ -82,11 +82,13 @@ export const ITEM_DEFS = {
  * spécial tant qu'il n'est pas correctement défini ici).
  */
 export function resolveItemDef(itemId) {
-  return ITEM_DEFS[itemId] || {
-    id: itemId,
-    category: 'unknown',
-    name: itemId,
-    description: '',
-    stackable: true,
-  };
+  return (
+    ITEM_DEFS[itemId] || {
+      id: itemId,
+      category: "unknown",
+      name: itemId,
+      description: "",
+      stackable: true,
+    }
+  );
 }

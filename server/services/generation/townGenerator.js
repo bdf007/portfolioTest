@@ -1,5 +1,5 @@
-const { createRng } = require('./rng');
-const { keepLargestRegion } = require('./gridUtils');
+const { createRng } = require("./rng");
+const { keepLargestRegion } = require("./gridUtils");
 
 const WALL = 1;
 const FLOOR = 0;
@@ -55,7 +55,9 @@ function placeBuildings(grid, width, height, buildingCount, rng, opts) {
       const y = 2 + Math.floor(rng() * Math.max(1, height - h - 4));
 
       const rect = { x, y, w, h };
-      const overlaps = placed.some((b) => rectOverlapsWithMargin(rect, b, minSpacing));
+      const overlaps = placed.some((b) =>
+        rectOverlapsWithMargin(rect, b, minSpacing),
+      );
       if (overlaps) continue;
 
       placed.push(rect);
@@ -94,7 +96,7 @@ function generateTown({
   maxTriesPerBuilding = 20,
 }) {
   if (width < 20 || height < 20) {
-    throw new Error('generateTown: width/height trop petits (minimum 20x20)');
+    throw new Error("generateTown: width/height trop petits (minimum 20x20)");
   }
 
   const rng = createRng(String(seed));

@@ -6,7 +6,11 @@ import { findPath } from "../pathfinding";
 import { createEnemyBehavior, decideNextState } from "../enemyBehavior";
 import { computeDamage, applyDamage, createCooldown } from "../combat";
 import { computeLevelFromXp, getPlayerStatsForLevel } from "../leveling";
-import { SPRITE_REGISTRY, resolveEnemySprite } from "../spriteRegistry";
+import {
+  SPRITE_REGISTRY,
+  resolveEnemySprite,
+  TILE_IMAGE_REGISTRY,
+} from "../spriteRegistry";
 import { resolveItemDef } from "../itemDefs";
 import { computeEquipmentBonuses } from "../equipment";
 
@@ -20,6 +24,12 @@ const ENEMY_STOP_DISTANCE = 28;
 // combat joueur - hp/degats/defense viennent desormais de leveling.js
 // (varient avec le niveau), seuls porte/cooldown/vitesse restent fixes ici
 const PLAYER_MELEE_RANGE = 46;
+// produit scalaire minimal entre le vecteur heros->cible normalise et la
+// direction de visee reelle (this.lastAimVector) pour qu'une cible soit
+// consideree "devant" - 0.5 = cone de ~120 degres (±60° autour du centre).
+// Un attaque au corps a corps ne doit toucher que devant le heros, pas
+// tout autour (cf. le rapport correspondant).
+const MELEE_CONE_DOT_THRESHOLD = 0.5;
 const PLAYER_MELEE_COOLDOWN = 420;
 const PLAYER_RANGED_COOLDOWN = 650;
 const PROJECTILE_SPEED = 320;
@@ -36,6 +46,11 @@ const ENEMY_ATTACK_RANGE = 34;
 const TILESET_COLORS = {
   cave: { wall: 0x3a3542, floor: 0xc8be9e },
   ruins: { wall: 0x372f38, floor: 0xd2b48c },
+  cavechain: { wall: 0x2f3a34, floor: 0xa8c0a0 }, // teinte verdatre/humide, distincte de la grotte classique
+  drunkardwalk: { wall: 0x3a2f2a, floor: 0xb89878 }, // teinte terreuse/brune, tunnels creuses
+  maze: { wall: 0x28282f, floor: 0x8a8a9a }, // gris froid, austere - coherent avec l'aspect labyrinthe oppressant
+  noise: { wall: 0x2a3540, floor: 0x94b0a8 }, // teinte bleu-vert, cavites organiques
+  voronoi: { wall: 0x3a2f3a, floor: 0xb090a0 }, // violet/rose desature, distinct des formes polygonales
   temple: { wall: 0x32303c, floor: 0xbec8d7 },
   town: { wall: 0x5a4a3a, floor: 0xc8bfa0 }, // batiments en bois/pierre, place claire
 };
@@ -71,13 +86,18 @@ export default class MainScene extends Phaser.Scene {
     if (this.anims.exists(prefix + "walk-down")) return; // deja cree
 
     const { key: textureKey, animations: f } = entry;
+    // repeat:0 (une seule fois) pour les entrees purement visuelles comme
+    // meleeSlashEffect - un cycle de marche infini n'aurait aucun sens
+    // pour un flash de degats. repeat:-1 (boucle) pour tout le reste,
+    // comportement inchange.
+    const walkRepeat = entry.oneShot ? 0 : -1;
     this.anims.create({
       key: prefix + "walk-down",
       frames: this.anims.generateFrameNumbers(textureKey, {
         frames: f.walkDown,
       }),
       frameRate: 8,
-      repeat: -1,
+      repeat: walkRepeat,
     });
     this.anims.create({
       key: prefix + "walk-left",
@@ -85,7 +105,7 @@ export default class MainScene extends Phaser.Scene {
         frames: f.walkLeft,
       }),
       frameRate: 8,
-      repeat: -1,
+      repeat: walkRepeat,
     });
     this.anims.create({
       key: prefix + "walk-right",
@@ -93,13 +113,13 @@ export default class MainScene extends Phaser.Scene {
         frames: f.walkRight,
       }),
       frameRate: 8,
-      repeat: -1,
+      repeat: walkRepeat,
     });
     this.anims.create({
       key: prefix + "walk-up",
       frames: this.anims.generateFrameNumbers(textureKey, { frames: f.walkUp }),
       frameRate: 8,
-      repeat: -1,
+      repeat: walkRepeat,
     });
     this.anims.create({
       key: prefix + "idle-down",
@@ -178,7 +198,7 @@ export default class MainScene extends Phaser.Scene {
     // superposer sur la meme case et se deplacer comme un seul bloc.
     this.enemyGroup = this.physics.add.group();
     this.physics.add.collider(this.enemyGroup, this.enemyGroup);
-    // colliders crees PENDANT loadLevel() (contre this.layer/this.questNpc,
+    // colliders crees PENDANT loadLevel() (contre this.layer/this.questNpcs,
     // tous deux recrees a chaque changement d'etage) - traces ici pour
     // etre explicitement detruits au debut du loadLevel() suivant, cf.
     // le commentaire la-bas. Ne contient JAMAIS le collider ci-dessus
@@ -207,7 +227,8 @@ export default class MainScene extends Phaser.Scene {
     this.visitedFloors = []; // historique {depth, seed} - permet de regenerer exactement le meme plan en y retournant
     this.currentFloorKills = []; // indices des ennemis tues lors de la visite EN COURS (ecrase a chaque loadLevel)
     this.currentFloorOpenedChests = []; // meme principe pour les coffres
-    this.quests = {}; // quetes actives/terminees, indexees par profondeur - cf. createQuestNpc
+    this.quests = {}; // quetes actives/terminees, indexees par "depth-npcIndex" - cf. createQuestNpcs
+    this.activeDialogQuestKey = null; // quelle quete le dialogue actuellement ouvert concerne (cf. openQuestDialog/acceptQuest)
     this.inventory = []; // {itemId, quantity}[] - persiste pour toute la partie, jamais reinitialise entre niveaux
     this.gamePaused = false; // vrai pendant la confirmation de remontee (cf. showUpstairsPrompt)
     this.pauseReasons = new Set(); // cf. pauseGame/unpauseGame - plusieurs sources de pause possibles (remontee, inventaire...) sans qu'elles se marchent dessus
@@ -562,6 +583,8 @@ export default class MainScene extends Phaser.Scene {
       upstairsTile,
       boss,
       bossDoorTile,
+      travelHubTile,
+      shop,
       enemies,
       chests,
       tileset,
@@ -572,6 +595,8 @@ export default class MainScene extends Phaser.Scene {
     this.currentFloorKills = [...killedIndices]; // copie fraiche, alimentee au fil des kills de cette visite
     this.currentFloorOpenedChests = [...openedChestIndices]; // meme principe, pour les coffres
     this.bossData = boss || null;
+    this.travelHubTile = travelHubTile || null;
+    this.shopData = shop || null;
     this.bossDoorTile = bossDoorTile || null;
     // porte fermee et boss pas encore invoque tant que les autres ennemis
     // ne sont pas nettoyes - reinitialise a CHAQUE visite (pas de mort
@@ -588,7 +613,7 @@ export default class MainScene extends Phaser.Scene {
     }
 
     // detruit d'abord les colliders qui referencent des objets du niveau
-    // PRECEDENT (this.layer, this.questNpc) - sans ca, ils continuent
+    // PRECEDENT (this.layer, this.questNpcs) - sans ca, ils continuent
     // d'exister dans le monde physique de Phaser apres que ces objets
     // soient detruits juste apres, et le moteur plante en tentant de
     // verifier une collision contre une tilemap layer qui n'existe plus
@@ -629,10 +654,18 @@ export default class MainScene extends Phaser.Scene {
       this.bossDoorMarker.destroy();
       this.bossDoorMarker = null;
     }
-    if (this.questNpc) {
-      this.questNpc.destroy();
-      this.questNpc = null;
+    if (this.travelHubMarker) {
+      this.travelHubMarker.destroy();
+      this.travelHubMarker = null;
     }
+    if (this.shopMarker) {
+      this.shopMarker.destroy();
+      this.shopMarker = null;
+    }
+    if (this.questNpcs) {
+      this.questNpcs.forEach((n) => n.sprite.destroy());
+    }
+    this.questNpcs = [];
     if (this.chests) {
       this.chests.forEach((c) => c.sprite.destroy());
     }
@@ -668,10 +701,40 @@ export default class MainScene extends Phaser.Scene {
       TILE_SIZE,
     );
     const ctx = canvasTex.getContext();
-    ctx.fillStyle = Phaser.Display.Color.IntegerToColor(colors.floor).rgba;
-    ctx.fillRect(0, 0, TILE_SIZE, TILE_SIZE);
-    ctx.fillStyle = Phaser.Display.Color.IntegerToColor(colors.wall).rgba;
-    ctx.fillRect(TILE_SIZE, 0, TILE_SIZE, TILE_SIZE);
+
+    // vraies images si ce biome en a (cf. TILE_IMAGE_REGISTRY), sinon
+    // repli sur les couleurs pleines habituelles - meme mise en page dans
+    // les deux cas (index 0 = sol, index 1 = mur), donc tout le reste du
+    // code (grille brute utilisee comme indices de tuile, setCollision,
+    // ouverture de la porte du boss via putTileAt...) reste inchange quel
+    // que soit le chemin pris ici.
+    const tileImages = TILE_IMAGE_REGISTRY[tileset];
+    const hasRealImages =
+      tileImages &&
+      this.textures.exists(tileImages.floorKey) &&
+      this.textures.exists(tileImages.wallKey);
+
+    if (hasRealImages) {
+      ctx.drawImage(
+        this.textures.get(tileImages.floorKey).getSourceImage(),
+        0,
+        0,
+        TILE_SIZE,
+        TILE_SIZE,
+      );
+      ctx.drawImage(
+        this.textures.get(tileImages.wallKey).getSourceImage(),
+        TILE_SIZE,
+        0,
+        TILE_SIZE,
+        TILE_SIZE,
+      );
+    } else {
+      ctx.fillStyle = Phaser.Display.Color.IntegerToColor(colors.floor).rgba;
+      ctx.fillRect(0, 0, TILE_SIZE, TILE_SIZE);
+      ctx.fillStyle = Phaser.Display.Color.IntegerToColor(colors.wall).rgba;
+      ctx.fillRect(TILE_SIZE, 0, TILE_SIZE, TILE_SIZE);
+    }
     canvasTex.refresh();
 
     this.map = this.make.tilemap({
@@ -801,6 +864,48 @@ export default class MainScene extends Phaser.Scene {
       });
     }
 
+    // hub de voyage rapide (uniquement en ville) - cyan, distinct du
+    // dore (sortie), rouge (remontee) et violet (porte du boss)
+    if (this.travelHubTile) {
+      this.travelHubMarker = this.add.circle(
+        this.travelHubTile.x * TILE_SIZE + TILE_SIZE / 2,
+        this.travelHubTile.y * TILE_SIZE + TILE_SIZE / 2,
+        10,
+        0x1ba8c9,
+      );
+      this.travelHubMarker.setDepth(2);
+      this.travelHubMarker.setStrokeStyle(2, 0xffffff);
+      this.tweens.add({
+        targets: this.travelHubMarker,
+        scale: { from: 0.7, to: 1.15 },
+        alpha: { from: 0.6, to: 1 },
+        duration: 700,
+        yoyo: true,
+        repeat: -1,
+      });
+    }
+
+    // boutique (uniquement en ville) - or/jaune, coherent thematiquement,
+    // distinct de tous les autres marqueurs
+    if (this.shopData) {
+      this.shopMarker = this.add.circle(
+        this.shopData.x * TILE_SIZE + TILE_SIZE / 2,
+        this.shopData.y * TILE_SIZE + TILE_SIZE / 2,
+        10,
+        0xd4af37,
+      );
+      this.shopMarker.setDepth(2);
+      this.shopMarker.setStrokeStyle(2, 0xffffff);
+      this.tweens.add({
+        targets: this.shopMarker,
+        scale: { from: 0.7, to: 1.15 },
+        alpha: { from: 0.6, to: 1 },
+        duration: 700,
+        yoyo: true,
+        repeat: -1,
+      });
+    }
+
     // ennemis : comportement (patrol/guard/rest) tire localement a partir
     // de la seed de niveau - c'est un detail de rendu/IA cote client, pas
     // une donnee de gameplay a faire transiter par l'API (cf.
@@ -905,13 +1010,13 @@ export default class MainScene extends Phaser.Scene {
       });
     });
 
-    // PNJ de quete - place et defini par le serveur (data.questNpc, null
-    // s'il n'y en a pas sur cet etage). Le client ne decide plus rien lui
-    // meme (position, objectif) : uniquement des villes pour l'instant
-    // (cf. ArpgController.getLevel), d'autres conditions d'apparition
-    // sont prevues plus tard.
-    if (data.questNpc) {
-      this.createQuestNpc(data.questNpc);
+    // PNJ de quete - places et definis par le serveur (data.questNpcs,
+    // tableau vide s'il n'y en a pas sur cet etage). Le client ne decide
+    // plus rien lui meme (position, objectif) : uniquement des villes
+    // pour l'instant (cf. ArpgController.getLevel), plusieurs PNJ
+    // possibles par ville desormais (1 a 3).
+    if (data.questNpcs && data.questNpcs.length > 0) {
+      this.createQuestNpcs(data.questNpcs);
     }
 
     this.fogState = createFogState(grid);
@@ -995,6 +1100,84 @@ export default class MainScene extends Phaser.Scene {
   goToDepth(targetDepth) {
     const existing = this.visitedFloors.find((f) => f.depth === targetDepth);
     this.loadLevel(targetDepth, existing ? existing.seed : undefined);
+  }
+
+  /**
+   * Ouvre le hub de voyage rapide (evenement React, cf. arpg.jsx) - met
+   * le jeu en pause (comme l'inventaire, cf. pauseGame) le temps du
+   * choix. Envoie la liste des etages deja visites SAUF l'etage courant
+   * (rien a faire d'y "voyager") - le client connait deja tout via
+   * this.visitedFloors, aucun aller-retour serveur necessaire ici.
+   */
+  openTravelHub() {
+    this.pauseGame("travelHub");
+    const destinations = this.visitedFloors.filter(
+      (f) => f.depth !== this.currentDepth,
+    );
+    this.events.emit("travel-hub", destinations);
+  }
+
+  /**
+   * Voyage vers un etage deja visite, choisi dans le hub (bouton cote
+   * React) - reutilise goToDepth telle quelle (meme mecanisme que la
+   * remontee/descente normale : reutilise la seed stockee, donc le meme
+   * plan qu'a la derniere visite).
+   */
+  travelToDepth(targetDepth) {
+    this.unpauseGame("travelHub");
+    this.events.emit("travel-hub", null);
+    this.goToDepth(targetDepth);
+  }
+
+  /**
+   * Ferme le hub sans voyager (bouton "Fermer" cote React).
+   */
+  closeTravelHub() {
+    this.unpauseGame("travelHub");
+    this.events.emit("travel-hub", null);
+  }
+
+  /**
+   * Ouvre la boutique (evenement React, cf. arpg.jsx) - met le jeu en
+   * pause (meme mecanisme a raisons comptees que l'inventaire/le hub,
+   * cf. pauseGame). Le stock est deja connu (this.shopData.stock, fixe a
+   * la generation) - pas besoin de recalculer quoi que ce soit ici, le
+   * prix affichable cote React se contente de comparer au montant d'or
+   * deja suivi dans l'inventaire (evenement 'inventory-updated').
+   */
+  openShop() {
+    this.pauseGame("shop");
+    this.events.emit("shop", this.shopData.stock);
+  }
+
+  /**
+   * Achete un objet du stock de la boutique (par son index) - deduit le
+   * prix de l'or en inventaire, ajoute l'objet achete. Ignore
+   * silencieusement si l'or est insuffisant (l'interface devrait deja
+   * avoir desactive le bouton dans ce cas - pas de raison de planter sur
+   * un clic qui n'aurait pas du etre possible).
+   */
+  buyItem(shopItemIndex) {
+    const shopItem = this.shopData?.stock?.[shopItemIndex];
+    if (!shopItem) return;
+
+    const goldEntry = this.inventory.find((i) => i.itemId === "gold");
+    const currentGold = goldEntry ? goldEntry.quantity : 0;
+    if (currentGold < shopItem.price) return;
+
+    goldEntry.quantity -= shopItem.price;
+    if (goldEntry.quantity <= 0)
+      this.inventory = this.inventory.filter((i) => i !== goldEntry);
+
+    this.addItemToInventory(shopItem.itemId, 1); // emet deja 'inventory-updated' et persiste
+  }
+
+  /**
+   * Ferme la boutique (bouton "Fermer" cote React).
+   */
+  closeShop() {
+    this.unpauseGame("shop");
+    this.events.emit("shop", null);
   }
 
   /**
@@ -1131,60 +1314,122 @@ export default class MainScene extends Phaser.Scene {
    * Cree le PNJ de quete a partir des donnees du serveur (position et
    * objectif deja decides la-bas, cf. ArpgController.getLevel) - le
    * client n'a plus a chercher de case ni a inventer d'objectif.
+   * Plusieurs PNJ possibles par ville (data.questNpcs, un tableau).
    *
-   * N'ecrase JAMAIS une progression deja existante pour cet etage (cf.
-   * this.quests, restaure par resumeFromSave le cas echeant) - seule une
-   * PREMIERE rencontre avec ce PNJ initialise une entree fraiche.
+   * N'ecrase JAMAIS une progression deja existante (cf. this.quests,
+   * restaure par resumeFromSave le cas echeant) - seule une PREMIERE
+   * rencontre avec un PNJ precis initialise une entree fraiche. Chaque
+   * quete est identifiee par une cle `${depth}-${npcIndex}` plutot que
+   * par la seule profondeur, pour distinguer plusieurs PNJ du meme etage.
    */
-  createQuestNpc(npcData) {
-    const npcSprite = SPRITE_REGISTRY.hero1; // sprite fixe, independant du heros choisi par le joueur
-    this.questNpc = this.physics.add.sprite(
-      npcData.x * TILE_SIZE + TILE_SIZE / 2,
-      npcData.y * TILE_SIZE + TILE_SIZE / 2,
-      npcSprite.key,
-      npcSprite.animations.idleDown,
+  /**
+   * Bassin des sprites utilisables pour les PNJ de quete - tout ce qui
+   * commence par "NPC_town" dans le registre. Calcule dynamiquement
+   * (pas une liste en dur) : ajouter un nouveau sprite NPC_town* au
+   * registre l'integre automatiquement au tirage, sans toucher a ce
+   * fichier.
+   */
+  createQuestNpcs(npcDataArray) {
+    const npcSpritePool = Object.keys(SPRITE_REGISTRY).filter((key) =>
+      key.startsWith("NPC_town"),
     );
-    this.questNpc.setScale(npcSprite.scale);
-    this.questNpc.setTint(0xffe066); // teinte doree - visuellement distinct des ennemis et du heros
-    this.questNpc.body.moves = false; // ne bouge jamais
-    this.questNpc.anims.play("hero1-idle-down");
-    this.questNpc.setDepth(9); // entre les ennemis (8) et le heros (10)
-    this.levelColliders.push(
-      this.physics.add.collider(this.hero, this.questNpc),
-    ); // pour ne pas pouvoir traverser le PNJ
-    this.levelColliders.push(
-      this.physics.add.collider(this.enemyGroup, this.questNpc),
-    ); // idem pour les ennemis
+    // seedee sur la seed du niveau (this.currentSeed) + l'index du PNJ -
+    // meme apparence a chaque revisite du meme etage, coherent avec le
+    // reste de la generation (seed identique = niveau identique)
+    const spriteRng = createRng(`${this.currentSeed}-quest-npc-sprites`);
+    this.questNpcs = [];
 
-    if (!this.quests[this.currentDepth]) {
-      this.quests[this.currentDepth] = {
-        questId: npcData.questId,
-        target: npcData.target,
-        xpReward: npcData.xpReward,
-        itemReward: npcData.itemReward || null,
-        targetEnemyType: npcData.targetEnemyType,
-        dialogText: npcData.dialogText || null, // texte personnalise (quete fixe) - null = texte generique
-        accepted: false,
-        completed: false,
-        killCount: 0,
-      };
+    for (const npcData of npcDataArray) {
+      const questKey = `${this.currentDepth}-${npcData.npcIndex}`;
+
+      // repli sur hero1 si aucun sprite NPC_town* n'existe dans le
+      // registre (projet frais, avant l'ajout de tels sprites)
+      const npcSpriteKey =
+        npcSpritePool.length > 0
+          ? npcSpritePool[Math.floor(spriteRng() * npcSpritePool.length)]
+          : "hero1";
+      const npcSprite = SPRITE_REGISTRY[npcSpriteKey];
+
+      const sprite = this.physics.add.sprite(
+        npcData.x * TILE_SIZE + TILE_SIZE / 2,
+        npcData.y * TILE_SIZE + TILE_SIZE / 2,
+        npcSprite.key,
+        npcSprite.animations.idleDown,
+      );
+      sprite.setScale(npcSprite.scale);
+      // plus de teinte doree ici : c'etait un pis-aller pour distinguer
+      // le PNJ du heros quand les deux reutilisaient la texture hero1 -
+      // desormais de vrais sprites NPC distincts, la teinte ferait plus
+      // de mal (fausse leur couleur reelle) que de bien
+      sprite.body.moves = false; // ne bouge jamais
+      sprite.anims.play(`${npcSpriteKey}-idle-down`);
+      sprite.setDepth(9); // entre les ennemis (8) et le heros (10)
+      this.levelColliders.push(this.physics.add.collider(this.hero, sprite)); // pour ne pas pouvoir traverser le PNJ
+      this.levelColliders.push(
+        this.physics.add.collider(this.enemyGroup, sprite),
+      ); // idem pour les ennemis
+
+      this.questNpcs.push({ sprite, questKey });
+
+      if (!this.quests[questKey]) {
+        this.quests[questKey] = {
+          questId: npcData.questId,
+          target: npcData.target,
+          xpReward: npcData.xpReward,
+          goldReward: npcData.goldReward, // uniquement pour questId==='obtainItem' - undefined sinon, sans consequence
+          itemReward: npcData.itemReward || null,
+          targetEnemyType: npcData.targetEnemyType,
+          targetItemId: npcData.targetItemId, // uniquement pour questId==='obtainItem' - undefined sinon, sans consequence
+          dialogText: npcData.dialogText || null, // texte personnalise (quete fixe) - null = texte generique
+          accepted: false,
+          completed: false,
+          killCount: 0,
+        };
+      }
     }
   }
 
   /**
-   * Ouvre le dialogue du PNJ (evenement React, cf. arpg.jsx) - propose la
-   * quete si elle n'a pas encore ete acceptee, un message de fin sinon.
-   * Opere sur la quete DE CET ETAGE precisement (this.quests est un
-   * objet indexe par profondeur - plusieurs quetes peuvent etre actives
-   * en meme temps sur des etages differents).
+   * Ouvre le dialogue d'UN PNJ precis (evenement React, cf. arpg.jsx) -
+   * propose la quete si elle n'a pas encore ete acceptee, un message de
+   * fin sinon. Retient `questKey` (this.activeDialogQuestKey) pour que
+   * acceptQuest() sache sur quelle quete precise agir - plusieurs PNJ
+   * peuvent etre presents sur le meme etage desormais.
    */
-  openQuestDialog() {
+  openQuestDialog(questKey) {
     this.dialogOpen = true;
-    const qs = this.quests[this.currentDepth];
+    this.activeDialogQuestKey = questKey;
+    const qs = this.quests[questKey];
     if (!qs) return;
     const custom = qs.dialogText || {};
     let text;
-    if (qs.completed) {
+    let canAccept = false;
+    let canTurnIn = false;
+
+    if (qs.questId === "obtainItem") {
+      const itemName = resolveItemDef(qs.targetItemId).name;
+      // l'objet appartient au PNJ, pas au joueur : l'avoir en poche ne
+      // suffit pas, il faut le RENDRE (cf. turnInQuest) pour toucher la
+      // recompense - ce dialogue distingue donc "je l'ai, pret a le
+      // rendre" de "je l'ai pas encore trouve", contrairement a
+      // killEnemies qui n'a que 3 etats (pas 4)
+      const hasItem = this.inventory.some((i) => i.itemId === qs.targetItemId);
+      if (qs.completed) {
+        text = custom.complete || `Merci pour ${itemName} !`;
+      } else if (qs.accepted && hasItem) {
+        text =
+          custom.progress ||
+          `Tu l'as trouvé ! Rends-moi ${itemName} contre une récompense.`;
+        canTurnIn = true;
+      } else if (qs.accepted) {
+        text =
+          custom.progress ||
+          `Toujours à la recherche de ${itemName} - reviens me voir une fois que tu l'auras trouvé.`;
+      } else {
+        text = custom.offer || `Peux-tu me rapporter ${itemName} ?`;
+        canAccept = true;
+      }
+    } else if (qs.completed) {
       text =
         custom.complete ||
         `Merci d'avoir tué ces ${qs.targetEnemyType} pour moi !`;
@@ -1196,25 +1441,59 @@ export default class MainScene extends Phaser.Scene {
       text =
         custom.offer ||
         `Peux-tu tuer ${qs.target} ${qs.targetEnemyType} pour moi ?`;
+      canAccept = true;
     }
-    this.events.emit("npc-dialog", {
-      text,
-      canAccept: !qs.accepted && !qs.completed,
-    });
+    this.events.emit("npc-dialog", { text, canAccept, canTurnIn });
   }
 
   /**
-   * Accepte la quete proposee par le PNJ de l'etage courant - appele
-   * depuis React (bouton "Accepter" du dialogue).
+   * Accepte la quete du PNJ dont le dialogue est actuellement ouvert -
+   * appele depuis React (bouton "Accepter" du dialogue).
    */
   acceptQuest() {
-    const qs = this.quests[this.currentDepth];
+    const qs = this.quests[this.activeDialogQuestKey];
     if (!qs) return;
     qs.accepted = true;
     this.dialogOpen = false;
+    this.activeDialogQuestKey = null;
     this.events.emit("npc-dialog", null);
     this.events.emit("quests-updated", { ...this.quests });
     this.persistProgress();
+  }
+
+  /**
+   * Rend l'objet d'une quete "recuperer tel objet" au PNJ - l'objet
+   * appartient au PNJ, pas au joueur : l'avoir en poche ne suffit pas
+   * (cf. openQuestDialog, qui n'affiche le bouton "Rendre" que si
+   * l'objet est bien present). Retire l'objet de l'inventaire, marque la
+   * quete terminee, donne l'XP et l'or.
+   */
+  turnInQuest() {
+    const qs = this.quests[this.activeDialogQuestKey];
+    if (!qs || qs.questId !== "obtainItem" || qs.completed) return;
+
+    const itemIndex = this.inventory.findIndex(
+      (i) => i.itemId === qs.targetItemId,
+    );
+    if (itemIndex === -1) return; // defensif - ne devrait pas arriver si le bouton n'etait propose que l'objet en main
+
+    const item = this.inventory[itemIndex];
+    item.quantity -= 1;
+    if (item.quantity <= 0) this.inventory.splice(itemIndex, 1);
+
+    qs.completed = true;
+    this.xp += qs.xpReward;
+    this.events.emit("xp-changed", { xp: this.xp });
+
+    this.dialogOpen = false;
+    this.activeDialogQuestKey = null;
+    this.events.emit("npc-dialog", null);
+    this.events.emit("quests-updated", { ...this.quests });
+
+    // reutilise addItemToInventory (deja teste) pour l'or gagne - empile
+    // avec l'or existant, emet 'inventory-updated' (reflete deja le
+    // retrait de l'objet ci-dessus) et persiste
+    this.addItemToInventory("gold", qs.goldReward);
   }
 
   /**
@@ -1223,6 +1502,7 @@ export default class MainScene extends Phaser.Scene {
    */
   closeDialog() {
     this.dialogOpen = false;
+    this.activeDialogQuestKey = null;
     this.events.emit("npc-dialog", null);
   }
 
@@ -1328,12 +1608,12 @@ export default class MainScene extends Phaser.Scene {
 
     this.updateEnemyMovement();
 
-    // le PNJ suit la meme regle de visibilite que les ennemis (case
-    // actuellement visible, pas juste "deja vue") - immobile, donc pas
-    // besoin d'une boucle dediee, un simple check suffit
-    if (this.questNpc) {
-      const npcTileX = Math.floor(this.questNpc.x / TILE_SIZE);
-      const npcTileY = Math.floor(this.questNpc.y / TILE_SIZE);
+    // les PNJ suivent la meme regle de visibilite que les ennemis (case
+    // actuellement visible, pas juste "deja vue") - immobiles, donc pas
+    // besoin d'une boucle dediee complexe, un simple check par PNJ suffit
+    for (const npc of this.questNpcs) {
+      const npcTileX = Math.floor(npc.sprite.x / TILE_SIZE);
+      const npcTileY = Math.floor(npc.sprite.y / TILE_SIZE);
       const state = this.fogState.state;
       const npcVisible =
         npcTileY >= 0 &&
@@ -1341,7 +1621,7 @@ export default class MainScene extends Phaser.Scene {
         npcTileY < state.length &&
         npcTileX < state[0].length &&
         state[npcTileY][npcTileX] === 2;
-      this.questNpc.setVisible(npcVisible);
+      npc.sprite.setVisible(npcVisible);
     }
     this.updateEnemyAttacks(now);
     this.updateProjectiles();
@@ -1537,18 +1817,46 @@ export default class MainScene extends Phaser.Scene {
     if (!this.meleeCooldown.isReady(now)) return;
     this.meleeCooldown.trigger(now);
 
-    // interaction avec le PNJ de quete : pas de degats, on ouvre le
+    // interaction avec un PNJ de quete : pas de degats, on ouvre le
     // dialogue a la place - reutilise la meme touche/portee que
     // l'attaque, comme demande. On n'attaque pas les ennemis ce coup-ci
-    // si le PNJ est a portee, pour eviter d'ouvrir le dialogue en pleine
-    // baston contre un ennemi qui se trouverait juste a cote.
-    if (this.questNpc && !this.dialogOpen) {
-      const distNpc = Math.hypot(
-        this.questNpc.x - this.hero.x,
-        this.questNpc.y - this.hero.y,
+    // si un PNJ est a portee, pour eviter d'ouvrir le dialogue en pleine
+    // baston contre un ennemi qui se trouverait juste a cote. Plusieurs
+    // PNJ possibles par etage desormais, mais l'espacement minimal impose
+    // a la generation (4 cases) est deja plus grand que la portee de
+    // melee - jamais deux a la fois a portee, un simple `find` suffit.
+    if (!this.dialogOpen) {
+      const npc = this.questNpcs.find(
+        (n) =>
+          Math.hypot(n.sprite.x - this.hero.x, n.sprite.y - this.hero.y) <=
+          PLAYER_MELEE_RANGE,
       );
-      if (distNpc <= PLAYER_MELEE_RANGE) {
-        this.openQuestDialog();
+      if (npc) {
+        this.openQuestDialog(npc.questKey);
+        return;
+      }
+    }
+
+    // hub de voyage rapide (uniquement en ville) - pas de degats, ouvre
+    // la liste des etages deja visites (evenement React, cf. arpg.jsx)
+    if (this.travelHubTile && !this.dialogOpen) {
+      const hubPx = this.travelHubTile.x * TILE_SIZE + TILE_SIZE / 2;
+      const hubPy = this.travelHubTile.y * TILE_SIZE + TILE_SIZE / 2;
+      const distHub = Math.hypot(hubPx - this.hero.x, hubPy - this.hero.y);
+      if (distHub <= PLAYER_MELEE_RANGE) {
+        this.openTravelHub();
+        return;
+      }
+    }
+
+    // boutique (uniquement en ville) - pas de degats, ouvre l'ecran
+    // d'achat (evenement React, cf. arpg.jsx)
+    if (this.shopData && !this.dialogOpen) {
+      const shopPx = this.shopData.x * TILE_SIZE + TILE_SIZE / 2;
+      const shopPy = this.shopData.y * TILE_SIZE + TILE_SIZE / 2;
+      const distShop = Math.hypot(shopPx - this.hero.x, shopPy - this.hero.y);
+      if (distShop <= PLAYER_MELEE_RANGE) {
+        this.openShop();
         return;
       }
     }
@@ -1606,33 +1914,52 @@ export default class MainScene extends Phaser.Scene {
     }
 
     for (const enemy of this.enemies) {
-      const dist = Math.hypot(
-        enemy.sprite.x - this.hero.x,
-        enemy.sprite.y - this.hero.y,
-      );
-      if (dist <= PLAYER_MELEE_RANGE && this.isEnemyVisible(enemy)) {
-        this.damageEnemy(
-          enemy,
-          computeDamage(this.playerMeleeDamage, enemy.defense),
-        );
+      const dx = enemy.sprite.x - this.hero.x;
+      const dy = enemy.sprite.y - this.hero.y;
+      const dist = Math.hypot(dx, dy);
+      if (dist > PLAYER_MELEE_RANGE || !this.isEnemyVisible(enemy)) continue;
+
+      // ne touche que dans un cone devant le heros, pas tout autour -
+      // produit scalaire entre le vecteur heros->cible normalise et la
+      // direction de visee reelle (capture aussi les diagonales, pas
+      // seulement les 4 directions cardinales de lastDir)
+      if (dist > 0.001) {
+        const nx = dx / dist;
+        const ny = dy / dist;
+        const dot = nx * this.lastAimVector.x + ny * this.lastAimVector.y;
+        if (dot < MELEE_CONE_DOT_THRESHOLD) continue;
       }
+
+      this.damageEnemy(
+        enemy,
+        computeDamage(this.playerMeleeDamage, enemy.defense),
+      );
     }
 
-    const fx = this.add.circle(
-      this.hero.x,
-      this.hero.y,
-      PLAYER_MELEE_RANGE,
-      0xffffff,
-      0.25,
+    // effet visuel directionnel (eclair de griffe qui s'estompe), oriente
+    // vers la meme direction que le cone de degats ci-dessus - remplace
+    // l'ancien flash en cercle plein (qui suggerait a tort un impact tout
+    // autour du heros). Meme bucketing axe-dominant que l'animation de
+    // marche (cf. plus haut dans update()), pour rester cohent avec le
+    // reste du jeu quand la visee est en diagonale.
+    const aimDir =
+      Math.abs(this.lastAimVector.x) > Math.abs(this.lastAimVector.y)
+        ? this.lastAimVector.x > 0
+          ? "right"
+          : "left"
+        : this.lastAimVector.y > 0
+          ? "down"
+          : "up";
+    const slashOffset = 22; // entre le heros et le bord de la portee (46)
+    const slash = this.add.sprite(
+      this.hero.x + this.lastAimVector.x * slashOffset,
+      this.hero.y + this.lastAimVector.y * slashOffset,
+      SPRITE_REGISTRY.meleeSlashEffect.key,
     );
-    fx.setDepth(15);
-    this.tweens.add({
-      targets: fx,
-      alpha: 0,
-      scale: 1.3,
-      duration: 150,
-      onComplete: () => fx.destroy(),
-    });
+    slash.setScale(SPRITE_REGISTRY.meleeSlashEffect.scale);
+    slash.setDepth(15);
+    slash.play("meleeSlashEffect-walk-" + aimDir);
+    slash.once("animationcomplete", () => slash.destroy());
   }
 
   performRangedAttack(now) {
@@ -1734,8 +2061,8 @@ export default class MainScene extends Phaser.Scene {
       // type de l'ennemi tue correspond a celui vise par la quete.
       let anyQuestUpdated = false;
       let justCompletedReward = null; // au cas ou plusieurs quetes se terminent sur le meme kill, n'affiche que la premiere - tres rare en pratique
-      for (const depthKey of Object.keys(this.quests)) {
-        const qs = this.quests[depthKey];
+      for (const questKey of Object.keys(this.quests)) {
+        const qs = this.quests[questKey];
         if (!qs.accepted || qs.completed) continue;
         if (qs.targetEnemyType && qs.targetEnemyType !== enemy.archetype)
           continue;

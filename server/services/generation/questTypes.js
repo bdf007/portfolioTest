@@ -1,5 +1,5 @@
-const { createRng } = require('./rng');
-const { rollLoot } = require('./itemTypes');
+const { createRng } = require("./rng");
+const { rollLoot } = require("./itemTypes");
 
 /**
  * Table des types de quêtes proposées par les PNJ - même esprit que
@@ -16,23 +16,68 @@ const { rollLoot } = require('./itemTypes');
  */
 const QUEST_TYPES = {
   killEnemies: {
-    id: 'killEnemies',
+    id: "killEnemies",
     targetRange: [3, 8],
     xpReward: 20,
     buildDialogText(target, progress, enemyTypeLabel) {
-      if (progress.completed) return `Merci d'avoir tué ces ${enemyTypeLabel} pour moi !`;
-      if (progress.accepted) return `Progression : ${progress.killCount} / ${target} ${enemyTypeLabel} tués. Reviens me voir une fois terminé !`;
+      if (progress.completed)
+        return `Merci d'avoir tué ces ${enemyTypeLabel} pour moi !`;
+      if (progress.accepted)
+        return `Progression : ${progress.killCount} / ${target} ${enemyTypeLabel} tués. Reviens me voir une fois terminé !`;
       return `Peux-tu tuer ${target} ${enemyTypeLabel} pour moi ?`;
     },
   },
 };
 
 /**
+ * Quête "récupérer tel objet" - VOLONTAIREMENT séparée de QUEST_TYPES :
+ * generateQuestForNpc pioche au hasard parmi TOUTES les clés de
+ * QUEST_TYPES, donc y ajouter ce type le ferait apparaître n'importe où,
+ * y compris dans une ville située avant tout boss vaincu (non-sens
+ * narratif - rien à "récupérer" sur un boss jamais rencontré). C'est
+ * ArpgController.js qui décide explicitement de l'éligibilité (profondeur
+ * de ville > profondeur du boss le plus proche) avant d'appeler
+ * generateObtainItemQuest, jamais un tirage générique.
+ *
+ * Vraie livraison : l'objet appartient au PNJ, pas au joueur - il faut le
+ * RENDRE (retiré de l'inventaire) pour toucher la récompense (or ET XP),
+ * pas juste l'avoir en poche. Cf. MainScene.turnInQuest().
+ */
+const OBTAIN_ITEM_XP_REWARD = 40; // plus genereux que killEnemies (20) - implique de redescendre et re-vaincre un boss, pas juste tuer des ennemis de passage
+const OBTAIN_ITEM_GOLD_REWARD_RANGE = [20, 50];
+
+/**
+ * Choisit un objet cible (seedé) pour une quête "récupérer tel objet",
+ * typiquement parmi le butin possible d'un boss déjà vaincu.
+ *
+ * @param {string} seed seed DEJA distincte par PNJ (meme convention que generateQuestForNpc)
+ * @param {string[]} itemPool objets parmi lesquels choisir la cible
+ * @returns {{questId:string, targetItemId:string, xpReward:number, goldReward:number, itemReward:null}}
+ */
+function generateObtainItemQuest(seed, itemPool) {
+  const rng = createRng(String(seed) + "-obtain-item");
+  const pool = itemPool && itemPool.length > 0 ? itemPool : ["healthPotion"];
+  const targetItemId = pool[Math.floor(rng() * pool.length)];
+  const [minGold, maxGold] = OBTAIN_ITEM_GOLD_REWARD_RANGE;
+  const goldReward = minGold + Math.floor(rng() * (maxGold - minGold + 1));
+  // pas de itemReward supplementaire (rollLoot questReward) ici - la
+  // recompense de cette quete EST deja l'or + l'XP ci-dessus
+  return {
+    questId: "obtainItem",
+    targetItemId,
+    xpReward: OBTAIN_ITEM_XP_REWARD,
+    goldReward,
+    itemReward: null,
+  };
+}
+
+/**
  * Quêtes écrites à la main, pour des moments précis - indexées par
- * profondeur. Si une entrée existe pour l'étage où se trouve une ville,
- * elle est utilisée TELLE QUELLE (aucun tirage aléatoire) - cf.
- * ArpgController.getLevel. Une ville sans entrée ici retombe sur le
- * générateur aléatoire habituel (generateQuestForNpc).
+ * profondeur, en TABLEAU (un élément par PNJ à cet étage, dans l'ordre
+ * où ils sont générés - cf. ArpgController.getLevel). Un élément `null`
+ * dans le tableau laisse CE PNJ précis retomber sur le tirage aléatoire,
+ * tandis que les autres PNJ du même étage peuvent avoir leur propre
+ * quête fixe - utile pour n'en scripter qu'un seul parmi plusieurs.
  *
  * `dialogText` est optionnel - à fournir uniquement si tu veux un texte
  * narratif personnalisé plutôt que le texte générique du type de quête
@@ -40,18 +85,21 @@ const QUEST_TYPES = {
  * indépendants : tu peux en personnaliser un seul et laisser les autres
  * vides, ils retomberont sur le texte générique.
  *
- * Exemple :
+ * Exemple (deux PNJ à l'étage 30, le premier scripté, le second aléatoire) :
  * const FIXED_QUESTS = {
- *   30: {
- *     questId: 'killEnemies',
- *     target: 10,
- *     xpReward: 100,
- *     targetEnemyType: 'skeleton',
- *     dialogText: {
- *       offer: "Le seigneur des ombres a envoye ses sbires piller notre reserve. Peux-tu nous debarrasser de 10 squelettes ?",
- *       complete: "Tu nous as sauves ! Prends cette recompense.",
+ *   30: [
+ *     {
+ *       questId: 'killEnemies',
+ *       target: 10,
+ *       xpReward: 100,
+ *       targetEnemyType: 'skeleton',
+ *       dialogText: {
+ *         offer: "Le seigneur des ombres a envoye ses sbires piller notre reserve. Peux-tu nous debarrasser de 10 squelettes ?",
+ *         complete: "Tu nous as sauves ! Prends cette recompense.",
+ *       },
  *     },
- *   },
+ *     null, // le deuxieme PNJ de cet etage reste aleatoire
+ *   ],
  * };
  */
 const FIXED_QUESTS = {};
@@ -60,7 +108,9 @@ const FIXED_QUESTS = {};
  * Choisit un type de quête, son objectif ET le type d'ennemi cible
  * (seedé, reproductible) pour un PNJ donné.
  *
- * @param {string} seed seed du niveau (derive sa propre seed de quete)
+ * @param {string} seed seed DEJA distincte par PNJ (cf. ArpgController -
+ *   inclut l'index du PNJ, pour que plusieurs PNJ du meme etage n'aient
+ *   jamais la meme quete par coincidence)
  * @param {string[]} enemyTypePool types d'ennemis parmi lesquels choisir
  *   la cible - a fournir par l'appelant (typiquement les types du biome
  *   qui suit la ville, cf. ArpgController.getLevel) plutot que TOUS les
@@ -69,7 +119,7 @@ const FIXED_QUESTS = {};
  * @returns {{questId:string, target:number, xpReward:number, targetEnemyType:string, itemReward:{itemId:string,quantity:number}|null}}
  */
 function generateQuestForNpc(seed, enemyTypePool) {
-  const rng = createRng(String(seed) + '-quest');
+  const rng = createRng(String(seed) + "-quest");
   const typeKeys = Object.keys(QUEST_TYPES);
   const typeKey = typeKeys[Math.floor(rng() * typeKeys.length)];
   const type = QUEST_TYPES[typeKey];
@@ -77,23 +127,45 @@ function generateQuestForNpc(seed, enemyTypePool) {
   const [min, max] = type.targetRange;
   const target = min + Math.floor(rng() * (max - min + 1));
 
-  const pool = enemyTypePool && enemyTypePool.length > 0 ? enemyTypePool : ['enemyDefault'];
+  const pool =
+    enemyTypePool && enemyTypePool.length > 0
+      ? enemyTypePool
+      : ["enemyDefault"];
   const targetEnemyType = pool[Math.floor(rng() * pool.length)];
 
   // seed distincte pour la recompense en objet, pour ne jamais coupler
   // ce tirage a celui de l'objectif/du type cible
-  const itemReward = rollLoot('questReward', createRng(String(seed) + '-quest-reward'));
+  const itemReward = rollLoot(
+    "questReward",
+    createRng(String(seed) + "-quest-reward"),
+  );
 
-  return { questId: type.id, target, xpReward: type.xpReward, targetEnemyType, itemReward };
+  return {
+    questId: type.id,
+    target,
+    xpReward: type.xpReward,
+    targetEnemyType,
+    itemReward,
+  };
 }
 
 /**
- * Renvoie la quete fixe pour cette profondeur, si elle existe.
+ * Renvoie la quete fixe pour un PNJ precis (par index, dans l'ordre de
+ * generation) a cette profondeur, si elle existe.
  * @param {number} depth
+ * @param {number} npcIndex
  * @returns {object|null}
  */
-function getFixedQuest(depth) {
-  return FIXED_QUESTS[depth] || null;
+function getFixedQuest(depth, npcIndex) {
+  const forDepth = FIXED_QUESTS[depth];
+  if (!Array.isArray(forDepth)) return null;
+  return forDepth[npcIndex] || null;
 }
 
-module.exports = { QUEST_TYPES, FIXED_QUESTS, generateQuestForNpc, getFixedQuest };
+module.exports = {
+  QUEST_TYPES,
+  FIXED_QUESTS,
+  generateQuestForNpc,
+  generateObtainItemQuest,
+  getFixedQuest,
+};
