@@ -125,6 +125,20 @@ export default function Arpg() {
       height: 600,
       parent: containerRef.current,
       pixelArt: true,
+      // adapte le canvas 800x600 (resolution LOGIQUE, inchangee - tout le
+      // reste du jeu continue de raisonner en ces coordonnees) a la
+      // taille REELLE du conteneur parent, en conservant le ratio
+      // d'aspect (letterboxing si besoin) plutot que de deborder. Sans
+      // ca, un mobile plus etroit que 800px de large ne montrait tout
+      // simplement pas le canvas (deborde hors du viewport visible) -
+      // sur desktop ou le conteneur mesure deja exactement 800x600,
+      // aucun effet visuel (echelle = 1, no-op).
+      scale: {
+        mode: Phaser.Scale.FIT,
+        autoCenter: Phaser.Scale.CENTER_BOTH,
+        width: 800,
+        height: 600,
+      },
       // aucun son dans le jeu pour l'instant - desactive completement le
       // systeme audio de Phaser (donc son AudioContext) plutot que de
       // laisser une instance en creer un a chaque montage. Sans ca, le
@@ -400,7 +414,16 @@ export default function Arpg() {
   };
 
   return (
-    <div style={{ position: "relative", width: 800 }}>
+    <div
+      style={{
+        position: "relative",
+        width: isMobile ? "100vw" : 800,
+        height: isMobile ? "100vh" : undefined,
+        display: isMobile ? "flex" : undefined,
+        flexDirection: isMobile ? "column" : undefined,
+        overflow: isMobile ? "hidden" : undefined,
+      }}
+    >
       <div
         style={{
           display: "flex",
@@ -408,6 +431,8 @@ export default function Arpg() {
           marginBottom: 6,
           fontSize: 14,
           alignItems: "center",
+          flexShrink: isMobile ? 0 : undefined,
+          flexWrap: isMobile ? "wrap" : undefined,
         }}
       >
         <span>Étage : {depth}</span>
@@ -499,8 +524,18 @@ export default function Arpg() {
         </div>
       )}
 
-      <div style={{ position: "relative" }}>
-        <div ref={containerRef} id="arpg-container" />
+      <div
+        style={{
+          position: "relative",
+          flex: isMobile ? 1 : undefined,
+          minHeight: isMobile ? 0 : undefined,
+        }}
+      >
+        <div
+          ref={containerRef}
+          id="arpg-container"
+          style={isMobile ? { width: "100%", height: "100%" } : undefined}
+        />
 
         {isMobile && <TouchControls gameRef={gameRef} />}
 
