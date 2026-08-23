@@ -6,9 +6,12 @@ import Minimap from "./Minimap";
 import CharacterSelectScreen from "./CharacterSelectScreen";
 import GameListScreen from "./GameListScreen";
 import InventoryScreen from "./InventoryScreen";
+import QuestsScreen from "./QuestsScreen";
 import TravelHubScreen from "./TravelHubScreen";
 import ShopScreen from "./ShopScreen";
-import { resolveItemDef } from "./itemDefs";
+import TouchControls from "./TouchControls";
+import { computeLevelFromXp, getPlayerStatsForLevel } from "./leveling";
+import { computeEquipmentBonuses } from "./equipment";
 import { fetchMyGames, abandonGame } from "../../api/arpgClient";
 
 /**
@@ -31,6 +34,46 @@ export default function Arpg() {
   const containerRef = useRef(null);
   const gameRef = useRef(null);
 
+  // detection tactile (capacite, pas user-agent - fiable et stable, pas
+  // besoin de sniffer une chaine fragile) - decide a la fois l'affichage
+  // des controles tactiles ET le besoin de forcer le mode paysage. Une
+  // seule lecture au montage : le TYPE d'appareil ne change jamais en
+  // cours de partie, inutile de re-detecter a chaque render.
+  const [isMobile] = useState(
+    () =>
+      typeof window !== "undefined" &&
+      ("ontouchstart" in window || navigator.maxTouchPoints > 0),
+  );
+  const [isPortrait, setIsPortrait] = useState(
+    () =>
+      typeof window !== "undefined" && window.innerHeight > window.innerWidth,
+  );
+
+  useEffect(() => {
+    if (!isMobile) return;
+
+    const handleOrientationChange = () =>
+      setIsPortrait(window.innerHeight > window.innerWidth);
+    window.addEventListener("resize", handleOrientationChange);
+    window.addEventListener("orientationchange", handleOrientationChange);
+
+    // tentative de verrouillage natif - fonctionne sur certains
+    // Android/Chrome (generalement en plein ecran uniquement), jamais
+    // sur iOS Safari (API absente) - simple amelioration progressive.
+    // Le vrai filet de securite reste l'overlay "tournez votre appareil"
+    // plus bas (isPortrait), qui fonctionne partout sans permission
+    // particuliere - on ne bloque jamais sur l'echec de cette tentative.
+    if (window.screen.orientation && window.screen.orientation.lock) {
+      window.screen.orientation.lock("landscape").catch(() => {});
+    }
+
+    return () => {
+      window.removeEventListener("resize", handleOrientationChange);
+      window.removeEventListener("orientationchange", handleOrientationChange);
+    };
+  }, [isMobile]);
+  const lootToastTimerRef = useRef(null); // pour reinitialiser le delai d'effacement a chaque nouvelle ligne (cf. le listener 'loot-toast')
+
   const [phase, setPhase] = useState("loading"); // 'loading' | 'picker' | 'select' | 'playing'
   const [games, setGames] = useState([]);
   const [heroId, setHeroId] = useState(null);
@@ -46,6 +89,7 @@ export default function Arpg() {
   const [npcDialog, setNpcDialog] = useState(null); // null | { text, canAccept }
   const [quests, setQuests] = useState({}); // { [depth]: { accepted, completed, killCount, target } }
   const [upstairsPrompt, setUpstairsPrompt] = useState(false);
+  const [exitPrompt, setExitPrompt] = useState(false);
   const [inventory, setInventory] = useState([]);
   const [equipped, setEquipped] = useState({
     weapon: null,
@@ -55,6 +99,8 @@ export default function Arpg() {
   const [inventoryOpen, setInventoryOpen] = useState(false);
   const [travelDestinations, setTravelDestinations] = useState(null); // null = ferme, tableau = ouvert avec ces destinations
   const [shopStock, setShopStock] = useState(null); // null = ferme, tableau = ouvert avec ce stock
+  const [questsOpen, setQuestsOpen] = useState(false);
+  const [lootToast, setLootToast] = useState(null); // texte de la derniere ligne de butin, ou null - s'efface automatiquement (cf. useEffect du listener 'loot-toast')
   const [minimapVisible, setMinimapVisible] = useState(true);
 
   const loadGamesList = () => {
@@ -138,7 +184,13 @@ export default function Arpg() {
       scene.events.on("fog-changed", (data) => setMinimapData(data));
       scene.events.on("npc-dialog", (dialog) => setNpcDialog(dialog));
       scene.events.on("quests-updated", (qs) => setQuests(qs));
+      scene.events.on("loot-toast", (text) => {
+        setLootToast(text);
+        clearTimeout(lootToastTimerRef.current);
+        lootToastTimerRef.current = setTimeout(() => setLootToast(null), 3500);
+      });
       scene.events.on("upstairs-prompt", (show) => setUpstairsPrompt(!!show));
+      scene.events.on("exit-prompt", (show) => setExitPrompt(!!show));
       scene.events.on("inventory-updated", (inv) => setInventory(inv));
       scene.events.on("travel-hub", (destinations) =>
         setTravelDestinations(destinations),
@@ -193,6 +245,16 @@ export default function Arpg() {
     if (scene) scene.cancelGoUpstairs();
   };
 
+  const handleConfirmExit = () => {
+    const scene = gameRef.current?.scene.getScene("MainScene");
+    if (scene) scene.confirmDescend();
+  };
+
+  const handleCancelExit = () => {
+    const scene = gameRef.current?.scene.getScene("MainScene");
+    if (scene) scene.cancelDescend();
+  };
+
   const handleEquip = (index) => {
     const scene = gameRef.current?.scene.getScene("MainScene");
     if (scene) scene.equipItem(index);
@@ -218,6 +280,18 @@ export default function Arpg() {
     setInventoryOpen(false);
     const scene = gameRef.current?.scene.getScene("MainScene");
     if (scene) scene.unpauseGame("inventory");
+  };
+
+  const handleOpenQuests = () => {
+    setQuestsOpen(true);
+    const scene = gameRef.current?.scene.getScene("MainScene");
+    if (scene) scene.pauseGame("quests");
+  };
+
+  const handleCloseQuests = () => {
+    setQuestsOpen(false);
+    const scene = gameRef.current?.scene.getScene("MainScene");
+    if (scene) scene.unpauseGame("quests");
   };
 
   const handleTravelToDepth = (depth) => {
@@ -279,6 +353,52 @@ export default function Arpg() {
     return <CharacterSelectScreen onSelect={handleSelectHero} />;
   }
 
+  // force le mode paysage UNIQUEMENT pendant la partie elle-meme (pas
+  // les ecrans de menu ci-dessus, qui restent lisibles en portrait) - le
+  // jeu a besoin de largeur (canvas 800px, controles tactiles aux deux
+  // coins bas) pour rester jouable. Bloque completement le rendu du jeu
+  // plutot qu'un simple overlay par-dessus : un canvas Phaser affiche en
+  // portrait sur un ecran etroit serait deja visuellement casse avant
+  // meme que l'overlay ne s'affiche par-dessus.
+  if (isMobile && isPortrait) {
+    return (
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          height: "100vh",
+          color: "#eee",
+          background: "#0b0c10",
+          textAlign: "center",
+          padding: 20,
+        }}
+      >
+        <div style={{ fontSize: 48, marginBottom: 16 }}>📱↻</div>
+        <div style={{ fontSize: 16 }}>Tourne ton appareil pour jouer</div>
+        <div style={{ fontSize: 13, color: "#999", marginTop: 8 }}>
+          Ce jeu se joue en mode paysage
+        </div>
+      </div>
+    );
+  }
+
+  const xpProgress = computeLevelFromXp(xp);
+  const combatStats = {
+    level,
+    ...(() => {
+      const base = getPlayerStatsForLevel(level);
+      const bonus = computeEquipmentBonuses(equipped);
+      return {
+        maxHp: base.maxHp + bonus.maxHp,
+        meleeDamage: base.meleeDamage + bonus.meleeDamage,
+        rangedDamage: base.rangedDamage + bonus.rangedDamage,
+        defense: base.defense + bonus.defense,
+      };
+    })(),
+  };
+
   return (
     <div style={{ position: "relative", width: 800 }}>
       <div
@@ -295,26 +415,9 @@ export default function Arpg() {
         <span>
           PV : {Math.max(0, playerHp.hp)} / {playerHp.maxHp}
         </span>
-        <span>XP : {xp}</span>
-        {Object.entries(quests)
-          .filter(([, q]) => q.accepted)
-          .map(([questKey, q]) => {
-            const hasTargetItem =
-              q.questId === "obtainItem" &&
-              inventory.some((i) => i.itemId === q.targetItemId);
-            return (
-              <span key={questKey}>
-                Quête (étage {questKey.split("-")[0]}) :{" "}
-                {q.completed
-                  ? "Terminée"
-                  : q.questId === "obtainItem"
-                    ? hasTargetItem
-                      ? `Prêt à rendre : ${resolveItemDef(q.targetItemId).name}`
-                      : `Trouver : ${resolveItemDef(q.targetItemId).name}`
-                    : `${q.killCount}/${q.target} ${q.targetEnemyType}`}
-              </span>
-            );
-          })}
+        <span>
+          XP : {xpProgress.xpIntoLevel} / {xpProgress.xpForNextLevel}
+        </span>
         <button
           onClick={() => setMinimapVisible((v) => !v)}
           style={{
@@ -329,6 +432,20 @@ export default function Arpg() {
           }}
         >
           🗺️ Carte
+        </button>
+        <button
+          onClick={handleOpenQuests}
+          style={{
+            padding: "4px 12px",
+            fontSize: 13,
+            borderRadius: 6,
+            border: "1px solid #555",
+            background: "#2a2a35",
+            color: "#eee",
+            cursor: "pointer",
+          }}
+        >
+          📜 Quêtes
         </button>
         <button
           onClick={handleOpenInventory}
@@ -360,14 +477,40 @@ export default function Arpg() {
         </button>
       </div>
 
+      {lootToast && (
+        <div
+          style={{
+            position: "absolute",
+            top: 44,
+            left: "50%",
+            transform: "translateX(-50%)",
+            zIndex: 6,
+            padding: "6px 16px",
+            fontSize: 13,
+            borderRadius: 6,
+            background: "rgba(20,18,14,0.9)",
+            border: "1px solid #8a7050",
+            color: "#f0e6d0",
+            pointerEvents: "none",
+            whiteSpace: "nowrap",
+          }}
+        >
+          {lootToast}
+        </div>
+      )}
+
       <div style={{ position: "relative" }}>
         <div ref={containerRef} id="arpg-container" />
+
+        {isMobile && <TouchControls gameRef={gameRef} />}
 
         {minimapVisible && minimapData && (
           <Minimap
             grid={minimapData.grid}
             fogState={minimapData.fogState}
             playerTile={minimapData.playerTile}
+            exitTile={minimapData.exitTile}
+            upstairsTile={minimapData.upstairsTile}
           />
         )}
 
@@ -542,15 +685,68 @@ export default function Arpg() {
             </div>
           </div>
         )}
+        {exitPrompt && (
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              zIndex: 10,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              background: "rgba(0,0,0,0.75)",
+              color: "#fff",
+              fontSize: 18,
+              gap: 16,
+            }}
+          >
+            <div>Descendre à l'étage suivant ?</div>
+            <div style={{ display: "flex", gap: 12 }}>
+              <button
+                onClick={handleConfirmExit}
+                style={{
+                  padding: "8px 20px",
+                  fontSize: 14,
+                  borderRadius: 6,
+                  border: "1px solid #ffd700",
+                  background: "#3a3320",
+                  color: "#f0e8c0",
+                  cursor: "pointer",
+                }}
+              >
+                Oui
+              </button>
+              <button
+                onClick={handleCancelExit}
+                style={{
+                  padding: "8px 20px",
+                  fontSize: 14,
+                  borderRadius: 6,
+                  border: "1px solid #555",
+                  background: "#2a2a35",
+                  color: "#eee",
+                  cursor: "pointer",
+                }}
+              >
+                Non
+              </button>
+            </div>
+          </div>
+        )}
         {inventoryOpen && (
           <InventoryScreen
             inventory={inventory}
             equipped={equipped}
+            stats={combatStats}
             onEquip={handleEquip}
             onUnequip={handleUnequip}
             onUse={handleUseConsumable}
             onClose={handleCloseInventory}
           />
+        )}
+        {questsOpen && (
+          <QuestsScreen quests={quests} onClose={handleCloseQuests} />
         )}
         {travelDestinations && (
           <TravelHubScreen

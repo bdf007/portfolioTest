@@ -2,6 +2,7 @@ import Phaser from "phaser";
 import {
   getUniqueTexturesToLoad,
   getTileImagesToLoad,
+  CHEST_SPRITESHEET,
 } from "../spriteRegistry";
 
 /**
@@ -12,8 +13,14 @@ import {
  *
  * Ajouter un nouveau sprite au jeu = ajouter une entrée dans
  * spriteRegistry.js, rien à toucher ici. Meme principe pour les images
- * de tuiles (getTileImagesToLoad) - chargees comme de simples images
- * (this.load.image), pas des spritesheets.
+ * de tuiles ET les icones de repere - toutes deux passent par
+ * getTileImagesToLoad (generalisee pour scanner n'importe quelle forme
+ * d'entree de TILE_IMAGE_REGISTRY, cf. spriteRegistry.js) - chargees
+ * comme de simples images (this.load.image), pas des spritesheets.
+ *
+ * CHEST_SPRITESHEET est charge a part (this.load.spritesheet, comme les
+ * personnages) - distinct de SPRITE_REGISTRY car sans structure
+ * d'animation (cf. le commentaire dans spriteRegistry.js).
  */
 export default class BootScene extends Phaser.Scene {
   constructor() {
@@ -30,6 +37,10 @@ export default class BootScene extends Phaser.Scene {
     for (const { key, path } of getTileImagesToLoad()) {
       this.load.image(key, path);
     }
+    this.load.spritesheet(CHEST_SPRITESHEET.key, CHEST_SPRITESHEET.path, {
+      frameWidth: CHEST_SPRITESHEET.frameWidth,
+      frameHeight: CHEST_SPRITESHEET.frameHeight,
+    });
   }
 
   create() {

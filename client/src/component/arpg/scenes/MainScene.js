@@ -3,13 +3,20 @@ import { fetchLevel, saveProgress } from "../../../api/arpgClient";
 import { createRng } from "../rng";
 import { hasClearLineOfSight, createFogState } from "../fogOfWar";
 import { findPath } from "../pathfinding";
-import { createEnemyBehavior, decideNextState } from "../enemyBehavior";
+import {
+  createEnemyBehavior,
+  decideNextState,
+  pickPatrolRoute,
+} from "../enemyBehavior";
 import { computeDamage, applyDamage, createCooldown } from "../combat";
 import { computeLevelFromXp, getPlayerStatsForLevel } from "../leveling";
 import {
   SPRITE_REGISTRY,
   resolveEnemySprite,
+  resolveEnemyDisplayName,
   TILE_IMAGE_REGISTRY,
+  CHEST_SPRITESHEET,
+  CHEST_VARIANTS,
 } from "../spriteRegistry";
 import { resolveItemDef } from "../itemDefs";
 import { computeEquipmentBonuses } from "../equipment";
@@ -43,6 +50,18 @@ const ENEMY_ATTACK_RANGE = 34;
 // rendu placeholder par biome, en attendant du vrai tile art - purement
 // visuel, ne duplique aucune logique de génération (celle-ci reste
 // entièrement côté serveur)
+// lignes de salutation des PNJ ambiants (purement decoratifs, aucun
+// rapport avec une quete) - une seule choisie au hasard (seedee) par
+// PNJ a sa creation, cf. MainScene.createAmbientNpcs
+const AMBIENT_NPC_GREETINGS = [
+  "Bonjour, voyageur !",
+  "Belle journée, n'est-ce pas ?",
+  "Fais attention à toi là-dessous.",
+  "J'ai entendu dire qu'il y avait un trésor par ici...",
+  "Content de voir un nouveau visage en ville.",
+  "Les affaires sont calmes en ce moment.",
+];
+
 const TILESET_COLORS = {
   cave: { wall: 0x3a3542, floor: 0xc8be9e },
   ruins: { wall: 0x372f38, floor: 0xd2b48c },
@@ -51,6 +70,7 @@ const TILESET_COLORS = {
   maze: { wall: 0x28282f, floor: 0x8a8a9a }, // gris froid, austere - coherent avec l'aspect labyrinthe oppressant
   noise: { wall: 0x2a3540, floor: 0x94b0a8 }, // teinte bleu-vert, cavites organiques
   voronoi: { wall: 0x3a2f3a, floor: 0xb090a0 }, // violet/rose desature, distinct des formes polygonales
+  tree: { wall: 0x2e4a2a, floor: 0x5a7a4a }, // foret - le sol reste TOUJOURS en couleur pleine (floorKey=null dans TILE_IMAGE_REGISTRY, aucune vraie image de sol pour ce biome) ; le mur n'est qu'un repli si wall_tree echoue a charger
   temple: { wall: 0x32303c, floor: 0xbec8d7 },
   town: { wall: 0x5a4a3a, floor: 0xc8bfa0 }, // batiments en bois/pierre, place claire
 };
@@ -174,6 +194,18 @@ export default class MainScene extends Phaser.Scene {
     this.lastPlayerTile = null;
     this.lastDir = "down";
     this.lastAimVector = { x: 0, y: 1 }; // correspond a 'down' (y positif = vers le bas a l'ecran)
+    // controles tactiles (cf. TouchControls.jsx cote React) - vecteur
+    // ANALOGIQUE du joystick virtuel (magnitude 0 a 1, pas juste 4
+    // booleens comme le clavier), fusionne avec le clavier dans update()
+    // plutot que de le remplacer - permet de tenir un appareil tactile
+    // ET un clavier branche sans que l'un exclue l'autre. Les drapeaux
+    // d'attaque sont consommes puis remis a false dans update() (meme
+    // semantique que Phaser.Input.Keyboard.JustDown pour le clavier) -
+    // jamais appeles directement depuis React, pour ne jamais contourner
+    // les gardes de pause/mort deja en tete d'update().
+    this.touchMoveVector = { x: 0, y: 0 };
+    this.touchMeleeRequested = false;
+    this.touchRangedRequested = false;
     this.enemies = [];
     this.projectiles = [];
 
@@ -229,6 +261,7 @@ export default class MainScene extends Phaser.Scene {
     this.currentFloorOpenedChests = []; // meme principe pour les coffres
     this.quests = {}; // quetes actives/terminees, indexees par "depth-npcIndex" - cf. createQuestNpcs
     this.activeDialogQuestKey = null; // quelle quete le dialogue actuellement ouvert concerne (cf. openQuestDialog/acceptQuest)
+    this.activeTalkingNpc = null; // quel PNJ (quete ou ambiant) est en train de parler, s'il y en a un (cf. openQuestDialog/openAmbientDialog/releaseTalkingNpc)
     this.inventory = []; // {itemId, quantity}[] - persiste pour toute la partie, jamais reinitialise entre niveaux
     this.gamePaused = false; // vrai pendant la confirmation de remontee (cf. showUpstairsPrompt)
     this.pauseReasons = new Set(); // cf. pauseGame/unpauseGame - plusieurs sources de pause possibles (remontee, inventaire...) sans qu'elles se marchent dessus
@@ -350,6 +383,44 @@ export default class MainScene extends Phaser.Scene {
 
     this.events.emit("inventory-updated", [...this.inventory]);
     this.persistProgress();
+  }
+
+  /**
+   * Affiche une ligne de log transitoire (butin trouve) - remplace toute
+   * ligne encore affichee, s'efface automatiquement au bout d'un
+   * moment. Cote React, gere par un simple timer qui reinitialise a
+   * chaque nouvel appel (cf. arpg.jsx) - remplace les anciennes fenetres
+   * de notification (npc-dialog) qu'il fallait fermer manuellement,
+   * genant pour un evenement aussi frequent qu'un simple ramassage
+   * d'objet.
+   */
+  showLootToast(text) {
+    this.events.emit("loot-toast", text);
+  }
+
+  /**
+   * Point d'entree pour le joystick virtuel (cf. TouchControls.jsx) -
+   * vecteur ANALOGIQUE (magnitude entre 0 et 1, jamais juste -1/0/1
+   * comme le clavier), fusionne avec le clavier dans update() plutot
+   * que de le remplacer. {x:0,y:0} = relache.
+   */
+  setTouchMoveVector(x, y) {
+    this.touchMoveVector = { x, y };
+  }
+
+  /**
+   * Points d'entree pour les boutons d'attaque tactiles - se contentent
+   * de LEVER un drapeau, consomme puis remis a false dans update() (meme
+   * semantique que JustDown pour le clavier). Jamais d'appel direct a
+   * performMeleeAttack/performRangedAttack depuis React : ça
+   * contournerait les gardes de pause/mort deja en tete d'update().
+   */
+  requestTouchMelee() {
+    this.touchMeleeRequested = true;
+  }
+
+  requestTouchRanged() {
+    this.touchRangedRequested = true;
   }
 
   /**
@@ -585,6 +656,7 @@ export default class MainScene extends Phaser.Scene {
       bossDoorTile,
       travelHubTile,
       shop,
+      ambientNpcs: ambientNpcData,
       enemies,
       chests,
       tileset,
@@ -666,6 +738,11 @@ export default class MainScene extends Phaser.Scene {
       this.questNpcs.forEach((n) => n.sprite.destroy());
     }
     this.questNpcs = [];
+    if (this.ambientNpcs) {
+      this.ambientNpcs.forEach((n) => n.sprite.destroy());
+    }
+    this.ambientNpcs = [];
+    this.activeTalkingNpc = null; // au cas ou un dialogue serait reste ouvert a travers un changement de niveau - evite une reference vers un sprite deja detruit
     if (this.chests) {
       this.chests.forEach((c) => c.sprite.destroy());
     }
@@ -708,13 +785,22 @@ export default class MainScene extends Phaser.Scene {
     // code (grille brute utilisee comme indices de tuile, setCollision,
     // ouverture de la porte du boss via putTileAt...) reste inchange quel
     // que soit le chemin pris ici.
+    //
+    // Sol et mur decident CHACUN separement s'ils ont une vraie image
+    // disponible - un biome peut tres bien n'avoir qu'un mur en vraie
+    // image (ex: tree.floorKey=null dans TILE_IMAGE_REGISTRY) et garder
+    // un sol en couleur pleine, plutot que d'exiger les deux a la fois.
     const tileImages = TILE_IMAGE_REGISTRY[tileset];
-    const hasRealImages =
+    const hasRealFloor =
       tileImages &&
-      this.textures.exists(tileImages.floorKey) &&
+      tileImages.floorKey &&
+      this.textures.exists(tileImages.floorKey);
+    const hasRealWall =
+      tileImages &&
+      tileImages.wallKey &&
       this.textures.exists(tileImages.wallKey);
 
-    if (hasRealImages) {
+    if (hasRealFloor) {
       ctx.drawImage(
         this.textures.get(tileImages.floorKey).getSourceImage(),
         0,
@@ -722,6 +808,12 @@ export default class MainScene extends Phaser.Scene {
         TILE_SIZE,
         TILE_SIZE,
       );
+    } else {
+      ctx.fillStyle = Phaser.Display.Color.IntegerToColor(colors.floor).rgba;
+      ctx.fillRect(0, 0, TILE_SIZE, TILE_SIZE);
+    }
+
+    if (hasRealWall) {
       ctx.drawImage(
         this.textures.get(tileImages.wallKey).getSourceImage(),
         TILE_SIZE,
@@ -730,8 +822,6 @@ export default class MainScene extends Phaser.Scene {
         TILE_SIZE,
       );
     } else {
-      ctx.fillStyle = Phaser.Display.Color.IntegerToColor(colors.floor).rgba;
-      ctx.fillRect(0, 0, TILE_SIZE, TILE_SIZE);
       ctx.fillStyle = Phaser.Display.Color.IntegerToColor(colors.wall).rgba;
       ctx.fillRect(TILE_SIZE, 0, TILE_SIZE, TILE_SIZE);
     }
@@ -799,46 +889,25 @@ export default class MainScene extends Phaser.Scene {
     // niveau - pas de raccourci "on voit la sortie a travers le
     // brouillard"
     this.exitTile = exitTile;
-    this.exitMarker = this.add.circle(
+    this.exitMarker = this.add.image(
       exitTile.x * TILE_SIZE + TILE_SIZE / 2,
       exitTile.y * TILE_SIZE + TILE_SIZE / 2,
-      10,
-      0xffd700,
+      "stair_up",
     );
     this.exitMarker.setDepth(2);
-    this.exitMarker.setStrokeStyle(2, 0xffffff);
-    this.tweens.add({
-      targets: this.exitMarker,
-      scale: { from: 0.7, to: 1.15 },
-      alpha: { from: 0.6, to: 1 },
-      duration: 700,
-      yoyo: true,
-      repeat: -1,
-    });
 
     // marqueur de remontee (jamais a l'etage 1) - meme principe que la
-    // sortie (cache par le brouillard tant que non explore), rouge pour
-    // le distinguer visuellement, PAS de declenchement automatique a
-    // l'arrivee dessus (contrairement a la sortie) : une confirmation
-    // est necessaire, cf. showUpstairsPrompt()
+    // sortie (cache par le brouillard tant que non explore), PAS de
+    // declenchement automatique a l'arrivee dessus (contrairement a la
+    // sortie) : une confirmation est necessaire, cf. showUpstairsPrompt()
     this.upstairsTile = upstairsTile;
     if (upstairsTile) {
-      this.upstairsMarker = this.add.circle(
+      this.upstairsMarker = this.add.image(
         upstairsTile.x * TILE_SIZE + TILE_SIZE / 2,
         upstairsTile.y * TILE_SIZE + TILE_SIZE / 2,
-        10,
-        0xdc3030,
+        "stair_down",
       );
       this.upstairsMarker.setDepth(2);
-      this.upstairsMarker.setStrokeStyle(2, 0xffffff);
-      this.tweens.add({
-        targets: this.upstairsMarker,
-        scale: { from: 0.7, to: 1.15 },
-        alpha: { from: 0.6, to: 1 },
-        duration: 700,
-        yoyo: true,
-        repeat: -1,
-      });
     }
 
     // marqueur de la porte du boss (visible seulement une fois explore,
@@ -979,22 +1048,31 @@ export default class MainScene extends Phaser.Scene {
     // pour les ennemis) restent visibles mais dans un etat "ouvert"
     // distinct, sans interaction possible - sinon sauvegarder+quitter+
     // reprendre permettrait de re-piocher leur contenu gratuitement.
+    //
+    // variante de couleur choisie au hasard, seedee sur la seed du
+    // niveau + l'index du coffre - meme apparence a chaque revisite du
+    // meme etage, coherent avec le reste de la generation
+    const chestVariantRng = createRng(`${this.currentSeed}-chest-variants`);
     (chests || []).forEach((chestData, index) => {
       const alreadyOpened = this.currentFloorOpenedChests.includes(index);
-      const sprite = this.add.rectangle(
+      const variant =
+        CHEST_VARIANTS[Math.floor(chestVariantRng() * CHEST_VARIANTS.length)];
+      const sprite = this.add.sprite(
         chestData.x * TILE_SIZE + TILE_SIZE / 2,
         chestData.y * TILE_SIZE + TILE_SIZE / 2,
-        20,
-        16,
-        alreadyOpened ? 0x5a4a30 : 0xc9a03c,
+        CHEST_SPRITESHEET.key,
+        alreadyOpened ? variant.openFrame : variant.closedFrame,
       );
-      sprite.setStrokeStyle(2, 0x3a2f1a);
       sprite.setDepth(7);
-      this.physics.add.existing(sprite, true); // corps statique, bloque le passage comme le PNJ
+      this.physics.add.existing(sprite, true); // corps statique, bloque le passage du joueur (jamais des ennemis, cf. juste en dessous)
       this.levelColliders.push(this.physics.add.collider(this.hero, sprite));
-      this.levelColliders.push(
-        this.physics.add.collider(this.enemyGroup, sprite),
-      );
+      // PAS de collider ennemi ici, contrairement au PNJ de quete - un
+      // coffre bloquant le chemin d'un ennemi permettait un exploit :
+      // rester pres d'un coffre non ouvert (sans le declencher) pour
+      // coincer un ennemi derriere, puis le mitrailler a distance sans
+      // jamais subir de riposte. Les ennemis traversent donc les coffres
+      // comme s'ils n'existaient pas - seul le joueur ne peut pas passer
+      // a travers un coffre ferme.
       // deja ouvert lors d'une session precedente (restaure via
       // currentFloorOpenedChests) : la collision doit etre desactivee
       // des la creation, pas seulement au moment ou on l'ouvre en direct
@@ -1007,6 +1085,7 @@ export default class MainScene extends Phaser.Scene {
         loot: chestData.loot,
         x: chestData.x,
         y: chestData.y,
+        variant,
       });
     });
 
@@ -1017,6 +1096,10 @@ export default class MainScene extends Phaser.Scene {
     // possibles par ville desormais (1 a 3).
     if (data.questNpcs && data.questNpcs.length > 0) {
       this.createQuestNpcs(data.questNpcs);
+    }
+
+    if (ambientNpcData && ambientNpcData.length > 0) {
+      this.createAmbientNpcs(ambientNpcData);
     }
 
     this.fogState = createFogState(grid);
@@ -1311,6 +1394,39 @@ export default class MainScene extends Phaser.Scene {
   }
 
   /**
+   * Ouvre le prompt de confirmation pour la sortie (etage suivant) -
+   * meme principe que showUpstairsPrompt : met le jeu en pause pendant
+   * la decision, evite qu'un simple passage dans le couloir force la
+   * descente sans choix possible, et evite qu'un ennemi continue a se
+   * deplacer (traversant potentiellement le joueur) pendant le delai
+   * reseau du chargement du niveau suivant (loadLevel est asynchrone).
+   */
+  showExitPrompt() {
+    if (this.pauseReasons.has("exit")) return; // deja affiche, pas de re-declenchement
+    this.pauseGame("exit");
+    this.events.emit("exit-prompt", true);
+  }
+
+  /**
+   * Confirme la descente (bouton "Oui" cote React).
+   */
+  confirmDescend() {
+    this.unpauseGame("exit");
+    this.events.emit("exit-prompt", null);
+    this.descendStairs();
+  }
+
+  /**
+   * Annule la descente (bouton "Non" cote React) - repart normalement,
+   * sans re-declencher tant que le joueur reste sur cette case (meme
+   * logique que cancelGoUpstairs).
+   */
+  cancelDescend() {
+    this.unpauseGame("exit");
+    this.events.emit("exit-prompt", null);
+  }
+
+  /**
    * Cree le PNJ de quete a partir des donnees du serveur (position et
    * objectif deja decides la-bas, cf. ArpgController.getLevel) - le
    * client n'a plus a chercher de case ni a inventer d'objectif.
@@ -1337,6 +1453,7 @@ export default class MainScene extends Phaser.Scene {
     // meme apparence a chaque revisite du meme etage, coherent avec le
     // reste de la generation (seed identique = niveau identique)
     const spriteRng = createRng(`${this.currentSeed}-quest-npc-sprites`);
+    const patrolRng = createRng(`${this.currentSeed}-quest-npc-patrol`);
     this.questNpcs = [];
 
     for (const npcData of npcDataArray) {
@@ -1361,15 +1478,33 @@ export default class MainScene extends Phaser.Scene {
       // le PNJ du heros quand les deux reutilisaient la texture hero1 -
       // desormais de vrais sprites NPC distincts, la teinte ferait plus
       // de mal (fausse leur couleur reelle) que de bien
-      sprite.body.moves = false; // ne bouge jamais
       sprite.anims.play(`${npcSpriteKey}-idle-down`);
       sprite.setDepth(9); // entre les ennemis (8) et le heros (10)
+      // bouge desormais (meme mecanisme de patrouille que les PNJ
+      // ambiants, cf. updateNpcMovement) - il lui faut donc aussi un
+      // collider avec les murs, en plus du heros et des ennemis
+      this.levelColliders.push(this.physics.add.collider(sprite, this.layer));
       this.levelColliders.push(this.physics.add.collider(this.hero, sprite)); // pour ne pas pouvoir traverser le PNJ
       this.levelColliders.push(
         this.physics.add.collider(this.enemyGroup, sprite),
       ); // idem pour les ennemis
 
-      this.questNpcs.push({ sprite, questKey });
+      const route = pickPatrolRoute(
+        this.fogGrid,
+        { x: npcData.x, y: npcData.y },
+        patrolRng,
+      );
+
+      this.questNpcs.push({
+        sprite,
+        questKey,
+        spriteKey: npcSpriteKey,
+        lastDir: "down",
+        patrolPath: route ? route.path : null,
+        patrolIndex: 0,
+        patrolDirection: 1,
+        talking: false,
+      });
 
       if (!this.quests[questKey]) {
         this.quests[questKey] = {
@@ -1390,15 +1525,97 @@ export default class MainScene extends Phaser.Scene {
   }
 
   /**
+   * Cree les PNJ ambiants a partir des positions du serveur - purement
+   * decoratifs, jamais de quete ni de vente. Chacun patrouille (meme
+   * mecanisme que le comportement 'patrol' des ennemis - pickPatrolRoute,
+   * cf. enemyBehavior.js) autour de son point de spawn, et s'arrete
+   * (this.talking) quand on lui parle, jusqu'a la fermeture du dialogue -
+   * cf. openAmbientDialog/closeDialog. Sprite ET salutation choisis au
+   * hasard, seedes separement des PNJ de quete (memes graines de base +
+   * suffixe different) pour ne jamais coincider par accident.
+   */
+  createAmbientNpcs(npcDataArray) {
+    const npcSpritePool = Object.keys(SPRITE_REGISTRY).filter((key) =>
+      key.startsWith("NPC_town"),
+    );
+    const spriteRng = createRng(`${this.currentSeed}-ambient-npc-sprites`);
+    const greetingRng = createRng(`${this.currentSeed}-ambient-npc-greetings`);
+    const patrolRng = createRng(`${this.currentSeed}-ambient-npc-patrol`);
+    this.ambientNpcs = [];
+
+    for (const npcData of npcDataArray) {
+      const npcSpriteKey =
+        npcSpritePool.length > 0
+          ? npcSpritePool[Math.floor(spriteRng() * npcSpritePool.length)]
+          : "hero1";
+      const npcSprite = SPRITE_REGISTRY[npcSpriteKey];
+
+      const sprite = this.physics.add.sprite(
+        npcData.x * TILE_SIZE + TILE_SIZE / 2,
+        npcData.y * TILE_SIZE + TILE_SIZE / 2,
+        npcSprite.key,
+        npcSprite.animations.idleDown,
+      );
+      sprite.setScale(npcSprite.scale);
+      sprite.anims.play(`${npcSpriteKey}-idle-down`);
+      sprite.setDepth(9); // entre les ennemis (8) et le heros (10), comme les PNJ de quete
+      // contrairement au PNJ de quete, celui-ci BOUGE : il lui faut son
+      // propre collider avec les murs (this.layer), en plus du heros et
+      // des ennemis (pour ne traverser personne, ni etre traverse)
+      this.levelColliders.push(this.physics.add.collider(sprite, this.layer));
+      this.levelColliders.push(this.physics.add.collider(this.hero, sprite));
+      this.levelColliders.push(
+        this.physics.add.collider(this.enemyGroup, sprite),
+      );
+
+      // meme mecanisme de patrouille que les ennemis de type 'patrol' -
+      // route calculee une fois a la creation, autour du point de spawn.
+      // Pas de route trouvee (carte trop exigue) = null = reste immobile,
+      // degradation propre plutot qu'une erreur
+      const route = pickPatrolRoute(
+        this.fogGrid,
+        { x: npcData.x, y: npcData.y },
+        patrolRng,
+      );
+      const greeting =
+        AMBIENT_NPC_GREETINGS[
+          Math.floor(greetingRng() * AMBIENT_NPC_GREETINGS.length)
+        ];
+
+      this.ambientNpcs.push({
+        sprite,
+        spriteKey: npcSpriteKey,
+        lastDir: "down",
+        patrolPath: route ? route.path : null,
+        patrolIndex: 0,
+        patrolDirection: 1,
+        talking: false,
+        greetingText: greeting,
+      });
+    }
+  }
+
+  /**
    * Ouvre le dialogue d'UN PNJ precis (evenement React, cf. arpg.jsx) -
    * propose la quete si elle n'a pas encore ete acceptee, un message de
    * fin sinon. Retient `questKey` (this.activeDialogQuestKey) pour que
    * acceptQuest() sache sur quelle quete precise agir - plusieurs PNJ
    * peuvent etre presents sur le meme etage desormais.
    */
-  openQuestDialog(questKey) {
+  /**
+   * Ouvre le dialogue d'UN PNJ de quete precis (evenement React, cf.
+   * arpg.jsx) - propose la quete si elle n'a pas encore ete acceptee, un
+   * message de fin sinon. Fige ce PNJ (npc.talking, lu par
+   * updateNpcMovement) le temps du dialogue, exactement comme un PNJ
+   * ambiant - cf. this.activeTalkingNpc, liberee a la fermeture quel que
+   * soit le bouton presse (Fermer/Accepter/Rendre).
+   */
+  openQuestDialog(npc) {
+    const questKey = npc.questKey;
     this.dialogOpen = true;
     this.activeDialogQuestKey = questKey;
+    this.activeTalkingNpc = npc;
+    npc.talking = true;
     const qs = this.quests[questKey];
     if (!qs) return;
     const custom = qs.dialogText || {};
@@ -1426,21 +1643,30 @@ export default class MainScene extends Phaser.Scene {
           custom.progress ||
           `Toujours à la recherche de ${itemName} - reviens me voir une fois que tu l'auras trouvé.`;
       } else {
-        text = custom.offer || `Peux-tu me rapporter ${itemName} ?`;
+        // indice de lieu uniquement si le serveur a fourni un boss
+        // connu (cf. ArpgController.js/bossConfig.getMostRecentBossDepth)
+        // - toujours le PLUS RECENT deja rencontre, jamais fige sur le
+        // tout premier boss du jeu. Absent (FIXED_QUESTS, ou aucun boss
+        // encore croise) = pas d'indice, texte generique seul.
+        const bossHint =
+          qs.bossDepth && qs.bossType
+            ? ` Le ${resolveEnemyDisplayName(qs.bossType)} de l'étage ${qs.bossDepth} le détient.`
+            : "";
+        text = custom.offer || `Peux-tu me rapporter ${itemName} ?${bossHint}`;
         canAccept = true;
       }
     } else if (qs.completed) {
-      text =
-        custom.complete ||
-        `Merci d'avoir tué ces ${qs.targetEnemyType} pour moi !`;
+      const enemyName = resolveEnemyDisplayName(qs.targetEnemyType);
+      text = custom.complete || `Merci d'avoir tué ces ${enemyName} pour moi !`;
     } else if (qs.accepted) {
+      const enemyName = resolveEnemyDisplayName(qs.targetEnemyType);
       text =
         custom.progress ||
-        `Progression : ${qs.killCount} / ${qs.target} ${qs.targetEnemyType} tués. Reviens me voir une fois terminé !`;
+        `Progression : ${qs.killCount} / ${qs.target} ${enemyName} tués. Reviens me voir une fois terminé !`;
     } else {
+      const enemyName = resolveEnemyDisplayName(qs.targetEnemyType);
       text =
-        custom.offer ||
-        `Peux-tu tuer ${qs.target} ${qs.targetEnemyType} pour moi ?`;
+        custom.offer || `Peux-tu tuer ${qs.target} ${enemyName} pour moi ?`;
       canAccept = true;
     }
     this.events.emit("npc-dialog", { text, canAccept, canTurnIn });
@@ -1456,6 +1682,7 @@ export default class MainScene extends Phaser.Scene {
     qs.accepted = true;
     this.dialogOpen = false;
     this.activeDialogQuestKey = null;
+    this.releaseTalkingNpc();
     this.events.emit("npc-dialog", null);
     this.events.emit("quests-updated", { ...this.quests });
     this.persistProgress();
@@ -1487,6 +1714,7 @@ export default class MainScene extends Phaser.Scene {
 
     this.dialogOpen = false;
     this.activeDialogQuestKey = null;
+    this.releaseTalkingNpc();
     this.events.emit("npc-dialog", null);
     this.events.emit("quests-updated", { ...this.quests });
 
@@ -1497,12 +1725,46 @@ export default class MainScene extends Phaser.Scene {
   }
 
   /**
+   * Ouvre le dialogue d'un PNJ ambiant (evenement React, reutilise le
+   * MEME canal que le dialogue de quete - cf. openQuestDialog) - juste
+   * une salutation, jamais de bouton "Accepter"/"Rendre". Le PNJ
+   * s'arrete net (npc.talking, lu par updateNpcMovement) pendant que le
+   * dialogue reste ouvert, et reprend sa patrouille a la fermeture (cf.
+   * closeDialog).
+   */
+  openAmbientDialog(npc) {
+    this.dialogOpen = true;
+    this.activeTalkingNpc = npc;
+    npc.talking = true;
+    this.events.emit("npc-dialog", {
+      text: npc.greetingText,
+      canAccept: false,
+      canTurnIn: false,
+    });
+  }
+
+  /**
+   * Libere le PNJ actuellement fige par un dialogue (quete OU ambiant -
+   * this.activeTalkingNpc couvre les deux, cf. openQuestDialog/
+   * openAmbientDialog) - reprend sa patrouille au prochain update.
+   * Appelee par les 3 chemins de fermeture du dialogue (Fermer/Accepter/
+   * Rendre), pour ne jamais dupliquer cette logique.
+   */
+  releaseTalkingNpc() {
+    if (this.activeTalkingNpc) {
+      this.activeTalkingNpc.talking = false;
+      this.activeTalkingNpc = null;
+    }
+  }
+
+  /**
    * Ferme le dialogue sans accepter - appele depuis React (bouton
    * "Fermer").
    */
   closeDialog() {
     this.dialogOpen = false;
     this.activeDialogQuestKey = null;
+    this.releaseTalkingNpc();
     this.events.emit("npc-dialog", null);
   }
 
@@ -1518,15 +1780,29 @@ export default class MainScene extends Phaser.Scene {
     const up = this.cursors.up.isDown || this.keys.up.isDown;
     const down = this.cursors.down.isDown || this.keys.down.isDown;
 
-    if (left) vx = -speed;
-    if (right) vx = speed;
-    if (up) vy = -speed;
-    if (down) vy = speed;
-    if (vx !== 0 && vy !== 0) {
-      const n = Math.SQRT1_2;
-      vx *= n;
-      vy *= n;
+    if (left) vx -= 1;
+    if (right) vx += 1;
+    if (up) vy -= 1;
+    if (down) vy += 1;
+
+    // fusionne avec le joystick tactile (vecteur analogique, cf.
+    // setTouchMoveVector) plutot que de le remplacer - un appareil
+    // tactile ET un clavier branche fonctionnent tous les deux en meme
+    // temps, aucun n'exclut l'autre
+    vx += this.touchMoveVector.x;
+    vy += this.touchMoveVector.y;
+
+    // normalise seulement si la magnitude depasse 1 (mouvement clavier
+    // en diagonale, ou clavier+tactile combines) - un joystick pousse a
+    // moitie (magnitude 0.5) doit rester a mi-vitesse, jamais remonte a
+    // pleine vitesse artificiellement
+    const mag = Math.hypot(vx, vy);
+    if (mag > 1) {
+      vx /= mag;
+      vy /= mag;
     }
+    vx *= speed;
+    vy *= speed;
 
     this.hero.setVelocity(vx, vy);
 
@@ -1584,8 +1860,14 @@ export default class MainScene extends Phaser.Scene {
         tileY === this.exitTile.y &&
         this.bossAlive !== true
       ) {
-        this.descendStairs();
-        return; // le niveau est en cours de rechargement, pas la peine de continuer cette frame
+        this.showExitPrompt();
+        // pas de return : on ne recharge rien immediatement, on met le
+        // jeu en pause en attendant la reponse du joueur (cf.
+        // showExitPrompt) - avant, le passage direct par ce couloir
+        // forcait la descente sans aucun choix possible, et le temps
+        // d'attente du chargement (async, appel reseau) n'etait pas mis
+        // en pause : un ennemi pouvait continuer a se deplacer et
+        // traverser le joueur pendant ce court delai
       }
 
       if (
@@ -1594,37 +1876,48 @@ export default class MainScene extends Phaser.Scene {
         tileY === this.upstairsTile.y
       ) {
         this.showUpstairsPrompt();
-        // pas de return ici contrairement a la sortie : on ne recharge
-        // rien, on met juste le jeu en pause en attendant la reponse du
-        // joueur (cf. showUpstairsPrompt)
+        // pas de return ici non plus, meme raison
       }
     }
 
     const now = this.time.now;
-    if (Phaser.Input.Keyboard.JustDown(this.keys.melee))
+    if (
+      Phaser.Input.Keyboard.JustDown(this.keys.melee) ||
+      this.touchMeleeRequested
+    ) {
+      this.touchMeleeRequested = false;
       this.performMeleeAttack(now);
-    if (Phaser.Input.Keyboard.JustDown(this.keys.ranged))
+    }
+    if (
+      Phaser.Input.Keyboard.JustDown(this.keys.ranged) ||
+      this.touchRangedRequested
+    ) {
+      this.touchRangedRequested = false;
       this.performRangedAttack(now);
+    }
 
     this.updateEnemyMovement();
 
-    // les PNJ suivent la meme regle de visibilite que les ennemis (case
-    // actuellement visible, pas juste "deja vue") - immobiles, donc pas
-    // besoin d'une boucle dediee complexe, un simple check par PNJ suffit
-    for (const npc of this.questNpcs) {
-      const npcTileX = Math.floor(npc.sprite.x / TILE_SIZE);
-      const npcTileY = Math.floor(npc.sprite.y / TILE_SIZE);
+    // meme regle pour les coffres - un vrai oubli jusqu'ici (jamais
+    // couverts par le controle de visibilite applique aux ennemis/PNJ,
+    // pas une regression d'un correctif precedent : ils n'avaient tout
+    // simplement jamais ete inclus dans cette boucle)
+    for (const chest of this.chests) {
+      const chestTileX = Math.floor(chest.sprite.x / TILE_SIZE);
+      const chestTileY = Math.floor(chest.sprite.y / TILE_SIZE);
       const state = this.fogState.state;
-      const npcVisible =
-        npcTileY >= 0 &&
-        npcTileX >= 0 &&
-        npcTileY < state.length &&
-        npcTileX < state[0].length &&
-        state[npcTileY][npcTileX] === 2;
-      npc.sprite.setVisible(npcVisible);
+      const chestVisible =
+        chestTileY >= 0 &&
+        chestTileX >= 0 &&
+        chestTileY < state.length &&
+        chestTileX < state[0].length &&
+        state[chestTileY][chestTileX] === 2;
+      chest.sprite.setVisible(chestVisible);
     }
     this.updateEnemyAttacks(now);
     this.updateProjectiles();
+    this.updateNpcMovement(this.questNpcs);
+    this.updateNpcMovement(this.ambientNpcs);
     this.drawHpBars();
 
     if (this.playerHp <= 0 && !this.isDead) {
@@ -1652,6 +1945,8 @@ export default class MainScene extends Phaser.Scene {
       grid: this.fogGrid,
       fogState: this.fogState.state,
       playerTile: this.lastPlayerTile,
+      exitTile: this.exitTile,
+      upstairsTile: this.upstairsTile,
     });
   }
 
@@ -1786,6 +2081,16 @@ export default class MainScene extends Phaser.Scene {
     return state[ey][ex] === 2;
   }
 
+  /**
+   * Deplace une entite (ennemi, PNJ de quete ou PNJ ambiant - fonction
+   * partagee) vers une case cible. Inclut une detection de blocage : si
+   * la position n'a quasiment pas bouge depuis ~500ms malgre une vitesse
+   * non nulle (collision avec un mur/batiment, un autre PNJ...), force
+   * le passage a l'etape suivante (onArrive quand meme) plutot que de
+   * laisser l'entite pousser indefiniment contre l'obstacle avec
+   * l'animation de marche qui tourne sans jamais vraiment avancer - bug
+   * constate en jeu avec un PNJ ambiant coince contre un batiment.
+   */
   moveEnemyToward(enemy, waypointTile, speed, onArrive) {
     const targetX = waypointTile.x * TILE_SIZE + TILE_SIZE / 2;
     const targetY = waypointTile.y * TILE_SIZE + TILE_SIZE / 2;
@@ -1794,8 +2099,28 @@ export default class MainScene extends Phaser.Scene {
     const dist = Math.hypot(dx, dy);
 
     if (dist < 4) {
+      enemy.stuckCheck = null;
       onArrive();
       return;
+    }
+
+    const now = this.time.now;
+    if (!enemy.stuckCheck || now - enemy.stuckCheck.time > 500) {
+      if (enemy.stuckCheck) {
+        const moved = Math.hypot(
+          enemy.sprite.x - enemy.stuckCheck.x,
+          enemy.sprite.y - enemy.stuckCheck.y,
+        );
+        if (moved < 3) {
+          // quasiment aucun progres en 500ms malgre une vitesse non
+          // nulle : bloque par un obstacle, abandonne cette case et
+          // passe a la suivante plutot que de rester coince
+          enemy.stuckCheck = null;
+          onArrive();
+          return;
+        }
+      }
+      enemy.stuckCheck = { x: enemy.sprite.x, y: enemy.sprite.y, time: now };
     }
 
     const nx = dx / dist,
@@ -1811,6 +2136,67 @@ export default class MainScene extends Phaser.Scene {
           : "up";
     enemy.sprite.anims.play(enemy.spriteKey + "-walk-" + edir, true);
     enemy.lastDir = edir;
+  }
+
+  /**
+   * Deplace chaque PNJ ambiant le long de sa route de patrouille (meme
+   * logique que le comportement 'patrol' des ennemis, reutilise
+   * moveEnemyToward tel quel) - s'arrete net (this.talking) pendant
+   * qu'on lui parle, cf. openAmbientDialog. Visibilite au brouillard
+   * recalculee chaque frame comme les ennemis (case ACTUELLEMENT
+   * visible, pas juste deja vue) : contrairement au PNJ de quete
+   * (immobile), celui-ci bouge, "se souvenir" de sa position passee
+   * n'aurait pas de sens.
+   */
+  /**
+   * Deplace une LISTE de PNJ mobiles le long de leur route de patrouille
+   * (meme logique que le comportement 'patrol' des ennemis, reutilise
+   * moveEnemyToward tel quel) - s'arrete net (npc.talking) pendant qu'on
+   * leur parle. Fonction partagee entre PNJ de quete ET PNJ ambiants :
+   * les deux ont exactement la meme mecanique de deplacement desormais,
+   * seule leur interaction differe (dialogue de quete vs simple
+   * salutation). Visibilite au brouillard recalculee chaque frame comme
+   * les ennemis (case ACTUELLEMENT visible, pas juste deja vue) : ces
+   * PNJ bougent, contrairement au decor.
+   */
+  updateNpcMovement(npcList) {
+    if (!npcList) return;
+    const state = this.fogState.state;
+
+    for (const npc of npcList) {
+      const npcTileX = Math.floor(npc.sprite.x / TILE_SIZE);
+      const npcTileY = Math.floor(npc.sprite.y / TILE_SIZE);
+      const npcVisible =
+        npcTileY >= 0 &&
+        npcTileX >= 0 &&
+        npcTileY < state.length &&
+        npcTileX < state[0].length &&
+        state[npcTileY][npcTileX] === 2;
+      npc.sprite.setVisible(npcVisible);
+
+      if (npc.talking) {
+        npc.sprite.setVelocity(0, 0);
+        npc.sprite.anims.play(`${npc.spriteKey}-idle-${npc.lastDir}`, true);
+        continue;
+      }
+
+      if (npc.patrolPath && npc.patrolPath.length > 1) {
+        const waypoint = npc.patrolPath[npc.patrolIndex];
+        this.moveEnemyToward(npc, waypoint, ENEMY_SPEED * 0.5, () => {
+          if (
+            npc.patrolIndex + npc.patrolDirection < 0 ||
+            npc.patrolIndex + npc.patrolDirection >= npc.patrolPath.length
+          ) {
+            npc.patrolDirection *= -1;
+          }
+          npc.patrolIndex += npc.patrolDirection;
+        });
+        continue;
+      }
+
+      npc.sprite.setVelocity(0, 0);
+      npc.sprite.anims.play(`${npc.spriteKey}-idle-${npc.lastDir}`, true);
+    }
   }
 
   performMeleeAttack(now) {
@@ -1832,7 +2218,24 @@ export default class MainScene extends Phaser.Scene {
           PLAYER_MELEE_RANGE,
       );
       if (npc) {
-        this.openQuestDialog(npc.questKey);
+        this.openQuestDialog(npc);
+        return;
+      }
+    }
+
+    // interaction avec un PNJ ambiant : meme principe, mais purement
+    // decoratif (juste une salutation, pas de quete/vente) - PEUT y avoir
+    // plusieurs PNJ ambiants a portee simultanement (contrairement aux
+    // PNJ de quete, leur espacement minimal - 4 cases - n'exclut pas ce
+    // cas), donc on prend le premier trouve, ordre arbitraire mais stable
+    if (!this.dialogOpen) {
+      const ambient = this.ambientNpcs.find(
+        (n) =>
+          Math.hypot(n.sprite.x - this.hero.x, n.sprite.y - this.hero.y) <=
+          PLAYER_MELEE_RANGE,
+      );
+      if (ambient) {
+        this.openAmbientDialog(ambient);
         return;
       }
     }
@@ -1896,18 +2299,16 @@ export default class MainScene extends Phaser.Scene {
       });
       if (chest) {
         chest.opened = true;
-        chest.sprite.setFillStyle(0x5a4a30);
+        chest.sprite.setFrame(chest.variant.openFrame);
         chest.sprite.body.checkCollision.none = true; // sinon il faut sauvegarder+reprendre pour que le passage se debloque (le corps physique du coffre nouvellement ouvert n'est jamais retouche autrement)
         this.currentFloorOpenedChests.push(chest.index);
 
         if (chest.loot) {
           this.addItemToInventory(chest.loot.itemId, chest.loot.quantity);
           const itemDef = resolveItemDef(chest.loot.itemId);
-          this.dialogOpen = true;
-          this.events.emit("npc-dialog", {
-            text: `Vous avez trouvé : ${itemDef.name} x${chest.loot.quantity}`,
-            canAccept: false,
-          });
+          this.showLootToast(
+            `Trouvé : ${itemDef.name} x${chest.loot.quantity}`,
+          );
         }
         return;
       }
@@ -2049,8 +2450,50 @@ export default class MainScene extends Phaser.Scene {
       this.events.emit("xp-changed", { xp: this.xp });
       this.checkLevelUp();
       this.currentFloorKills.push(enemy.spawnIndex); // ne reapparait plus si on sauvegarde+reprend SANS avoir quitte cet etage
-      if (enemy.drop)
+      if (enemy.drop) {
         this.addItemToInventory(enemy.drop.itemId, enemy.drop.quantity);
+        const itemDef = resolveItemDef(enemy.drop.itemId);
+        this.showLootToast(`Trouvé : ${itemDef.name} x${enemy.drop.quantity}`);
+      }
+
+      // un boss vaincu donne TOUJOURS l'objet cible de toute quete
+      // "recuperer tel objet" active (acceptee, pas encore terminee),
+      // EN PLUS du butin normal ci-dessus - sans quete active pour un
+      // objet donne, il ne tombe jamais du tout (absent de
+      // LOOT_TABLES.bossDrop cote serveur). Garantit que la quete reste
+      // toujours faisable, sans dependre d'un tirage aleatoire - avant
+      // ce changement, l'objet avait une simple CHANCE de tomber meme
+      // sans quete active, ce qui rendait la quete elle-meme peu fiable
+      // (bug remonte : "j'ai essaye le boss mais rien").
+      //
+      // Compte, par objet cible, combien d'EXEMPLAIRES sont necessaires
+      // (plusieurs quetes actives peuvent viser le meme objet - rare
+      // mais possible) contre combien on en a deja, et ne complete que
+      // l'ecart - evite qu'une quete "vole" l'exemplaire deja destine a
+      // une autre sur le meme kill.
+      if (enemy.isBoss) {
+        const neededCounts = {};
+        for (const questKey of Object.keys(this.quests)) {
+          const qs = this.quests[questKey];
+          if (qs.questId !== "obtainItem" || !qs.accepted || qs.completed)
+            continue;
+          neededCounts[qs.targetItemId] =
+            (neededCounts[qs.targetItemId] || 0) + 1;
+        }
+        for (const [itemId, neededCount] of Object.entries(neededCounts)) {
+          const haveCount = this.inventory
+            .filter((i) => i.itemId === itemId)
+            .reduce((sum, i) => sum + i.quantity, 0);
+          const toGrant = neededCount - haveCount;
+          if (toGrant > 0) {
+            this.addItemToInventory(itemId, toGrant);
+            const itemDef = resolveItemDef(itemId);
+            this.showLootToast(
+              `Le boss laisse tomber : ${itemDef.name} x${toGrant}`,
+            );
+          }
+        }
+      }
 
       // suivi GLOBAL de toutes les quetes actives, pas seulement celle de
       // l'etage courant : une quete acceptee en ville (0 ennemi sur
@@ -2088,13 +2531,11 @@ export default class MainScene extends Phaser.Scene {
       // notification immediate de la recompense en objet - la quete est
       // deja terminee et l'objet deja ajoute a l'inventaire a cet instant,
       // pas la peine d'attendre que le joueur retourne parler au PNJ
-      if (justCompletedReward && !this.dialogOpen) {
+      if (justCompletedReward) {
         const itemDef = resolveItemDef(justCompletedReward.itemId);
-        this.dialogOpen = true;
-        this.events.emit("npc-dialog", {
-          text: `Quête terminée ! Vous avez aussi reçu : ${itemDef.name} x${justCompletedReward.quantity}`,
-          canAccept: false,
-        });
+        this.showLootToast(
+          `Quête terminée ! Reçu : ${itemDef.name} x${justCompletedReward.quantity}`,
+        );
       }
 
       enemy.sprite.destroy();

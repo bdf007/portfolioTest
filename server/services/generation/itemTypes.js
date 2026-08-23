@@ -130,6 +130,13 @@ const LOOT_TABLES = {
     { itemId: "leatherArmor", weight: 20 },
     { itemId: "vitalityCharm", weight: 10 },
     { itemId: "gold", weight: 20, quantityRange: [50, 100] },
+    // PAS d'objet de quete (ancientRelic) ici - contrairement au reste
+    // de cette table (tirage aleatoire), un objet de quete ne doit
+    // JAMAIS tomber sans quete active, et doit tomber a coup SUR (pas
+    // juste une chance) quand une quete active le cible - ni l'un ni
+    // l'autre ne se preterait a un poids fixe dans un tirage aleatoire.
+    // Cf. MainScene.damageEnemy (client) pour la vraie logique
+    // d'attribution, conditionnee a l'etat des quetes du joueur.
   ],
 
   // recompense de quete : l'XP reste la recompense principale (deja geree
@@ -191,4 +198,25 @@ function getPurchasableItemIds() {
     .map((item) => item.id);
 }
 
-module.exports = { ITEM_TYPES, LOOT_TABLES, rollLoot, getPurchasableItemIds };
+/**
+ * Liste des clés d'objets utilisables comme cible d'une quete "recuperer
+ * tel objet" (cf. questTypes.generateObtainItemQuest) - uniquement la
+ * categorie 'questItem' : jamais une piece d'equipement reelle, jamais
+ * un consommable. C'est ce qui garantit qu'un objet de quete n'est
+ * JAMAIS equipable ("le marteau du grand-pere, pas une vraie arme") -
+ * pas une verification a faire cote quete, une propriete garantie par
+ * la SOURCE du pool lui-meme.
+ */
+function getQuestItemIds() {
+  return Object.values(ITEM_TYPES)
+    .filter((item) => item.category === "questItem")
+    .map((item) => item.id);
+}
+
+module.exports = {
+  ITEM_TYPES,
+  LOOT_TABLES,
+  rollLoot,
+  getPurchasableItemIds,
+  getQuestItemIds,
+};

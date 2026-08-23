@@ -26,9 +26,58 @@ import orc5Spritesheet from "../../assets/$Orc_5.png";
 import orc6Spritesheet from "../../assets/$Orc_6.png";
 import orc7Spritesheet from "../../assets/$Orc_7.png";
 import orc8Spritesheet from "../../assets/$Orc_8.png";
+import bat1aSpritesheet from "../../assets/$Bat_1.png";
+import bee1Spritesheet from "../../assets/$Bee_1.png";
+import bird1Spritesheet from "../../assets/$Bird_1.png";
+import bug1aSpritesheet from "../../assets/$Bug_1a.png";
+import bug1bSpritesheet from "../../assets/$Bug_1b.png";
+import cockatrice1Spritesheet from "../../assets/$Cockatrice_1.png";
+import deer1Spritesheet from "../../assets/$Deer_1.png";
+import deer2Spritesheet from "../../assets/$Deer_2.png";
+import fox1Spritesheet from "../../assets/$Fox_1.png";
+import fox2Spritesheet from "../../assets/$Fox_2.png";
+import lizardSpritesheet from "../../assets/$Lizard.png";
+import raccoon1Spritesheet from "../../assets/$Raccoon_1.png";
+import slime1Spritesheet from "../../assets/$Slime_1.png";
+import snake1Spritesheet from "../../assets/$Snake_1.png";
+import snake2Spritesheet from "../../assets/$Snake_2.png";
+import snake3Spritesheet from "../../assets/$Snake_3.png";
+import snake4Spritesheet from "../../assets/$Snake_4.png";
+import spider1Spritesheet from "../../assets/$Spider_1.png";
+import spider2Spritesheet from "../../assets/$Spider_2.png";
+import spider3Spritesheet from "../../assets/$Spider_3.png";
+import worm1Spritesheet from "../../assets/$Worm_1.png";
+import miniDragon1Spritesheet from "../../assets/mini_dragon1.png";
+import miniDragon2Spritesheet from "../../assets/mini_dragon2.png";
+import miniDragon3Spritesheet from "../../assets/mini_dragon3.png";
+import miniDragon4Spritesheet from "../../assets/mini_dragon4.png";
+import miniDragon5Spritesheet from "../../assets/mini_dragon5.png";
+import miniDragon6Spritesheet from "../../assets/mini_dragon6.png";
+import plantMonster1Spritesheet from "../../assets/plant_monster1.png";
+import plantMonster2Spritesheet from "../../assets/plant_monster2.png";
+import lamia1Spritesheet from "../../assets/lamia1.png";
+import lamia2Spritesheet from "../../assets/lamia2.png";
+import lamia3Spritesheet from "../../assets/lamia3.png";
+import lamia4Spritesheet from "../../assets/lamia4.png";
+//import boss
+import GhostskullSpritesheet from "../../assets/$GhostSkull_1.png";
+import BigSpiderSpritesheet from "../../assets/big_spider.png";
+import BoneKing1Spritesheet from "../../assets/bone_king_1.png";
+import BoneKing2Spritesheet from "../../assets/bone_king_2.png";
+import dragonSpritesheet from "../../assets/dragon.png";
+import giantAntSpritesheet from "../../assets/giant_ant.png";
+import medusaSpritesheet from "../../assets/medusa.png";
 // import tiles
 import wallCaveSprite from "../../assets/wall_cave.png";
 import floorCaveSprite from "../../assets/floor_cave.png";
+import wallDesertSprite from "../../assets/wall_desert.png";
+import floorDesertSprite from "../../assets/floor_desert.png";
+import stairdownSprite from "../../assets/stair_down.png";
+import stairupSprite from "../../assets/stair_up.png";
+import wallTreeSprite from "../../assets/wall_tree.png";
+import floorTreeSprite from "../../assets/floor_tree.png";
+// import objects
+import chestsSpritesheet from "../../assets/Chests.png";
 // import animation effects
 import meleeSlashSpritesheet from "../../assets/melee_slash_effect.png";
 // import town PNJ spritesheets here when available
@@ -63,42 +112,10 @@ import town3NPCm3Spritesheet from "../../assets/town3_M3_walk.png";
 import town3NPCm4Spritesheet from "../../assets/town3_M4_walk.png";
 import town3NPCm5Spritesheet from "../../assets/town3_M5_walk.png";
 
-/**
- * Registre centralisé des sprites du jeu. Chaque entrée porte ses PROPRES
- * dimensions de frame, son propre facteur d'échelle et sa propre hitbox -
- * rien n'est supposé uniforme entre les types. Un boss en 96x128 et un
- * insecte en 16x16 cohabitent sans problème, chacun avec une hitbox
- * calculée à partir de SES dimensions (cf. computeSafeHitbox), jamais de
- * constante partagée qui forcerait une taille commune.
- *
- * Le découpage des animations suit la convention 3 colonnes x 4 lignes
- * déjà établie pour hero1_walk.png (bas/gauche/droite/haut, frame du
- * milieu de chaque ligne = pose idle). Un sprite qui suit cette même
- * disposition peut réutiliser STANDARD_ANIMATION_FRAMES tel quel ; un
- * sprite structuré différemment définit ses propres indices de frames
- * dans son entrée `animations`.
- */
-
-// taille de hitbox visée en ESPACE MONDE (apres mise a l'echelle), pas en
-// local - c'est ce qui garantit une hitbox toujours sure sous 32px (la
-// taille d'une case de la grille de niveau) quelle que soit la taille
-// source du sprite ou son echelle d'affichage.
-// Valeurs identiques a celles validees manuellement pour hero1_walk.png
-// (cf. la correction du souci de blocage en diagonale dans les couloirs).
 const SAFE_WORLD_WIDTH = 18;
 const SAFE_WORLD_HEIGHT = 24;
-const FEET_MARGIN = 2; // la hitbox reste ancree pres des pieds, pas centree
+const FEET_MARGIN = 2;
 
-/**
- * Calcule une hitbox sûre pour n'importe quelle taille de frame/échelle.
- * Toujours sous 32px (une case) en espace monde, jamais plus grande que 90% de
- * la frame source (garde-fou pour les très petits sprites).
- *
- * @param {number} frameWidth
- * @param {number} frameHeight
- * @param {number} scale
- * @returns {{width:number, height:number, offsetX:number, offsetY:number}}
- */
 export function computeSafeHitbox(frameWidth, frameHeight, scale) {
   let width = SAFE_WORLD_WIDTH / scale;
   let height = SAFE_WORLD_HEIGHT / scale;
@@ -117,10 +134,6 @@ export function computeSafeHitbox(frameWidth, frameHeight, scale) {
   };
 }
 
-/**
- * Indices de frames pour la disposition standard 3x4 (bas/gauche/droite/
- * haut). Réutilisable par tout sprite qui suit cette même disposition.
- */
 export const STANDARD_ANIMATION_FRAMES = {
   walkDown: [0, 1, 2, 1],
   walkLeft: [3, 4, 5, 4],
@@ -132,7 +145,6 @@ export const STANDARD_ANIMATION_FRAMES = {
   idleUp: 10,
 };
 
-// Indices de frames pour la disposition 4X4 (bas/gauche/droite/haut) - réutilisable par tout sprite qui suit cette disposition.
 export const STANDARD_ANIMATION_FRAMES_4X4 = {
   walkDown: [0, 1, 2, 3],
   walkLeft: [4, 5, 6, 7],
@@ -144,21 +156,6 @@ export const STANDARD_ANIMATION_FRAMES_4X4 = {
   idleUp: 13,
 };
 
-/**
- * @typedef {Object} SpriteEntry
- * @property {string} key - clé de texture Phaser (this.load.spritesheet)
- * @property {*} path - asset importé (résolu par le bundler en URL)
- * @property {number} frameWidth
- * @property {number} frameHeight
- * @property {number} scale - facteur d'affichage (setScale)
- * @property {Object} animations - indices de frames (cf. STANDARD_ANIMATION_FRAMES)
- * @property {{width:number,height:number,offsetX:number,offsetY:number}} hitbox
- */
-
-// les 4 heros de Skip the Dungeon, memes dimensions confirmees (78x144,
-// grille 3x4 -> 26x36 par frame) - meme echelle que le heros actuel pour
-// rester coherent visuellement entre eux tant qu'aucune raison de les
-// differencier n'existe
 const HERO_FRAME_W = 26;
 const HERO_FRAME_H = 36;
 const HERO_SCALE = 1.2;
@@ -181,14 +178,9 @@ export const SPRITE_REGISTRY = {
   hero3: makeHeroEntry("hero3", hero3Spritesheet),
   hero4: makeHeroEntry("hero4", hero4Spritesheet),
 
-  // placeholder : reutilise la texture de hero1 teintee, en attendant de
-  // vrais sprites d'ennemis. Le jour ou un vrai sprite (goblin.png,
-  // boss.png...) est disponible, il suffit de changer `key`/`path`/
-  // `frameWidth`/`frameHeight`/`scale` de cette entree (ou d'en ajouter
-  // une nouvelle) - aucun autre fichier n'a besoin de changer, puisque
-  // BootScene et MainScene lisent tout depuis ce registre.
   enemyDefault: {
-    key: "hero1", // meme texture Phaser que 'hero1' - pas rechargee deux fois
+    key: "hero1",
+    displayName: "Default Enemy",
     path: hero1Spritesheet,
     frameWidth: HERO_FRAME_W,
     frameHeight: HERO_FRAME_H,
@@ -198,6 +190,7 @@ export const SPRITE_REGISTRY = {
   },
   enemy1: {
     key: "enemy1",
+    displayName: "homme des bois",
     path: enemy1Spritesheet,
     frameWidth: 32,
     frameHeight: 40,
@@ -207,6 +200,7 @@ export const SPRITE_REGISTRY = {
   },
   goblin: {
     key: "enemy2",
+    displayName: "gobelin furieux",
     path: enemy2Spritesheet,
     frameWidth: 32,
     frameHeight: 40,
@@ -216,6 +210,7 @@ export const SPRITE_REGISTRY = {
   },
   goblin2: {
     key: "goblin2",
+    displayName: "gobelin rusé",
     path: goblin2Spritesheet,
     frameWidth: 32,
     frameHeight: 32,
@@ -225,15 +220,348 @@ export const SPRITE_REGISTRY = {
   },
   bat1: {
     key: "bat1",
+    displayName: "chauve-souris",
     path: bat1Spritesheet,
     frameWidth: 16,
     frameHeight: 16,
-    scale: 2,
+    scale: 1.7,
     animations: STANDARD_ANIMATION_FRAMES_4X4,
-    hitbox: computeSafeHitbox(16, 16, 2),
+    hitbox: computeSafeHitbox(16, 16, 1.7),
+  },
+  bat1a: {
+    key: "bat1a",
+    displayName: "chauve-souris alpha",
+    path: bat1aSpritesheet,
+    frameWidth: 32,
+    frameHeight: 40,
+    scale: 0.6,
+    animations: STANDARD_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(32, 40, 0.6),
+  },
+  bee1: {
+    key: "bee1",
+    displayName: "abeille",
+    path: bee1Spritesheet,
+    frameWidth: 32,
+    frameHeight: 40,
+    scale: 0.5,
+    animations: STANDARD_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(32, 40, 0.5),
+  },
+
+  bird1: {
+    key: "bird1",
+    displayName: "oiseau",
+    path: bird1Spritesheet,
+    frameWidth: 32,
+    frameHeight: 40,
+    scale: 0.8,
+    animations: STANDARD_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(32, 40, 0.8),
+  },
+  bug1a: {
+    key: "bug1a",
+    displayName: "insecte vert",
+    path: bug1aSpritesheet,
+    frameWidth: 32,
+    frameHeight: 40,
+    scale: 0.7,
+    animations: STANDARD_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(32, 40, 0.7),
+  },
+  bug1b: {
+    key: "bug1b",
+    displayName: "insecte rouge",
+    path: bug1bSpritesheet,
+    frameWidth: 32,
+    frameHeight: 40,
+    scale: 0.7,
+    animations: STANDARD_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(32, 40, 0.7),
+  },
+  cockatrice1: {
+    key: "cockatrice1",
+    displayName: "basilic",
+    path: cockatrice1Spritesheet,
+    frameWidth: 32,
+    frameHeight: 40,
+    scale: 0.7,
+    animations: STANDARD_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(32, 40, 0.7),
+  },
+  deer1: {
+    key: "deer1",
+    displayName: "cerf de feu",
+    path: deer1Spritesheet,
+    frameWidth: 32,
+    frameHeight: 40,
+    scale: 1.2,
+    animations: STANDARD_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(32, 40, 1.2),
+  },
+  deer2: {
+    key: "deer2",
+    displayName: "cerf",
+    path: deer2Spritesheet,
+    frameWidth: 32,
+    frameHeight: 40,
+    scale: 1.2,
+    animations: STANDARD_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(32, 40, 1.2),
+  },
+  fox1: {
+    key: "fox1",
+    displayName: "renard bleu",
+    path: fox1Spritesheet,
+    frameWidth: 32,
+    frameHeight: 40,
+    scale: 0.7,
+    animations: STANDARD_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(32, 40, 0.7),
+  },
+  fox2: {
+    key: "fox2",
+    displayName: "renard rouge",
+    path: fox2Spritesheet,
+    frameWidth: 32,
+    frameHeight: 40,
+    scale: 0.7,
+    animations: STANDARD_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(32, 40, 0.7),
+  },
+  lizard: {
+    key: "lizard",
+    displayName: "lézard",
+    path: lizardSpritesheet,
+    frameWidth: 32,
+    frameHeight: 40,
+    scale: 1.5,
+    animations: STANDARD_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(32, 40, 1.5),
+  },
+  raccoon1: {
+    key: "raccoon1",
+    displayName: "raton laveur",
+    path: raccoon1Spritesheet,
+    frameWidth: 32,
+    frameHeight: 40,
+    scale: 1.5,
+    animations: STANDARD_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(32, 40, 1.5),
+  },
+  slime1: {
+    key: "slime1",
+    displayName: "slime",
+    path: slime1Spritesheet,
+    frameWidth: 32,
+    frameHeight: 40,
+    scale: 1.5,
+    animations: STANDARD_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(32, 40, 1.5),
+  },
+  snake1: {
+    key: "snake1",
+    displayName: "serpent vert",
+    path: snake1Spritesheet,
+    frameWidth: 32,
+    frameHeight: 40,
+    scale: 1.5,
+    animations: STANDARD_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(32, 40, 1.5),
+  },
+  snake2: {
+    key: "snake2",
+    displayName: "serpent violet",
+    path: snake2Spritesheet,
+    frameWidth: 32,
+    frameHeight: 32,
+    scale: 1.5,
+    animations: STANDARD_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(32, 32, 1.5),
+  },
+  snake3: {
+    key: "snake3",
+    displayName: "serpent rouge",
+    path: snake3Spritesheet,
+    frameWidth: 32,
+    frameHeight: 32,
+    scale: 1.5,
+    animations: STANDARD_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(32, 32, 1.5),
+  },
+  snake4: {
+    key: "snake4",
+    displayName: "serpent blanc",
+    path: snake4Spritesheet,
+    frameWidth: 32,
+    frameHeight: 32,
+    scale: 1.5,
+    animations: STANDARD_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(32, 32, 1.5),
+  },
+  spider1: {
+    key: "spider1",
+    displayName: "petite araignée",
+    path: spider1Spritesheet,
+    frameWidth: 32,
+    frameHeight: 40,
+    scale: 1.5,
+    animations: STANDARD_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(32, 40, 1.5),
+  },
+  spider2: {
+    key: "spider2",
+    displayName: "araignée moyenne",
+    path: spider2Spritesheet,
+    frameWidth: 32,
+    frameHeight: 40,
+    scale: 1.5,
+    animations: STANDARD_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(32, 40, 1.5),
+  },
+  spider3: {
+    key: "spider3",
+    displayName: "grande araignée",
+    path: spider3Spritesheet,
+    frameWidth: 32,
+    frameHeight: 40,
+    scale: 1.5,
+    animations: STANDARD_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(32, 40, 1.5),
+  },
+  worm1: {
+    key: "worm1",
+    displayName: "ver bleu géant",
+    path: worm1Spritesheet,
+    frameWidth: 32,
+    frameHeight: 40,
+    scale: 1.5,
+    animations: STANDARD_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(32, 40, 1.5),
+  },
+  miniDragon1: {
+    key: "miniDragon1",
+    displayName: "petit dragon jaune",
+    path: miniDragon1Spritesheet,
+    frameWidth: 32,
+    frameHeight: 32,
+    scale: 1,
+    animations: STANDARD_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(32, 32, 1),
+  },
+  miniDragon2: {
+    key: "miniDragon2",
+    displayName: "petit dragon jaune et vert",
+    path: miniDragon2Spritesheet,
+    frameWidth: 32,
+    frameHeight: 32,
+    scale: 1,
+    animations: STANDARD_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(32, 32, 1),
+  },
+  miniDragon3: {
+    key: "miniDragon3",
+    displayName: "petit dragon vert et rouge",
+    path: miniDragon3Spritesheet,
+    frameWidth: 32,
+    frameHeight: 32,
+    scale: 1,
+    animations: STANDARD_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(32, 32, 1),
+  },
+  miniDragon4: {
+    key: "miniDragon4",
+    displayName: "petit dragon vert",
+    path: miniDragon4Spritesheet,
+    frameWidth: 32,
+    frameHeight: 32,
+    scale: 1,
+    animations: STANDARD_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(32, 32, 1),
+  },
+  miniDragon5: {
+    key: "miniDragon5",
+    displayName: "petit dragon blanc",
+    path: miniDragon5Spritesheet,
+    frameWidth: 32,
+    frameHeight: 32,
+    scale: 1,
+    animations: STANDARD_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(32, 32, 1),
+  },
+  miniDragon6: {
+    key: "miniDragon6",
+    displayName: "petit dragon bleu",
+    path: miniDragon6Spritesheet,
+    frameWidth: 32,
+    frameHeight: 32,
+    scale: 1,
+    animations: STANDARD_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(32, 32, 1),
+  },
+  plantMonster1: {
+    key: "plantMonster1",
+    displayName: "Navet géant",
+    path: plantMonster1Spritesheet,
+    frameWidth: 32,
+    frameHeight: 32,
+    scale: 1,
+    animations: STANDARD_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(32, 32, 1),
+  },
+  plantMonster2: {
+    key: "plantMonster2",
+    displayName: "plant carnivore",
+    path: plantMonster2Spritesheet,
+    frameWidth: 32,
+    frameHeight: 32,
+    scale: 1,
+    animations: STANDARD_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(32, 32, 1),
+  },
+  lamia1: {
+    key: "lamia1",
+    displayName: "lamia rousse",
+    path: lamia1Spritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 1,
+    animations: STANDARD_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(48, 48, 1),
+  },
+  lamia2: {
+    key: "lamia2",
+    displayName: "lamia brune",
+    path: lamia2Spritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 1,
+    animations: STANDARD_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(48, 48, 1),
+  },
+  lamia3: {
+    key: "lamia3",
+    displayName: "lamia blonde",
+    path: lamia3Spritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 1,
+    animations: STANDARD_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(48, 48, 1),
+  },
+  lamia4: {
+    key: "lamia4",
+    displayName: "lamia châtain",
+    path: lamia4Spritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 1,
+    animations: STANDARD_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(48, 48, 1),
   },
   kobold1: {
     key: "kobold1",
+    displayName: "kobold",
     path: kobold1Spritesheet,
     frameWidth: 32,
     frameHeight: 40,
@@ -243,6 +571,7 @@ export const SPRITE_REGISTRY = {
   },
   kobold2: {
     key: "kobold2",
+    displayName: "kobold agressif",
     path: kobold2Spritesheet,
     frameWidth: 32,
     frameHeight: 40,
@@ -252,6 +581,7 @@ export const SPRITE_REGISTRY = {
   },
   kobold3: {
     key: "kobold3",
+    displayName: "kobold furieux",
     path: kobold3Spritesheet,
     frameWidth: 32,
     frameHeight: 40,
@@ -261,6 +591,7 @@ export const SPRITE_REGISTRY = {
   },
   naga1: {
     key: "naga1",
+    displayName: "naga avec une lance",
     path: naga1Spritesheet,
     frameWidth: 32,
     frameHeight: 40,
@@ -270,6 +601,7 @@ export const SPRITE_REGISTRY = {
   },
   naga2: {
     key: "naga2",
+    displayName: "naga aux cheveux violets",
     path: naga2Spritesheet,
     frameWidth: 32,
     frameHeight: 40,
@@ -279,6 +611,7 @@ export const SPRITE_REGISTRY = {
   },
   naga3: {
     key: "naga3",
+    displayName: "naga avec des épées",
     path: naga3Spritesheet,
     frameWidth: 32,
     frameHeight: 40,
@@ -288,6 +621,7 @@ export const SPRITE_REGISTRY = {
   },
   naga4: {
     key: "naga4",
+    displayName: "naga avec un arc",
     path: naga4Spritesheet,
     frameWidth: 32,
     frameHeight: 40,
@@ -297,6 +631,7 @@ export const SPRITE_REGISTRY = {
   },
   naga5: {
     key: "naga5",
+    displayName: "naga avec une hache",
     path: naga5Spritesheet,
     frameWidth: 32,
     frameHeight: 40,
@@ -306,6 +641,7 @@ export const SPRITE_REGISTRY = {
   },
   naga6: {
     key: "naga6",
+    displayName: "mage naga aux cheveux violets",
     path: naga6Spritesheet,
     frameWidth: 32,
     frameHeight: 40,
@@ -315,6 +651,7 @@ export const SPRITE_REGISTRY = {
   },
   naga7: {
     key: "naga7",
+    displayName: "naga rose",
     path: naga7Spritesheet,
     frameWidth: 32,
     frameHeight: 40,
@@ -324,80 +661,189 @@ export const SPRITE_REGISTRY = {
   },
   orc1: {
     key: "orc1",
+    displayName: "orc guerrier",
     path: orc1Spritesheet,
     frameWidth: 32,
     frameHeight: 40,
-    scale: 0.8,
+    scale: 1.2,
     animations: STANDARD_ANIMATION_FRAMES,
-    hitbox: computeSafeHitbox(32, 40, 0.8),
+    hitbox: computeSafeHitbox(32, 40, 1.2),
   },
   orc2: {
     key: "orc2",
+    displayName: "orc voleur",
     path: orc2Spritesheet,
     frameWidth: 32,
     frameHeight: 40,
-    scale: 0.8,
+    scale: 1.2,
     animations: STANDARD_ANIMATION_FRAMES,
-    hitbox: computeSafeHitbox(32, 40, 0.8),
+    hitbox: computeSafeHitbox(32, 40, 1.2),
   },
   orc3: {
     key: "orc3",
+    displayName: "orc avec une queue de cheval",
     path: orc3Spritesheet,
     frameWidth: 32,
-
     frameHeight: 40,
-    scale: 0.8,
+    scale: 1.2,
     animations: STANDARD_ANIMATION_FRAMES,
-    hitbox: computeSafeHitbox(32, 40, 0.8),
+    hitbox: computeSafeHitbox(32, 40, 1.2),
   },
   orc4: {
     key: "orc4",
+    displayName: "orc",
     path: orc4Spritesheet,
     frameWidth: 32,
     frameHeight: 40,
-    scale: 0.8,
+    scale: 1.2,
     animations: STANDARD_ANIMATION_FRAMES,
-    hitbox: computeSafeHitbox(32, 40, 0.8),
+    hitbox: computeSafeHitbox(32, 40, 1.2),
   },
   orc5: {
     key: "orc5",
+    displayName: "orc casqué",
     path: orc5Spritesheet,
     frameWidth: 32,
     frameHeight: 40,
-    scale: 0.8,
+    scale: 1.2,
     animations: STANDARD_ANIMATION_FRAMES,
-    hitbox: computeSafeHitbox(32, 40, 0.8),
+    hitbox: computeSafeHitbox(32, 40, 1.2),
   },
   orc6: {
     key: "orc6",
+    displayName: "orc avec une cicatrice sur le visage",
     path: orc6Spritesheet,
     frameWidth: 32,
     frameHeight: 40,
-    scale: 0.8,
+    scale: 1.2,
     animations: STANDARD_ANIMATION_FRAMES,
-    hitbox: computeSafeHitbox(32, 40, 0.8),
+    hitbox: computeSafeHitbox(32, 40, 1.2),
   },
   orc7: {
     key: "orc7",
+    displayName: "orc avec coupe iroquoise",
     path: orc7Spritesheet,
     frameWidth: 32,
     frameHeight: 40,
-    scale: 0.8,
+    scale: 1.2,
     animations: STANDARD_ANIMATION_FRAMES,
-    hitbox: computeSafeHitbox(32, 40, 0.8),
+    hitbox: computeSafeHitbox(32, 40, 1.2),
   },
   orc8: {
     key: "orc8",
+    displayName: "orc pirate",
     path: orc8Spritesheet,
     frameWidth: 32,
     frameHeight: 40,
-    scale: 0.8,
+    scale: 1.2,
     animations: STANDARD_ANIMATION_FRAMES,
-    hitbox: computeSafeHitbox(32, 40, 0.8),
+    hitbox: computeSafeHitbox(32, 40, 1.2),
   },
-
+  // Boss
+  ghostskull: {
+    key: "ghostskull",
+    displayName: "crâne fantôme",
+    path: GhostskullSpritesheet,
+    frameWidth: 32,
+    frameHeight: 40,
+    scale: 1.5,
+    animations: STANDARD_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(32, 40, 1.5),
+  },
+  bigspider: {
+    key: "bigspider",
+    displayName: "grosse araignée",
+    path: BigSpiderSpritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 1.5,
+    animations: STANDARD_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(48, 48, 1.5),
+  },
+  boneking1: {
+    key: "boneking1",
+    displayName: "roi des os en tunique noire",
+    path: BoneKing1Spritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 1.5,
+    animations: STANDARD_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(48, 48, 1.5),
+  },
+  boneking2: {
+    key: "boneking2",
+    displayName: "roi des os en tunique bleue",
+    path: BoneKing2Spritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 1.5,
+    animations: STANDARD_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(48, 48, 1.5),
+  },
+  dragon: {
+    key: "dragon",
+    displayName: "dragon",
+    path: dragonSpritesheet,
+    frameWidth: 120,
+    frameHeight: 120,
+    scale: 1,
+    animations: STANDARD_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(120, 120, 1),
+  },
+  giantant: {
+    key: "giantant",
+    displayName: "fourmi géante",
+    path: giantAntSpritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 1.5,
+    animations: STANDARD_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(48, 48, 1.5),
+  },
+  medusa: {
+    key: "medusa",
+    displayName: "méduse",
+    path: medusaSpritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 1.5,
+    animations: STANDARD_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(48, 48, 1.5),
+  },
+  maxibee1: {
+    key: "maxibee1",
+    displayName: "maxi abeille",
+    path: bee1Spritesheet,
+    frameWidth: 32,
+    frameHeight: 40,
+    scale: 1.5,
+    animations: STANDARD_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(32, 40, 1.5),
+  },
+  BigBug: {
+    key: "BigBug",
+    displayName: "insecte géant",
+    path: bug1bSpritesheet,
+    frameWidth: 32,
+    frameHeight: 40,
+    scale: 1.5,
+    animations: STANDARD_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(32, 40, 1.5),
+  },
+  GiantFox: {
+    key: "GiantFox",
+    displayName: "renard géant",
+    path: fox2Spritesheet,
+    frameWidth: 32,
+    frameHeight: 40,
+    scale: 2,
+    animations: STANDARD_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(32, 40, 2),
+  },
+  // NPCs de ville
   NPC_town1_F1: {
     key: "NPC_town1_F1",
+    displayName: "PNJ ville 1 femme 1",
     path: town1NPCf1Spritesheet,
     frameWidth: 32,
     frameHeight: 40,
@@ -407,6 +853,7 @@ export const SPRITE_REGISTRY = {
   },
   NPC_town1_F2: {
     key: "NPC_town1_F2",
+    displayName: "PNJ ville 1 femme 2",
     path: town1NPCf2Spritesheet,
     frameWidth: 32,
     frameHeight: 40,
@@ -416,6 +863,7 @@ export const SPRITE_REGISTRY = {
   },
   NPC_town1_F3: {
     key: "NPC_town1_F3",
+    displayName: "PNJ ville 1 femme 3",
     path: town1NPCf3Spritesheet,
     frameWidth: 32,
     frameHeight: 40,
@@ -425,6 +873,7 @@ export const SPRITE_REGISTRY = {
   },
   NPC_town1_F4: {
     key: "NPC_town1_F4",
+    displayName: "PNJ ville 1 femme 4",
     path: town1NPCf4Spritesheet,
     frameWidth: 32,
     frameHeight: 40,
@@ -434,6 +883,7 @@ export const SPRITE_REGISTRY = {
   },
   NPC_town1_F5: {
     key: "NPC_town1_F5",
+    displayName: "PNJ ville 1 femme 5",
     path: town1NPCf5Spritesheet,
     frameWidth: 32,
     frameHeight: 40,
@@ -443,6 +893,7 @@ export const SPRITE_REGISTRY = {
   },
   NPC_town1_M1: {
     key: "NPC_town1_M1",
+    displayName: "PNJ ville 1 homme 1",
     path: town1NPCm1Spritesheet,
     frameWidth: 32,
     frameHeight: 40,
@@ -452,6 +903,7 @@ export const SPRITE_REGISTRY = {
   },
   NPC_town1_M2: {
     key: "NPC_town1_M2",
+    displayName: "PNJ ville 1 homme 2",
     path: town1NPCm2Spritesheet,
     frameWidth: 32,
     frameHeight: 40,
@@ -461,6 +913,7 @@ export const SPRITE_REGISTRY = {
   },
   NPC_town1_M3: {
     key: "NPC_town1_M3",
+    displayName: "PNJ ville 1 homme 3",
     path: town1NPCm3Spritesheet,
     frameWidth: 32,
     frameHeight: 40,
@@ -470,6 +923,7 @@ export const SPRITE_REGISTRY = {
   },
   NPC_town1_M4: {
     key: "NPC_town1_M4",
+    displayName: "PNJ ville 1 homme 4",
     path: town1NPCm4Spritesheet,
     frameWidth: 32,
     frameHeight: 40,
@@ -479,6 +933,7 @@ export const SPRITE_REGISTRY = {
   },
   NPC_town1_M5: {
     key: "NPC_town1_M5",
+    displayName: "PNJ ville 1 homme 5",
     path: town1NPCm5Spritesheet,
     frameWidth: 32,
     frameHeight: 40,
@@ -488,6 +943,7 @@ export const SPRITE_REGISTRY = {
   },
   NPC_town2_F1: {
     key: "NPC_town2_F1",
+    displayName: "PNJ ville 2 femme 1",
     path: town2NPCf1Spritesheet,
     frameWidth: 32,
     frameHeight: 40,
@@ -497,6 +953,7 @@ export const SPRITE_REGISTRY = {
   },
   NPC_town2_F2: {
     key: "NPC_town2_F2",
+    displayName: "PNJ ville 2 femme 2",
     path: town2NPCf2Spritesheet,
     frameWidth: 32,
     frameHeight: 40,
@@ -506,6 +963,7 @@ export const SPRITE_REGISTRY = {
   },
   NPC_town2_F3: {
     key: "NPC_town2_F3",
+    displayName: "PNJ ville 2 femme 3",
     path: town2NPCf3Spritesheet,
     frameWidth: 32,
     frameHeight: 40,
@@ -515,6 +973,7 @@ export const SPRITE_REGISTRY = {
   },
   NPC_town2_F4: {
     key: "NPC_town2_F4",
+    displayName: "PNJ ville 2 femme 4",
     path: town2NPCf4Spritesheet,
     frameWidth: 32,
     frameHeight: 40,
@@ -524,6 +983,7 @@ export const SPRITE_REGISTRY = {
   },
   NPC_town2_F5: {
     key: "NPC_town2_F5",
+    displayName: "PNJ ville 2 femme 5",
     path: town2NPCf5Spritesheet,
     frameWidth: 32,
     frameHeight: 40,
@@ -533,6 +993,7 @@ export const SPRITE_REGISTRY = {
   },
   NPC_town2_M1: {
     key: "NPC_town2_M1",
+    displayName: "PNJ ville 2 homme 1",
     path: town2NPCm1Spritesheet,
     frameWidth: 32,
     frameHeight: 40,
@@ -542,6 +1003,7 @@ export const SPRITE_REGISTRY = {
   },
   NPC_town2_M2: {
     key: "NPC_town2_M2",
+    displayName: "PNJ ville 2 homme 2",
     path: town2NPCm2Spritesheet,
     frameWidth: 32,
     frameHeight: 40,
@@ -551,6 +1013,7 @@ export const SPRITE_REGISTRY = {
   },
   NPC_town2_M3: {
     key: "NPC_town2_M3",
+    displayName: "PNJ ville 2 homme 3",
     path: town2NPCm3Spritesheet,
     frameWidth: 32,
     frameHeight: 40,
@@ -560,6 +1023,7 @@ export const SPRITE_REGISTRY = {
   },
   NPC_town2_M4: {
     key: "NPC_town2_M4",
+    displayName: "PNJ ville 2 homme 4",
     path: town2NPCm4Spritesheet,
     frameWidth: 32,
     frameHeight: 40,
@@ -569,6 +1033,7 @@ export const SPRITE_REGISTRY = {
   },
   NPC_town2_M5: {
     key: "NPC_town2_M5",
+    displayName: "PNJ ville 2 homme 5",
     path: town2NPCm5Spritesheet,
     frameWidth: 32,
     frameHeight: 40,
@@ -578,6 +1043,7 @@ export const SPRITE_REGISTRY = {
   },
   NPC_town3_F1: {
     key: "NPC_town3_F1",
+    displayName: "PNJ ville 3 femme 1",
     path: town3NPCf1Spritesheet,
     frameWidth: 32,
     frameHeight: 40,
@@ -587,6 +1053,7 @@ export const SPRITE_REGISTRY = {
   },
   NPC_town3_F2: {
     key: "NPC_town3_F2",
+    displayName: "PNJ ville 3 femme 2",
     path: town3NPCf2Spritesheet,
     frameWidth: 32,
     frameHeight: 40,
@@ -596,6 +1063,7 @@ export const SPRITE_REGISTRY = {
   },
   NPC_town3_F3: {
     key: "NPC_town3_F3",
+    displayName: "PNJ ville 3 femme 3",
     path: town3NPCf3Spritesheet,
     frameWidth: 32,
     frameHeight: 40,
@@ -605,6 +1073,7 @@ export const SPRITE_REGISTRY = {
   },
   NPC_town3_F4: {
     key: "NPC_town3_F4",
+    displayName: "PNJ ville 3 femme 4",
     path: town3NPCf4Spritesheet,
     frameWidth: 32,
     frameHeight: 40,
@@ -614,6 +1083,7 @@ export const SPRITE_REGISTRY = {
   },
   NPC_town3_F5: {
     key: "NPC_town3_F5",
+    displayName: "PNJ ville 3 femme 5",
     path: town3NPCf5Spritesheet,
     frameWidth: 32,
     frameHeight: 40,
@@ -623,6 +1093,7 @@ export const SPRITE_REGISTRY = {
   },
   NPC_town3_M1: {
     key: "NPC_town3_M1",
+    displayName: "PNJ ville 3 homme 1",
     path: town3NPCm1Spritesheet,
     frameWidth: 32,
     frameHeight: 40,
@@ -632,6 +1103,7 @@ export const SPRITE_REGISTRY = {
   },
   NPC_town3_M2: {
     key: "NPC_town3_M2",
+    displayName: "PNJ ville 3 homme 2",
     path: town3NPCm2Spritesheet,
     frameWidth: 32,
     frameHeight: 40,
@@ -641,6 +1113,7 @@ export const SPRITE_REGISTRY = {
   },
   NPC_town3_M3: {
     key: "NPC_town3_M3",
+    displayName: "PNJ ville 3 homme 3",
     path: town3NPCm3Spritesheet,
     frameWidth: 32,
     frameHeight: 40,
@@ -650,6 +1123,7 @@ export const SPRITE_REGISTRY = {
   },
   NPC_town3_M4: {
     key: "NPC_town3_M4",
+    displayName: "PNJ ville 3 homme 4",
     path: town3NPCm4Spritesheet,
     frameWidth: 32,
     frameHeight: 40,
@@ -659,6 +1133,7 @@ export const SPRITE_REGISTRY = {
   },
   NPC_town3_M5: {
     key: "NPC_town3_M5",
+    displayName: "PNJ ville 3 homme 5",
     path: town3NPCm5Spritesheet,
     frameWidth: 32,
     frameHeight: 40,
@@ -667,41 +1142,17 @@ export const SPRITE_REGISTRY = {
     hitbox: computeSafeHitbox(32, 40, 1),
   },
 
-  // effet visuel de coup en melee (eclair de griffe/lame qui s'estompe,
-  // 4 lignes = 4 directions bas/gauche/droite/haut, 4 colonnes = frames
-  // de l'estompage) - PAS une entite de jeu comme les heros/ennemis
-  // ci-dessus : jamais resolue via resolveEnemySprite/resolveHeroSprite,
-  // referencee directement par sa cle dans MainScene.performMeleeAttack.
-  // `oneShot: true` fait jouer ses animations une seule fois (repeat: 0)
-  // plutot qu'en boucle, cf. MainScene.createAnimationsForEntry - sans
-  // ca, un cycle de marche infini n'aurait aucun sens pour un flash de
-  // degats. Pas de hitbox : jamais de corps physique pour un effet
-  // purement visuel.
   meleeSlashEffect: {
     key: "meleeSlashEffect",
     path: meleeSlashSpritesheet,
     frameWidth: 96,
     frameHeight: 96,
-    scale: 0.5, // a ajuster une fois vu en jeu - frame source bien plus grande que le heros
+    scale: 0.5,
     oneShot: true,
     animations: STANDARD_ANIMATION_FRAMES_4X4,
   },
 };
 
-/**
- * Liste des héros sélectionnables à l'écran de démarrage, dans l'ordre
- * d'affichage. `label` est un texte d'appoint (à remplacer par de vrais
- * noms de personnage le jour venu) - purement présentationnel, ne
- * touche à aucune logique de jeu.
- *
- * "À terme" (cf. /areas/phaser-arpg.md), chaque héros aura ses propres
- * stats/compétences - non construit ici volontairement (portée de cette
- * session = choisir un skin, pas encore le différencier mécaniquement).
- * Le champ `statsOverride` est un point d'extension prêt à l'emploi :
- * aujourd'hui `null` pour tous (stats identiques, cf. leveling.js), le
- * jour venu il suffira d'y mettre un objet de surcharge par héros sans
- * avoir à retoucher la structure.
- */
 export const HERO_ROSTER = [
   { id: "hero1", label: "Héros 1", statsOverride: null },
   { id: "hero2", label: "Héros 2", statsOverride: null },
@@ -709,18 +1160,6 @@ export const HERO_ROSTER = [
   { id: "hero4", label: "Héros 4", statsOverride: null },
 ];
 
-/**
- * Résout l'entrée du registre à utiliser pour un ennemi, à partir du
- * `type` renvoyé par le serveur (ArpgController.getLevel décide seul
- * quel archétype un ennemi utilise, cf. enemyStats.js - le client ne
- * choisit jamais ce type lui-même, il se contente d'afficher le sprite
- * qui correspond). Repli propre sur enemyDefault si le serveur renvoie
- * un type que ce client ne connaît pas encore (ex: nouveau type ajouté
- * côté serveur avant que l'art correspondant soit déployé côté client).
- *
- * @param {string} typeKey valeur reçue dans enemyData.type
- * @returns {{entry: SpriteEntry, spriteKey: string}}
- */
 export function resolveEnemySprite(typeKey) {
   if (SPRITE_REGISTRY[typeKey]) {
     return { entry: SPRITE_REGISTRY[typeKey], spriteKey: typeKey };
@@ -729,13 +1168,21 @@ export function resolveEnemySprite(typeKey) {
 }
 
 /**
- * Résout l'entrée du registre pour le héros choisi par le joueur. Repli
- * sur hero1 si l'id reçu (sauvegarde ancienne, valeur corrompue...) ne
- * correspond à aucune entrée connue.
+ * Nom d'affichage d'un type d'ennemi (cf. le champ `displayName` sur
+ * chaque entrée de SPRITE_REGISTRY) - utilisé dans le texte des quêtes
+ * "tuer X ennemis" (cf. MainScene.js), jamais la clé technique brute.
+ * Repli sur la clé technique elle-même si l'entrée est absente ou n'a
+ * pas encore de displayName - jamais d'erreur, juste moins joli tant
+ * qu'un nom n'a pas été choisi.
  *
- * @param {string} heroId
- * @returns {{entry: SpriteEntry, spriteKey: string}}
+ * @param {string} typeKey
+ * @returns {string}
  */
+export function resolveEnemyDisplayName(typeKey) {
+  const entry = SPRITE_REGISTRY[typeKey];
+  return (entry && entry.displayName) || typeKey;
+}
+
 export function resolveHeroSprite(heroId) {
   if (SPRITE_REGISTRY[heroId]) {
     return { entry: SPRITE_REGISTRY[heroId], spriteKey: heroId };
@@ -743,11 +1190,6 @@ export function resolveHeroSprite(heroId) {
   return { entry: SPRITE_REGISTRY.hero1, spriteKey: "hero1" };
 }
 
-/**
- * Liste dédupliquée des textures à charger (this.load.spritesheet) -
- * plusieurs entrées du registre peuvent partager la même `key` (comme
- * hero1/enemyDefault aujourd'hui), il ne faut la charger qu'une fois.
- */
 export function getUniqueTexturesToLoad() {
   const seen = new Map();
   for (const entry of Object.values(SPRITE_REGISTRY)) {
@@ -758,37 +1200,82 @@ export function getUniqueTexturesToLoad() {
   return [...seen.values()];
 }
 
-/**
- * Registre des VRAIES images de tuiles (sol/mur), par biome - distinct
- * de SPRITE_REGISTRY (personnages) : une simple image, jamais de
- * spritesheet ni d'animation. Un biome absent d'ici continue d'afficher
- * des couleurs pleines (cf. TILESET_COLORS dans MainScene.js) - c'est le
- * repli normal, pas une erreur. Ajouter un biome ici = fournir
- * `wallKey`/`floorKey` correspondant a des imports ajoutes en haut de ce
- * fichier, et le tour est joue : MainScene.js detecte automatiquement
- * leur presence au chargement du niveau.
- */
 export const TILE_IMAGE_REGISTRY = {
   cave: { wallKey: "wall_cave", floorKey: "floor_cave" },
+  desert: { wallKey: "wall_desert", floorKey: "floor_desert" },
+  tree: { wallKey: "wall_tree", floorKey: "floor_tree" },
+  stair: { stairUpKey: "stair_up", stairDownKey: "stair_down" },
 };
 
 const TILE_IMAGE_PATHS = {
   wall_cave: wallCaveSprite,
   floor_cave: floorCaveSprite,
+  wall_desert: wallDesertSprite,
+  floor_desert: floorDesertSprite,
+  wall_tree: wallTreeSprite,
+  floor_tree: floorTreeSprite,
+  stair_up: stairupSprite,
+  stair_down: stairdownSprite,
 };
 
 /**
- * Liste {key, path} de toutes les images de tuiles a charger - separee
- * de getUniqueTexturesToLoad() (spritesheets) car il s'agit d'images
- * simples (this.load.image, pas this.load.spritesheet), cf. BootScene.js.
+ * Liste {key, path} de toutes les images de tuiles/reperes a charger -
+ * separee de getUniqueTexturesToLoad() (spritesheets) car il s'agit
+ * d'images simples (this.load.image, pas this.load.spritesheet), cf.
+ * BootScene.js.
+ *
+ * Generalisee pour scanner TOUTES les valeurs de chaque entree (pas
+ * seulement wallKey/floorKey codes en dur) - une entree peut avoir
+ * n'importe quelle forme (wallKey/floorKey pour un biome, stairUpKey/
+ * stairDownKey pour les reperes de montee/descente...), tant que ses
+ * valeurs correspondent a des cles presentes dans TILE_IMAGE_PATHS.
+ * Une valeur null (ex: tree.floorKey) est simplement ignoree, pas une
+ * erreur - cf. le commentaire de TILE_IMAGE_REGISTRY plus haut.
  */
 export function getTileImagesToLoad() {
   const seen = new Map();
-  for (const { wallKey, floorKey } of Object.values(TILE_IMAGE_REGISTRY)) {
-    if (wallKey && !seen.has(wallKey))
-      seen.set(wallKey, { key: wallKey, path: TILE_IMAGE_PATHS[wallKey] });
-    if (floorKey && !seen.has(floorKey))
-      seen.set(floorKey, { key: floorKey, path: TILE_IMAGE_PATHS[floorKey] });
+  for (const entry of Object.values(TILE_IMAGE_REGISTRY)) {
+    for (const key of Object.values(entry)) {
+      if (key && !seen.has(key) && TILE_IMAGE_PATHS[key]) {
+        seen.set(key, { key, path: TILE_IMAGE_PATHS[key] });
+      }
+    }
   }
   return [...seen.values()];
 }
+
+/**
+ * Spritesheet des coffres - registre DISTINCT de SPRITE_REGISTRY (pas un
+ * personnage anime : aucun cycle de marche, juste des frames statiques
+ * adressables individuellement - createAnimationsForEntry planterait sur
+ * une entree sans structure walkDown/walkLeft/etc.) et de
+ * TILE_IMAGE_REGISTRY (pas une texture de tuile repetee - un vrai
+ * spritesheet a frames indexees, charge via this.load.spritesheet, cf.
+ * BootScene.js).
+ */
+export const CHEST_SPRITESHEET = {
+  key: "chests",
+  path: chestsSpritesheet,
+  frameWidth: 32,
+  frameHeight: 32,
+};
+
+/**
+ * 6 variantes de couleur, chacune avec une frame fermee et une frame
+ * ouverte (cf. Chests.png - grille 3 colonnes x 4 lignes ; les lignes se
+ * groupent par paires fermee/ouverte, memes couleurs en colonnes).
+ * L'indice de frame se lit ligne par ligne, gauche a droite (convention
+ * standard de this.load.spritesheet) :
+ *   ligne 0 (frames 0,1,2)  = fermees  (rouge, or, vert)
+ *   ligne 1 (frames 3,4,5)  = ouvertes (rouge, or, vert)
+ *   ligne 2 (frames 6,7,8)  = fermees  (violet-gris, violet, dore clair)
+ *   ligne 3 (frames 9,10,11) = ouvertes (violet-gris, violet, dore clair)
+ */
+export const CHEST_VARIANTS = [
+  { closedFrame: 0, openFrame: 3 },
+  { closedFrame: 1, openFrame: 4 },
+  { closedFrame: 2, openFrame: 5 },
+  { closedFrame: 6, openFrame: 9 },
+  { closedFrame: 7, openFrame: 10 },
+  { closedFrame: 8, openFrame: 11 },
+];

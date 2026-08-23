@@ -1,5 +1,5 @@
 const { createRng } = require("./rng");
-const { keepLargestRegion } = require("./gridUtils");
+const { keepLargestRegion, ensureMinimumPassageWidth } = require("./gridUtils");
 
 const WALL = 1;
 const FLOOR = 0;
@@ -112,7 +112,7 @@ function generateTown({
     grid[y][width - 1] = WALL;
   }
 
-  placeBuildings(grid, width, height, buildingCount, rng, {
+  const buildings = placeBuildings(grid, width, height, buildingCount, rng, {
     minSize: minBuildingSize,
     maxSize: maxBuildingSize,
     minSpacing,
@@ -122,8 +122,74 @@ function generateTown({
   // filet de securite : garantit la connexite meme si un placement
   // improbable de batiments avait scelle une poche (cf. commentaire en tete)
   grid = keepLargestRegion(grid, width, height);
+  // corrige les pincements droits/diagonaux (cf. gridUtils.js) - a
+  // 32px/case, une seule case de large suffit deja largement pour la
+  // hitbox du heros, pas besoin de la dilatation plus agressive utilisee
+  // un temps a l'echelle 16px. N'ajoute que du sol, ne peut donc jamais
+  // casser la connexite garantie juste au-dessus.
+  grid = ensureMinimumPassageWidth(grid);
 
-  return grid;
+  // renvoie aussi les rectangles de batiments (pas seulement la grille)
+  // - sert par ex. a placer "l'entree" de la boutique juste devant un
+  // batiment plutot qu'a une case de sol quelconque, cf.
+  // findBuildingFrontTile ci-dessous
+  return { grid, buildings };
 }
 
-module.exports = { generateTown, WALL, FLOOR };
+/**
+ * Trouve une case de sol juste devant un batiment - sert a positionner
+ * un point d'interaction ("entree") de facon coherente visuellement,
+ * plutot qu'a une case de sol quelconque sans rapport avec la
+ * disposition de la ville. "Devant" = le cote bas du batiment en
+ * PRIORITE (convention habituelle en vue du dessus : la facade/porte
+ * fait face au joueur, pas un cote ou l'arriere) - les 3 autres cotes ne
+ * servent que de repli si le bas n'a pas de case de sol valide (bord de
+ * carte, bloque par un autre element).
+ *
+ * @param {number[][]} grid
+ * @param {{x:number,y:number,w:number,h:number}} building
+ * @param {Function} rng generateur seede (cf. rng.js) - utilise seulement pour l'ordre des cotes de repli
+ * @returns {{x:number,y:number}|null}
+ */
+function findBuildingFrontTile(grid, building, rng) {
+  const height = grid.length;
+  const width = grid[0].length;
+
+  const fallbackSides = ["top", "left", "right"];
+  for (let i = fallbackSides.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [fallbackSides[i], fallbackSides[j]] = [fallbackSides[j], fallbackSides[i]];
+  }
+  const sides = ["bottom", ...fallbackSides];
+
+  for (const side of sides) {
+    let x;
+    let y;
+    if (side === "top") {
+      x = building.x + Math.floor(building.w / 2);
+      y = building.y - 1;
+    } else if (side === "bottom") {
+      x = building.x + Math.floor(building.w / 2);
+      y = building.y + building.h;
+    } else if (side === "left") {
+      x = building.x - 1;
+      y = building.y + Math.floor(building.h / 2);
+    } else {
+      x = building.x + building.w;
+      y = building.y + Math.floor(building.h / 2);
+    }
+
+    if (
+      y > 0 &&
+      y < height - 1 &&
+      x > 0 &&
+      x < width - 1 &&
+      grid[y][x] === FLOOR
+    ) {
+      return { x, y };
+    }
+  }
+  return null;
+}
+
+module.exports = { generateTown, findBuildingFrontTile, WALL, FLOOR };

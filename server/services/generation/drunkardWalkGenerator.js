@@ -1,4 +1,5 @@
 const { createRng } = require("./rng");
+const { ensureMinimumPassageWidth } = require("./gridUtils");
 
 const WALL = 1;
 const FLOOR = 0;
@@ -86,7 +87,13 @@ function generateDrunkardWalk({
     }
   }
 
-  return grid;
+  // corrige les pincements droits/diagonaux (cf. gridUtils.js) - a
+  // 32px/case, une seule case de large suffit deja largement pour la
+  // hitbox du heros, pas besoin de la dilatation plus agressive utilisee
+  // un temps a l'echelle 16px. N'ajoute que du sol, ne peut donc jamais
+  // casser la connexite deja garantie par construction (cf. le
+  // commentaire de la fonction plus haut).
+  return ensureMinimumPassageWidth(grid);
 }
 
 module.exports = { generateDrunkardWalk, WALL, FLOOR };
