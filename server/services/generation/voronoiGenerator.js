@@ -1,4 +1,5 @@
 const { createRng } = require("./rng");
+const { ensureMinimumPassageWidth } = require("./gridUtils");
 
 const WALL = 1;
 const FLOOR = 0;
@@ -181,7 +182,13 @@ function generateVoronoi({ width, height, seed, cellCount = 14 }) {
   // de continuer a peaufiner la geometrie. Meme principe de repli que
   // bossRoom.js : un connecteur droit qui n'AJOUTE que du sol, jamais
   // n'en retire, ne peut donc jamais casser une connexite deja acquise.
-  return repairConnectivity(grid, width, height);
+  // connexite d'abord (repare toute region isolee), puis corrige les
+  // pincements droits/diagonaux (cf. gridUtils.js) - a 32px/case, une
+  // seule case de large suffit deja largement pour la hitbox du heros,
+  // pas besoin de la dilatation plus agressive utilisee un temps a
+  // l'echelle 16px. N'ajoutent que du sol, ne peuvent donc jamais casser
+  // la connexite garantie par repairConnectivity.
+  return ensureMinimumPassageWidth(repairConnectivity(grid, width, height));
 }
 
 /**

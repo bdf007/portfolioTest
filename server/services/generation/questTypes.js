@@ -1,5 +1,5 @@
 const { createRng } = require("./rng");
-const { rollLoot } = require("./itemTypes");
+const { rollLoot, ITEM_TYPES } = require("./itemTypes");
 
 /**
  * Table des types de quêtes proposées par les PNJ - même esprit que
@@ -54,20 +54,46 @@ const OBTAIN_ITEM_GOLD_REWARD_RANGE = [20, 50];
  * @param {string[]} itemPool objets parmi lesquels choisir la cible
  * @returns {{questId:string, targetItemId:string, xpReward:number, goldReward:number, itemReward:null}}
  */
-function generateObtainItemQuest(seed, itemPool) {
+/**
+ * @param {string} seed seed DEJA distincte par PNJ (meme convention que generateQuestForNpc)
+ * @param {string[]} itemPool objets parmi lesquels choisir la cible
+ * @param {number[]} [bossDepths] etage(s) ou un boss peut donner cet
+ *   objet (cf. ArpgController.BOSS_DEPTHS) - sert uniquement a
+ *   construire un indice explicite dans le texte du dialogue ("l'etage
+ *   5"), pour que le joueur sache ou chercher sans avoir a deviner (bug
+ *   remonte : quete recue sans aucune indication de lieu)
+ * @returns {{questId:string, targetItemId:string, xpReward:number, goldReward:number, itemReward:null, dialogText:Object}}
+ */
+function generateObtainItemQuest(seed, itemPool, bossDepths = []) {
   const rng = createRng(String(seed) + "-obtain-item");
   const pool = itemPool && itemPool.length > 0 ? itemPool : ["healthPotion"];
   const targetItemId = pool[Math.floor(rng() * pool.length)];
   const [minGold, maxGold] = OBTAIN_ITEM_GOLD_REWARD_RANGE;
   const goldReward = minGold + Math.floor(rng() * (maxGold - minGold + 1));
-  // pas de itemReward supplementaire (rollLoot questReward) ici - la
-  // recompense de cette quete EST deja l'or + l'XP ci-dessus
+
+  const itemDef = ITEM_TYPES[targetItemId];
+  const itemName = itemDef ? itemDef.name : targetItemId;
+  const depthHint =
+    bossDepths.length > 0
+      ? ` Un boss redoutable rôde à l'étage ${bossDepths.join(" ou ")} - c'est lui qui le détient.`
+      : "";
+
+  // uniquement le texte de PROPOSITION (avec l'indice de lieu) - PAS de
+  // "progress"/"complete" personnalises ici : cote client, le champ
+  // "progress" sert a DEUX etats distincts de la quete (objet pas
+  // encore trouve / objet en poche pret a rendre), avec un seul texte
+  // fixe on risquerait d'afficher le mauvais message dans l'un des deux
+  // cas. Laisser ces deux-la a la charge des replis generiques cote
+  // client, deja corrects pour chaque etat.
   return {
     questId: "obtainItem",
     targetItemId,
     xpReward: OBTAIN_ITEM_XP_REWARD,
     goldReward,
     itemReward: null,
+    dialogText: {
+      offer: `Peux-tu me rapporter ${itemName} ?${depthHint}`,
+    },
   };
 }
 

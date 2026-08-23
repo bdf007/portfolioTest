@@ -53,8 +53,21 @@ const ENEMY_TYPES = {
     defenseGrowthEveryNDepths: 4,
   },
   enemy1: {
-    base: { hp: 30, damage: 5, xpReward: 12 },
+    base: { hp: 34, damage: 6, xpReward: 15 },
     growthRate: { hp: 1.2, damage: 1.18, xpReward: 1.15 },
+    speedBase: 80,
+    speedMax: 130,
+    speedGrowthPerDepth: 2,
+    defenseGrowthEveryNDepths: 3,
+  },
+  // manquait jusqu'ici (utilise dans biomeConfig.js sans jamais avoir ete
+  // defini ici - retombait silencieusement sur enemyDefault, trouve en
+  // verifiant la coherence entre les deux fichiers). Meme famille que
+  // enemy1 (courbe de croissance proche), legerement au-dessus en base
+  // pour rester la deuxieme variante du temple.
+  enemy2: {
+    base: { hp: 41, damage: 8, xpReward: 21 },
+    growthRate: { hp: 1.19, damage: 1.16, xpReward: 1.13 },
     speedBase: 80,
     speedMax: 130,
     speedGrowthPerDepth: 2,
@@ -68,8 +81,113 @@ const ENEMY_TYPES = {
     speedGrowthPerDepth: 4,
     defenseGrowthEveryNDepths: 5,
   },
+  bat1a: {
+    base: { hp: 8, damage: 2, xpReward: 7 },
+    growthRate: { hp: 1.13, damage: 1.1, xpReward: 1.08 },
+    speedBase: 120,
+    speedMax: 180,
+    speedGrowthPerDepth: 4,
+    defenseGrowthEveryNDepths: 5,
+  },
+  bee1: {
+    base: { hp: 8, damage: 2, xpReward: 7 },
+    growthRate: { hp: 1.13, damage: 1.1, xpReward: 1.08 },
+    speedBase: 120,
+    speedMax: 180,
+    speedGrowthPerDepth: 4,
+    defenseGrowthEveryNDepths: 5,
+  },
+
+  bird1: {
+    base: { hp: 8, damage: 2, xpReward: 7 },
+    growthRate: { hp: 1.13, damage: 1.1, xpReward: 1.08 },
+    speedBase: 120,
+    speedMax: 180,
+    speedGrowthPerDepth: 4,
+    defenseGrowthEveryNDepths: 5,
+  },
+  bug1a: {
+    base: { hp: 8, damage: 2, xpReward: 7 },
+    growthRate: { hp: 1.13, damage: 1.1, xpReward: 1.08 },
+    speedBase: 120,
+    speedMax: 180,
+    speedGrowthPerDepth: 4,
+    defenseGrowthEveryNDepths: 5,
+  },
+  bug1b: {
+    base: { hp: 8, damage: 2, xpReward: 7 },
+    growthRate: { hp: 1.13, damage: 1.1, xpReward: 1.08 },
+    speedBase: 120,
+    speedMax: 180,
+    speedGrowthPerDepth: 4,
+    defenseGrowthEveryNDepths: 5,
+  },
+  cockatrice1: {
+    base: { hp: 8, damage: 2, xpReward: 7 },
+    growthRate: { hp: 1.13, damage: 1.1, xpReward: 1.08 },
+    speedBase: 120,
+    speedMax: 180,
+    speedGrowthPerDepth: 4,
+    defenseGrowthEveryNDepths: 5,
+  },
+  deer1: {
+    base: { hp: 8, damage: 2, xpReward: 7 },
+    growthRate: { hp: 1.13, damage: 1.1, xpReward: 1.08 },
+    speedBase: 120,
+    speedMax: 180,
+    speedGrowthPerDepth: 4,
+    defenseGrowthEveryNDepths: 5,
+  },
+  deer2: {
+    base: { hp: 8, damage: 2, xpReward: 7 },
+    growthRate: { hp: 1.13, damage: 1.1, xpReward: 1.08 },
+    speedBase: 120,
+    speedMax: 180,
+    speedGrowthPerDepth: 4,
+    defenseGrowthEveryNDepths: 5,
+  },
+  fox1: {
+    base: { hp: 8, damage: 2, xpReward: 7 },
+    growthRate: { hp: 1.13, damage: 1.1, xpReward: 1.08 },
+    speedBase: 120,
+    speedMax: 180,
+    speedGrowthPerDepth: 4,
+    defenseGrowthEveryNDepths: 5,
+  },
+  fox2: {
+    base: { hp: 8, damage: 2, xpReward: 7 },
+    growthRate: { hp: 1.13, damage: 1.1, xpReward: 1.08 },
+    speedBase: 120,
+    speedMax: 180,
+    speedGrowthPerDepth: 4,
+    defenseGrowthEveryNDepths: 5,
+  },
+  lizard: {
+    base: { hp: 8, damage: 2, xpReward: 7 },
+    growthRate: { hp: 1.13, damage: 1.1, xpReward: 1.08 },
+    speedBase: 120,
+    speedMax: 180,
+    speedGrowthPerDepth: 4,
+    defenseGrowthEveryNDepths: 5,
+  },
+  raccoon1: {
+    base: { hp: 8, damage: 2, xpReward: 7 },
+    growthRate: { hp: 1.13, damage: 1.1, xpReward: 1.08 },
+    speedBase: 120,
+    speedMax: 180,
+    speedGrowthPerDepth: 4,
+    defenseGrowthEveryNDepths: 5,
+  },
+  slime1: {
+    base: { hp: 8, damage: 2, xpReward: 7 },
+    growthRate: { hp: 1.13, damage: 1.1, xpReward: 1.08 },
+    speedBase: 120,
+    speedMax: 180,
+    speedGrowthPerDepth: 4,
+    defenseGrowthEveryNDepths: 5,
+  },
   kobold1: {
-    base: { hp: 15, damage: 3, xpReward: 9 },
+    base: { hp: 32, damage: 6, xpReward: 15 },
     growthRate: { hp: 1.16, damage: 1.13, xpReward: 1.11 },
     speedBase: 95,
     speedMax: 150,
@@ -77,7 +195,7 @@ const ENEMY_TYPES = {
     defenseGrowthEveryNDepths: 4,
   },
   kobold2: {
-    base: { hp: 18, damage: 4, xpReward: 10 },
+    base: { hp: 32, damage: 6, xpReward: 15 },
     growthRate: { hp: 1.17, damage: 1.14, xpReward: 1.12 },
     speedBase: 90,
     speedMax: 145,
@@ -85,7 +203,7 @@ const ENEMY_TYPES = {
     defenseGrowthEveryNDepths: 4,
   },
   kobold3: {
-    base: { hp: 20, damage: 5, xpReward: 11 },
+    base: { hp: 32, damage: 6, xpReward: 15 },
     growthRate: { hp: 1.18, damage: 1.15, xpReward: 1.13 },
     speedBase: 85,
     speedMax: 140,
@@ -93,7 +211,7 @@ const ENEMY_TYPES = {
     defenseGrowthEveryNDepths: 4,
   },
   naga1: {
-    base: { hp: 25, damage: 6, xpReward: 13 },
+    base: { hp: 23, damage: 5, xpReward: 11 },
     growthRate: { hp: 1.19, damage: 1.16, xpReward: 1.14 },
     speedBase: 80,
     speedMax: 135,
@@ -101,7 +219,7 @@ const ENEMY_TYPES = {
     defenseGrowthEveryNDepths: 4,
   },
   naga2: {
-    base: { hp: 28, damage: 7, xpReward: 14 },
+    base: { hp: 24, damage: 5, xpReward: 11 },
     growthRate: { hp: 1.2, damage: 1.17, xpReward: 1.15 },
     speedBase: 75,
     speedMax: 130,
@@ -109,7 +227,7 @@ const ENEMY_TYPES = {
     defenseGrowthEveryNDepths: 4,
   },
   naga3: {
-    base: { hp: 30, damage: 8, xpReward: 15 },
+    base: { hp: 25, damage: 5, xpReward: 12 },
     growthRate: { hp: 1.21, damage: 1.18, xpReward: 1.16 },
     speedBase: 70,
     speedMax: 125,
@@ -125,7 +243,7 @@ const ENEMY_TYPES = {
     defenseGrowthEveryNDepths: 4,
   },
   naga5: {
-    base: { hp: 35, damage: 10, xpReward: 17 },
+    base: { hp: 22, damage: 4, xpReward: 10 },
     growthRate: { hp: 1.23, damage: 1.2, xpReward: 1.18 },
     speedBase: 60,
     speedMax: 115,
@@ -134,7 +252,7 @@ const ENEMY_TYPES = {
   },
 
   naga6: {
-    base: { hp: 38, damage: 11, xpReward: 18 },
+    base: { hp: 22, damage: 4, xpReward: 10 },
     growthRate: { hp: 1.24, damage: 1.21, xpReward: 1.19 },
     speedBase: 55,
     speedMax: 110,
@@ -142,7 +260,7 @@ const ENEMY_TYPES = {
     defenseGrowthEveryNDepths: 4,
   },
   naga7: {
-    base: { hp: 40, damage: 12, xpReward: 19 },
+    base: { hp: 21, damage: 4, xpReward: 10 },
     growthRate: { hp: 1.25, damage: 1.22, xpReward: 1.2 },
     speedBase: 50,
     speedMax: 105,
@@ -150,7 +268,7 @@ const ENEMY_TYPES = {
     defenseGrowthEveryNDepths: 4,
   },
   orc1: {
-    base: { hp: 45, damage: 13, xpReward: 20 },
+    base: { hp: 16, damage: 3, xpReward: 8 },
     growthRate: { hp: 1.26, damage: 1.23, xpReward: 1.21 },
     speedBase: 45,
     speedMax: 100,
@@ -158,7 +276,7 @@ const ENEMY_TYPES = {
     defenseGrowthEveryNDepths: 4,
   },
   orc2: {
-    base: { hp: 50, damage: 14, xpReward: 21 },
+    base: { hp: 18, damage: 4, xpReward: 9 },
     growthRate: { hp: 1.27, damage: 1.24, xpReward: 1.22 },
     speedBase: 40,
     speedMax: 95,
@@ -167,7 +285,7 @@ const ENEMY_TYPES = {
   },
 
   orc3: {
-    base: { hp: 55, damage: 15, xpReward: 22 },
+    base: { hp: 19, damage: 4, xpReward: 9 },
     growthRate: { hp: 1.28, damage: 1.25, xpReward: 1.23 },
     speedBase: 35,
     speedMax: 90,
@@ -175,7 +293,7 @@ const ENEMY_TYPES = {
     defenseGrowthEveryNDepths: 4,
   },
   orc4: {
-    base: { hp: 60, damage: 16, xpReward: 23 },
+    base: { hp: 14, damage: 3, xpReward: 6 },
     growthRate: { hp: 1.29, damage: 1.26, xpReward: 1.24 },
     speedBase: 30,
     speedMax: 85,
@@ -183,7 +301,7 @@ const ENEMY_TYPES = {
     defenseGrowthEveryNDepths: 4,
   },
   orc5: {
-    base: { hp: 65, damage: 17, xpReward: 24 },
+    base: { hp: 13, damage: 3, xpReward: 6 },
     growthRate: { hp: 1.3, damage: 1.27, xpReward: 1.25 },
     speedBase: 25,
     speedMax: 80,
@@ -191,7 +309,7 @@ const ENEMY_TYPES = {
     defenseGrowthEveryNDepths: 4,
   },
   orc6: {
-    base: { hp: 70, damage: 18, xpReward: 25 },
+    base: { hp: 13, damage: 2, xpReward: 5 },
     growthRate: { hp: 1.31, damage: 1.28, xpReward: 1.26 },
     speedBase: 20,
     speedMax: 75,
@@ -199,7 +317,7 @@ const ENEMY_TYPES = {
     defenseGrowthEveryNDepths: 4,
   },
   orc7: {
-    base: { hp: 75, damage: 19, xpReward: 26 },
+    base: { hp: 9, damage: 2, xpReward: 4 },
     growthRate: { hp: 1.32, damage: 1.29, xpReward: 1.27 },
     speedBase: 15,
     speedMax: 70,
@@ -207,7 +325,7 @@ const ENEMY_TYPES = {
     defenseGrowthEveryNDepths: 4,
   },
   orc8: {
-    base: { hp: 80, damage: 20, xpReward: 27 },
+    base: { hp: 9, damage: 2, xpReward: 4 },
     growthRate: { hp: 1.33, damage: 1.3, xpReward: 1.28 },
     speedBase: 10,
     speedMax: 65,
@@ -224,13 +342,37 @@ const ENEMY_TYPES = {
   // bonus d'XP a la mort). Plus lent (ne patrouille jamais, cf.
   // enemyBehavior.js - toujours en garde), defense qui monte plus vite
   // (tous les 2 etages au lieu de 3).
-  boss1: {
-    base: { hp: 150, damage: 12, xpReward: 100 },
-    growthRate: { hp: 1.18, damage: 1.15, xpReward: 1.12 },
-    speedBase: 60,
-    speedMax: 100,
-    speedGrowthPerDepth: 2,
-    defenseGrowthEveryNDepths: 2,
+  // ghostskull: {
+  //   base: { hp: 150, damage: 12, xpReward: 100 },
+  //   growthRate: { hp: 1.18, damage: 1.15, xpReward: 1.12 },
+  //   speedBase: 60,
+  //   speedMax: 100,
+  //   speedGrowthPerDepth: 2,
+  //   defenseGrowthEveryNDepths: 2,
+  // },
+  maxibee1: {
+    base: { hp: 8, damage: 2, xpReward: 7 },
+    growthRate: { hp: 1.13, damage: 1.1, xpReward: 1.08 },
+    speedBase: 120,
+    speedMax: 180,
+    speedGrowthPerDepth: 4,
+    defenseGrowthEveryNDepths: 5,
+  },
+  BigBug: {
+    base: { hp: 8, damage: 2, xpReward: 7 },
+    growthRate: { hp: 1.13, damage: 1.1, xpReward: 1.08 },
+    speedBase: 120,
+    speedMax: 180,
+    speedGrowthPerDepth: 4,
+    defenseGrowthEveryNDepths: 5,
+  },
+  GiantFox: {
+    base: { hp: 8, damage: 2, xpReward: 7 },
+    growthRate: { hp: 1.13, damage: 1.1, xpReward: 1.08 },
+    speedBase: 120,
+    speedMax: 180,
+    speedGrowthPerDepth: 4,
+    defenseGrowthEveryNDepths: 5,
   },
 };
 

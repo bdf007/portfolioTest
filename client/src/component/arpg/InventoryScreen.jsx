@@ -16,6 +16,7 @@ const SLOT_LABELS = {
 export default function InventoryScreen({
   inventory,
   equipped,
+  stats,
   onEquip,
   onUnequip,
   onUse,
@@ -59,6 +60,37 @@ export default function InventoryScreen({
           Fermer
         </button>
       </div>
+
+      {stats && (
+        <div style={{ marginBottom: 20 }}>
+          <div style={{ fontSize: 13, color: "#999", marginBottom: 8 }}>
+            Statistiques
+          </div>
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+            {[
+              ["Niveau", stats.level],
+              ["PV max", stats.maxHp],
+              ["Dégâts (mêlée)", stats.meleeDamage],
+              ["Dégâts (distance)", stats.rangedDamage],
+              ["Défense", stats.defense],
+            ].map(([label, value]) => (
+              <div
+                key={label}
+                style={{
+                  padding: "8px 12px",
+                  background: "#1e2029",
+                  border: "1px solid #444",
+                  borderRadius: 8,
+                  minWidth: 90,
+                }}
+              >
+                <div style={{ fontSize: 11, color: "#999" }}>{label}</div>
+                <div style={{ fontSize: 15, marginTop: 2 }}>{value}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div style={{ marginBottom: 20 }}>
         <div style={{ fontSize: 13, color: "#999", marginBottom: 8 }}>

@@ -18,7 +18,7 @@
  */
 
 const { createRng } = require("./rng");
-const { keepLargestRegion } = require("./gridUtils");
+const { keepLargestRegion, ensureMinimumPassageWidth } = require("./gridUtils");
 
 const WALL = 1;
 const FLOOR = 0;
@@ -127,6 +127,13 @@ function generateCave({
     }
 
     grid = keepLargestRegion(grid, width, height);
+    // corrige les pincements droits/diagonaux (cf. gridUtils.js) - a
+    // 32px/case, une seule case de large suffit deja largement pour la
+    // hitbox du heros (~18-24px), pas besoin de la dilatation plus
+    // agressive utilisee un temps a l'echelle 16px. N'ajoute que du sol,
+    // ne peut donc jamais casser la connexite garantie par
+    // keepLargestRegion juste au-dessus.
+    grid = ensureMinimumPassageWidth(grid);
     lastGrid = grid;
 
     let floorCount = 0;
