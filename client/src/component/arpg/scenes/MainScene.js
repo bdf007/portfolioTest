@@ -883,6 +883,27 @@ export default class MainScene extends Phaser.Scene {
     this.cameras.main.setBounds(0, 0, worldW, worldH);
     this.cameras.main.startFollow(this.hero, true, 0.1, 0.1);
 
+    // zoom sur mobile pour que la zone de visibilite (VISION_RADIUS, cf.
+    // le brouillard de guerre) remplisse une bonne partie de l'ecran -
+    // sans ca, sur un petit telephone, le cercle visible (petit par
+    // rapport aux 800x600 logiques du canvas) restait difficile a voir/
+    // utiliser, la majeure partie de l'ecran affichant du brouillard
+    // noir. Jamais sur desktop, ou le canvas 800x600 offre deja assez
+    // d'espace visible. Calcule a partir de VISION_RADIUS/TILE_SIZE
+    // plutot qu'une valeur fixe - reste coherent si l'un des deux change
+    // un jour.
+    if (this.registry.get("isMobile")) {
+      const visionDiameterPx = VISION_RADIUS * TILE_SIZE * 2;
+      const targetFraction = 0.85; // la zone visible doit remplir ~85% de la plus petite dimension de la camera
+      const smallerDimension = Math.min(
+        this.cameras.main.width,
+        this.cameras.main.height,
+      );
+      this.cameras.main.setZoom(
+        (smallerDimension * targetFraction) / visionDiameterPx,
+      );
+    }
+
     // marqueur de sortie : place sous le calque de brouillard (depth 2,
     // entre le sol a 0 et le brouillard a 5) pour qu'il reste cache tant
     // que le joueur n'a pas explore/vu cette case, comme le reste du
