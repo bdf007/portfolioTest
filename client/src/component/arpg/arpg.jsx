@@ -172,6 +172,9 @@ export default function Arpg() {
     // Phaser via son registre global - lu par MainScene.create()/startGame()
     game.registry.set("heroId", heroId);
     if (resumeSave) game.registry.set("resumeSave", resumeSave);
+    // idem pour isMobile - lu par MainScene pour zoomer la camera sur
+    // mobile (cf. le commentaire de setZoom dans MainScene.js)
+    game.registry.set("isMobile", isMobile);
 
     // les listeners ne peuvent s'attacher qu'une fois la scène créée -
     // on les branche via l'événement 'ready' du système de scènes plutôt
@@ -222,7 +225,7 @@ export default function Arpg() {
       game.destroy(true);
       gameRef.current = null;
     };
-  }, [phase, heroId, resumeSave]);
+  }, [phase, heroId, resumeSave, isMobile]);
 
   const handleRetry = () => {
     const scene = gameRef.current?.scene.getScene("MainScene");
