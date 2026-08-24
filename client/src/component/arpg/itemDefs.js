@@ -24,6 +24,15 @@ export const ITEM_DEFS = {
     stackable: true,
     price: 15,
   },
+  manaPotion: {
+    id: "manaPotion",
+    category: "consumable",
+    name: "Potion de mana",
+    description: "Restaure 10 PM à l'usage.",
+    effect: { mana: 10 },
+    stackable: true,
+    price: 15,
+  },
   ironSword: {
     id: "ironSword",
     category: "equipment",
@@ -42,6 +51,7 @@ export const ITEM_DEFS = {
     slot: "mainHand",
     twoHanded: true, // occupe les DEUX mains - equiper libere mainHand ET offHand (cf. MainScene.equipItem)
     grantsRanged: true, // sans arme marquee ainsi equipee (ici ou en offHand), l'attaque a distance est indisponible - cf. MainScene.canUseRangedAttack
+    requiresAmmo: "woodenArrow", // itemId EXACT requis (pas juste un booleen) - un carreau ne peut pas alimenter un arc, cf. MainScene.performRangedAttack
     name: "Arc de chasse",
     description: "+4 dégâts à distance.",
     statBonus: { rangedDamage: 4 },
@@ -54,6 +64,7 @@ export const ITEM_DEFS = {
     slot: "mainHand", // une main - peut cohabiter avec une epee (double armement automatique si l'autre main est libre, cf. MainScene.equipItem) ou un bouclier
     twoHanded: false,
     grantsRanged: true,
+    requiresAmmo: "crossbowBolt", // munition DISTINCTE des fleches - un carreau ne peut alimenter que l'arbalete, jamais un arc
     name: "Arbalète",
     description: "+3 dégâts à distance. Se manie a une main.",
     statBonus: { rangedDamage: 3 },
@@ -93,6 +104,91 @@ export const ITEM_DEFS = {
     name: "Relique ancienne",
     description: "Un artefact qui semble important.",
     stackable: false,
+  },
+  woodenSword: {
+    id: "woodenSword",
+    category: "equipment",
+    slot: "mainHand",
+    twoHanded: false,
+    grantsRanged: false,
+    name: "Épée en bois",
+    description: "+1 dégât au corps à corps. Arme d'entraînement de départ.",
+    statBonus: { meleeDamage: 1 },
+    stackable: false,
+    // pas de price -> jamais achetable ni vendable (cf. sellItem, qui
+    // exige def.price) - objet de depart uniquement (cf. HERO_STATS_PROFILES
+    // dans spriteRegistry.js), et jamais dans une table de butin non plus
+  },
+  woodenShield: {
+    id: "woodenShield",
+    category: "equipment",
+    slot: "offHand",
+    twoHanded: false,
+    grantsRanged: false,
+    name: "Bouclier en bois",
+    description: "+1 défense. Équipement d'entraînement de départ.",
+    statBonus: { defense: 1 },
+    stackable: false,
+  },
+  woodenBow: {
+    id: "woodenBow",
+    category: "equipment",
+    slot: "mainHand",
+    twoHanded: true,
+    grantsRanged: true,
+    requiresAmmo: "woodenArrow", // itemId EXACT requis (pas juste un booleen)
+    name: "Arc en bois",
+    description:
+      "+1 dégât à distance. Nécessite des flèches. Arme d'entraînement de départ.",
+    statBonus: { rangedDamage: 1 },
+    stackable: false,
+  },
+  woodenDagger: {
+    id: "woodenDagger",
+    category: "equipment",
+    slot: "mainHand",
+    twoHanded: false,
+    grantsRanged: false,
+    name: "Dague en bois",
+    description: "+1 dégât au corps à corps. Arme d'entraînement de départ.",
+    statBonus: { meleeDamage: 1 },
+    stackable: false,
+  },
+  woodenStaff: {
+    id: "woodenStaff",
+    category: "equipment",
+    slot: "mainHand",
+    twoHanded: true,
+    grantsRanged: true,
+    requiresAmmo: false, // la magie ne consomme pas de flèches, contrairement a l'arc
+    manaCost: 1, // coute du mana au lieu de munitions physiques - cf. MainScene.performRangedAttack. A sec, retombe naturellement en melee pur (le baton n'a aucun bonus de meleeDamage)
+    name: "Bâton en bois",
+    description:
+      "+1 dégât à distance. Canalise la magie (1 mana par tir). +1 dégât au corps à corps. Arme d'entraînement de départ.",
+    statBonus: { meleeDamage: 1, rangedDamage: 1 },
+    stackable: false,
+  },
+  woodenArrow: {
+    id: "woodenArrow",
+    category: "ammo", // pas 'equipment' - regles d'equipement dediees (cf. MainScene.equipItem/unequipItem), jamais retire de l'inventaire en s'equipant, contrairement a un objet 'equipment' classique
+    slot: "quiver",
+    name: "Flèche en bois",
+    description:
+      "+1 dégât à distance tant que des flèches sont encochées. Récupérables sur les ennemis, ou achetables en boutique.",
+    statBonus: { rangedDamage: 1 },
+    stackable: true,
+    price: 2, // seul objet "en bois" achetable ET lootable - cf. LOOT_TABLES.enemyDrop cote serveur
+  },
+  crossbowBolt: {
+    id: "crossbowBolt",
+    category: "ammo",
+    slot: "quiver", // meme emplacement que les fleches (un seul type de munition encochee a la fois) - cf. MainScene.performRangedAttack, qui verifie que le carquois contient PRECISEMENT le type requis par l'arme equipee (requiresAmmo), jamais juste "des munitions" au sens large
+    name: "Carreau",
+    description:
+      "+1 dégât à distance tant que des carreaux sont encochés. Munition de l'arbalète - jamais compatible avec un arc.",
+    statBonus: { rangedDamage: 1 },
+    stackable: true,
+    price: 3,
   },
   sealedPackage: {
     id: "sealedPackage",

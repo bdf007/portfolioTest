@@ -12,6 +12,7 @@ const SLOT_LABELS = {
   ring1: "Bague",
   ring2: "Bague",
   necklace: "Collier",
+  quiver: "Carquois",
 };
 
 const PREVIEW_SCALE = 3; // meme echelle que CharacterSelectScreen, pour un portrait coherent
@@ -89,6 +90,17 @@ export default function InventoryScreen({
         : null;
     const lockedByTwoHanded = mainHandDef && mainHandDef.twoHanded;
 
+    // carquois : contrairement a un objet d'equipement classique, les
+    // flèches restent COMPTEES dans l'inventaire meme une fois
+    // "equipees" (cf. MainScene.equipItem, categorie 'ammo' - jamais
+    // retirees de l'inventaire) - on affiche donc leur quantite REELLE
+    // ici, pas juste leur nom, sans quoi le joueur ne saurait jamais
+    // combien il lui en reste sans ouvrir l'inventaire
+    const quiverQuantity =
+      slot === "quiver" && itemId
+        ? inventory.find((i) => i.itemId === itemId)?.quantity || 0
+        : null;
+
     return (
       <div
         style={{
@@ -103,7 +115,10 @@ export default function InventoryScreen({
         <div style={{ fontSize: 10, color: "#999" }}>{SLOT_LABELS[slot]}</div>
         {def ? (
           <>
-            <div style={{ fontSize: 12, marginTop: 3 }}>{def.name}</div>
+            <div style={{ fontSize: 12, marginTop: 3 }}>
+              {def.name}
+              {quiverQuantity !== null ? ` x${quiverQuantity}` : ""}
+            </div>
             <button
               onClick={() => onUnequip(slot)}
               style={{
@@ -131,7 +146,17 @@ export default function InventoryScreen({
     );
   }
 
-  const groupedItems = groupInventory(inventory);
+  // les flèches equipees (cf. equipped.quiver) ne quittent JAMAIS
+  // reellement this.inventory (contrairement a un objet d'equipement
+  // classique - cf. MainScene.equipItem, categorie 'ammo') - sans ce
+  // filtre, elles apparaitraient a la fois dans la case Carquois ET
+  // dans "Objets", alors que tout le reste de l'equipement disparait de
+  // cette liste une fois equipe. Le filtre se base sur l'itemId (pas la
+  // categorie generique) : si un jour un autre type de munition existe,
+  // il faudra le meme traitement pour son propre emplacement.
+  const groupedItems = groupInventory(inventory).filter(
+    (group) => group.itemId !== equipped.quiver,
+  );
 
   return (
     <div
@@ -184,6 +209,7 @@ export default function InventoryScreen({
               ["Dégâts (mêlée)", stats.meleeDamage],
               ["Dégâts (distance)", stats.rangedDamage],
               ["Défense", stats.defense],
+              ["Mana max", stats.mana],
             ].map(([label, value]) => (
               <div
                 key={label}
@@ -227,7 +253,7 @@ export default function InventoryScreen({
         >
           <div style={{ justifySelf: "end" }}>{renderSlot("necklace")}</div>
           <div style={{ justifySelf: "center" }}>{renderSlot("helmet")}</div>
-          <div />
+          <div style={{ justifySelf: "start" }}>{renderSlot("quiver")}</div>
 
           <div style={{ justifySelf: "end" }}>{renderSlot("mainHand")}</div>
           <div
@@ -289,7 +315,7 @@ export default function InventoryScreen({
                     {def.description}
                   </div>
                 </div>
-                {def.category === "equipment" && (
+                {(def.category === "equipment" || def.category === "ammo") && (
                   <button
                     onClick={() => onEquip(group.firstIndex)}
                     style={{
