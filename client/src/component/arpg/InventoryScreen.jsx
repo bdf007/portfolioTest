@@ -1,27 +1,138 @@
 import { resolveItemDef } from "./itemDefs";
+import { SPRITE_REGISTRY } from "./spriteRegistry";
 
 const SLOT_LABELS = {
-  weapon: "Arme",
+  helmet: "Casque",
+  mainHand: "Main principale",
+  offHand: "Main secondaire",
   armor: "Armure",
-  accessory: "Accessoire",
+  belt: "Ceinture",
+  pants: "Pantalon",
+  boots: "Bottes",
+  ring1: "Bague",
+  ring2: "Bague",
+  necklace: "Collier",
 };
+
+const PREVIEW_SCALE = 3; // meme echelle que CharacterSelectScreen, pour un portrait coherent
+const GRID_COLS = 3; // convention standard (bas/gauche/droite/haut), cf. STANDARD_ANIMATION_FRAMES
+const GRID_ROWS = 4;
+
+/**
+ * Regroupe les entrees d'inventaire identiques (meme itemId) en une
+ * seule ligne d'affichage - necessaire pour l'equipement (non
+ * empilable, chaque exemplaire est une entree SEPAREE avec quantity:1
+ * dans this.inventory) qui affichait sinon une ligne par exemplaire
+ * (3 epees de fer identiques = 3 lignes "Épée de fer") plutot qu'une
+ * seule ligne "Épée de fer x3". Les objets deja empilables (potions,
+ * or) n'ont de toute facon jamais qu'une seule entree - regroupement
+ * sans effet pour eux, meme resultat qu'avant.
+ *
+ * `firstIndex` = l'index dans le tableau ORIGINAL (non regroupe) du
+ * premier exemplaire trouve - c'est celui-la qui est vise par
+ * onEquip/onUse quand on clique sur une ligne groupee (peu importe
+ * LEQUEL des exemplaires identiques est equipe/utilise en premier, ils
+ * sont interchangeables par definition).
+ */
+function groupInventory(inventory) {
+  const groups = new Map();
+  inventory.forEach((entry, index) => {
+    if (!groups.has(entry.itemId)) {
+      groups.set(entry.itemId, {
+        itemId: entry.itemId,
+        totalQuantity: 0,
+        firstIndex: index,
+      });
+    }
+    groups.get(entry.itemId).totalQuantity += entry.quantity;
+  });
+  return [...groups.values()];
+}
 
 /**
  * Écran d'inventaire - overlay superposé au jeu (comme les dialogues),
  * ouvert/fermé par un bouton dans le HUD (cf. arpg.jsx). Toutes les
  * actions (équiper/déséquiper/utiliser) appellent directement les
  * méthodes déjà testées de MainScene - ce composant n'a aucune logique
- * propre, juste de l'affichage et des clics.
+ * propre (hormis le regroupement d'affichage ci-dessus), juste de
+ * l'affichage et des clics.
  */
 export default function InventoryScreen({
   inventory,
   equipped,
   stats,
+  heroId,
   onEquip,
   onUnequip,
   onUse,
   onClose,
 }) {
+  const heroEntry = SPRITE_REGISTRY[heroId] || SPRITE_REGISTRY.hero1;
+  const idleFrameIndex = heroEntry.animations.idleDown;
+  const col = idleFrameIndex % GRID_COLS;
+  const row = Math.floor(idleFrameIndex / GRID_COLS);
+  const sheetW = heroEntry.frameWidth * GRID_COLS;
+  const sheetH = heroEntry.frameHeight * GRID_ROWS;
+
+  function renderSlot(slot) {
+    const itemId = equipped[slot];
+    const def = itemId ? resolveItemDef(itemId) : null;
+
+    // main secondaire "verrouillee" par une arme a 2 mains en main
+    // principale (cf. MainScene.equipItem) - jamais un objet REELEMENT
+    // present dans offHand dans ce cas (equipped.offHand reste `null`,
+    // pas de reference dupliquee), donc rendu special plutot qu'un
+    // simple "Vide" qui laisserait croire a un emplacement disponible
+    const mainHandDef =
+      slot === "offHand" && equipped.mainHand
+        ? resolveItemDef(equipped.mainHand)
+        : null;
+    const lockedByTwoHanded = mainHandDef && mainHandDef.twoHanded;
+
+    return (
+      <div
+        style={{
+          padding: 8,
+          background: "#1e2029",
+          border: "1px solid #444",
+          borderRadius: 8,
+          minHeight: 56,
+          width: 110,
+        }}
+      >
+        <div style={{ fontSize: 10, color: "#999" }}>{SLOT_LABELS[slot]}</div>
+        {def ? (
+          <>
+            <div style={{ fontSize: 12, marginTop: 3 }}>{def.name}</div>
+            <button
+              onClick={() => onUnequip(slot)}
+              style={{
+                marginTop: 4,
+                padding: "3px 8px",
+                fontSize: 11,
+                borderRadius: 5,
+                border: "1px solid #555",
+                background: "#2a2a35",
+                color: "#eee",
+                cursor: "pointer",
+              }}
+            >
+              Retirer
+            </button>
+          </>
+        ) : lockedByTwoHanded ? (
+          <div style={{ fontSize: 10, color: "#8a7050", marginTop: 3 }}>
+            Occupée (arme à 2 mains)
+          </div>
+        ) : (
+          <div style={{ fontSize: 11, color: "#555", marginTop: 3 }}>Vide</div>
+        )}
+      </div>
+    );
+  }
+
+  const groupedItems = groupInventory(inventory);
+
   return (
     <div
       style={{
@@ -96,55 +207,53 @@ export default function InventoryScreen({
         <div style={{ fontSize: 13, color: "#999", marginBottom: 8 }}>
           Équipement
         </div>
-        <div style={{ display: "flex", gap: 10 }}>
-          {Object.entries(SLOT_LABELS).map(([slot, label]) => {
-            const itemId = equipped[slot];
-            const def = itemId ? resolveItemDef(itemId) : null;
-            return (
-              <div
-                key={slot}
-                style={{
-                  flex: 1,
-                  padding: 10,
-                  background: "#1e2029",
-                  border: "1px solid #444",
-                  borderRadius: 8,
-                  minHeight: 60,
-                }}
-              >
-                <div style={{ fontSize: 11, color: "#999" }}>{label}</div>
-                {def ? (
-                  <>
-                    <div style={{ fontSize: 13, marginTop: 4 }}>{def.name}</div>
-                    <div
-                      style={{ fontSize: 11, color: "#8a7050", marginTop: 2 }}
-                    >
-                      {def.description}
-                    </div>
-                    <button
-                      onClick={() => onUnequip(slot)}
-                      style={{
-                        marginTop: 6,
-                        padding: "4px 10px",
-                        fontSize: 12,
-                        borderRadius: 6,
-                        border: "1px solid #555",
-                        background: "#2a2a35",
-                        color: "#eee",
-                        cursor: "pointer",
-                      }}
-                    >
-                      Retirer
-                    </button>
-                  </>
-                ) : (
-                  <div style={{ fontSize: 12, color: "#555", marginTop: 4 }}>
-                    Vide
-                  </div>
-                )}
-              </div>
-            );
-          })}
+        {/* mannequin en grille CSS - collier a cote du casque en haut,
+            mains de part et d'autre du heros, puis une pile par cote
+            associee a chaque main (bague, puis armure/ceinture, puis
+            pantalon/bottes) - cote gauche = main principale, cote droit
+            = main secondaire. "Casque"/"Ceinture"/"Bagues" restent VIDES
+            pour l'instant : aucun objet du jeu ne cible encore ces
+            emplacements (cf. itemDefs.js) - la mannequin est prete a les
+            recevoir des qu'ils existeront. */}
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "110px auto 110px",
+            gridTemplateRows: "auto auto auto auto auto",
+            gap: 10,
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <div style={{ justifySelf: "end" }}>{renderSlot("necklace")}</div>
+          <div style={{ justifySelf: "center" }}>{renderSlot("helmet")}</div>
+          <div />
+
+          <div style={{ justifySelf: "end" }}>{renderSlot("mainHand")}</div>
+          <div
+            style={{
+              width: heroEntry.frameWidth * PREVIEW_SCALE,
+              height: heroEntry.frameHeight * PREVIEW_SCALE,
+              backgroundImage: `url(${heroEntry.path})`,
+              backgroundPosition: `-${col * heroEntry.frameWidth * PREVIEW_SCALE}px -${row * heroEntry.frameHeight * PREVIEW_SCALE}px`,
+              backgroundSize: `${sheetW * PREVIEW_SCALE}px ${sheetH * PREVIEW_SCALE}px`,
+              imageRendering: "pixelated",
+              justifySelf: "center",
+            }}
+          />
+          <div style={{ justifySelf: "start" }}>{renderSlot("offHand")}</div>
+
+          <div style={{ justifySelf: "end" }}>{renderSlot("ring1")}</div>
+          <div />
+          <div style={{ justifySelf: "start" }}>{renderSlot("ring2")}</div>
+
+          <div style={{ justifySelf: "end" }}>{renderSlot("armor")}</div>
+          <div />
+          <div style={{ justifySelf: "start" }}>{renderSlot("belt")}</div>
+
+          <div style={{ justifySelf: "end" }}>{renderSlot("pants")}</div>
+          <div />
+          <div style={{ justifySelf: "start" }}>{renderSlot("boots")}</div>
         </div>
       </div>
 
@@ -152,15 +261,15 @@ export default function InventoryScreen({
         <div style={{ fontSize: 13, color: "#999", marginBottom: 8 }}>
           Objets
         </div>
-        {inventory.length === 0 && (
+        {groupedItems.length === 0 && (
           <div style={{ color: "#666", fontSize: 13 }}>Inventaire vide.</div>
         )}
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          {inventory.map((entry, index) => {
-            const def = resolveItemDef(entry.itemId);
+          {groupedItems.map((group) => {
+            const def = resolveItemDef(group.itemId);
             return (
               <div
-                key={`${entry.itemId}-${index}`}
+                key={group.itemId}
                 style={{
                   display: "flex",
                   justifyContent: "space-between",
@@ -174,7 +283,7 @@ export default function InventoryScreen({
                 <div>
                   <div style={{ fontSize: 13 }}>
                     {def.name}
-                    {entry.quantity > 1 ? ` x${entry.quantity}` : ""}
+                    {group.totalQuantity > 1 ? ` x${group.totalQuantity}` : ""}
                   </div>
                   <div style={{ fontSize: 11, color: "#8a7050", marginTop: 2 }}>
                     {def.description}
@@ -182,7 +291,7 @@ export default function InventoryScreen({
                 </div>
                 {def.category === "equipment" && (
                   <button
-                    onClick={() => onEquip(index)}
+                    onClick={() => onEquip(group.firstIndex)}
                     style={{
                       padding: "6px 12px",
                       fontSize: 12,
@@ -198,7 +307,7 @@ export default function InventoryScreen({
                 )}
                 {def.category === "consumable" && (
                   <button
-                    onClick={() => onUse(index)}
+                    onClick={() => onUse(group.firstIndex)}
                     style={{
                       padding: "6px 12px",
                       fontSize: 12,

@@ -26,6 +26,7 @@ const { getEnemyStatsForDepth } = require("../services/generation/enemyStats");
 const {
   generateQuestForNpc,
   generateObtainItemQuest,
+  generateDefeatBossQuest,
   getFixedQuest,
 } = require("../services/generation/questTypes");
 const {
@@ -168,6 +169,7 @@ async function getLevel(req, res) {
         defense: bossConfig.stats.defense,
         speed: bossConfig.stats.speed,
         xpReward: bossConfig.stats.xpReward,
+        attackType: bossConfig.stats.attackType || "melee", // pas encore defini dans BOSS_ASSIGNMENTS (cf. bossConfig.js) - repli explicite, prêt si un futur boss veut attaquer a distance
         drop: rollLoot("bossDrop", bossLootRng),
       };
     } else {
@@ -267,9 +269,16 @@ async function getLevel(req, res) {
           quest = fixedQuest;
         } else {
           const npcSeed = `${seed}-npc-${npcIndex}`;
-          const obtainChanceRng = createRng(`${npcSeed}-obtain-chance`);
-          const useObtainItem = obtainChanceRng() < 0.25;
-          if (useObtainItem) {
+          // tirage a 3 branches en UN SEUL jet (jamais deux verifications
+          // independantes empilees, qui fausseraient les probabilites
+          // reelles) : 25% obtainItem, 25% defeatBoss, 50% killEnemies
+          const questTypeRng = createRng(`${npcSeed}-quest-type-choice`);
+          const roll = questTypeRng();
+
+          if (roll < 0.5) {
+            // obtainItem (roll < 0.25) OU defeatBoss (0.25 <= roll < 0.5) -
+            // partagent le meme choix de boss cible (cf.
+            // getBossDepthsInCurrentDecade plus haut)
             const bossPickRng = createRng(`${npcSeed}-boss-pick`);
             const relevantBossDepth =
               bossDepthsThisDecade[
@@ -277,12 +286,19 @@ async function getLevel(req, res) {
               ];
             const relevantBossType =
               getBossConfigForDepth(relevantBossDepth).type;
-            quest = generateObtainItemQuest(
-              npcSeed,
-              bossItemPool,
-              relevantBossDepth,
-              relevantBossType,
-            );
+            quest =
+              roll < 0.25
+                ? generateObtainItemQuest(
+                    npcSeed,
+                    bossItemPool,
+                    relevantBossDepth,
+                    relevantBossType,
+                  )
+                : generateDefeatBossQuest(
+                    npcSeed,
+                    relevantBossDepth,
+                    relevantBossType,
+                  );
           } else {
             quest = generateQuestForNpc(npcSeed, enemyTypePool);
           }
@@ -421,6 +437,7 @@ async function getLevel(req, res) {
         defense: stats.defense,
         speed: stats.speed,
         xpReward: stats.xpReward,
+        attackType: stats.attackType,
         drop: rollLoot("enemyDrop", enemyLootRng),
       };
     });
@@ -484,6 +501,7 @@ async function getMyGames(req, res) {
         playerState: g.playerState,
         updatedAt: g.updatedAt,
       })),
+      username: req.user.username,
     });
   } catch (error) {
     console.error("[ArpgController.getMyGames]", error);

@@ -1,3 +1,5 @@
+import { HERO_ROSTER } from "./spriteRegistry";
+
 /**
  * Formate un temps de jeu en secondes -> "XhYY" (ex: 9900 -> "2h45").
  */
@@ -8,12 +10,24 @@ function formatPlayTime(totalSeconds) {
 }
 
 /**
+ * Libelle de classe du heros choisi pour cette partie - meme repli sur
+ * 'hero1' que handleResumeGame (cf. arpg.jsx), pour rester coherent avec
+ * ce qui sera reellement charge si le joueur reprend cette partie.
+ */
+function resolveHeroLabel(heroId) {
+  const hero =
+    HERO_ROSTER.find((h) => h.id === (heroId || "hero1")) || HERO_ROSTER[0];
+  return hero.label;
+}
+
+/**
  * Écran "Parties en cours" - même pattern que StartScreen.jsx de Skip
  * the Dungeon : liste des parties en cours (reprendre/abandonner) plus
  * un bouton pour en démarrer une nouvelle.
  */
 export default function GameListScreen({
   games,
+  username,
   onResume,
   onAbandon,
   onNewGame,
@@ -31,7 +45,9 @@ export default function GameListScreen({
         minHeight: 400,
       }}
     >
-      <h2 style={{ margin: 0 }}>Parties en cours</h2>
+      <h2 style={{ margin: 0 }}>
+        {username ? `Parties en cours - ${username}` : "Parties en cours"}
+      </h2>
 
       {games.length === 0 && (
         <div style={{ color: "#999" }}>Aucune partie en cours.</div>
@@ -60,8 +76,9 @@ export default function GameListScreen({
               }}
             >
               <span style={{ fontSize: 14 }}>
-                Étage {g.depth} - Niveau {g.playerState?.level || 1} - XP{" "}
-                {g.playerState?.xp || 0} - Temps en jeu :{" "}
+                {resolveHeroLabel(g.playerState?.heroId)} - Étage {g.depth} -
+                Niveau {g.playerState?.level || 1} - XP {g.playerState?.xp || 0}{" "}
+                - Temps en jeu :{" "}
                 {formatPlayTime(g.playerState?.timePlayedSeconds || 0)}
               </span>
               <div style={{ display: "flex", gap: 8 }}>

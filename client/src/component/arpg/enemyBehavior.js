@@ -1,4 +1,4 @@
-import { findPath } from './pathfinding';
+import { findPath } from "./pathfinding";
 
 /**
  * Comportements d'ennemis au repos (avant detection du joueur). Chaque
@@ -36,7 +36,12 @@ function pickBehaviorType(rng, weights = DEFAULT_TYPE_WEIGHTS) {
  * garde, meme s'il etait cense patrouiller) - degradation propre plutot
  * que de forcer une patrouille absurde sur une carte trop exigue.
  */
-function pickPatrolRoute(grid, home, rng, { radius = 5, maxPathLength = 20, maxTries = 15 } = {}) {
+function pickPatrolRoute(
+  grid,
+  home,
+  rng,
+  { radius = 5, maxPathLength = 20, maxTries = 15 } = {},
+) {
   const height = grid.length;
   const width = grid[0].length;
   const FLOOR = 0;
@@ -90,15 +95,15 @@ function createEnemyBehavior(grid, home, rng, typeWeights) {
     patrolIndex: 0,
   };
 
-  if (type === 'patrol') {
+  if (type === "patrol") {
     const route = pickPatrolRoute(grid, home, rng);
     if (route) {
       behavior.patrolPath = route.path;
     } else {
       // aucune route trouvee : degrade en garde plutot que de laisser un
       // etat "patrol" sans jamais rien a patrouiller
-      behavior.type = 'guard';
-      behavior.state = 'guard';
+      behavior.type = "guard";
+      behavior.state = "guard";
       behavior.aggroRadius = AGGRO_RADIUS_BY_TYPE.guard;
     }
   }
@@ -117,27 +122,45 @@ function createEnemyBehavior(grid, home, rng, typeWeights) {
  * @param {boolean} ctx.losClear ligne de vue degagee vers le joueur
  * @param {number} ctx.aggroRadius rayon d'aggro de cet ennemi
  * @param {boolean} ctx.arrivedAtHome vrai si l'ennemi est revenu a son poste
+ * @param {boolean} [ctx.isPlayerBehind] vrai si le joueur est dans l'angle
+ *   mort (derriere) de cet ennemi, cf. MainScene (calcule a partir de
+ *   enemy.lastDir) - bloque uniquement la DETECTION INITIALE (repos ->
+ *   chase), jamais un ennemi DEJA en chase (une fois engage, il continue
+ *   de suivre meme si le joueur passe brievement derriere lui - sinon
+ *   "rester derriere un ennemi qui chasse" deviendrait un moyen trivial
+ *   de ne jamais se faire toucher). Absent/`undefined` = jamais derriere
+ *   (comportement inchange, compat ascendante).
  * @returns {string} le nouvel etat. 'home' est un signal special : le
  *   caller doit alors reprendre le type d'origine (patrol/guard/rest) et
  *   relancer sa patrouille le cas echeant - ce n'est pas un etat runtime
  *   qui persiste.
  */
-function decideNextState(currentState, { distanceToPlayer, losClear, aggroRadius, arrivedAtHome }) {
+function decideNextState(
+  currentState,
+  {
+    distanceToPlayer,
+    losClear,
+    aggroRadius,
+    arrivedAtHome,
+    isPlayerBehind = false,
+  },
+) {
   const seesPlayer = losClear && distanceToPlayer <= aggroRadius;
+  const detectsPlayer = seesPlayer && !isPlayerBehind;
 
-  if (currentState === 'chase') {
-    return seesPlayer ? 'chase' : 'returning';
+  if (currentState === "chase") {
+    return seesPlayer ? "chase" : "returning"; // deja engage - "derriere" ne compte plus, continue de suivre
   }
 
-  if (currentState === 'returning') {
-    if (seesPlayer) return 'chase'; // re-aggro en chemin vers la maison
-    if (arrivedAtHome) return 'home'; // signal : reprendre l'activite d'origine
-    return 'returning';
+  if (currentState === "returning") {
+    if (detectsPlayer) return "chase"; // re-aggro en chemin vers la maison
+    if (arrivedAtHome) return "home"; // signal : reprendre l'activite d'origine
+    return "returning";
   }
 
-  // etats de repos (guard/patrol/rest) : seule la detection du joueur
-  // change quelque chose, sinon l'ennemi continue ce qu'il faisait
-  return seesPlayer ? 'chase' : currentState;
+  // etats de repos (guard/patrol/rest) : seule une detection FRONTALE
+  // (jamais dans l'angle mort) declenche l'aggro initiale
+  return detectsPlayer ? "chase" : currentState;
 }
 
 export {

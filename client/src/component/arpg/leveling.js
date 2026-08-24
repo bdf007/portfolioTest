@@ -65,15 +65,35 @@ function computeLevelFromXp(totalXp) {
  * Stats de combat du joueur pour un niveau donné - toujours calculées
  * depuis la base plutôt qu'accumulées pas à pas, pour éviter toute
  * dérive d'arrondi si jamais on recalcule plusieurs fois.
+ *
+ * @param {number} level
+ * @param {{base:Object, growth:Object}|null} [statsOverride] - profil
+ *   d'archétype du héros (cf. HERO_ROSTER dans spriteRegistry.js) -
+ *   remplace BASE_STATS/GROWTH_PER_LEVEL si fourni. `null` = stats
+ *   génériques (repli, ne devrait plus arriver une fois tous les héros
+ *   du roster dotés d'un profil).
  */
-function getPlayerStatsForLevel(level) {
+function getPlayerStatsForLevel(level, statsOverride = null) {
+  const base = (statsOverride && statsOverride.base) || BASE_STATS;
+  const growth = (statsOverride && statsOverride.growth) || GROWTH_PER_LEVEL;
   const n = level - 1;
   return {
-    maxHp: BASE_STATS.maxHp + GROWTH_PER_LEVEL.maxHp * n,
-    meleeDamage: BASE_STATS.meleeDamage + GROWTH_PER_LEVEL.meleeDamage * n,
-    rangedDamage: BASE_STATS.rangedDamage + GROWTH_PER_LEVEL.rangedDamage * n,
-    defense: BASE_STATS.defense + GROWTH_PER_LEVEL.defense * n,
+    // Math.round : les profils d'archetype (cf. HERO_ROSTER) utilisent
+    // des taux de croissance fractionnaires (ex: 2.5 degats/niveau pour
+    // l'archer) - sans arrondi, les stats affichees deviendraient non
+    // entieres des le niveau 2 (les anciens taux etaient tous entiers,
+    // l'arrondi n'avait jamais ete necessaire jusqu'ici)
+    maxHp: Math.round(base.maxHp + growth.maxHp * n),
+    meleeDamage: Math.round(base.meleeDamage + growth.meleeDamage * n),
+    rangedDamage: Math.round(base.rangedDamage + growth.rangedDamage * n),
+    defense: Math.round(base.defense + growth.defense * n),
   };
 }
 
-export { xpRequiredForLevel, computeLevelFromXp, getPlayerStatsForLevel, BASE_STATS, GROWTH_PER_LEVEL };
+export {
+  xpRequiredForLevel,
+  computeLevelFromXp,
+  getPlayerStatsForLevel,
+  BASE_STATS,
+  GROWTH_PER_LEVEL,
+};
