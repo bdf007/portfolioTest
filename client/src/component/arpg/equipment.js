@@ -7,7 +7,7 @@ import { resolveItemDef } from "./itemDefs";
  * de progression distinctes, pas la peine de les mélanger dans la même
  * fonction (leveling.js reste pur "niveau -> stats de base").
  *
- * @param {{mainHand: string|null, offHand: string|null, armor: string|null, helmet: string|null, pants: string|null, boots: string|null, belt: string|null, ring1: string|null, ring2: string|null, necklace: string|null}} equipped
+ * @param {{mainHand: string|null, offHand: string|null, armor: string|null, helmet: string|null, pants: string|null, boots: string|null, belt: string|null, ring1: string|null, ring2: string|null, necklace: string|null, quiver: string|null}} equipped
  * @returns {{meleeDamage:number, rangedDamage:number, defense:number, maxHp:number}}
  */
 export function computeEquipmentBonuses(equipped) {

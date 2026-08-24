@@ -37,6 +37,7 @@ const { generateChests } = require("../services/generation/chestGenerator");
 const { generateShopStock } = require("../services/generation/shopGenerator");
 const {
   rollLoot,
+  rollMultipleLoot,
   getQuestItemIds,
 } = require("../services/generation/itemTypes");
 const { createRng } = require("../services/generation/rng");
@@ -438,7 +439,16 @@ async function getLevel(req, res) {
         speed: stats.speed,
         xpReward: stats.xpReward,
         attackType: stats.attackType,
-        drop: rollLoot("enemyDrop", enemyLootRng),
+        // PLURIEL desormais (drops, pas drop) - plusieurs tirages
+        // independants (2) au lieu d'un seul, pour permettre un coffre
+        // de butin avec plusieurs objets a la fois (cf. MainScene.js,
+        // qui fait apparaitre un coffre a ouvrir plutot qu'un ramassage
+        // instantane). Tableau vide si aucun tirage n'a rien donne -
+        // jamais null. Les BOSS gardent leur mecanique inchangee
+        // (rollLoot singulier, cf. plus haut) - la garantie d'objet de
+        // quete y est plus delicate a toucher sans risque, hors du
+        // perimetre de cette demande.
+        drops: rollMultipleLoot("enemyDrop", enemyLootRng, 2),
       };
     });
 

@@ -90,6 +90,7 @@ export default function Arpg() {
   const [resumeSave, setResumeSave] = useState(null); // partie a reprendre, si choisie dans la liste
 
   const [playerHp, setPlayerHp] = useState({ hp: 100, maxHp: 100 });
+  const [playerMana, setPlayerMana] = useState({ mana: 0, maxMana: 0 });
   const [xp, setXp] = useState(0);
   const [level, setLevel] = useState(1);
   const [depth, setDepth] = useState(1);
@@ -112,6 +113,7 @@ export default function Arpg() {
     ring1: null,
     ring2: null,
     necklace: null,
+    quiver: null,
   });
   const [inventoryOpen, setInventoryOpen] = useState(false);
   const [travelDestinations, setTravelDestinations] = useState(null); // null = ferme, tableau = ouvert avec ces destinations
@@ -212,6 +214,9 @@ export default function Arpg() {
 
       scene.events.on("player-hp-changed", ({ hp, maxHp }) =>
         setPlayerHp({ hp, maxHp }),
+      );
+      scene.events.on("player-mana-changed", ({ mana, maxMana }) =>
+        setPlayerMana({ mana, maxMana }),
       );
       scene.events.on("xp-changed", ({ xp }) => setXp(xp));
       scene.events.on("level-up", ({ level }) => setLevel(level));
@@ -414,6 +419,48 @@ export default function Arpg() {
   const handleSelectHero = (id) => {
     setHeroId(id);
     setResumeSave(null); // partie fraiche, pas de reprise
+
+    // reinitialise TOUT l'etat de progression avant de demarrer - sans
+    // ca, une partie fraichement lancee affichait les valeurs LAISSEES
+    // par une precedente partie de cette meme session de navigateur
+    // (meme si celle-ci avait ete abandonnee/supprimee entre temps) :
+    // le state React ne se remettait jamais a zero tout seul, seul un
+    // vrai cycle sauvegarde/reprise le corrigeait ensuite (en ecrasant
+    // avec les vraies donnees serveur) - d'ou l'illusion d'un "bug
+    // d'affichage qui garde en memoire une autre partie".
+    setPlayerHp({ hp: 100, maxHp: 100 });
+    setPlayerMana({ mana: 0, maxMana: 0 });
+    setXp(0);
+    setLevel(1);
+    setDepth(1);
+    setGameOver(null);
+    setLoadError(null);
+    setMinimapData(null);
+    setNpcDialog(null);
+    setQuests({});
+    setUpstairsPrompt(false);
+    setExitPrompt(false);
+    setInventory([]);
+    setEquipped({
+      mainHand: null,
+      offHand: null,
+      armor: null,
+      helmet: null,
+      pants: null,
+      boots: null,
+      belt: null,
+      ring1: null,
+      ring2: null,
+      necklace: null,
+      quiver: null,
+    });
+    setInventoryOpen(false);
+    setTravelDestinations(null);
+    setShopStock(null);
+    setQuestsOpen(false);
+    setLootToast(null);
+    setMinimapVisible(true);
+
     setPhase("playing");
   };
 
@@ -484,6 +531,9 @@ export default function Arpg() {
         meleeDamage: base.meleeDamage + bonus.meleeDamage,
         rangedDamage: base.rangedDamage + bonus.rangedDamage,
         defense: base.defense + bonus.defense,
+        // pas de bonus.mana - computeEquipmentBonuses n'a pas ce champ,
+        // meme choix que dans MainScene.recalculatePlayerStats
+        mana: base.mana,
       };
     })(),
   };
@@ -515,6 +565,11 @@ export default function Arpg() {
         <span>
           PV : {Math.max(0, playerHp.hp)} / {playerHp.maxHp}
         </span>
+        {playerMana.maxMana > 0 && (
+          <span>
+            Mana : {Math.max(0, playerMana.mana)} / {playerMana.maxMana}
+          </span>
+        )}
         <span>
           XP : {xpProgress.xpIntoLevel} / {xpProgress.xpForNextLevel}
         </span>

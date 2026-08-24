@@ -1195,36 +1195,70 @@ export const SPRITE_REGISTRY = {
  */
 const HERO_STATS_PROFILES = {
   guerrier: {
-    base: { maxHp: 130, meleeDamage: 10, rangedDamage: 2, defense: 3 },
-    growth: { maxHp: 24, meleeDamage: 2.5, rangedDamage: 0.5, defense: 1.4 },
+    base: { maxHp: 130, meleeDamage: 10, rangedDamage: 2, defense: 3, mana: 0 },
+    growth: {
+      maxHp: 24,
+      meleeDamage: 2.5,
+      rangedDamage: 0.5,
+      defense: 1.4,
+      mana: 0,
+    },
     moveSpeed: 130,
     visionRadius: 5,
     meleeRange: 56,
     rangedRange: 300,
+    // equipement/objets donnes ET equipes automatiquement au tout debut
+    // d'une partie NEUVE (jamais a une reprise, cf. MainScene.giveStartingKit)
+    startingEquipment: ["woodenSword", "woodenShield"],
+    startingAmmo: null,
   },
   archer: {
-    base: { maxHp: 90, meleeDamage: 4, rangedDamage: 10, defense: 1 },
-    growth: { maxHp: 16, meleeDamage: 1, rangedDamage: 2.6, defense: 0.8 },
+    base: { maxHp: 90, meleeDamage: 4, rangedDamage: 10, defense: 1, mana: 0 },
+    growth: {
+      maxHp: 16,
+      meleeDamage: 1,
+      rangedDamage: 2.6,
+      defense: 0.8,
+      mana: 0,
+    },
     moveSpeed: 160,
     visionRadius: 8,
     meleeRange: 42,
     rangedRange: 440,
+    startingEquipment: ["woodenBow"],
+    startingAmmo: { itemId: "woodenArrow", quantity: 20 },
   },
   voleur: {
-    base: { maxHp: 85, meleeDamage: 11, rangedDamage: 3, defense: 0 },
-    growth: { maxHp: 15, meleeDamage: 2.8, rangedDamage: 0.7, defense: 0.6 },
+    base: { maxHp: 85, meleeDamage: 11, rangedDamage: 3, defense: 0, mana: 0 },
+    growth: {
+      maxHp: 15,
+      meleeDamage: 2.8,
+      rangedDamage: 0.7,
+      defense: 0.6,
+      mana: 0,
+    },
     moveSpeed: 175,
     visionRadius: 7,
     meleeRange: 46,
     rangedRange: 340,
+    startingEquipment: ["woodenDagger"],
+    startingAmmo: null,
   },
   mage: {
-    base: { maxHp: 70, meleeDamage: 2, rangedDamage: 12, defense: 0 },
-    growth: { maxHp: 12, meleeDamage: 0.5, rangedDamage: 3, defense: 0.4 },
+    base: { maxHp: 70, meleeDamage: 2, rangedDamage: 12, defense: 0, mana: 20 },
+    growth: {
+      maxHp: 12,
+      meleeDamage: 0.5,
+      rangedDamage: 3,
+      defense: 0.4,
+      mana: 1,
+    },
     moveSpeed: 140,
     visionRadius: 6,
     meleeRange: 38,
     rangedRange: 420,
+    startingEquipment: ["woodenStaff"],
+    startingAmmo: null,
   },
 };
 

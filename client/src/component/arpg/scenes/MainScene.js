@@ -282,9 +282,11 @@ export default class MainScene extends Phaser.Scene {
       ring1: null,
       ring2: null,
       necklace: null,
+      quiver: null,
     }; // itemId par emplacement, ou null - AVANT recalculatePlayerStats
     this.recalculatePlayerStats();
     this.playerHp = this.playerMaxHp;
+    this.playerMana = this.playerMaxMana;
     this.meleeCooldown = createCooldown(PLAYER_MELEE_COOLDOWN);
     this.rangedCooldown = createCooldown(PLAYER_RANGED_COOLDOWN);
     this.isDead = false;
@@ -372,7 +374,45 @@ export default class MainScene extends Phaser.Scene {
       await this.resumeFromSave(resumeSave);
       return;
     }
+    this.giveStartingKit();
     this.loadLevel(this.currentDepth);
+  }
+
+  /**
+   * Donne ET equipe automatiquement le kit de depart de l'archetype
+   * choisi (arme en bois +1, bouclier/fleches selon le cas - cf.
+   * HERO_STATS_PROFILES dans spriteRegistry.js) - UNIQUEMENT pour une
+   * partie NEUVE (jamais appelee sur resumeFromSave, qui restaure deja
+   * l'equipement exact de la sauvegarde). Utilise addItemToInventory +
+   * equipItem tels quels (deja testes) plutot que de manipuler
+   * this.equipped directement, sauf pour les flèches (cf.
+   * equipArrows - mecanique dediee, jamais retirees de l'inventaire en
+   * s'equipant, contrairement a une arme/armure classique).
+   */
+  giveStartingKit() {
+    const profile = resolveHeroStatsOverride(this.heroSpriteKey);
+    if (!profile) return;
+
+    for (const itemId of profile.startingEquipment || []) {
+      this.addItemToInventory(itemId, 1);
+      const newIndex = this.inventory.length - 1; // addItemToInventory vient de le pousser en dernier (objet non empilable, jamais fusionne avec une entree existante)
+      this.equipItem(newIndex);
+    }
+
+    if (profile.startingAmmo) {
+      this.addItemToInventory(
+        profile.startingAmmo.itemId,
+        profile.startingAmmo.quantity,
+      );
+      this.equipped.quiver = profile.startingAmmo.itemId;
+      // sans cet evenement, React (equipped.quiver cote arpg.jsx) ne
+      // recevait JAMAIS cette affectation directe - le carquois etait
+      // bien rempli en interne (scene Phaser), mais son itemId restait
+      // `null` cote React, donc le filtre qui masque les fleches
+      // equipees de la liste "Objets" (cf. InventoryScreen.jsx) ne les
+      // reconnaissait jamais comme equipees
+      this.events.emit("equipment-updated", { ...this.equipped });
+    }
   }
 
   /**
@@ -409,6 +449,7 @@ export default class MainScene extends Phaser.Scene {
       ring1: null,
       ring2: null,
       necklace: null,
+      quiver: null,
       ...(ps.equipped || {}),
     };
     this.timePlayedBaseline = ps.timePlayedSeconds || 0; // sessionStartedAt reste "maintenant" (deja fixe dans create())
@@ -418,6 +459,13 @@ export default class MainScene extends Phaser.Scene {
       resolveHeroStatsOverride(this.heroSpriteKey),
     );
     this.recalculatePlayerStats(); // combine niveau + bonus d'equipement (this.equipped deja restaure ci-dessus)
+    // contrairement aux PV (cf. hpOverride passe a loadLevel juste en
+    // dessous, qui EMPECHE le soin complet par defaut a chaque
+    // chargement d'etage), le mana n'est jamais reinitialise par
+    // loadLevel - fixe ici suffit, rien a modifier la-bas. `?? ` plutot
+    // que `||` : un mana a 0 (legitime, ex: juste apres avoir tout
+    // depense) ne doit pas etre remplace par le max
+    this.playerMana = ps.mana ?? this.playerMaxMana;
 
     await this.loadLevel(
       save.depth,
@@ -431,6 +479,10 @@ export default class MainScene extends Phaser.Scene {
     // reutilise les events existants pour que le HUD React se mette a
     // jour avec l'etat restaure, sans avoir besoin d'un event dedie
     this.events.emit("xp-changed", { xp: this.xp });
+    this.events.emit("player-mana-changed", {
+      mana: this.playerMana,
+      maxMana: this.playerMaxMana,
+    });
     this.events.emit("level-up", { level: this.playerLevel, stats });
   }
 
@@ -546,6 +598,10 @@ export default class MainScene extends Phaser.Scene {
     this.playerMeleeDamage = base.meleeDamage + bonus.meleeDamage;
     this.playerRangedDamage = base.rangedDamage + bonus.rangedDamage;
     this.playerDefense = base.defense + bonus.defense;
+    // pas de bonus d'equipement pour l'instant (computeEquipmentBonuses
+    // n'a pas de champ mana) - uniquement la valeur de base par
+    // archetype/niveau (cf. HERO_STATS_PROFILES dans spriteRegistry.js)
+    this.playerMaxMana = base.mana;
   }
 
   /**
@@ -601,6 +657,26 @@ export default class MainScene extends Phaser.Scene {
     const item = this.inventory[index];
     if (!item) return;
     const def = resolveItemDef(item.itemId);
+
+    // munitions (flèches) : mecanique DEDIEE, jamais retirees de
+    // l'inventaire en s'equipant (contrairement a une arme/armure
+    // classique, non empilable) - "equiper" signifie juste "cette pile
+    // devient la source active pour le tir a distance" (cf.
+    // performRangedAttack, qui decremente directement cette meme entree
+    // d'inventaire a chaque tir). Pas de recalculatePlayerStats ici :
+    // le bonus de statBonus des flèches (cf. itemDefs.js) est deja pris
+    // en compte par computeEquipmentBonuses via this.equipped.quiver,
+    // sans changement necessaire a cette fonction.
+    if (def.category === "ammo") {
+      this.equipped[def.slot] = item.itemId;
+      const oldMaxHp = this.playerMaxHp;
+      this.recalculatePlayerStats();
+      this.adjustHpAfterMaxHpChange(oldMaxHp);
+      this.events.emit("equipment-updated", { ...this.equipped });
+      this.persistProgress();
+      return;
+    }
+
     if (def.category !== "equipment" || !def.slot) return;
 
     let targetSlot = def.slot;
@@ -679,7 +755,13 @@ export default class MainScene extends Phaser.Scene {
     const itemId = this.equipped[slot];
     if (!itemId) return;
     this.equipped[slot] = null;
-    this.inventory.push({ itemId, quantity: 1 });
+
+    // munitions : jamais repoussees dans l'inventaire - elles n'en sont
+    // JAMAIS sorties en s'equipant (cf. equipItem), les repousser ici
+    // dupliquerait la pile deja presente
+    if (slot !== "quiver") {
+      this.inventory.push({ itemId, quantity: 1 });
+    }
 
     const oldMaxHp = this.playerMaxHp;
     this.recalculatePlayerStats();
@@ -712,6 +794,17 @@ export default class MainScene extends Phaser.Scene {
       });
     }
 
+    if (def.effect.mana) {
+      this.playerMana = Math.min(
+        this.playerMaxMana,
+        this.playerMana + def.effect.mana,
+      );
+      this.events.emit("player-mana-changed", {
+        mana: this.playerMana,
+        maxMana: this.playerMaxMana,
+      });
+    }
+
     item.quantity -= 1;
     if (item.quantity <= 0) this.inventory.splice(index, 1);
 
@@ -739,6 +832,7 @@ export default class MainScene extends Phaser.Scene {
           xp: this.xp,
           level: this.playerLevel,
           hp: this.playerHp,
+          mana: this.playerMana,
           heroId: this.heroSpriteKey,
           currentFloorKills: this.currentFloorKills,
           currentFloorOpenedChests: this.currentFloorOpenedChests,
@@ -928,6 +1022,7 @@ export default class MainScene extends Phaser.Scene {
       this.chests.forEach((c) => c.sprite.destroy());
     }
     this.chests = [];
+    this.nextLootChestId = 0; // identifiants negatifs pour les coffres de butin d'ennemi (cf. spawnLootChest), jamais confondus avec un index de coffre pre-place (toujours >= 0)
     this.dialogOpen = false;
     this.gamePaused = false;
     this.pauseReasons.clear();
@@ -939,14 +1034,32 @@ export default class MainScene extends Phaser.Scene {
     this.enemyProjectiles.forEach((p) => p.sprite.destroy());
     this.enemyProjectiles = [];
 
+    // ne soigne PLUS automatiquement a chaque changement d'etage (montee/
+    // descente/voyage) - preserve les PV actuels par defaut (clamped au
+    // cas ou playerMaxHp aurait change entre-temps, ex: niveau gagne ou
+    // objet retire). hpOverride (fourni par resumeFromSave) reste
+    // prioritaire quand present. Un soin complet EXPLICITE reste
+    // legitime pour "Reessayer" apres une mort (cf. retryLevel, qui fixe
+    // this.playerHp AVANT d'appeler loadLevel) et pour une partie neuve
+    // (this.playerHp deja a this.playerMaxHp depuis create(), preserve
+    // tel quel ici).
     this.playerHp =
       typeof hpOverride === "number"
         ? Math.min(hpOverride, this.playerMaxHp)
-        : this.playerMaxHp;
+        : Math.min(this.playerHp, this.playerMaxHp);
     this.isDead = false;
     this.events.emit("player-hp-changed", {
       hp: this.playerHp,
       maxHp: this.playerMaxHp,
+    });
+    // contrairement aux PV juste au-dessus, le mana n'est JAMAIS
+    // reinitialise a chaque changement d'etage (pas de "soin complet"
+    // equivalent pour le mana) - simple synchronisation de la valeur
+    // deja en place (fixee dans create() pour une partie neuve, ou dans
+    // resumeFromSave pour une reprise), pour que React en soit informe
+    this.events.emit("player-mana-changed", {
+      mana: this.playerMana,
+      maxMana: this.playerMaxMana,
     });
 
     const worldW = grid[0].length * TILE_SIZE;
@@ -1244,7 +1357,7 @@ export default class MainScene extends Phaser.Scene {
         defense: enemyData.defense,
         xpReward: enemyData.xpReward,
         attackType: enemyData.attackType || "melee", // 'melee' (contact) ou 'ranged' (projectile) - cf. updateEnemyAttacks
-        drop: enemyData.drop || null,
+        drops: enemyData.drops || [], // PLURIEL - tableau (peut etre vide), plus jamais un singulier + null - cf. ArpgController.js
         attackCooldown: createCooldown(ENEMY_ATTACK_COOLDOWN),
       });
     });
@@ -1364,9 +1477,15 @@ export default class MainScene extends Phaser.Scene {
 
   /**
    * Recharge le même étage avec une nouvelle seed - appelé par le bouton
-   * "Réessayer" du composant React après un game over.
+   * "Réessayer" du composant React après un game over. Contrairement a
+   * un changement d'etage normal (qui ne soigne plus, cf. loadLevel),
+   * "Réessayer" doit repartir a PLEINE vie - sans quoi le joueur
+   * redemarrerait a 0 PV (celui de sa mort) et mourrait a nouveau
+   * instantanement. Fixe explicitement AVANT l'appel a loadLevel, qui
+   * preserve desormais this.playerHp tel quel par defaut.
    */
   retryLevel() {
+    this.playerHp = this.playerMaxHp;
     this.loadLevel(this.currentDepth, "retry-" + Date.now());
   }
 
@@ -2878,7 +2997,11 @@ export default class MainScene extends Phaser.Scene {
         chest.opened = true;
         chest.sprite.setFrame(chest.variant.openFrame);
         chest.sprite.body.checkCollision.none = true; // sinon il faut sauvegarder+reprendre pour que le passage se debloque (le corps physique du coffre nouvellement ouvert n'est jamais retouche autrement)
-        this.currentFloorOpenedChests.push(chest.index);
+        // jamais pour un coffre EPHEMERE (butin d'ennemi, cf.
+        // spawnLootChest) - il n'existe pas dans la liste generee par le
+        // serveur, son index (negatif) n'aurait aucun sens a y figurer,
+        // et il n'est de toute facon jamais recree a une revisite
+        if (!chest.ephemeral) this.currentFloorOpenedChests.push(chest.index);
 
         if (chest.loot) {
           this.addItemToInventory(chest.loot.itemId, chest.loot.quantity);
@@ -2886,6 +3009,20 @@ export default class MainScene extends Phaser.Scene {
           this.showLootToast(
             `Trouvé : ${itemDef.name} x${chest.loot.quantity}`,
           );
+        } else if (chest.lootItems && chest.lootItems.length > 0) {
+          // coffre de butin d'ennemi : PLUSIEURS objets a la fois (cf.
+          // spawnLootChest) - un seul toast combine plutot qu'un par
+          // objet, qui se chevaucheraient (showLootToast remplace
+          // toujours la ligne precedente, cf. sa propre doc)
+          for (const drop of chest.lootItems) {
+            this.addItemToInventory(drop.itemId, drop.quantity);
+          }
+          const summary = chest.lootItems
+            .map(
+              (drop) => `${resolveItemDef(drop.itemId).name} x${drop.quantity}`,
+            )
+            .join(", ");
+          this.showLootToast(`Trouvé : ${summary}`);
         }
         return;
       }
@@ -2960,27 +3097,99 @@ export default class MainScene extends Phaser.Scene {
    * n'est plus une capacite universelle disponible quel que soit
    * l'equipement : une epee + un bouclier ne la debloque jamais.
    */
-  canUseRangedAttack() {
+  /**
+   * Renvoie la definition de l'arme a distance ACTUELLEMENT equipee
+   * (mainHand ou offHand, quel que soit celui qui a grantsRanged) - ou
+   * null si aucune. Complete canUseRangedAttack (qui dit juste SI le
+   * joueur peut tirer) : celle-ci dit AVEC QUOI, utile pour verifier
+   * requiresAmmo sans redérouler la meme logique deux fois.
+   */
+  getActiveRangedWeaponDef() {
     const mainDef = this.equipped.mainHand
       ? resolveItemDef(this.equipped.mainHand)
       : null;
+    if (mainDef && mainDef.grantsRanged) return mainDef;
     const offDef = this.equipped.offHand
       ? resolveItemDef(this.equipped.offHand)
       : null;
-    return (
-      !!(mainDef && mainDef.grantsRanged) || !!(offDef && offDef.grantsRanged)
-    );
+    if (offDef && offDef.grantsRanged) return offDef;
+    return null;
+  }
+
+  canUseRangedAttack() {
+    return !!this.getActiveRangedWeaponDef();
   }
 
   performRangedAttack(now) {
     if (!this.rangedCooldown.isReady(now)) return;
-    if (!this.canUseRangedAttack()) {
+    const weaponDef = this.getActiveRangedWeaponDef();
+    if (!weaponDef) {
       // pas de declenchement du cooldown ici - aucune attaque n'a
       // reellement eu lieu, le laisser intact pour la prochaine fois ou
       // le joueur aura une vraie arme a distance equipee
       this.showLootToast("Aucune arme à distance équipée");
       return;
     }
+
+    // arme PHYSIQUE (arc/arbalete) : consomme une munition de la pile
+    // encochee (this.equipped.quiver) - MAIS uniquement si c'est la
+    // BONNE munition (requiresAmmo est desormais l'itemId EXACT requis,
+    // pas juste un booleen "a besoin de munitions") : un carreau ne peut
+    // jamais alimenter un arc, ni une fleche une arbalete. Arme MAGIQUE
+    // (baton, requiresAmmo absent/false) : tir illimite. Meme garde "pas
+    // de cooldown declenche" que ci-dessus si la bonne munition manque.
+    if (weaponDef.requiresAmmo) {
+      const requiredAmmoId = weaponDef.requiresAmmo;
+      if (!this.equipped.quiver) {
+        this.showLootToast("Aucune munition équipée");
+        return;
+      }
+      if (this.equipped.quiver !== requiredAmmoId) {
+        this.showLootToast("Mauvaise munition équipée");
+        return;
+      }
+      const ammoEntry = this.inventory.find((i) => i.itemId === requiredAmmoId);
+      if (!ammoEntry || ammoEntry.quantity <= 0) {
+        this.showLootToast("Plus de munitions !");
+        return;
+      }
+      ammoEntry.quantity -= 1;
+      if (ammoEntry.quantity <= 0) {
+        const idx = this.inventory.indexOf(ammoEntry);
+        this.inventory.splice(idx, 1);
+        this.equipped.quiver = null; // plus rien a encocher - perd aussi le bonus de statBonus de cette munition
+        const oldMaxHp = this.playerMaxHp;
+        this.recalculatePlayerStats();
+        this.adjustHpAfterMaxHpChange(oldMaxHp);
+        this.events.emit("equipment-updated", { ...this.equipped });
+      }
+      // pas de persistProgress() ici - trop frequent (chaque tir), la
+      // sauvegarde periodique (cf. this.time.addEvent dans create())
+      // suffit a capturer ca, meme principe que les PV en plein combat
+      this.events.emit("inventory-updated", [...this.inventory]);
+    }
+
+    // arme MAGIQUE (baton) : coute du mana au lieu de munitions
+    // physiques - meme structure de garde que requiresAmmo ci-dessus
+    // (bloque, sans declencher le cooldown, si pas assez de mana). A sec,
+    // le joueur retombe naturellement sur la melee pure (le baton n'a
+    // aucun bonus de meleeDamage, cf. itemDefs.js) - aucun code
+    // supplementaire necessaire pour "forcer" ce repli, il decoule deja
+    // du fait que Space (melee) reste toujours disponible independamment.
+    if (weaponDef.manaCost) {
+      if (this.playerMana < weaponDef.manaCost) {
+        this.showLootToast("Plus assez de mana !");
+        return;
+      }
+      this.playerMana -= weaponDef.manaCost;
+      // pas de persistProgress() ici non plus - meme raisonnement que
+      // les munitions ci-dessus (trop frequent, la sauvegarde periodique suffit)
+      this.events.emit("player-mana-changed", {
+        mana: this.playerMana,
+        maxMana: this.playerMaxMana,
+      });
+    }
+
     this.rangedCooldown.trigger(now);
 
     // vise automatiquement l'ennemi VISIBLE le plus proche a portee,
@@ -3073,6 +3282,55 @@ export default class MainScene extends Phaser.Scene {
     this.projectiles = remaining;
   }
 
+  /**
+   * Fait apparaitre un coffre de butin a une position PIXEL donnee (pas
+   * en cases, contrairement aux coffres pre-places du niveau) - utilise
+   * par damageEnemy a la mort d'un ennemi normal avec du butin (cf.
+   * enemy.drops), plutot que de donner les objets instantanement comme
+   * avant. Reutilise EXACTEMENT le meme systeme visuel/d'interaction que
+   * les coffres pre-places (this.chests, meme boucle d'ouverture dans
+   * performInteraction) - simplement cree au RUNTIME plutot qu'a la
+   * generation du niveau.
+   *
+   * JAMAIS suivi dans currentFloorOpenedChests (contrairement aux
+   * coffres pre-places) : ephemere par nature - si le joueur quitte
+   * l'etage et revient, tous les ennemis sont de toute facon regeneres,
+   * un coffre de butin d'une visite precedente n'aurait pas de sens a
+   * faire persister.
+   */
+  spawnLootChest(pixelX, pixelY, lootItems) {
+    if (!lootItems || lootItems.length === 0) return;
+
+    const variantRng = createRng(
+      `${this.currentSeed}-enemy-chest-${this.nextLootChestId}`,
+    );
+    const variant =
+      CHEST_VARIANTS[Math.floor(variantRng() * CHEST_VARIANTS.length)];
+    const sprite = this.add.sprite(
+      pixelX,
+      pixelY,
+      CHEST_SPRITESHEET.key,
+      variant.closedFrame,
+    );
+    sprite.setDepth(7);
+    this.physics.add.existing(sprite, true);
+    this.levelColliders.push(this.physics.add.collider(this.hero, sprite));
+    // pas de collider ennemi, meme raison que les coffres pre-places
+    // (cf. le commentaire correspondant plus haut dans loadLevel)
+
+    this.chests.push({
+      sprite,
+      index: -1 - this.nextLootChestId, // negatif = jamais confondu avec un index de coffre pre-place (toujours >= 0)
+      opened: false,
+      lootItems, // TABLEAU (nouveau champ) - distinct de `loot` (singulier, coffres pre-places), cf. performInteraction
+      x: Math.round(pixelX / TILE_SIZE - 0.5),
+      y: Math.round(pixelY / TILE_SIZE - 0.5),
+      variant,
+      ephemeral: true, // jamais pousse dans currentFloorOpenedChests a l'ouverture, cf. performInteraction
+    });
+    this.nextLootChestId++;
+  }
+
   damageEnemy(enemy, amount) {
     const result = applyDamage(enemy, amount);
     enemy.hp = result.hp;
@@ -3082,10 +3340,16 @@ export default class MainScene extends Phaser.Scene {
       this.events.emit("xp-changed", { xp: this.xp });
       this.checkLevelUp();
       this.currentFloorKills.push(enemy.spawnIndex); // ne reapparait plus si on sauvegarde+reprend SANS avoir quitte cet etage
-      if (enemy.drop) {
-        this.addItemToInventory(enemy.drop.itemId, enemy.drop.quantity);
-        const itemDef = resolveItemDef(enemy.drop.itemId);
-        this.showLootToast(`Trouvé : ${itemDef.name} x${enemy.drop.quantity}`);
+      // ennemi NORMAL avec du butin : fait apparaitre un coffre a
+      // ouvrir plutot que de donner les objets instantanement (cf.
+      // spawnLootChest) - peut contenir PLUSIEURS objets a la fois
+      // (enemy.drops, tableau, cf. ArpgController.js/rollMultipleLoot),
+      // contrairement a l'ancien ramassage automatique d'un seul objet.
+      // Les BOSS gardent leur comportement instantane inchange (cf. le
+      // bloc enemy.isBoss plus bas, qui utilise toujours enemy.drop
+      // singulier) - hors du perimetre de cette demande.
+      if (enemy.drops && enemy.drops.length > 0) {
+        this.spawnLootChest(enemy.sprite.x, enemy.sprite.y, enemy.drops);
       }
 
       // un boss vaincu donne TOUJOURS l'objet cible de toute quete
@@ -3243,10 +3507,15 @@ export default class MainScene extends Phaser.Scene {
     this.playerLevel = level;
     this.recalculatePlayerStats(); // niveau + bonus d'equipement combines
     this.playerHp = this.playerMaxHp; // leve de niveau soigne entierement
+    this.playerMana = this.playerMaxMana; // idem pour le mana
 
     this.events.emit("player-hp-changed", {
       hp: this.playerHp,
       maxHp: this.playerMaxHp,
+    });
+    this.events.emit("player-mana-changed", {
+      mana: this.playerMana,
+      maxMana: this.playerMaxMana,
     });
     this.events.emit("level-up", { level });
     this.persistProgress();

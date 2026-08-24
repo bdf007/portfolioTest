@@ -35,6 +35,16 @@ const ITEM_TYPES = {
     price: 15, // vendable en boutique - cf. shopGenerator.js. Absent = jamais en vente (or, objets de quete)
   },
 
+  manaPotion: {
+    id: "manaPotion",
+    category: "consumable",
+    name: "Potion de mana",
+    description: "Restaure 10 PM à l'usage.",
+    effect: { mana: 10 },
+    stackable: true,
+    price: 15,
+  },
+
   ironSword: {
     id: "ironSword",
     category: "equipment",
@@ -54,6 +64,7 @@ const ITEM_TYPES = {
     slot: "mainHand",
     twoHanded: true,
     grantsRanged: true, // sans arme marquee ainsi equipee (ici ou en offHand), l'attaque a distance est indisponible - cf. MainScene.canUseRangedAttack
+    requiresAmmo: "woodenArrow", // itemId EXACT requis (pas juste un booleen) - un carreau ne peut pas alimenter un arc, cf. MainScene.performRangedAttack
     name: "Arc de chasse",
     description: "+4 dégâts à distance.",
     statBonus: { rangedDamage: 4 },
@@ -66,6 +77,7 @@ const ITEM_TYPES = {
     slot: "mainHand", // une main - peut cohabiter avec une epee (double armement automatique si l'autre main est libre, cf. MainScene.equipItem) ou un bouclier
     twoHanded: false,
     grantsRanged: true,
+    requiresAmmo: "crossbowBolt", // munition DISTINCTE des fleches
     name: "Arbalète",
     description: "+3 dégâts à distance. Se manie a une main.",
     statBonus: { rangedDamage: 3 },
@@ -113,6 +125,87 @@ const ITEM_TYPES = {
     description: "Un artefact qui semble important.",
     stackable: false,
   },
+  woodenSword: {
+    id: "woodenSword",
+    category: "equipment",
+    slot: "mainHand",
+    twoHanded: false,
+    grantsRanged: false,
+    name: "Épée en bois",
+    description: "+1 dégât au corps à corps. Arme d'entraînement de départ.",
+    statBonus: { meleeDamage: 1 },
+    stackable: false,
+  },
+  woodenShield: {
+    id: "woodenShield",
+    category: "equipment",
+    slot: "offHand",
+    twoHanded: false,
+    grantsRanged: false,
+    name: "Bouclier en bois",
+    description: "+1 défense. Équipement d'entraînement de départ.",
+    statBonus: { defense: 1 },
+    stackable: false,
+  },
+  woodenBow: {
+    id: "woodenBow",
+    category: "equipment",
+    slot: "mainHand",
+    twoHanded: true,
+    grantsRanged: true,
+    requiresAmmo: "woodenArrow",
+    name: "Arc en bois",
+    description:
+      "+1 dégât à distance. Nécessite des flèches. Arme d'entraînement de départ.",
+    statBonus: { rangedDamage: 1 },
+    stackable: false,
+  },
+  woodenDagger: {
+    id: "woodenDagger",
+    category: "equipment",
+    slot: "mainHand",
+    twoHanded: false,
+    grantsRanged: false,
+    name: "Dague en bois",
+    description: "+1 dégât au corps à corps. Arme d'entraînement de départ.",
+    statBonus: { meleeDamage: 1 },
+    stackable: false,
+  },
+  woodenStaff: {
+    id: "woodenStaff",
+    category: "equipment",
+    slot: "mainHand",
+    twoHanded: true,
+    grantsRanged: true,
+    requiresAmmo: false,
+    manaCost: 1,
+    name: "Bâton en bois",
+    description:
+      "+1 dégât à distance. Canalise la magie (1 mana par tir). +1 dégât au corps à corps. Arme d'entraînement de départ.",
+    statBonus: { meleeDamage: 1, rangedDamage: 1 },
+    stackable: false,
+  },
+  woodenArrow: {
+    id: "woodenArrow",
+    category: "ammo",
+    slot: "quiver",
+    name: "Flèche en bois",
+    description: "+1 dégât à distance tant que des flèches sont encochées.",
+    statBonus: { rangedDamage: 1 },
+    stackable: true,
+    price: 2,
+  },
+  crossbowBolt: {
+    id: "crossbowBolt",
+    category: "ammo",
+    slot: "quiver",
+    name: "Carreau",
+    description:
+      "+1 dégât à distance tant que des carreaux sont encochés. Munition de l'arbalète uniquement.",
+    statBonus: { rangedDamage: 1 },
+    stackable: true,
+    price: 3,
+  },
   sealedPackage: {
     id: "sealedPackage",
     category: "questItem",
@@ -134,6 +227,7 @@ const ITEM_TYPES = {
 const LOOT_TABLES = {
   chestStandard: [
     { itemId: "healthPotion", weight: 35 },
+    { itemId: "manaPotion", weight: 35 },
     { itemId: "gold", weight: 35, quantityRange: [5, 20] },
     { itemId: "ironSword", weight: 10 },
     { itemId: "huntingBow", weight: 10 },
@@ -143,9 +237,13 @@ const LOOT_TABLES = {
   ],
 
   enemyDrop: [
-    { itemId: null, weight: 50 }, // la plupart des ennemis ne laissent rien
-    { itemId: "gold", weight: 35, quantityRange: [1, 5] },
-    { itemId: "healthPotion", weight: 15 },
+    { itemId: null, weight: 20 }, // la plupart des ennemis ne laissent rien
+    { itemId: "gold", weight: 28, quantityRange: [1, 5] },
+    { itemId: "healthPotion", weight: 10 },
+    { itemId: "manaPotion", weight: 10 },
+    { itemId: "ironSword", weight: 10 },
+    { itemId: "woodenArrow", weight: 13, quantityRange: [1, 4] }, // seul objet "en bois" lootable - cf. itemDefs.js
+    { itemId: "crossbowBolt", weight: 9, quantityRange: [1, 4] },
   ],
 
   bossDrop: [
@@ -169,9 +267,10 @@ const LOOT_TABLES = {
   // objet - poids "rien" tres majoritaire, pour ne pas transformer
   // chaque quete en garantie d'equipement gratuit
   questReward: [
-    { itemId: null, weight: 60 },
+    { itemId: null, weight: 50 },
     { itemId: "gold", weight: 20, quantityRange: [10, 30] },
     { itemId: "healthPotion", weight: 10 },
+    { itemId: "manaPotion", weight: 10 },
     { itemId: "ironSword", weight: 4 },
     { itemId: "huntingBow", weight: 4 },
     { itemId: "crossbow", weight: 4 },
@@ -214,6 +313,48 @@ function rollLoot(tableName, rng) {
 }
 
 /**
+ * Comme rollLoot, mais tire PLUSIEURS fois independamment (chaque tirage
+ * peut individuellement ne rien donner) et renvoie la liste des resultats
+ * NON-nuls uniquement - jamais d'entree `null` dans le tableau renvoye.
+ * Sert au coffre de butin d'ennemi (cf. MainScene.js), qui peut contenir
+ * plusieurs objets a la fois (or, fleche, potion...) plutot qu'un seul
+ * objet ramasse instantanement comme avant.
+ *
+ * N'accepte JAMAIS deux fois le meme itemId dans un seul coffre (ex:
+ * plusieurs objets a la fois (or, fleche, potion...) plutot qu'un seul
+ * objet ramasse instantanement comme avant.
+ *
+ * N'accepte JAMAIS deux fois le meme itemId dans un seul coffre (ex:
+ * "Or x2" et "Or x4" comme deux lignes separees, jamais fusionnees en
+ * "Or x6") - si un tirage tombe sur un itemId deja obtenu dans ce meme
+ * lot, une SEULE nouvelle tentative est faite ; si elle est encore en
+ * double, ce tirage est simplement abandonne (devient "rien") plutot que
+ * de boucler indefiniment sur une petite table.
+ *
+ * @param {string} tableName
+ * @param {Function} rng
+ * @param {number} rolls nombre de tirages independants
+ * @returns {{itemId:string, quantity:number}[]} peut etre vide (tous les
+ *   tirages ont donne "rien" ou un doublon), jamais null
+ */
+function rollMultipleLoot(tableName, rng, rolls) {
+  const results = [];
+  const usedItemIds = new Set();
+  for (let i = 0; i < rolls; i++) {
+    let result = rollLoot(tableName, rng);
+    if (result && usedItemIds.has(result.itemId)) {
+      result = rollLoot(tableName, rng); // une seule nouvelle tentative
+      if (result && usedItemIds.has(result.itemId)) result = null; // encore en double -> abandonne ce tirage
+    }
+    if (result) {
+      usedItemIds.add(result.itemId);
+      results.push(result);
+    }
+  }
+  return results;
+}
+
+/**
  * Liste des clés d'objets vendables en boutique - tout objet ayant un
  * `price` defini (equipement/consommables ci-dessus) - l'or et les
  * objets de quete n'en ont volontairement pas, donc jamais achetables.
@@ -243,6 +384,7 @@ module.exports = {
   ITEM_TYPES,
   LOOT_TABLES,
   rollLoot,
+  rollMultipleLoot,
   getPurchasableItemIds,
   getQuestItemIds,
 };
