@@ -50,17 +50,17 @@ const EARLIEST_BOSS_DEPTH = 5;
 const BOSS_ASSIGNMENTS = [
   {
     depth: 5,
-    type: "ghostskull",
+    type: "bigbat",
     // valeurs directement reprises de l'ancien calcul par formule a
     // depth=5 (cf. l'historique de enemyStats.js) - preserve le
     // comportement actuel a l'identique pour ce boss precis, seul a
     // exister pour l'instant
-    stats: { hp: 291, damage: 21, defense: 2, speed: 62, xpReward: 157 },
+    stats: { hp: 100, damage: 10, defense: 2, speed: 62, xpReward: 50 },
   },
   {
     depth: 9,
-    type: "BigBug",
-    stats: { hp: 400, damage: 25, defense: 3, speed: 65, xpReward: 200 },
+    type: "bigbat",
+    stats: { hp: 200, damage: 20, defense: 4, speed: 62, xpReward: 70 },
     // valeurs directement reprises de l'ancien calcul par formule a
   },
   // Exemple pour un futur boss, une fois son sprite + ses stats prets :

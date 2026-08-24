@@ -38,7 +38,9 @@ const ITEM_TYPES = {
   ironSword: {
     id: "ironSword",
     category: "equipment",
-    slot: "weapon",
+    slot: "mainHand",
+    twoHanded: false,
+    grantsRanged: false, // explicite plutot qu'absent - purement melee, ne debloque jamais l'attaque a distance seule (cf. MainScene.canUseRangedAttack)
     name: "Épée de fer",
     description: "+5 dégâts au corps à corps.",
     statBonus: { meleeDamage: 5 },
@@ -49,12 +51,26 @@ const ITEM_TYPES = {
   huntingBow: {
     id: "huntingBow",
     category: "equipment",
-    slot: "weapon",
+    slot: "mainHand",
+    twoHanded: true,
+    grantsRanged: true, // sans arme marquee ainsi equipee (ici ou en offHand), l'attaque a distance est indisponible - cf. MainScene.canUseRangedAttack
     name: "Arc de chasse",
     description: "+4 dégâts à distance.",
     statBonus: { rangedDamage: 4 },
     stackable: false,
     price: 55,
+  },
+  crossbow: {
+    id: "crossbow",
+    category: "equipment",
+    slot: "mainHand", // une main - peut cohabiter avec une epee (double armement automatique si l'autre main est libre, cf. MainScene.equipItem) ou un bouclier
+    twoHanded: false,
+    grantsRanged: true,
+    name: "Arbalète",
+    description: "+3 dégâts à distance. Se manie a une main.",
+    statBonus: { rangedDamage: 3 },
+    stackable: false,
+    price: 50,
   },
 
   leatherArmor: {
@@ -71,7 +87,7 @@ const ITEM_TYPES = {
   vitalityCharm: {
     id: "vitalityCharm",
     category: "equipment",
-    slot: "accessory",
+    slot: "necklace",
     name: "Charme de vitalité",
     description: "+20 PV maximum.",
     statBonus: { maxHp: 20 },
@@ -97,6 +113,13 @@ const ITEM_TYPES = {
     description: "Un artefact qui semble important.",
     stackable: false,
   },
+  sealedPackage: {
+    id: "sealedPackage",
+    category: "questItem",
+    name: "Colis scellé",
+    description: "À livrer à son destinataire, sans l'ouvrir.",
+    stackable: false,
+  },
 };
 
 /**
@@ -114,6 +137,7 @@ const LOOT_TABLES = {
     { itemId: "gold", weight: 35, quantityRange: [5, 20] },
     { itemId: "ironSword", weight: 10 },
     { itemId: "huntingBow", weight: 10 },
+    { itemId: "crossbow", weight: 10 },
     { itemId: "leatherArmor", weight: 8 },
     { itemId: "vitalityCharm", weight: 2 },
   ],
@@ -127,6 +151,7 @@ const LOOT_TABLES = {
   bossDrop: [
     { itemId: "ironSword", weight: 25 },
     { itemId: "huntingBow", weight: 25 },
+    { itemId: "crossbow", weight: 25 },
     { itemId: "leatherArmor", weight: 20 },
     { itemId: "vitalityCharm", weight: 10 },
     { itemId: "gold", weight: 20, quantityRange: [50, 100] },
@@ -149,6 +174,7 @@ const LOOT_TABLES = {
     { itemId: "healthPotion", weight: 10 },
     { itemId: "ironSword", weight: 4 },
     { itemId: "huntingBow", weight: 4 },
+    { itemId: "crossbow", weight: 4 },
     { itemId: "leatherArmor", weight: 2 },
   ],
 };

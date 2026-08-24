@@ -740,6 +740,16 @@ export const SPRITE_REGISTRY = {
     hitbox: computeSafeHitbox(32, 40, 1.2),
   },
   // Boss
+  bigbat: {
+    key: "bigbat",
+    displayName: "chauve-souris géante",
+    path: bat1aSpritesheet,
+    frameWidth: 32,
+    frameHeight: 40,
+    scale: 1,
+    animations: STANDARD_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(32, 40, 1),
+  },
   ghostskull: {
     key: "ghostskull",
     displayName: "crâne fantôme",
@@ -1153,11 +1163,80 @@ export const SPRITE_REGISTRY = {
   },
 };
 
+/**
+ * Profils de stats des 4 archetypes RPG classiques - meme forme que
+ * BASE_STATS/GROWTH_PER_LEVEL dans leveling.js (`base` = stats a
+ * depth=1, `growth` = gain par niveau, PEUT etre fractionnaire
+ * contrairement aux valeurs generiques - cf. Math.round dans
+ * getPlayerStatsForLevel). Volontairement distincts sans qu'aucun ne
+ * domine les autres en puissance globale - chacun echange une force
+ * contre une faiblesse, principe classique de RPG.
+ *
+ * `moveSpeed`/`visionRadius`/`meleeRange`/`rangedRange` sont FIXES (pas
+ * de progression par niveau, contrairement a base/growth) - lus une
+ * seule fois a la creation du heros (cf. MainScene.js), jamais
+ * recalcules ensuite :
+ *
+ * - Guerrier : le plus de PV/defense, degats corps-a-corps solides,
+ *   quasi aucun degat a distance - tank de melee pur. Lent, vue courte
+ *   (focalise sur ce qui est proche), la plus longue portee de melee
+ *   (grande arme), la plus courte portee a distance (pas son domaine).
+ * - Archer : degats a distance eleves des le depart et qui montent vite,
+ *   PV/defense moderes. Rapide, la meilleure vue (eclaireur/chasseur),
+ *   portee de melee courte, la meilleure portee a distance.
+ * - Voleur : le plus haut degat corps-a-corps de tous, mais PV/defense
+ *   les plus bas du groupe melee. Le plus rapide de tous, bonne vue
+ *   (furtif/alerte), portee de melee moyenne, portee a distance
+ *   inferieure a la moyenne.
+ * - Mage : degats a distance les plus eleves de tous, mais PV/defense
+ *   les plus bas du jeu. Vitesse moderee, vue moyenne, la plus courte
+ *   portee de melee (evite le corps-a-corps), la meilleure portee a
+ *   distance a egalite avec l'archer (portee de la magie).
+ */
+const HERO_STATS_PROFILES = {
+  guerrier: {
+    base: { maxHp: 130, meleeDamage: 10, rangedDamage: 2, defense: 3 },
+    growth: { maxHp: 24, meleeDamage: 2.5, rangedDamage: 0.5, defense: 1.4 },
+    moveSpeed: 130,
+    visionRadius: 5,
+    meleeRange: 56,
+    rangedRange: 300,
+  },
+  archer: {
+    base: { maxHp: 90, meleeDamage: 4, rangedDamage: 10, defense: 1 },
+    growth: { maxHp: 16, meleeDamage: 1, rangedDamage: 2.6, defense: 0.8 },
+    moveSpeed: 160,
+    visionRadius: 8,
+    meleeRange: 42,
+    rangedRange: 440,
+  },
+  voleur: {
+    base: { maxHp: 85, meleeDamage: 11, rangedDamage: 3, defense: 0 },
+    growth: { maxHp: 15, meleeDamage: 2.8, rangedDamage: 0.7, defense: 0.6 },
+    moveSpeed: 175,
+    visionRadius: 7,
+    meleeRange: 46,
+    rangedRange: 340,
+  },
+  mage: {
+    base: { maxHp: 70, meleeDamage: 2, rangedDamage: 12, defense: 0 },
+    growth: { maxHp: 12, meleeDamage: 0.5, rangedDamage: 3, defense: 0.4 },
+    moveSpeed: 140,
+    visionRadius: 6,
+    meleeRange: 38,
+    rangedRange: 420,
+  },
+};
+
 export const HERO_ROSTER = [
-  { id: "hero1", label: "Héros 1", statsOverride: null },
-  { id: "hero2", label: "Héros 2", statsOverride: null },
-  { id: "hero3", label: "Héros 3", statsOverride: null },
-  { id: "hero4", label: "Héros 4", statsOverride: null },
+  {
+    id: "hero1",
+    label: "Guerrier",
+    statsOverride: HERO_STATS_PROFILES.guerrier,
+  },
+  { id: "hero2", label: "Archer", statsOverride: HERO_STATS_PROFILES.archer },
+  { id: "hero3", label: "Voleur", statsOverride: HERO_STATS_PROFILES.voleur },
+  { id: "hero4", label: "Mage", statsOverride: HERO_STATS_PROFILES.mage },
 ];
 
 export function resolveEnemySprite(typeKey) {
@@ -1188,6 +1267,20 @@ export function resolveHeroSprite(heroId) {
     return { entry: SPRITE_REGISTRY[heroId], spriteKey: heroId };
   }
   return { entry: SPRITE_REGISTRY.hero1, spriteKey: "hero1" };
+}
+
+/**
+ * Profil de stats (cf. HERO_STATS_PROFILES) du heros choisi, pour
+ * getPlayerStatsForLevel (leveling.js) - repli sur celui de hero1 si
+ * l'id recu ne correspond a aucune entree connue du roster (meme
+ * logique de repli que resolveHeroSprite).
+ *
+ * @param {string} heroId
+ * @returns {{base:Object, growth:Object}}
+ */
+export function resolveHeroStatsOverride(heroId) {
+  const hero = HERO_ROSTER.find((h) => h.id === heroId) || HERO_ROSTER[0];
+  return hero.statsOverride;
 }
 
 export function getUniqueTexturesToLoad() {

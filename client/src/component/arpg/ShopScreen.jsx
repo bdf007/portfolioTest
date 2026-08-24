@@ -8,9 +8,16 @@ import { resolveItemDef } from "./itemDefs";
  * directement dans `inventory` (déjà suivi par ailleurs), pas besoin
  * d'une prop dédiée.
  */
-export default function ShopScreen({ stock, inventory, onBuy, onClose }) {
+export default function ShopScreen({
+  stock,
+  inventory,
+  onBuy,
+  onSell,
+  onClose,
+}) {
   const goldEntry = inventory.find((i) => i.itemId === "gold");
   const currentGold = goldEntry ? goldEntry.quantity : 0;
+  const SELL_PRICE_RATIO = 0.5; // doit rester synchronise avec MainScene.js (SELL_PRICE_RATIO)
 
   return (
     <div
@@ -55,7 +62,17 @@ export default function ShopScreen({ stock, inventory, onBuy, onClose }) {
         Or : {currentGold}
       </div>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+      <div style={{ fontSize: 13, color: "#999", marginBottom: 8 }}>
+        Acheter
+      </div>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: 8,
+          marginBottom: 20,
+        }}
+      >
         {stock.map((shopItem, index) => {
           const def = resolveItemDef(shopItem.itemId);
           const canAfford = currentGold >= shopItem.price;
@@ -96,6 +113,58 @@ export default function ShopScreen({ stock, inventory, onBuy, onClose }) {
                 }}
               >
                 Acheter
+              </button>
+            </div>
+          );
+        })}
+      </div>
+
+      <div style={{ fontSize: 13, color: "#999", marginBottom: 8 }}>Vendre</div>
+      {inventory.every((item) => !resolveItemDef(item.itemId).price) && (
+        <div style={{ color: "#666", fontSize: 13 }}>
+          Rien à vendre pour l'instant.
+        </div>
+      )}
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        {inventory.map((item, index) => {
+          const def = resolveItemDef(item.itemId);
+          if (!def.price) return null; // objets sans prix (or, objets de quete) jamais vendables
+          const sellPrice = Math.floor(def.price * SELL_PRICE_RATIO);
+          return (
+            <div
+              key={`${item.itemId}-${index}`}
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                padding: 10,
+                background: "#1e2029",
+                border: "1px solid #444",
+                borderRadius: 8,
+              }}
+            >
+              <div>
+                <div style={{ fontSize: 13 }}>
+                  {def.name}
+                  {item.quantity > 1 ? ` x${item.quantity}` : ""}
+                </div>
+                <div style={{ fontSize: 12, color: "#d4af37", marginTop: 4 }}>
+                  {sellPrice} or
+                </div>
+              </div>
+              <button
+                onClick={() => onSell(index)}
+                style={{
+                  padding: "6px 12px",
+                  fontSize: 12,
+                  borderRadius: 6,
+                  border: "1px solid #8a7050",
+                  background: "#3a2f20",
+                  color: "#f0e6d0",
+                  cursor: "pointer",
+                }}
+              >
+                Vendre
               </button>
             </div>
           );

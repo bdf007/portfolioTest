@@ -11,6 +11,7 @@ import TravelHubScreen from "./TravelHubScreen";
 import ShopScreen from "./ShopScreen";
 import TouchControls from "./TouchControls";
 import { computeLevelFromXp, getPlayerStatsForLevel } from "./leveling";
+import { resolveHeroStatsOverride } from "./spriteRegistry";
 import { computeEquipmentBonuses } from "./equipment";
 import { fetchMyGames, abandonGame } from "../../api/arpgClient";
 
@@ -34,15 +35,24 @@ export default function Arpg() {
   const containerRef = useRef(null);
   const gameRef = useRef(null);
 
-  // detection tactile (capacite, pas user-agent - fiable et stable, pas
-  // besoin de sniffer une chaine fragile) - decide a la fois l'affichage
-  // des controles tactiles ET le besoin de forcer le mode paysage. Une
-  // seule lecture au montage : le TYPE d'appareil ne change jamais en
-  // cours de partie, inutile de re-detecter a chaque render.
+  // detection du POINTEUR PRINCIPAL (pas juste "capacite tactile
+  // presente") - decide a la fois l'affichage des controles tactiles ET
+  // le besoin de forcer le mode paysage. `(pointer: coarse) and (hover:
+  // none)` est le motif standard pour "l'appareil principal est un
+  // doigt, sans souris/trackpad" - contrairement a un simple test de
+  // capacite tactile (ontouchstart/maxTouchPoints), qui declenche a tort
+  // sur un ecran ou trackpad tactile de BUREAU (le bureau garde une
+  // souris comme pointeur principal, donc hover:hover - un vrai
+  // telephone n'a jamais de survol possible). Bug trouve en testant :
+  // l'ancienne detection affichait les controles tactiles/le
+  // verrouillage paysage meme sur un poste de bureau equipe d'un ecran
+  // tactile. Une seule lecture au montage : le TYPE d'appareil ne change
+  // jamais en cours de partie, inutile de re-detecter a chaque render.
   const [isMobile] = useState(
     () =>
       typeof window !== "undefined" &&
-      ("ontouchstart" in window || navigator.maxTouchPoints > 0),
+      window.matchMedia &&
+      window.matchMedia("(pointer: coarse) and (hover: none)").matches,
   );
   const [isPortrait, setIsPortrait] = useState(
     () =>
@@ -92,9 +102,16 @@ export default function Arpg() {
   const [exitPrompt, setExitPrompt] = useState(false);
   const [inventory, setInventory] = useState([]);
   const [equipped, setEquipped] = useState({
-    weapon: null,
+    mainHand: null,
+    offHand: null,
     armor: null,
-    accessory: null,
+    helmet: null,
+    pants: null,
+    boots: null,
+    belt: null,
+    ring1: null,
+    ring2: null,
+    necklace: null,
   });
   const [inventoryOpen, setInventoryOpen] = useState(false);
   const [travelDestinations, setTravelDestinations] = useState(null); // null = ferme, tableau = ouvert avec ces destinations
@@ -102,10 +119,19 @@ export default function Arpg() {
   const [questsOpen, setQuestsOpen] = useState(false);
   const [lootToast, setLootToast] = useState(null); // texte de la derniere ligne de butin, ou null - s'efface automatiquement (cf. useEffect du listener 'loot-toast')
   const [minimapVisible, setMinimapVisible] = useState(true);
+  // disposition de deplacement au clavier - 'azerty' (ZQSD, defaut) ou
+  // 'qwerty' (WASD) - cf. MainScene.setKeyboardLayout. Etat duplique ici
+  // (en plus de this.keyboardLayout cote scene) uniquement pour afficher
+  // le libelle correct sur le bouton de bascule.
+  const [keyboardLayout, setKeyboardLayoutState] = useState("azerty");
+  const [username, setUsername] = useState(null);
 
   const loadGamesList = () => {
     fetchMyGames()
-      .then(({ games }) => setGames(games || []))
+      .then(({ games, username }) => {
+        setGames(games || []);
+        setUsername(username || null);
+      })
       .catch(() => setGames([])) // en cas d'echec reseau, liste vide plutot que de bloquer l'ecran
       .finally(() => setPhase("picker"));
   };
@@ -311,6 +337,41 @@ export default function Arpg() {
     if (scene) scene.unpauseGame("quests");
   };
 
+  const handleToggleKeyboardLayout = () => {
+    const next = keyboardLayout === "azerty" ? "qwerty" : "azerty";
+    setKeyboardLayoutState(next);
+    const scene = gameRef.current?.scene.getScene("MainScene");
+    if (scene) scene.setKeyboardLayout(next);
+  };
+
+  // raccourcis clavier globaux - I (inventaire), R (quetes), V (carte) -
+  // basculent (ouvre si ferme, ferme si ouvert), meme principe que le
+  // bouton Carte deja existant, plutot que de toujours ouvrir sans
+  // jamais pouvoir fermer au clavier. e.key (caractere, pas keyCode) :
+  // I/R/V occupent la MEME position physique en AZERTY et QWERTY (seuls
+  // Q/W/A/Z/Z autour d'eux different), pas besoin de la meme gestion de
+  // disposition que le deplacement (cf. MainScene.setKeyboardLayout).
+  // Ne fait rien tant qu'aucune partie n'est en cours (gameRef.current
+  // absent) - evite un effet sur les ecrans de menu (selection de
+  // personnage, liste de parties).
+  useEffect(() => {
+    function handleGlobalKeyDown(e) {
+      if (!gameRef.current) return;
+      const key = e.key.toLowerCase();
+      if (key === "i") {
+        if (inventoryOpen) handleCloseInventory();
+        else handleOpenInventory();
+      } else if (key === "r") {
+        if (questsOpen) handleCloseQuests();
+        else handleOpenQuests();
+      } else if (key === "v") {
+        setMinimapVisible((v) => !v);
+      }
+    }
+    window.addEventListener("keydown", handleGlobalKeyDown);
+    return () => window.removeEventListener("keydown", handleGlobalKeyDown);
+  }, [inventoryOpen, questsOpen]);
+
   const handleTravelToDepth = (depth) => {
     const scene = gameRef.current?.scene.getScene("MainScene");
     if (scene) scene.travelToDepth(depth); // la scene emet 'travel-hub': null, pas besoin de setTravelDestinations ici
@@ -324,6 +385,11 @@ export default function Arpg() {
   const handleBuyItem = (index) => {
     const scene = gameRef.current?.scene.getScene("MainScene");
     if (scene) scene.buyItem(index);
+  };
+
+  const handleSellItem = (index) => {
+    const scene = gameRef.current?.scene.getScene("MainScene");
+    if (scene) scene.sellItem(index);
   };
 
   const handleCloseShop = () => {
@@ -359,6 +425,7 @@ export default function Arpg() {
     return (
       <GameListScreen
         games={games}
+        username={username}
         onResume={handleResumeGame}
         onAbandon={handleAbandonGame}
         onNewGame={handleNewGame}
@@ -367,7 +434,9 @@ export default function Arpg() {
   }
 
   if (phase === "select") {
-    return <CharacterSelectScreen onSelect={handleSelectHero} />;
+    return (
+      <CharacterSelectScreen onSelect={handleSelectHero} isMobile={isMobile} />
+    );
   }
 
   // force le mode paysage UNIQUEMENT pendant la partie elle-meme (pas
@@ -405,7 +474,10 @@ export default function Arpg() {
   const combatStats = {
     level,
     ...(() => {
-      const base = getPlayerStatsForLevel(level);
+      const base = getPlayerStatsForLevel(
+        level,
+        resolveHeroStatsOverride(heroId),
+      );
       const bonus = computeEquipmentBonuses(equipped);
       return {
         maxHp: base.maxHp + bonus.maxHp,
@@ -461,6 +533,23 @@ export default function Arpg() {
         >
           🗺️ Carte
         </button>
+        {!isMobile && (
+          <button
+            onClick={handleToggleKeyboardLayout}
+            title="Basculer la disposition clavier (I: inventaire, R: quêtes, V: carte, E: action)"
+            style={{
+              padding: "4px 12px",
+              fontSize: 13,
+              borderRadius: 6,
+              border: "1px solid #555",
+              background: "#2a2a35",
+              color: "#eee",
+              cursor: "pointer",
+            }}
+          >
+            ⌨️ {keyboardLayout === "azerty" ? "ZQSD" : "WASD"}
+          </button>
+        )}
         <button
           onClick={handleOpenQuests}
           style={{
@@ -777,6 +866,7 @@ export default function Arpg() {
             inventory={inventory}
             equipped={equipped}
             stats={combatStats}
+            heroId={heroId}
             onEquip={handleEquip}
             onUnequip={handleUnequip}
             onUse={handleUseConsumable}
@@ -798,6 +888,7 @@ export default function Arpg() {
             stock={shopStock}
             inventory={inventory}
             onBuy={handleBuyItem}
+            onSell={handleSellItem}
             onClose={handleCloseShop}
           />
         )}

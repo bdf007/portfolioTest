@@ -74,7 +74,7 @@ const ENEMY_TYPES = {
     defenseGrowthEveryNDepths: 3,
   },
   bat1: {
-    base: { hp: 8, damage: 2, xpReward: 7 },
+    base: { hp: 10, damage: 2, xpReward: 1 },
     growthRate: { hp: 1.13, damage: 1.1, xpReward: 1.08 },
     speedBase: 120,
     speedMax: 180,
@@ -82,7 +82,7 @@ const ENEMY_TYPES = {
     defenseGrowthEveryNDepths: 5,
   },
   bat1a: {
-    base: { hp: 8, damage: 2, xpReward: 7 },
+    base: { hp: 12, damage: 2, xpReward: 2 },
     growthRate: { hp: 1.13, damage: 1.1, xpReward: 1.08 },
     speedBase: 120,
     speedMax: 180,
@@ -211,6 +211,7 @@ const ENEMY_TYPES = {
     defenseGrowthEveryNDepths: 4,
   },
   naga1: {
+    attackType: "ranged",
     base: { hp: 23, damage: 5, xpReward: 11 },
     growthRate: { hp: 1.19, damage: 1.16, xpReward: 1.14 },
     speedBase: 80,
@@ -219,6 +220,7 @@ const ENEMY_TYPES = {
     defenseGrowthEveryNDepths: 4,
   },
   naga2: {
+    attackType: "ranged",
     base: { hp: 24, damage: 5, xpReward: 11 },
     growthRate: { hp: 1.2, damage: 1.17, xpReward: 1.15 },
     speedBase: 75,
@@ -227,6 +229,7 @@ const ENEMY_TYPES = {
     defenseGrowthEveryNDepths: 4,
   },
   naga3: {
+    attackType: "ranged",
     base: { hp: 25, damage: 5, xpReward: 12 },
     growthRate: { hp: 1.21, damage: 1.18, xpReward: 1.16 },
     speedBase: 70,
@@ -235,6 +238,7 @@ const ENEMY_TYPES = {
     defenseGrowthEveryNDepths: 4,
   },
   naga4: {
+    attackType: "ranged",
     base: { hp: 32, damage: 9, xpReward: 16 },
     growthRate: { hp: 1.22, damage: 1.19, xpReward: 1.17 },
     speedBase: 65,
@@ -243,6 +247,7 @@ const ENEMY_TYPES = {
     defenseGrowthEveryNDepths: 4,
   },
   naga5: {
+    attackType: "ranged",
     base: { hp: 22, damage: 4, xpReward: 10 },
     growthRate: { hp: 1.23, damage: 1.2, xpReward: 1.18 },
     speedBase: 60,
@@ -252,6 +257,7 @@ const ENEMY_TYPES = {
   },
 
   naga6: {
+    attackType: "ranged",
     base: { hp: 22, damage: 4, xpReward: 10 },
     growthRate: { hp: 1.24, damage: 1.21, xpReward: 1.19 },
     speedBase: 55,
@@ -260,6 +266,7 @@ const ENEMY_TYPES = {
     defenseGrowthEveryNDepths: 4,
   },
   naga7: {
+    attackType: "ranged",
     base: { hp: 21, damage: 4, xpReward: 10 },
     growthRate: { hp: 1.25, damage: 1.22, xpReward: 1.2 },
     speedBase: 50,
@@ -333,23 +340,6 @@ const ENEMY_TYPES = {
     defenseGrowthEveryNDepths: 4,
   },
 
-  // Boss du premier donjon (depth=5) - cf. biomeConfig.js pour le contexte
-  // premier boss (etage 5 pour l'instant, cf. biomeConfig.js/ArpgController.js).
-  // Meme courbe de croissance que enemyDefault (coherence si un boss
-  // apparait un jour plus profond), mais base bien plus haute - a
-  // depth=5, ca donne environ 291 PV / 21 degats / 157 xp contre 39/7/16
-  // pour un ennemi normal (~7.5x plus de PV, 3x plus de degats, gros
-  // bonus d'XP a la mort). Plus lent (ne patrouille jamais, cf.
-  // enemyBehavior.js - toujours en garde), defense qui monte plus vite
-  // (tous les 2 etages au lieu de 3).
-  // ghostskull: {
-  //   base: { hp: 150, damage: 12, xpReward: 100 },
-  //   growthRate: { hp: 1.18, damage: 1.15, xpReward: 1.12 },
-  //   speedBase: 60,
-  //   speedMax: 100,
-  //   speedGrowthPerDepth: 2,
-  //   defenseGrowthEveryNDepths: 2,
-  // },
   maxibee1: {
     base: { hp: 8, damage: 2, xpReward: 7 },
     growthRate: { hp: 1.13, damage: 1.1, xpReward: 1.08 },
@@ -400,6 +390,11 @@ function getEnemyStatsForDepth(depth, typeKey = "enemyDefault") {
       type.speedMax,
       type.speedBase + n * type.speedGrowthPerDepth,
     ),
+    // 'melee' par defaut (comportement inchange pour tout type qui ne
+    // definit pas ce champ) - 'ranged' pour les types qui doivent
+    // attaquer a distance plutot qu'au contact (cf. les nagas,
+    // MainScene.updateEnemyAttacks/updateEnemyProjectiles cote client)
+    attackType: type.attackType || "melee",
   };
 }
 
