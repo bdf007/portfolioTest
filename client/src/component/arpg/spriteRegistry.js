@@ -59,6 +59,10 @@ import lamia1Spritesheet from "../../assets/lamia1.png";
 import lamia2Spritesheet from "../../assets/lamia2.png";
 import lamia3Spritesheet from "../../assets/lamia3.png";
 import lamia4Spritesheet from "../../assets/lamia4.png";
+import minisMonksSpritesheet from "../../assets/minis_monks.png";
+import minisSoldiers1Spritesheet from "../../assets/minis_soldiers1.png";
+import minisSoldiers2Spritesheet from "../../assets/minis_soldiers2.png";
+
 //import boss
 import GhostskullSpritesheet from "../../assets/$GhostSkull_1.png";
 import BigSpiderSpritesheet from "../../assets/big_spider.png";
@@ -156,6 +160,94 @@ export const STANDARD_ANIMATION_FRAMES_4X4 = {
   idleUp: 13,
 };
 
+export const STANDARD_ANIMATION_FRAMES_3X4_MULTI_1 = {
+  walkDown: [0, 1, 2, 1],
+  walkLeft: [12, 13, 14, 13],
+  walkRight: [24, 25, 26, 25],
+  walkUp: [36, 37, 38, 37],
+  idleDown: 1,
+  idleLeft: 13,
+  idleRight: 25,
+  idleUp: 37,
+};
+
+export const STANDARD_ANIMATION_FRAMES_3X4_MULTI_2 = {
+  walkDown: [3, 4, 5, 4],
+  walkLeft: [15, 16, 17, 16],
+  walkRight: [27, 28, 29, 28],
+  walkUp: [39, 40, 41, 40],
+  idleDown: 4,
+  idleLeft: 16,
+  idleRight: 28,
+  idleUp: 40,
+};
+
+export const STANDARD_ANIMATION_FRAMES_3X4_MULTI_3 = {
+  walkDown: [6, 7, 8, 7],
+  walkLeft: [18, 19, 20, 19],
+  walkRight: [30, 31, 32, 31],
+  walkUp: [42, 43, 44, 43],
+  idleDown: 7,
+  idleLeft: 19,
+  idleRight: 31,
+  idleUp: 43,
+};
+
+export const STANDARD_ANIMATION_FRAMES_3X4_MULTI_4 = {
+  walkDown: [9, 10, 11, 10],
+  walkLeft: [21, 22, 23, 22],
+  walkRight: [33, 34, 35, 34],
+  walkUp: [45, 46, 47, 46],
+  idleDown: 10,
+  idleLeft: 22,
+  idleRight: 34,
+  idleUp: 46,
+};
+
+export const STANDARD_ANIMATION_FRAMES_3X4_MULTI_5 = {
+  walkDown: [48, 49, 50, 49],
+  walkLeft: [60, 61, 62, 61],
+  walkRight: [72, 73, 74, 73],
+  walkUp: [84, 85, 86, 85],
+  idleDown: 49,
+  idleLeft: 61,
+  idleRight: 73,
+  idleUp: 85,
+};
+
+export const STANDARD_ANIMATION_FRAMES_3X4_MULTI_6 = {
+  walkDown: [51, 52, 53, 52],
+  walkLeft: [63, 64, 65, 64],
+  walkRight: [75, 76, 77, 76],
+  walkUp: [87, 88, 89, 88],
+  idleDown: 52,
+  idleLeft: 64,
+  idleRight: 76,
+  idleUp: 88,
+};
+
+export const STANDARD_ANIMATION_FRAMES_3X4_MULTI_7 = {
+  walkDown: [54, 55, 56, 55],
+  walkLeft: [66, 67, 68, 67],
+  walkRight: [78, 79, 80, 79],
+  walkUp: [90, 91, 92, 91],
+  idleDown: 55,
+  idleLeft: 67,
+  idleRight: 79,
+  idleUp: 91,
+};
+
+export const STANDARD_ANIMATION_FRAMES_3X4_MULTI_8 = {
+  walkDown: [57, 58, 59, 58],
+  walkLeft: [69, 70, 71, 70],
+  walkRight: [81, 82, 83, 82],
+  walkUp: [93, 94, 95, 94],
+  idleDown: 58,
+  idleLeft: 70,
+  idleRight: 82,
+  idleUp: 94,
+};
+
 const HERO_FRAME_W = 26;
 const HERO_FRAME_H = 36;
 const HERO_SCALE = 1.2;
@@ -187,6 +279,206 @@ export const SPRITE_REGISTRY = {
     scale: 1,
     animations: STANDARD_ANIMATION_FRAMES,
     hitbox: computeSafeHitbox(HERO_FRAME_W, HERO_FRAME_H, 1),
+  },
+  monks1: {
+    key: "monks1",
+    displayName: "monks1",
+    path: minisMonksSpritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 0.7,
+    animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_1,
+    hitbox: computeSafeHitbox(48, 48, 0.7),
+  },
+  monks2: {
+    key: "monks2",
+    displayName: "monks2",
+    path: minisMonksSpritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 0.7,
+    animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_2,
+    hitbox: computeSafeHitbox(48, 48, 0.7),
+  },
+  monks3: {
+    key: "monks3",
+    displayName: "monks3",
+    path: minisMonksSpritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 0.7,
+    animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_3,
+    hitbox: computeSafeHitbox(48, 48, 0.7),
+  },
+  monks4: {
+    key: "monks4",
+    displayName: "monks4",
+    path: minisMonksSpritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 0.7,
+    animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_4,
+    hitbox: computeSafeHitbox(48, 48, 0.7),
+  },
+  soldier1: {
+    key: "soldier1",
+    displayName: "soldier1",
+    path: minisSoldiers1Spritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 0.7,
+    animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_1,
+    hitbox: computeSafeHitbox(48, 48, 0.7),
+  },
+  soldier2: {
+    key: "soldier2",
+    displayName: "soldier2",
+    path: minisSoldiers1Spritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 0.7,
+    animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_2,
+    hitbox: computeSafeHitbox(48, 48, 0.7),
+  },
+  soldier3: {
+    key: "soldier3",
+    displayName: "soldier3",
+    path: minisSoldiers1Spritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 0.7,
+    animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_3,
+    hitbox: computeSafeHitbox(48, 48, 0.7),
+  },
+  soldier4: {
+    key: "soldier4",
+    displayName: "soldier4",
+    path: minisSoldiers1Spritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 0.7,
+    animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_4,
+    hitbox: computeSafeHitbox(48, 48, 0.7),
+  },
+  soldier5: {
+    key: "soldier5",
+    displayName: "soldier5",
+    path: minisSoldiers1Spritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 0.7,
+    animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_5,
+    hitbox: computeSafeHitbox(48, 48, 0.7),
+  },
+  soldier6: {
+    key: "soldier6",
+    displayName: "soldier6",
+    path: minisSoldiers1Spritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 0.7,
+    animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_6,
+    hitbox: computeSafeHitbox(48, 48, 0.7),
+  },
+  soldier7: {
+    key: "soldier7",
+    displayName: "soldier7",
+    path: minisSoldiers1Spritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 0.7,
+    animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_7,
+    hitbox: computeSafeHitbox(48, 48, 0.7),
+  },
+  soldier8: {
+    key: "soldier8",
+    displayName: "soldier8",
+    path: minisSoldiers1Spritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 0.7,
+    animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_8,
+    hitbox: computeSafeHitbox(48, 48, 0.7),
+  },
+  soldier9: {
+    key: "soldier9",
+    displayName: "soldier9",
+    path: minisSoldiers2Spritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 0.7,
+    animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_1,
+    hitbox: computeSafeHitbox(48, 48, 0.7),
+  },
+  soldier10: {
+    key: "soldier10",
+    displayName: "soldier10",
+    path: minisSoldiers2Spritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 0.7,
+    animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_2,
+    hitbox: computeSafeHitbox(48, 48, 0.7),
+  },
+  soldier11: {
+    key: "soldier11",
+    displayName: "soldier11",
+    path: minisSoldiers2Spritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 0.7,
+    animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_3,
+    hitbox: computeSafeHitbox(48, 48, 0.7),
+  },
+  soldier12: {
+    key: "soldier12",
+    displayName: "soldier12",
+    path: minisSoldiers2Spritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 0.7,
+    animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_4,
+    hitbox: computeSafeHitbox(48, 48, 0.7),
+  },
+  soldier13: {
+    key: "soldier13",
+    displayName: "soldier13",
+    path: minisSoldiers2Spritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 0.7,
+    animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_5,
+    hitbox: computeSafeHitbox(48, 48, 0.7),
+  },
+  soldier14: {
+    key: "soldier14",
+    displayName: "soldier14",
+    path: minisSoldiers2Spritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 0.7,
+    animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_6,
+    hitbox: computeSafeHitbox(48, 48, 0.7),
+  },
+  soldier15: {
+    key: "soldier15",
+    displayName: "soldier15",
+    path: minisSoldiers2Spritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 0.7,
+    animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_7,
+    hitbox: computeSafeHitbox(48, 48, 0.7),
+  },
+  soldier16: {
+    key: "soldier16",
+    displayName: "soldier16",
+    path: minisSoldiers2Spritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 0.7,
+    animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_8,
+    hitbox: computeSafeHitbox(48, 48, 0.7),
   },
   enemy1: {
     key: "enemy1",
