@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { HERO_ROSTER, SPRITE_REGISTRY } from "./spriteRegistry";
 
-const PREVIEW_SCALE = 3; // zoom pour un portrait plus lisible qu'a taille native
-const GRID_COLS = 3; // convention standard (bas/gauche/droite/haut), cf. STANDARD_ANIMATION_FRAMES
-const GRID_ROWS = 4;
+const PREVIEW_SCALE = 3;
+
+// Spritesheet complète : 12 colonnes × 8 lignes
+const SHEET_COLS = 12;
+const SHEET_ROWS = 8;
 
 const CONTROLS = [
   ["Déplacement", "ZQSD ou WASD (basculable en jeu) / flèches"],
@@ -16,15 +18,13 @@ const CONTROLS = [
 ];
 
 /**
- * Écran de sélection du héros au démarrage - un portrait par héros du
- * roster, recadré sur la pose idle-down (frame du milieu de la ligne
- * "bas") directement depuis le spritesheet de marche déjà utilisé en
- * jeu, via SPRITE_REGISTRY - pas besoin de fichiers de portrait séparés,
- * et ça reste correct si un futur héros a des dimensions différentes.
+ * Écran de sélection du héros au démarrage.
  *
- * "À terme" les héros auront des stats/compétences différentes (cf.
- * HERO_ROSTER dans spriteRegistry.js, champ statsOverride) - non
- * affiché ici pour l'instant, cet écran ne fait que choisir un skin.
+ * La spritesheet contient les 8 héros sur une seule image
+ * de 12 colonnes × 8 lignes.
+ *
+ * Chaque héros possède déjà dans SPRITE_REGISTRY les indices
+ * globaux de ses animations.
  */
 export default function CharacterSelectScreen({ onSelect, isMobile }) {
   const [controlsOpen, setControlsOpen] = useState(false);
@@ -36,16 +36,16 @@ export default function CharacterSelectScreen({ onSelect, isMobile }) {
         flexDirection: "column",
         alignItems: "center",
         gap: 24,
-        padding: 40,
+        padding: isMobile ? 20 : 40,
         color: "#eee",
         background: "#12131a",
         minHeight: 400,
         position: "relative",
+        width: "100%",
+        boxSizing: "border-box",
       }}
     >
-      {/* uniquement desktop - sur mobile, les controles sont tactiles
-          (cf. TouchControls.jsx), ce recapitulatif clavier n'aurait pas
-          de sens */}
+      {/* uniquement desktop */}
       {!isMobile && (
         <button
           onClick={() => setControlsOpen(true)}
@@ -66,15 +66,48 @@ export default function CharacterSelectScreen({ onSelect, isMobile }) {
         </button>
       )}
 
-      <h2 style={{ margin: 0 }}>Choisis ton héros</h2>
-      <div style={{ display: "flex", gap: 20 }}>
+      <h2
+        style={{
+          margin: 0,
+          textAlign: "center",
+        }}
+      >
+        Choisis ton héros
+      </h2>
+
+      {/* Grille des héros */}
+      <div
+        style={{
+          display: "grid",
+
+          // 4 héros par ligne sur desktop,
+          // 2 héros par ligne sur mobile.
+          gridTemplateColumns: isMobile
+            ? "repeat(2, minmax(0, 1fr))"
+            : "repeat(4, minmax(0, 1fr))",
+
+          gap: isMobile ? 12 : 20,
+
+          width: "100%",
+          maxWidth: isMobile ? 360 : 800,
+
+          boxSizing: "border-box",
+        }}
+      >
         {HERO_ROSTER.map((hero) => {
-          const entry = SPRITE_REGISTRY[hero.id];
+          const entry = SPRITE_REGISTRY[hero.id] || SPRITE_REGISTRY.hero1;
+
+          // idleDown est déjà l'index GLOBAL
+          // dans la spritesheet 12 × 8.
           const idleFrameIndex = entry.animations.idleDown;
-          const col = idleFrameIndex % GRID_COLS;
-          const row = Math.floor(idleFrameIndex / GRID_COLS);
-          const sheetW = entry.frameWidth * GRID_COLS;
-          const sheetH = entry.frameHeight * GRID_ROWS;
+
+          // Position de la frame dans la spritesheet complète
+          const col = idleFrameIndex % SHEET_COLS;
+          const row = Math.floor(idleFrameIndex / SHEET_COLS);
+
+          // Taille de la spritesheet complète
+          const sheetW = entry.frameWidth * SHEET_COLS;
+          const sheetH = entry.frameHeight * SHEET_ROWS;
 
           return (
             <button
@@ -84,11 +117,20 @@ export default function CharacterSelectScreen({ onSelect, isMobile }) {
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
-                gap: 10,
-                padding: 16,
+                justifyContent: "center",
+
+                gap: 8,
+
+                padding: isMobile ? 10 : 16,
+
+                width: "100%",
+                minWidth: 0,
+                boxSizing: "border-box",
+
                 background: "#1e2029",
                 border: "1px solid #444",
                 borderRadius: 8,
+
                 cursor: "pointer",
                 color: "#eee",
               }}
@@ -97,18 +139,44 @@ export default function CharacterSelectScreen({ onSelect, isMobile }) {
                 style={{
                   width: entry.frameWidth * PREVIEW_SCALE,
                   height: entry.frameHeight * PREVIEW_SCALE,
+
                   backgroundImage: `url(${entry.path})`,
-                  backgroundPosition: `-${col * entry.frameWidth * PREVIEW_SCALE}px -${row * entry.frameHeight * PREVIEW_SCALE}px`,
-                  backgroundSize: `${sheetW * PREVIEW_SCALE}px ${sheetH * PREVIEW_SCALE}px`,
+
+                  backgroundPosition: `
+                    -${col * entry.frameWidth * PREVIEW_SCALE}px
+                    -${row * entry.frameHeight * PREVIEW_SCALE}px
+                  `,
+
+                  backgroundSize: `
+                    ${sheetW * PREVIEW_SCALE}px
+                    ${sheetH * PREVIEW_SCALE}px
+                  `,
+
+                  backgroundRepeat: "no-repeat",
+
                   imageRendering: "pixelated",
+
+                  flexShrink: 0,
                 }}
               />
-              <span>{hero.label}</span>
+
+              <span
+                style={{
+                  textAlign: "center",
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  maxWidth: "100%",
+                }}
+              >
+                {hero.label}
+              </span>
             </button>
           );
         })}
       </div>
 
+      {/* Fenêtre des contrôles */}
       {controlsOpen && (
         <div
           onClick={() => setControlsOpen(false)}
@@ -120,6 +188,8 @@ export default function CharacterSelectScreen({ onSelect, isMobile }) {
             alignItems: "center",
             justifyContent: "center",
             background: "rgba(0,0,0,0.75)",
+            padding: 20,
+            boxSizing: "border-box",
           }}
         >
           <div
@@ -130,7 +200,9 @@ export default function CharacterSelectScreen({ onSelect, isMobile }) {
               borderRadius: 10,
               padding: 24,
               minWidth: 320,
+              maxWidth: "100%",
               color: "#eee",
+              boxSizing: "border-box",
             }}
           >
             <div
@@ -142,6 +214,7 @@ export default function CharacterSelectScreen({ onSelect, isMobile }) {
               }}
             >
               <h3 style={{ margin: 0 }}>Contrôles</h3>
+
               <button
                 onClick={() => setControlsOpen(false)}
                 style={{
@@ -157,7 +230,14 @@ export default function CharacterSelectScreen({ onSelect, isMobile }) {
                 Fermer
               </button>
             </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: 8,
+              }}
+            >
               {CONTROLS.map(([label, key]) => (
                 <div
                   key={label}
@@ -169,7 +249,13 @@ export default function CharacterSelectScreen({ onSelect, isMobile }) {
                   }}
                 >
                   <span style={{ color: "#ccc" }}>{label}</span>
-                  <span style={{ color: "#8a7050", whiteSpace: "nowrap" }}>
+
+                  <span
+                    style={{
+                      color: "#8a7050",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
                     {key}
                   </span>
                 </div>
