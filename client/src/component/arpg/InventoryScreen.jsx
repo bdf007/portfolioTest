@@ -1,5 +1,9 @@
 import { resolveItemDef } from "./itemDefs";
-import { SPRITE_REGISTRY } from "./spriteRegistry";
+import {
+  SPRITE_REGISTRY,
+  ICON_SPRITESHEET,
+  ICON_SHEET_1_FRAMES,
+} from "./spriteRegistry";
 
 const SLOT_LABELS = {
   helmet: "Casque",
@@ -18,6 +22,8 @@ const SLOT_LABELS = {
 const PREVIEW_SCALE = 3; // meme echelle que CharacterSelectScreen, pour un portrait coherent
 const SHEET_COLS = 12;
 const SHEET_ROWS = 8;
+const ICON_SHEET_COLS = 10;
+const ICON_SHEET_ROWS = 22;
 
 /**
  * Regroupe les entrees d'inventaire identiques (meme itemId) en une
@@ -48,6 +54,42 @@ function groupInventory(inventory) {
     groups.get(entry.itemId).totalQuantity += entry.quantity;
   });
   return [...groups.values()];
+}
+
+function ItemIcon({ itemId, scale = 2 }) {
+  const frameIndex = ICON_SHEET_1_FRAMES[itemId];
+
+  if (frameIndex === undefined) {
+    return null;
+  }
+
+  const col = frameIndex % ICON_SHEET_COLS;
+  const row = Math.floor(frameIndex / ICON_SHEET_COLS);
+
+  const sheetW = ICON_SPRITESHEET.frameWidth * ICON_SHEET_COLS;
+
+  const sheetH = ICON_SPRITESHEET.frameHeight * ICON_SHEET_ROWS;
+
+  return (
+    <div
+      style={{
+        width: ICON_SPRITESHEET.frameWidth * scale,
+        height: ICON_SPRITESHEET.frameHeight * scale,
+        backgroundImage: `url(${ICON_SPRITESHEET.path})`,
+        backgroundPosition: `
+          -${col * ICON_SPRITESHEET.frameWidth * scale}px
+          -${row * ICON_SPRITESHEET.frameHeight * scale}px
+        `,
+        backgroundSize: `
+          ${sheetW * scale}px
+          ${sheetH * scale}px
+        `,
+        backgroundRepeat: "no-repeat",
+        imageRendering: "pixelated",
+        flexShrink: 0,
+      }}
+    />
+  );
 }
 
 /**
@@ -121,9 +163,20 @@ export default function InventoryScreen({
         <div style={{ fontSize: 10, color: "#999" }}>{SLOT_LABELS[slot]}</div>
         {def ? (
           <>
-            <div style={{ fontSize: 12, marginTop: 3 }}>
-              {def.name}
-              {quiverQuantity !== null ? ` x${quiverQuantity}` : ""}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+                marginTop: 3,
+              }}
+            >
+              <ItemIcon itemId={itemId} scale={1.5} />
+
+              <div style={{ fontSize: 12 }}>
+                {def.name}
+                {quiverQuantity !== null ? ` x${quiverQuantity}` : ""}
+              </div>
             </div>
             <button
               onClick={() => onUnequip(slot)}
@@ -312,13 +365,33 @@ export default function InventoryScreen({
                   borderRadius: 8,
                 }}
               >
-                <div>
-                  <div style={{ fontSize: 13 }}>
-                    {def.name}
-                    {group.totalQuantity > 1 ? ` x${group.totalQuantity}` : ""}
-                  </div>
-                  <div style={{ fontSize: 11, color: "#8a7050", marginTop: 2 }}>
-                    {def.description}
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 10,
+                    minWidth: 0,
+                  }}
+                >
+                  <ItemIcon itemId={group.itemId} scale={2} />
+
+                  <div>
+                    <div style={{ fontSize: 13 }}>
+                      {def.name}
+                      {group.totalQuantity > 1
+                        ? ` x${group.totalQuantity}`
+                        : ""}
+                    </div>
+
+                    <div
+                      style={{
+                        fontSize: 11,
+                        color: "#8a7050",
+                        marginTop: 2,
+                      }}
+                    >
+                      {def.description}
+                    </div>
                   </div>
                 </div>
                 {(def.category === "equipment" || def.category === "ammo") && (

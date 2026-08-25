@@ -3,6 +3,7 @@ import {
   getUniqueTexturesToLoad,
   getTileImagesToLoad,
   CHEST_SPRITESHEET,
+  ICON_SPRITESHEET,
 } from "../spriteRegistry";
 
 /**
@@ -40,6 +41,10 @@ export default class BootScene extends Phaser.Scene {
     this.load.spritesheet(CHEST_SPRITESHEET.key, CHEST_SPRITESHEET.path, {
       frameWidth: CHEST_SPRITESHEET.frameWidth,
       frameHeight: CHEST_SPRITESHEET.frameHeight,
+    });
+    this.load.spritesheet(ICON_SPRITESHEET.key, ICON_SPRITESHEET.path, {
+      frameWidth: ICON_SPRITESHEET.frameWidth,
+      frameHeight: ICON_SPRITESHEET.frameHeight,
     });
   }
 
