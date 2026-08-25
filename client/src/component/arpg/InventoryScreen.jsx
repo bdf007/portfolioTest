@@ -16,8 +16,8 @@ const SLOT_LABELS = {
 };
 
 const PREVIEW_SCALE = 3; // meme echelle que CharacterSelectScreen, pour un portrait coherent
-const GRID_COLS = 3; // convention standard (bas/gauche/droite/haut), cf. STANDARD_ANIMATION_FRAMES
-const GRID_ROWS = 4;
+const SHEET_COLS = 12;
+const SHEET_ROWS = 8;
 
 /**
  * Regroupe les entrees d'inventaire identiques (meme itemId) en une
@@ -69,11 +69,17 @@ export default function InventoryScreen({
   onClose,
 }) {
   const heroEntry = SPRITE_REGISTRY[heroId] || SPRITE_REGISTRY.hero1;
+  // idleDown est déjà l'index GLOBAL
+  // dans la spritesheet 12 × 8.
   const idleFrameIndex = heroEntry.animations.idleDown;
-  const col = idleFrameIndex % GRID_COLS;
-  const row = Math.floor(idleFrameIndex / GRID_COLS);
-  const sheetW = heroEntry.frameWidth * GRID_COLS;
-  const sheetH = heroEntry.frameHeight * GRID_ROWS;
+
+  // Position de la frame dans la spritesheet complète
+  const col = idleFrameIndex % SHEET_COLS;
+  const row = Math.floor(idleFrameIndex / SHEET_COLS);
+
+  // Taille de la spritesheet complète
+  const sheetW = heroEntry.frameWidth * SHEET_COLS;
+  const sheetH = heroEntry.frameHeight * SHEET_ROWS;
 
   function renderSlot(slot) {
     const itemId = equipped[slot];

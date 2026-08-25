@@ -1,8 +1,9 @@
 // import hero
-import hero1Spritesheet from "../../assets/hero1_walk.png";
-import hero2Spritesheet from "../../assets/hero2_walk.png";
-import hero3Spritesheet from "../../assets/hero3_walk.png";
-import hero4Spritesheet from "../../assets/hero4_walk.png";
+// import hero1Spritesheet from "../../assets/hero1_walk.png";
+// import hero2Spritesheet from "../../assets/hero2_walk.png";
+// import hero3Spritesheet from "../../assets/hero3_walk.png";
+// import hero4Spritesheet from "../../assets/hero4_walk.png";
+import minisHeroesSpritesheet from "../../assets/minis_heroes.png";
 // import enemy
 import enemy1Spritesheet from "../../assets/enemy1_walk.png";
 import enemy2Spritesheet from "../../assets/enemy2_walk.png";
@@ -252,32 +253,74 @@ export const STANDARD_ANIMATION_FRAMES_3X4_MULTI_8 = {
   idleUp: 94,
 };
 
-const HERO_FRAME_W = 26;
-const HERO_FRAME_H = 36;
-const HERO_SCALE = 1.2;
+// const HERO_FRAME_W = 26;
+// const HERO_FRAME_H = 36;
+// const HERO_SCALE = 1.2;
 
-function makeHeroEntry(key, path) {
+const HERO_FRAME_W = 48;
+const HERO_FRAME_H = 48;
+const HERO_SCALE = 0.8;
+
+function makeHeroEntry(key, path, animations) {
   return {
     key,
     path,
     frameWidth: HERO_FRAME_W,
     frameHeight: HERO_FRAME_H,
     scale: HERO_SCALE,
-    animations: STANDARD_ANIMATION_FRAMES,
+    // animations: STANDARD_ANIMATION_FRAMES,
+    animations,
+
     hitbox: computeSafeHitbox(HERO_FRAME_W, HERO_FRAME_H, HERO_SCALE),
   };
 }
 
 export const SPRITE_REGISTRY = {
-  hero1: makeHeroEntry("hero1", hero1Spritesheet),
-  hero2: makeHeroEntry("hero2", hero2Spritesheet),
-  hero3: makeHeroEntry("hero3", hero3Spritesheet),
-  hero4: makeHeroEntry("hero4", hero4Spritesheet),
+  hero1: makeHeroEntry(
+    "hero1",
+    minisHeroesSpritesheet,
+    STANDARD_ANIMATION_FRAMES_3X4_MULTI_1,
+  ),
+  hero2: makeHeroEntry(
+    "hero2",
+    minisHeroesSpritesheet,
+    STANDARD_ANIMATION_FRAMES_3X4_MULTI_2,
+  ),
+  hero3: makeHeroEntry(
+    "hero3",
+    minisHeroesSpritesheet,
+    STANDARD_ANIMATION_FRAMES_3X4_MULTI_3,
+  ),
+  hero4: makeHeroEntry(
+    "hero4",
+    minisHeroesSpritesheet,
+    STANDARD_ANIMATION_FRAMES_3X4_MULTI_4,
+  ),
+  hero5: makeHeroEntry(
+    "hero5",
+    minisHeroesSpritesheet,
+    STANDARD_ANIMATION_FRAMES_3X4_MULTI_5,
+  ),
+  hero6: makeHeroEntry(
+    "hero6",
+    minisHeroesSpritesheet,
+    STANDARD_ANIMATION_FRAMES_3X4_MULTI_6,
+  ),
+  hero7: makeHeroEntry(
+    "hero7",
+    minisHeroesSpritesheet,
+    STANDARD_ANIMATION_FRAMES_3X4_MULTI_7,
+  ),
+  hero8: makeHeroEntry(
+    "hero8",
+    minisHeroesSpritesheet,
+    STANDARD_ANIMATION_FRAMES_3X4_MULTI_8,
+  ),
 
   enemyDefault: {
     key: "hero1",
     displayName: "Default Enemy",
-    path: hero1Spritesheet,
+    path: minisHeroesSpritesheet,
     frameWidth: HERO_FRAME_W,
     frameHeight: HERO_FRAME_H,
     scale: 1,
@@ -1956,6 +1999,72 @@ const HERO_STATS_PROFILES = {
     startingEquipment: ["woodenStaff"],
     startingAmmo: null,
   },
+  guerriere: {
+    base: { maxHp: 130, meleeDamage: 10, rangedDamage: 2, defense: 3, mana: 0 },
+    growth: {
+      maxHp: 24,
+      meleeDamage: 2.5,
+      rangedDamage: 0.5,
+      defense: 1.4,
+      mana: 0,
+    },
+    moveSpeed: 130,
+    visionRadius: 5,
+    meleeRange: 56,
+    rangedRange: 300,
+    // equipement/objets donnes ET equipes automatiquement au tout debut
+    // d'une partie NEUVE (jamais a une reprise, cf. MainScene.giveStartingKit)
+    startingEquipment: ["woodenSword", "woodenShield"],
+    startingAmmo: null,
+  },
+  archere: {
+    base: { maxHp: 90, meleeDamage: 4, rangedDamage: 10, defense: 1, mana: 0 },
+    growth: {
+      maxHp: 16,
+      meleeDamage: 1,
+      rangedDamage: 2.6,
+      defense: 0.8,
+      mana: 0,
+    },
+    moveSpeed: 160,
+    visionRadius: 8,
+    meleeRange: 42,
+    rangedRange: 440,
+    startingEquipment: ["woodenBow"],
+    startingAmmo: { itemId: "woodenArrow", quantity: 20 },
+  },
+  voleuse: {
+    base: { maxHp: 85, meleeDamage: 11, rangedDamage: 3, defense: 0, mana: 0 },
+    growth: {
+      maxHp: 15,
+      meleeDamage: 2.8,
+      rangedDamage: 0.7,
+      defense: 0.6,
+      mana: 0,
+    },
+    moveSpeed: 175,
+    visionRadius: 7,
+    meleeRange: 46,
+    rangedRange: 340,
+    startingEquipment: ["woodenDagger"],
+    startingAmmo: null,
+  },
+  magicienne: {
+    base: { maxHp: 70, meleeDamage: 2, rangedDamage: 12, defense: 0, mana: 20 },
+    growth: {
+      maxHp: 12,
+      meleeDamage: 0.5,
+      rangedDamage: 3,
+      defense: 0.4,
+      mana: 1,
+    },
+    moveSpeed: 140,
+    visionRadius: 6,
+    meleeRange: 38,
+    rangedRange: 420,
+    startingEquipment: ["woodenStaff"],
+    startingAmmo: null,
+  },
 };
 
 export const HERO_ROSTER = [
@@ -1967,6 +2076,22 @@ export const HERO_ROSTER = [
   { id: "hero2", label: "Archer", statsOverride: HERO_STATS_PROFILES.archer },
   { id: "hero3", label: "Voleur", statsOverride: HERO_STATS_PROFILES.voleur },
   { id: "hero4", label: "Mage", statsOverride: HERO_STATS_PROFILES.mage },
+  {
+    id: "hero5",
+    label: "Guerrière",
+    statsOverride: HERO_STATS_PROFILES.guerriere,
+  },
+  { id: "hero6", label: "Archère", statsOverride: HERO_STATS_PROFILES.archere },
+  {
+    id: "hero7",
+    label: "Voleuse",
+    statsOverride: HERO_STATS_PROFILES.voleuse,
+  },
+  {
+    id: "hero8",
+    label: "Magicienne",
+    statsOverride: HERO_STATS_PROFILES.magicienne,
+  },
 ];
 
 export function resolveEnemySprite(typeKey) {
