@@ -212,15 +212,13 @@ export default class MainScene extends Phaser.Scene {
     // le profil ne definit pas (encore) l'un de ces champs - jamais de
     // plantage sur un profil incomplet.
     const heroProfile = resolveHeroStatsOverride(this.heroSpriteKey);
-    this.playerMoveSpeed =
-      (heroProfile && heroProfile.moveSpeed) || PLAYER_MOVE_SPEED_DEFAULT;
+    this.playerMoveSpeed = heroProfile?.moveSpeed ?? PLAYER_MOVE_SPEED_DEFAULT;
     this.playerVisionRadius =
-      (heroProfile && heroProfile.visionRadius) || VISION_RADIUS_DEFAULT;
+      heroProfile?.visionRadius ?? VISION_RADIUS_DEFAULT;
     this.playerMeleeRange =
-      (heroProfile && heroProfile.meleeRange) || PLAYER_MELEE_RANGE_DEFAULT;
+      heroProfile?.base?.meleeRange ?? PLAYER_MELEE_RANGE_DEFAULT;
     this.playerRangedRange =
-      (heroProfile && heroProfile.rangedRange) ||
-      PROJECTILE_MAX_DISTANCE_DEFAULT;
+      heroProfile?.rangedRange ?? PROJECTILE_MAX_DISTANCE_DEFAULT;
 
     this.cursors = this.input.keyboard.createCursorKeys();
     // deux jeux de touches de deplacement enregistres SIMULTANEMENT
@@ -588,20 +586,36 @@ export default class MainScene extends Phaser.Scene {
    * preservation de l'ecart manquant a l'equipement...), cf. les points
    * d'appel (create, resumeFromSave, checkLevelUp, equipItem, unequipItem).
    */
+
   recalculatePlayerStats() {
-    const base = getPlayerStatsForLevel(
-      this.playerLevel,
-      resolveHeroStatsOverride(this.heroSpriteKey),
-    );
+    const heroProfile = resolveHeroStatsOverride(this.heroSpriteKey);
+
+    const base = getPlayerStatsForLevel(this.playerLevel, heroProfile);
+
     const bonus = computeEquipmentBonuses(this.equipped);
+
     this.playerMaxHp = base.maxHp + bonus.maxHp;
     this.playerMeleeDamage = base.meleeDamage + bonus.meleeDamage;
     this.playerRangedDamage = base.rangedDamage + bonus.rangedDamage;
     this.playerDefense = base.defense + bonus.defense;
-    // pas de bonus d'equipement pour l'instant (computeEquipmentBonuses
-    // n'a pas de champ mana) - uniquement la valeur de base par
-    // archetype/niveau (cf. HERO_STATS_PROFILES dans spriteRegistry.js)
-    this.playerMaxMana = base.mana;
+
+    this.playerMaxMana = base.mana + bonus.mana;
+
+    this.playerMeleeRange =
+      (heroProfile?.meleeRange ?? PLAYER_MELEE_RANGE_DEFAULT) +
+      (bonus.meleeRange ?? 0);
+
+    this.playerRangedRange =
+      (heroProfile?.rangedRange ?? PROJECTILE_MAX_DISTANCE_DEFAULT) +
+      (bonus.rangedRange ?? 0);
+
+    this.playerVisionRadius =
+      (heroProfile?.visionRadius ?? VISION_RADIUS_DEFAULT) +
+      (bonus.visionRadius ?? 0);
+
+    this.playerMoveSpeed =
+      (heroProfile?.moveSpeed ?? PLAYER_MOVE_SPEED_DEFAULT) +
+      (bonus.moveSpeed ?? 0);
   }
 
   /**
@@ -3140,32 +3154,43 @@ export default class MainScene extends Phaser.Scene {
     // de cooldown declenche" que ci-dessus si la bonne munition manque.
     if (weaponDef.requiresAmmo) {
       const requiredAmmoId = weaponDef.requiresAmmo;
+
       if (!this.equipped.quiver) {
         this.showLootToast("Aucune munition équipée");
         return;
       }
-      if (this.equipped.quiver !== requiredAmmoId) {
+
+      const ammoAllowed = Array.isArray(requiredAmmoId)
+        ? requiredAmmoId.includes(this.equipped.quiver)
+        : this.equipped.quiver === requiredAmmoId;
+
+      if (!ammoAllowed) {
         this.showLootToast("Mauvaise munition équipée");
         return;
       }
-      const ammoEntry = this.inventory.find((i) => i.itemId === requiredAmmoId);
+
+      const ammoEntry = this.inventory.find(
+        (i) => i.itemId === this.equipped.quiver,
+      );
+
       if (!ammoEntry || ammoEntry.quantity <= 0) {
         this.showLootToast("Plus de munitions !");
         return;
       }
+
       ammoEntry.quantity -= 1;
+
       if (ammoEntry.quantity <= 0) {
         const idx = this.inventory.indexOf(ammoEntry);
         this.inventory.splice(idx, 1);
-        this.equipped.quiver = null; // plus rien a encocher - perd aussi le bonus de statBonus de cette munition
+        this.equipped.quiver = null;
+
         const oldMaxHp = this.playerMaxHp;
         this.recalculatePlayerStats();
         this.adjustHpAfterMaxHpChange(oldMaxHp);
         this.events.emit("equipment-updated", { ...this.equipped });
       }
-      // pas de persistProgress() ici - trop frequent (chaque tir), la
-      // sauvegarde periodique (cf. this.time.addEvent dans create())
-      // suffit a capturer ca, meme principe que les PV en plein combat
+
       this.events.emit("inventory-updated", [...this.inventory]);
     }
 

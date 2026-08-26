@@ -6,12 +6,22 @@ import { resolveItemDef } from "./itemDefs";
  * séparée de leveling.js : le niveau et l'équipement sont deux sources
  * de progression distinctes, pas la peine de les mélanger dans la même
  * fonction (leveling.js reste pur "niveau -> stats de base").
- *
+ *, move
  * @param {{mainHand: string|null, offHand: string|null, armor: string|null, helmet: string|null, pants: string|null, boots: string|null, belt: string|null, ring1: string|null, ring2: string|null, necklace: string|null, quiver: string|null}} equipped
- * @returns {{meleeDamage:number, rangedDamage:number, defense:number, maxHp:number}}
+ * @returns {{meleeDamage:number, rangedDamage:number, defense:number, maxHp:number, meleeRange:number, rangedRange:number, visionRadius:number, moveSpeed:number, mana:number}}
  */
 export function computeEquipmentBonuses(equipped) {
-  const bonuses = { meleeDamage: 0, rangedDamage: 0, defense: 0, maxHp: 0 };
+  const bonuses = {
+    meleeDamage: 0,
+    rangedDamage: 0,
+    defense: 0,
+    maxHp: 0,
+    meleeRange: 0,
+    rangedRange: 0,
+    visionRadius: 0,
+    moveSpeed: 0,
+    mana: 0,
+  };
 
   for (const itemId of Object.values(equipped || {})) {
     if (!itemId) continue;
