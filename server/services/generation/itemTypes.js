@@ -324,7 +324,7 @@ const ITEM_TYPES = {
     slot: 'mainHand',
     twoHanded: true,
     grantsRanged: true, 
-    requiresAmmo: ['woodenArrow', 'ironArrow'], 
+    requiresAmmo: ['woodenArrow', 'ironArrow', 'acidArrow'], 
     name: 'Arc de guerre',
     description: "+10 dégâts à distance. +8 de distance d'attaque.",
     statBonus: { rangedDamage: 10, rangedRange: 8 },
@@ -337,7 +337,7 @@ const ITEM_TYPES = {
     slot: 'mainHand',
     twoHanded: false,
     grantsRanged: true,
-    requiresAmmo: ['woodenCrossbowBolt', 'crossbowBolt'], 
+    requiresAmmo: ['woodenCrossbowBolt', 'ironCrossbowBolt', 'acidCrossbowBolt'], 
     name: 'Arbalète',
     description: "+3 dégâts à distance. Se manie a une main.",
     statBonus: { rangedDamage: 6, rangedRange: 6 },
@@ -404,7 +404,7 @@ const ITEM_TYPES = {
     stackable: false,
     price: 110,
   },
-  ironHammer: {
+  bronzeHammer: {
     id: 'bronzeHammer',
     category: 'equipment',
     slot: 'mainHand',
