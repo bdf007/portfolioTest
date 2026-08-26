@@ -212,15 +212,10 @@ export default class MainScene extends Phaser.Scene {
     // le profil ne definit pas (encore) l'un de ces champs - jamais de
     // plantage sur un profil incomplet.
     const heroProfile = resolveHeroStatsOverride(this.heroSpriteKey);
-    this.playerMoveSpeed =
-      (heroProfile && heroProfile.moveSpeed) || PLAYER_MOVE_SPEED_DEFAULT;
-    this.playerVisionRadius =
-      (heroProfile && heroProfile.visionRadius) || VISION_RADIUS_DEFAULT;
-    this.playerMeleeRange =
-      (heroProfile && heroProfile.meleeRange) || PLAYER_MELEE_RANGE_DEFAULT;
-    this.playerRangedRange =
-      (heroProfile && heroProfile.rangedRange) ||
-      PROJECTILE_MAX_DISTANCE_DEFAULT;
+    this.playerMoveSpeed = heroProfile?.moveSpeed ?? PLAYER_MOVE_SPEED_DEFAULT;
+    this.playerVisionRadius = heroProfile?.visionRadius ?? VISION_RADIUS_DEFAULT;
+    this.playerMeleeRange = heroProfile?.base?.meleeRange ?? PLAYER_MELEE_RANGE_DEFAULT;
+    this.playerRangedRange = heroProfile?.rangedRange ?? PROJECTILE_MAX_DISTANCE_DEFAULT;
 
     this.cursors = this.input.keyboard.createCursorKeys();
     // deux jeux de touches de deplacement enregistres SIMULTANEMENT
