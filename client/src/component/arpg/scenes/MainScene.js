@@ -3139,6 +3139,9 @@ export default class MainScene extends Phaser.Scene {
     // de cooldown declenche" que ci-dessus si la bonne munition manque.
     if (weaponDef.requiresAmmo) {
       const requiredAmmoId = weaponDef.requiresAmmo;
+      const ammoAllowed = Array.isArray(requiredAmmoId)
+        ? requiredAmmoId.includes(item.id)
+        : item.id === requiredAmmoId;
       if (!this.equipped.quiver) {
         this.showLootToast("Aucune munition équipée");
         return;
