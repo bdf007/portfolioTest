@@ -32,6 +32,7 @@ export default function Minimap({
   playerTile,
   exitTile,
   upstairsTile,
+  isMobile,
 }) {
   const canvasRef = useRef(null);
 
@@ -104,7 +105,8 @@ export default function Minimap({
       style={{
         position: "absolute",
         top: 8,
-        right: 8,
+        left: isMobile ? 8 : undefined,
+        right: isMobile ? undefined : 8,
         zIndex: 5,
         background: "rgba(11,12,16,0.45)",
         border: "1px solid #444",
