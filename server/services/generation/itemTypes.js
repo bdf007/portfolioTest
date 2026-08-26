@@ -32,7 +32,7 @@ const ITEM_TYPES = {
     twoHanded: false,
     grantsRanged: false, // explicite plutot qu'absent - purement melee, ne debloque jamais l'attaque a distance seule (cf. MainScene.canUseRangedAttack)
     name: 'Dague en bois',
-    description: "+1 dégât au corps à corps. Arme d'entraînement de départ.",
+    description: "+1 dégât au corps à corps et -2 à la distance d'attaque. Arme d'entraînement de départ.",
     statBonus: { meleeDamage: 1, meleeRange: -2 },
     stackable: false,
     price: 2,
@@ -45,7 +45,7 @@ const ITEM_TYPES = {
     grantsRanged: false,
     name: 'Épée en bois',
     description: "+1 dégât au corps à corps. Arme d'entraînement de départ.",
-    statBonus: { meleeDamage: 1, meleeRange: 0 },
+    statBonus: { meleeDamage: 1 },
     stackable: false,
     price: 2,
   },
@@ -55,13 +55,26 @@ const ITEM_TYPES = {
     slot: 'mainHand',
     twoHanded: true,  // occupe les DEUX mains - equiper libere mainHand ET offHand (cf. MainScene.equipItem)
     grantsRanged: true, // sans arme marquee ainsi equipee (ici ou en offHand), l'attaque a distance est indisponible - cf. MainScene.canUseRangedAttack
-    requiresAmmo: ["woodenArrow"], // itemId EXACT requis (pas juste un booleen) - un carreau ne peut pas alimenter un arc, cf. MainScene.performRangedAttack
+    requiresAmmo: ['woodenArrow'], // itemId EXACT requis (pas juste un booleen) - un carreau ne peut pas alimenter un arc, cf. MainScene.performRangedAttack
     name: 'Arc en bois',
     description: "+1 dégât à distance. Nécessite des flèches. Arme d'entraînement de départ.",
-    statBonus: { rangedDamage: 1, meleeRange: 0 },
+    statBonus: { rangedDamage: 1 },
     stackable: false,
     price: 2,
   },
+  woodenCrossBow: {
+    id: 'woodenCrossBow',
+    category: 'equipement',
+    slot: 'offHand',
+    twoHanded: false',
+    grantsRanged: true,
+    requiresAmo: ['woodenCrossbowBolt']
+    name: 'Arbalète en bois',
+    description: "+1 dégàt à distance, Nécessite des carreaux. Arme d'entraînement de départ.",
+    statBonus: { rangedDamage: -1),
+    stackable: false,
+    price: 2,
+  },    
   woodenSpear: {
     id: 'woodenSpear',
     category: 'equipment',
@@ -82,7 +95,7 @@ const ITEM_TYPES = {
     grantsRanged: false,
     name: 'Hache de guerre en bois',
     description: "+1 dégât au corps à corps. Arme d'entraînement de départ.",
-    statBonus: { meleeDamage: 1, meleeRange:0 },
+    statBonus: { meleeDamage: 1 },
     stackable: false,
     price: 2,
   },
@@ -94,7 +107,7 @@ const ITEM_TYPES = {
     grantsRanged: false,
     name: 'Masse en bois',
     description: "+1 dégât au corps à corps. Arme d'entraînement de départ.",
-    statBonus: { meleeDamage: 1, meleeRange: 0 },
+    statBonus: { meleeDamage: 1 },
     stackable: false,
     price: 2,
   },
@@ -106,7 +119,7 @@ const ITEM_TYPES = {
     grantsRanged: false,
     name: 'Pelle en bois',
     description: "+1 dégât au corps à corps. Arme d'entraînement de départ.",
-    statBonus: { meleeDamage: 1 },
+    statBonus: { meleeDamage: 1, meleeRange: +1 },
     stackable: false,
     price: 2,
   },
@@ -232,7 +245,7 @@ const ITEM_TYPES = {
     slot: 'mainHand',
     twoHanded: true,
     grantsRanged: true, // sans arme marquee ainsi equipee (ici ou en offHand), l'attaque a distance est indisponible - cf. MainScene.canUseRangedAttack
-    requiresAmmo: 'woodenArrow', // itemId EXACT requis (pas juste un booleen) - un carreau ne peut pas alimenter un arc, cf. MainScene.performRangedAttack
+    requiresAmmo: ['woodenArrow'], // itemId EXACT requis (pas juste un booleen) - un carreau ne peut pas alimenter un arc, cf. MainScene.performRangedAttack
     name: 'Arc de chasse',
     description: '+4 dégâts à distance.',
     statBonus: { rangedDamage: 4 },
@@ -245,7 +258,7 @@ const ITEM_TYPES = {
     slot: 'mainHand', // une main - peut cohabiter avec une epee (double armement automatique si l'autre main est libre, cf. MainScene.equipItem) ou un bouclier
     twoHanded: false,
     grantsRanged: true,
-    requiresAmmo: 'crossbowBolt', // munition DISTINCTE des fleches
+    requiresAmmo: ['crossbowBolt'], // munition DISTINCTE des fleches
     name: 'Arbalète',
     description: '+3 dégâts à distance. Se manie a une main.',
     statBonus: { rangedDamage: 3 },
@@ -326,6 +339,16 @@ const ITEM_TYPES = {
     slot: 'quiver',
     name: 'Flèche en bois',
     description: '+1 dégât à distance tant que des flèches sont encochées.',
+    statBonus: { rangedDamage: 1 },
+    stackable: true,
+    price: 2,
+  },
+  woodenCrossbowBolt: {
+    id: 'woodenCrossbowBolt',
+    category: 'ammo',
+    slot: 'quiver',
+    name: 'Carreau en bois',
+    description: "+1 dégât à distance tant que des carreaux sont disponibles. Munition de l'arbalète uniquement.",
     statBonus: { rangedDamage: 1 },
     stackable: true,
     price: 2,
