@@ -722,6 +722,7 @@ export default function Arpg() {
             playerTile={minimapData.playerTile}
             exitTile={minimapData.exitTile}
             upstairsTile={minimapData.upstairsTile}
+            isMobile={isMobile}
           />
         )}
 
