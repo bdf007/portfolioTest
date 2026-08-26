@@ -655,7 +655,7 @@ const LOOT_TABLES = {
   chestStandard: [
     { itemId: "healthPotion", weight: 35 },
     { itemId: "manaPotion", weight: 35 },
-    { itemId: "gold", weight: 35, quantityRange: [5, 20] },
+    { itemId: "gold", weight: 40, quantityRange: [2, 10] },
     { itemId: "ironSword", weight: 10 },
     { itemId: "huntingBow", weight: 10 },
     { itemId: "crossbow", weight: 10 },
@@ -664,13 +664,13 @@ const LOOT_TABLES = {
   ],
 
   enemyDrop: [
-    { itemId: null, weight: 20 }, // la plupart des ennemis ne laissent rien
+    { itemId: null, weight: 40 }, // la plupart des ennemis ne laissent rien
     { itemId: "gold", weight: 28, quantityRange: [1, 5] },
     { itemId: "healthPotion", weight: 10 },
     { itemId: "manaPotion", weight: 10 },
     { itemId: "ironSword", weight: 10 },
-    { itemId: "woodenArrow", weight: 13, quantityRange: [1, 4] }, // seul objet "en bois" lootable - cf. itemDefs.js
-    { itemId: "crossbowBolt", weight: 9, quantityRange: [1, 4] },
+    { itemId: "woodenArrow", weight: 13, quantityRange: [1, 4] }, 
+    { itemId: "woodenCrossbowBolt", weight: 13, quantityRange: [1, 4] },
   ],
 
   bossDrop: [
@@ -698,9 +698,16 @@ const LOOT_TABLES = {
     { itemId: "gold", weight: 20, quantityRange: [10, 30] },
     { itemId: "healthPotion", weight: 10 },
     { itemId: "manaPotion", weight: 10 },
+    { itemId: "ironDagger", weight: 10},
     { itemId: "ironSword", weight: 4 },
     { itemId: "huntingBow", weight: 4 },
-    { itemId: "crossbow", weight: 4 },
+    { itemId: "ironSpear", weight: 4 },
+    { itemId: "ironAxe", weight: 4 },
+    { itemId: "ironMallet", weight: 4 },
+    { itemId: "ironShovel", weight: 4 },
+    { itemId: "ironPickaxe", weight: 4 },
+    { itemId: "ironHammer", weight: 4 },
+    { itemId: "ironSickle", weight: 4 },
     { itemId: "leatherArmor", weight: 2 },
   ],
 };
