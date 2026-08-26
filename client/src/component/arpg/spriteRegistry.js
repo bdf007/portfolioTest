@@ -1981,8 +1981,8 @@ const HERO_STATS_PROFILES = {
     visionRadius: 7,
     meleeRange: 46,
     rangedRange: 340,
-    startingEquipment: ["woodenDagger"],
-    startingAmmo: null,
+    startingEquipment: ["woodenDagger", "woodenCrossbow"],
+    startingAmmo: {itemId: "woodenCrossbowBolt", quantity: 30},
   },
   mage: {
     base: { maxHp: 70, meleeDamage: 2, rangedDamage: 12, defense: 0, mana: 20 },
@@ -2013,8 +2013,6 @@ const HERO_STATS_PROFILES = {
     visionRadius: 5,
     meleeRange: 56,
     rangedRange: 300,
-    // equipement/objets donnes ET equipes automatiquement au tout debut
-    // d'une partie NEUVE (jamais a une reprise, cf. MainScene.giveStartingKit)
     startingEquipment: ["woodenSword", "woodenShield"],
     startingAmmo: null,
   },
@@ -2047,8 +2045,8 @@ const HERO_STATS_PROFILES = {
     visionRadius: 7,
     meleeRange: 46,
     rangedRange: 340,
-    startingEquipment: ["woodenDagger"],
-    startingAmmo: null,
+    startingEquipment: ["woodenDagger", "woodenCrossbow"],
+    startingAmmo: {itemId: "woodenCrossbowBolt", quantity: 30},
   },
   magicienne: {
     base: { maxHp: 70, meleeDamage: 2, rangedDamage: 12, defense: 0, mana: 20 },
