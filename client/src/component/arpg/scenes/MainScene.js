@@ -602,6 +602,10 @@ export default class MainScene extends Phaser.Scene {
     // n'a pas de champ mana) - uniquement la valeur de base par
     // archetype/niveau (cf. HERO_STATS_PROFILES dans spriteRegistry.js)
     this.playerMaxMana = base.mana;
+    this.playerMeleeRange = heroProfile.meleeRange + bonus.meleeRange;
+    this.playerRangedRange = heroProfile.rangedRange + bonus.rangedRange;
+    this.playerVisionRadius = heroProfile.visionRadius + bonus.visionRadius;
+    this.playerMoveSpeed = heroProfile.moveSpeed + bonus.moveSpeed;
   }
 
   /**
