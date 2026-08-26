@@ -542,56 +542,66 @@ export default function Arpg() {
     <div
       style={{
         position: "relative",
-        width: isMobile ? "100vw" : 800,
-        height: isMobile ? "100vh" : undefined,
-        display: isMobile ? "flex" : undefined,
-        flexDirection: isMobile ? "column" : undefined,
+        width: isMobile ? "100dvw" : 800,
+        height: isMobile ? "100dvh" : undefined,
+        display: "flex",
+        flexDirection: "column",
         overflow: isMobile ? "hidden" : undefined,
       }}
     >
       <div
         style={{
           display: "flex",
-          gap: 20,
-          marginBottom: 6,
-          fontSize: 14,
+          gap: isMobile ? 8 : 20,
+          marginBottom: isMobile ? 2 : 6,
+          padding: isMobile ? "4px 6px" : 0,
+          fontSize: isMobile ? 12 : 14,
           alignItems: "center",
-          flexShrink: isMobile ? 0 : undefined,
-          flexWrap: isMobile ? "wrap" : undefined,
+          flexShrink: 0,
+          flexWrap: isMobile ? "nowrap" : "wrap",
+          whiteSpace: "nowrap",
+          overflow: "hidden",
         }}
       >
         <span>Étage : {depth}</span>
-        <span>Niveau : {level}</span>
+        <span>Niv. : {level}</span>
+
         <span>
-          PV : {Math.max(0, playerHp.hp)} / {playerHp.maxHp}
+          ❤️ {Math.max(0, playerHp.hp)}/{playerHp.maxHp}
         </span>
+
         {playerMana.maxMana > 0 && (
           <span>
-            Mana : {Math.max(0, playerMana.mana)} / {playerMana.maxMana}
+            💧 {Math.max(0, playerMana.mana)}/{playerMana.maxMana}
           </span>
         )}
+
         <span>
-          XP : {xpProgress.xpIntoLevel} / {xpProgress.xpForNextLevel}
+          XP : {xpProgress.xpIntoLevel}/{xpProgress.xpForNextLevel}
         </span>
+
         <button
           onClick={() => setMinimapVisible((v) => !v)}
           style={{
             marginLeft: "auto",
-            padding: "4px 12px",
-            fontSize: 13,
+            padding: isMobile ? "4px 7px" : "4px 12px",
+            fontSize: isMobile ? 14 : 13,
             borderRadius: 6,
             border: "1px solid #555",
             background: "#2a2a35",
             color: "#eee",
             cursor: "pointer",
+            flexShrink: 0,
           }}
+          title="Carte"
         >
-          🗺️ Carte
+          🗺️
         </button>
+
         {!isMobile && (
           <button
             onClick={handleToggleKeyboardLayout}
-            title="Basculer la disposition clavier (I: inventaire, R: quêtes, V: carte, E: action)"
+            title="Basculer la disposition clavier"
             style={{
               padding: "4px 12px",
               fontSize: 13,
@@ -605,47 +615,56 @@ export default function Arpg() {
             ⌨️ {keyboardLayout === "azerty" ? "ZQSD" : "WASD"}
           </button>
         )}
+
         <button
           onClick={handleOpenQuests}
           style={{
-            padding: "4px 12px",
-            fontSize: 13,
+            padding: isMobile ? "4px 7px" : "4px 12px",
+            fontSize: isMobile ? 14 : 13,
             borderRadius: 6,
             border: "1px solid #555",
             background: "#2a2a35",
             color: "#eee",
             cursor: "pointer",
+            flexShrink: 0,
           }}
+          title="Quêtes"
         >
-          📜 Quêtes
+          {isMobile ? "📜" : "📜 Quêtes"}
         </button>
+
         <button
           onClick={handleOpenInventory}
           style={{
-            padding: "4px 12px",
-            fontSize: 13,
+            padding: isMobile ? "4px 7px" : "4px 12px",
+            fontSize: isMobile ? 14 : 13,
             borderRadius: 6,
             border: "1px solid #555",
             background: "#2a2a35",
             color: "#eee",
             cursor: "pointer",
+            flexShrink: 0,
           }}
+          title="Inventaire"
         >
-          🎒 Inventaire
+          {isMobile ? "🎒" : "🎒 Inventaire"}
         </button>
+
         <button
           onClick={handleSaveAndQuit}
           style={{
-            padding: "4px 12px",
-            fontSize: 13,
+            padding: isMobile ? "4px 7px" : "4px 12px",
+            fontSize: isMobile ? 14 : 13,
             borderRadius: 6,
             border: "1px solid #555",
             background: "#2a2a35",
             color: "#eee",
             cursor: "pointer",
+            flexShrink: 0,
           }}
+          title="Sauvegarder et quitter"
         >
-          💾 Sauvegarder et quitter
+          {isMobile ? "💾" : "💾 Sauvegarder et quitter"}
         </button>
       </div>
 
@@ -653,18 +672,21 @@ export default function Arpg() {
         <div
           style={{
             position: "absolute",
-            top: 44,
+            top: isMobile ? 6 : 44,
             left: "50%",
             transform: "translateX(-50%)",
-            zIndex: 6,
-            padding: "6px 16px",
-            fontSize: 13,
+            zIndex: 20,
+            padding: isMobile ? "5px 10px" : "6px 16px",
+            fontSize: isMobile ? 11 : 13,
             borderRadius: 6,
             background: "rgba(20,18,14,0.9)",
             border: "1px solid #8a7050",
             color: "#f0e6d0",
             pointerEvents: "none",
             whiteSpace: "nowrap",
+            maxWidth: isMobile ? "80vw" : undefined,
+            overflow: "hidden",
+            textOverflow: "ellipsis",
           }}
         >
           {lootToast}
@@ -674,14 +696,21 @@ export default function Arpg() {
       <div
         style={{
           position: "relative",
-          flex: isMobile ? 1 : undefined,
+          flex: isMobile ? "1 1 0" : undefined,
           minHeight: isMobile ? 0 : undefined,
+          minWidth: isMobile ? 0 : undefined,
+          width: "100%",
+          overflow: "hidden",
         }}
       >
         <div
           ref={containerRef}
           id="arpg-container"
-          style={isMobile ? { width: "100%", height: "100%" } : undefined}
+          style={{
+            width: "100%",
+            height: "100%",
+            overflow: "hidden",
+          }}
         />
 
         {isMobile && <TouchControls gameRef={gameRef} />}
@@ -754,16 +783,16 @@ export default function Arpg() {
           <div
             style={{
               position: "absolute",
-              bottom: 20,
-              left: 20,
-              right: 20,
-              zIndex: 10,
+              bottom: isMobile ? 80 : 20,
+              left: isMobile ? 8 : 20,
+              right: isMobile ? 8 : 20,
+              zIndex: 20,
               background: "rgba(20,18,15,0.95)",
               border: "2px solid #8a7050",
               borderRadius: 8,
-              padding: 16,
+              padding: isMobile ? 10 : 16,
               color: "#f0e6d0",
-              fontSize: 14,
+              fontSize: isMobile ? 12 : 14,
             }}
           >
             <div style={{ marginBottom: 12 }}>{npcDialog.text}</div>
