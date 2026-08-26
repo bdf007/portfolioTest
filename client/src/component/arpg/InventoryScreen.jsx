@@ -2,7 +2,9 @@ import { resolveItemDef } from "./itemDefs";
 import {
   SPRITE_REGISTRY,
   ICON_SPRITESHEET,
+  ICON_SPRITESHEET_2,
   ICON_SHEET_1_FRAMES,
+  ICON_SHEET_2_FRAMES,
 } from "./spriteRegistry";
 
 const SLOT_LABELS = {
@@ -22,8 +24,8 @@ const SLOT_LABELS = {
 const PREVIEW_SCALE = 3; // meme echelle que CharacterSelectScreen, pour un portrait coherent
 const SHEET_COLS = 12;
 const SHEET_ROWS = 8;
-const ICON_SHEET_COLS = 10;
-const ICON_SHEET_ROWS = 22;
+// const ICON_SHEET_COLS = 10;
+// const ICON_SHEET_ROWS = 22;
 
 /**
  * Regroupe les entrees d'inventaire identiques (meme itemId) en une
@@ -57,35 +59,48 @@ function groupInventory(inventory) {
 }
 
 function ItemIcon({ itemId, scale = 2 }) {
-  const frameIndex = ICON_SHEET_1_FRAMES[itemId];
+  let frameIndex;
+  let spriteSheet;
 
-  if (frameIndex === undefined) {
+  if (ICON_SHEET_1_FRAMES[itemId] !== undefined) {
+    frameIndex = ICON_SHEET_1_FRAMES[itemId];
+    spriteSheet = ICON_SPRITESHEET;
+  } else if (ICON_SHEET_2_FRAMES[itemId] !== undefined) {
+    frameIndex = ICON_SHEET_2_FRAMES[itemId];
+    spriteSheet = ICON_SPRITESHEET_2;
+  } else {
     return null;
   }
 
-  const col = frameIndex % ICON_SHEET_COLS;
-  const row = Math.floor(frameIndex / ICON_SHEET_COLS);
+  const col = frameIndex % spriteSheet.columns;
+  const row = Math.floor(frameIndex / spriteSheet.columns);
 
-  const sheetW = ICON_SPRITESHEET.frameWidth * ICON_SHEET_COLS;
+  const sheetW = spriteSheet.frameWidth * spriteSheet.columns;
 
-  const sheetH = ICON_SPRITESHEET.frameHeight * ICON_SHEET_ROWS;
+  const sheetH = spriteSheet.frameHeight * spriteSheet.rows;
 
   return (
     <div
       style={{
-        width: ICON_SPRITESHEET.frameWidth * scale,
-        height: ICON_SPRITESHEET.frameHeight * scale,
-        backgroundImage: `url(${ICON_SPRITESHEET.path})`,
+        width: spriteSheet.frameWidth * scale,
+        height: spriteSheet.frameHeight * scale,
+
+        backgroundImage: `url(${spriteSheet.path})`,
+
         backgroundPosition: `
-          -${col * ICON_SPRITESHEET.frameWidth * scale}px
-          -${row * ICON_SPRITESHEET.frameHeight * scale}px
+          -${col * spriteSheet.frameWidth * scale}px
+          -${row * spriteSheet.frameHeight * scale}px
         `,
+
         backgroundSize: `
           ${sheetW * scale}px
           ${sheetH * scale}px
         `,
+
         backgroundRepeat: "no-repeat",
+
         imageRendering: "pixelated",
+
         flexShrink: 0,
       }}
     />
