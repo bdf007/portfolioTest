@@ -53,7 +53,7 @@ const ENEMY_TYPES = {
     defenseGrowthEveryNDepths: 4,
   },
   monks1: {
-    base: { hp: 20, damage: 4, xpReward: 10 },
+    base: { hp: 12, damage: 4, xpReward: 1 },
     growthRate: { hp: 1.18, damage: 1.15, xpReward: 1.12 },
     speedBase: 90,
     speedMax: 140,
@@ -86,7 +86,7 @@ const ENEMY_TYPES = {
   },
   elementalfairy1: {
     attackType: "ranged",
-    base: { hp: 10, damage: 4, xpReward: 10 },
+    base: { hp: 10, damage: 4, xpReward: 1 },
     growthRate: { hp: 1.18, damage: 1.15, xpReward: 1.12 },
     speedBase: 90,
     speedMax: 140,
@@ -131,7 +131,7 @@ const ENEMY_TYPES = {
   },
   fairy2: {
     attackType: "ranged",
-    base: { hp: 10, damage: 5, xpReward: 12 },
+    base: { hp: 10, damage: 5, xpReward: 1 },
     growthRate: { hp: 1.19, damage: 1.16, xpReward: 1.13 },
     speedBase: 90,
     speedMax: 140,
@@ -197,7 +197,7 @@ const ENEMY_TYPES = {
     defenseGrowthEveryNDepths: 3,
   },
   colorBat6: {
-    base: { hp: 22, damage: 5, xpReward: 12 },
+    base: { hp: 12, damage: 5, xpReward: 1 },
     growthRate: { hp: 1.19, damage: 1.16, xpReward: 1.13 },
     speedBase: 90,
     speedMax: 140,
@@ -229,7 +229,7 @@ const ENEMY_TYPES = {
     defenseGrowthEveryNDepths: 3,
   },
   angryBrownMushroom: {
-    base: { hp: 12, damage: 4, xpReward: 9 },
+    base: { hp: 12, damage: 4, xpReward: 1 },
     growthRate: { hp: 1.16, damage: 1.13, xpReward: 1.11 },
     speedBase: 90,
     speedMax: 140,
@@ -285,7 +285,7 @@ const ENEMY_TYPES = {
     defenseGrowthEveryNDepths: 3,
   },
   demonLady1: {
-    base: { hp: 12, damage: 4, xpReward: 1 },
+    base: { hp: 12, damage: 5, xpReward: 1 },
     growthRate: { hp: 1.18, damage: 1.15, xpReward: 1.1 },
     speedBase: 90,
     speedMax: 140,
@@ -373,7 +373,7 @@ const ENEMY_TYPES = {
     defenseGrowthEveryNDepths: 3,
   },
   gazer4: {
-    base: { hp: 26, damage: 7, xpReward: 16 },
+    base: { hp: 12, damage: 7, xpReward: 2 },
     growthRate: { hp: 1.21, damage: 1.18, xpReward: 1.15 },
     speedBase: 90,
     speedMax: 140,
@@ -416,7 +416,7 @@ const ENEMY_TYPES = {
     defenseGrowthEveryNDepths: 3,
   },
   soldier4: {
-    base: { hp: 26, damage: 7, xpReward: 16 },
+    base: { hp: 12, damage: 7, xpReward: 1 },
     growthRate: { hp: 1.21, damage: 1.18, xpReward: 1.15 },
     speedBase: 90,
     speedMax: 140,
@@ -859,7 +859,7 @@ const ENEMY_TYPES = {
   },
   lamia6: {
     attackType: "ranged",
-    base: { hp: 8, damage: 2, xpReward: 1 },
+    base: { hp: 8, damage: 4, xpReward: 1 },
     growthRate: { hp: 1.13, damage: 1.1, xpReward: 1.08 },
     speedBase: 120,
     speedMax: 180,
@@ -868,7 +868,7 @@ const ENEMY_TYPES = {
   },
   vampire1: {
     attackType: "ranged",
-    base: { hp: 8, damage: 2, xpReward: 1 },
+    base: { hp: 8, damage: 5, xpReward: 1 },
     growthRate: { hp: 1.13, damage: 1.1, xpReward: 1.08 },
     speedBase: 120,
     speedMax: 180,

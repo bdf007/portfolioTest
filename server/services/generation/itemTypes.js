@@ -691,12 +691,12 @@ const LOOT_TABLES = {
 
   enemyDrop: [
     { itemId: null, weight: 40 }, // la plupart des ennemis ne laissent rien
-    { itemId: "redChest", weight: 2 }, // un coffre rouge peut tomber sur n'importe quel ennemi, mais très rarement
-    { itemId: "greenApple", weight: 100 }, // une pomme peut tomber sur n'importe quel ennemi, mais très rarement
     { itemId: "gold", weight: 28, quantityRange: [1, 5] },
     { itemId: "healthPotion", weight: 10 },
     { itemId: "manaPotion", weight: 10 },
     { itemId: "ironSword", weight: 10 },
+    { itemId: "ironSickle", weight: 10 },
+    { itemId: "ironShovel", weight: 10 },
     { itemId: "woodenArrow", weight: 13, quantityRange: [1, 4] },
     { itemId: "woodenCrossbowBolt", weight: 13, quantityRange: [1, 4] },
   ],
