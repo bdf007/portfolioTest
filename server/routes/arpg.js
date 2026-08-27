@@ -12,6 +12,7 @@ router.get("/level", ArpgController.getLevel);
 router.get("/my-games", ArpgController.getMyGames);
 router.post("/save", ArpgController.saveProgress);
 router.post("/abandon", ArpgController.abandonGame);
+router.post("/delete", ArpgController.deleteGame);
 
 module.exports = router;
 

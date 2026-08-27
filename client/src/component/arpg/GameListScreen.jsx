@@ -30,6 +30,7 @@ export default function GameListScreen({
   username,
   onResume,
   onAbandon,
+  onDelete,
   onNewGame,
 }) {
   return (
@@ -109,6 +110,20 @@ export default function GameListScreen({
                   }}
                 >
                   Abandonner
+                </button>
+                <button
+                  onClick={() => onDelete(g.gameId)}
+                  style={{
+                    padding: "6px 12px",
+                    fontSize: 13,
+                    borderRadius: 6,
+                    border: "1px solid #a04040",
+                    background: "#3a2020",
+                    color: "#f0d0d0",
+                    cursor: "pointer",
+                  }}
+                >
+                  Supprimer
                 </button>
               </div>
             </div>

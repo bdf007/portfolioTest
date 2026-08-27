@@ -13,7 +13,7 @@ import TouchControls from "./TouchControls";
 import { computeLevelFromXp, getPlayerStatsForLevel } from "./leveling";
 import { resolveHeroStatsOverride } from "./spriteRegistry";
 import { computeEquipmentBonuses } from "./equipment";
-import { fetchMyGames, abandonGame } from "../../api/arpgClient";
+import { fetchMyGames, abandonGame, deleteGame } from "../../api/arpgClient";
 
 /**
  * Composant React qui héberge le jeu Phaser et le HUD (PV, XP, game over).
@@ -414,6 +414,12 @@ export default function Arpg() {
       .catch((err) => console.warn("[Arpg] echec abandon de partie", err));
   };
 
+  const handleDeleteGame = (gameId) => {
+    deleteGame(gameId)
+      .then(() => loadGamesList())
+      .catch((err) => console.warn("[Arpg] echec suppression de partie", err));
+  };
+
   const handleNewGame = () => setPhase("select");
 
   const handleSelectHero = (id) => {
@@ -475,6 +481,7 @@ export default function Arpg() {
         username={username}
         onResume={handleResumeGame}
         onAbandon={handleAbandonGame}
+        onDelete={handleDeleteGame}
         onNewGame={handleNewGame}
       />
     );

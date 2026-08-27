@@ -88,3 +88,17 @@ export async function abandonGame(gameId) {
   }
   return res.json();
 }
+
+// suppression d'une partie
+export async function deleteGame(gameId) {
+  const res = await fetch("/api/arpg/delete", {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ gameId }),
+  });
+  if (!res.ok) {
+    throw new Error(`deleteGame: ${res.status}`);
+  }
+  return res.json();
+}

@@ -84,7 +84,7 @@ const ENEMY_TYPES = {
     speedGrowthPerDepth: 2,
     defenseGrowthEveryNDepths: 3,
   },
-  elementalfairy1: {
+  elementalFairy1: {
     attackType: "ranged",
     base: { hp: 10, damage: 4, xpReward: 1 },
     growthRate: { hp: 1.18, damage: 1.15, xpReward: 1.12 },
@@ -93,7 +93,7 @@ const ENEMY_TYPES = {
     speedGrowthPerDepth: 2,
     defenseGrowthEveryNDepths: 3,
   },
-  elementalfairy2: {
+  elementalFairy2: {
     attackType: "ranged",
     base: { hp: 10, damage: 5, xpReward: 12 },
     growthRate: { hp: 1.19, damage: 1.16, xpReward: 1.13 },
@@ -102,7 +102,7 @@ const ENEMY_TYPES = {
     speedGrowthPerDepth: 2,
     defenseGrowthEveryNDepths: 3,
   },
-  elementalfairy3: {
+  elementalFairy3: {
     attackType: "ranged",
     base: { hp: 10, damage: 6, xpReward: 14 },
     growthRate: { hp: 1.2, damage: 1.17, xpReward: 1.14 },
@@ -111,7 +111,7 @@ const ENEMY_TYPES = {
     speedGrowthPerDepth: 2,
     defenseGrowthEveryNDepths: 3,
   },
-  elementalfairy4: {
+  elementalFairy4: {
     attackType: "ranged",
     base: { hp: 10, damage: 7, xpReward: 16 },
     growthRate: { hp: 1.21, damage: 1.18, xpReward: 1.15 },
