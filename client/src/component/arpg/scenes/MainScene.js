@@ -472,6 +472,7 @@ export default class MainScene extends Phaser.Scene {
       ps.currentFloorKills || [],
       ps.currentFloorOpenedChests || [],
       ps.currentFloorLootSeed || null,
+      ps.fogState || null,
     );
 
     // reutilise les events existants pour que le HUD React se mette a
@@ -837,6 +838,17 @@ export default class MainScene extends Phaser.Scene {
   async persistProgressAsync() {
     if (!this.currentSeed) return; // aucun niveau charge pour l'instant
     try {
+      const discoveredTiles = [];
+
+      if (this.fogState?.state) {
+        for (let y = 0; y < this.fogState.state.length; y++) {
+          for (let x = 0; x < this.fogState.state[y].length; x++) {
+            if (this.fogState.state[y][x] !== 0) {
+              discoveredTiles.push(`${x},${y}`);
+            }
+          }
+        }
+      }
       const res = await saveProgress(
         this.currentGameId,
         this.currentDepth,
@@ -855,6 +867,8 @@ export default class MainScene extends Phaser.Scene {
           inventory: this.inventory,
           equipped: this.equipped,
           timePlayedSeconds: this.getTotalTimePlayed(),
+          // Exploration du niveau actuellement sauvegardé
+          fogState: discoveredTiles
         },
       );
       if (res && res.gameId) this.currentGameId = res.gameId;
@@ -923,6 +937,7 @@ export default class MainScene extends Phaser.Scene {
     killedIndices = [],
     openedChestIndices = [],
     lootSeed = null,
+    savedFogState = null,
   ) {
     this.events.emit("level-loading", { depth });
     const effectiveLootSeed = lootSeed || `${Date.now()}-${Math.random()}`;
@@ -1437,6 +1452,21 @@ export default class MainScene extends Phaser.Scene {
     }
 
     this.fogState = createFogState(grid);
+
+    if (savedFogState) {
+      for (const tile of savedFogState) {
+        const [x, y] = tile.split(",").map(Number);
+
+        if (
+          y >= 0 &&
+          y < this.fogState.state.length &&
+          x >= 0 &&
+          x < this.fogState.state[y].length
+          ) {
+          this.fogState.state[y][x] = 1;
+        }
+      }
+    }
     this.lastPlayerTile = { x: playerSpawn.x, y: playerSpawn.y };
 
     // pas de brouillard de guerre dans les villes - zone sure, tout est
