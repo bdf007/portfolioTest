@@ -1496,36 +1496,59 @@ export default class MainScene extends Phaser.Scene {
     this.fogDisabled = data.tileset === "town";
 
     // brouillard de guerre : calque separe, initialement opaque partout,
-    // que l'on eclaircit progressivement selon ce que le joueur decouvre
-    const fogTileset = this.map.addTilesetImage(
-      this.fogTilesetKey,
-      this.fogTilesetKey,
-      TILE_SIZE,
-      TILE_SIZE,
-      0,
-      0,
-    );
-    this.fogLayer = this.map.createBlankLayer("fog", fogTileset, 0, 0);
-    this.fogLayer.fill(0);
-    this.fogLayer.setDepth(5);
+// que l'on eclaircit progressivement selon ce que le joueur decouvre
+const fogTileset = this.map.addTilesetImage(
+  this.fogTilesetKey,
+  this.fogTilesetKey,
+  TILE_SIZE,
+  TILE_SIZE,
+  0,
+  0,
+);
 
-    if (this.fogDisabled) {
-      const allChanges = [];
-      for (let y = 0; y < grid.length; y++) {
-        for (let x = 0; x < grid[0].length; x++) {
-          this.fogState.state[y][x] = 2;
-          allChanges.push({ x, y });
-        }
-      }
-      this.applyFogChanges(allChanges);
-    } else {
-      const initialChanges = this.fogState.update(
-        startPosition.x,
-        startPosition.y,
-        this.playerVisionRadius,
-      );
-      this.applyFogChanges(initialChanges);
+this.fogLayer = this.map.createBlankLayer("fog", fogTileset, 0, 0);
+this.fogLayer.fill(0);
+this.fogLayer.setDepth(5);
+
+if (this.fogDisabled) {
+  const allChanges = [];
+
+  for (let y = 0; y < grid.length; y++) {
+    for (let x = 0; x < grid[0].length; x++) {
+      this.fogState.state[y][x] = 2;
+      allChanges.push({ x, y });
     }
+  }
+
+  this.applyFogChanges(allChanges);
+} else {
+  // Si on charge une sauvegarde, restaurer visuellement
+  // les cases déjà découvertes.
+  if (savedFogState) {
+    for (const tile of savedFogState) {
+      const [x, y] = tile.split(",").map(Number);
+
+      if (
+        y >= 0 &&
+        y < this.fogState.state.length &&
+        x >= 0 &&
+        x < this.fogState.state[y].length
+      ) {
+        this.fogState.state[y][x] = 1;
+        this.fogLayer.putTileAt(1, x, y);
+      }
+    }
+  }
+
+  // Puis révéler la zone autour de la position actuelle du joueur.
+  const initialChanges = this.fogState.update(
+    startPosition.x,
+    startPosition.y,
+    this.playerVisionRadius,
+  );
+
+  this.applyFogChanges(initialChanges);
+}
 
     this.events.emit("level-loaded", { depth, biome: data.biome });
     // etat initial pour React, qui n'a sinon aucune valeur tant que le
