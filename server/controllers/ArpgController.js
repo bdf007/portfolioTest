@@ -625,4 +625,35 @@ async function abandonGame(req, res) {
   }
 }
 
-module.exports = { ping, getLevel, getMyGames, saveProgress, abandonGame };
+// supprimer une partie
+async function deleteGame(req, res) {
+  try {
+    const { gameId } = req.body;
+    if (!gameId) {
+      return res.status(400).json({ error: "gameId requis" });
+    }
+
+    const result = await ArpgGame.findOneAndDelete({
+      _id: gameId,
+      user: req.user._id,
+    });
+
+    if (!result) {
+      return res.status(404).json({ error: "Partie introuvable" });
+    }
+
+    res.json({ ok: true });
+  } catch (error) {
+    console.error("[ArpgController.deleteGame]", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+}
+
+module.exports = {
+  ping,
+  getLevel,
+  getMyGames,
+  saveProgress,
+  abandonGame,
+  deleteGame,
+};
