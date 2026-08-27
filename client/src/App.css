@@ -2407,7 +2407,7 @@ td {
   display: flex;
   flex-direction: column;
   align-items: center;
-  overflow-x: hidden;
+  overflow-x: visible;
   background: radial-gradient(
     circle at top,
     var(--bg-darkBlue),
@@ -2458,7 +2458,8 @@ td {
 @media (max-width: 900px) {
   .arpg-game-area-mobile {
     width: 100%;
-    flex: 1;
+    height: calc(100dvh - 54px);
+    flex: none;
     min-height: 0;
     overflow: hidden;
   }
@@ -2476,11 +2477,16 @@ td {
 
 @media (max-width: 900px) {
   .arpg-page {
+    width: 100%;
     min-height: 100dvh;
-    height: 100dvh;
+    height: auto;
+
     padding: 0;
+
     display: block;
-    overflow: hidden;
+
+    overflow-x: hidden;
+    overflow-y: auto;
   }
 }
 
@@ -2527,13 +2533,12 @@ td {
   .arpg-layout {
     position: relative;
     width: 100%;
-    height: 100%;
+    height: 100dvh;
   }
 
   .arpg-minimap {
     top: 10px;
-    left: 120px;
-
+    left: 110px;
     transform: scale(0.58);
     transform-origin: top left;
   }
