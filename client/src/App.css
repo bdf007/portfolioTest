@@ -2435,7 +2435,7 @@ td {
 .arpg-minimap {
   position: absolute;
   top: 0;
-  left: calc(100% + 5px);
+  left: 200px;
   z-index: 20;
 }
 

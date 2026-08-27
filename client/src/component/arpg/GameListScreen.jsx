@@ -79,7 +79,8 @@ export default function GameListScreen({
               <span style={{ fontSize: 14 }}>
                 {resolveHeroLabel(g.playerState?.heroId)} - Étage {g.depth} -
                 Niveau {g.playerState?.level || 1} - XP {g.playerState?.xp || 0}{" "}
-                - Temps en jeu :{" "}
+                <br />
+                Temps en jeu :{" "}
                 {formatPlayTime(g.playerState?.timePlayedSeconds || 0)}
               </span>
               <div style={{ display: "flex", gap: 8 }}>
@@ -90,14 +91,14 @@ export default function GameListScreen({
                     fontSize: 13,
                     borderRadius: 6,
                     border: "1px solid #8a7050",
-                    background: "#3a2f20",
+                    background: "#065a0b",
                     color: "#f0e6d0",
                     cursor: "pointer",
                   }}
                 >
                   Reprendre
                 </button>
-                <button
+                {/* <button
                   onClick={() => onAbandon(g.gameId)}
                   style={{
                     padding: "6px 12px",
@@ -110,20 +111,14 @@ export default function GameListScreen({
                   }}
                 >
                   Abandonner
-                </button>
+                </button> */}
                 <button
+                  className="admin-delete-x"
                   onClick={() => onDelete(g.gameId)}
-                  style={{
-                    padding: "6px 12px",
-                    fontSize: 13,
-                    borderRadius: 6,
-                    border: "1px solid #a04040",
-                    background: "#3a2020",
-                    color: "#f0d0d0",
-                    cursor: "pointer",
-                  }}
+                  title="Supprimer cette partie"
+                  aria-label="Supprimer cette partie"
                 >
-                  Supprimer
+                  ✕
                 </button>
               </div>
             </div>
