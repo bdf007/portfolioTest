@@ -2440,7 +2440,7 @@ td {
 @media (max-width: 900px) {
   .arpg-minimap {
     top: 10px;
-    left: 10px;
+    left: 60px;
 
     transform: scale(0.58);
     transform-origin: top left;
