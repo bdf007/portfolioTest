@@ -59,7 +59,7 @@ export default function QuestsScreen({ quests, onClose }) {
       style={{
         position: "absolute",
         inset: 0,
-        zIndex: 10,
+        zIndex: 22,
         display: "flex",
         flexDirection: "column",
         background: "rgba(10,10,15,0.95)",
