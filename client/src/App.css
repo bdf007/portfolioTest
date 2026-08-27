@@ -2434,14 +2434,17 @@ td {
 }
 .arpg-minimap {
   position: absolute;
-  top: 0;
-  left: calc(100%);
-  z-index: 20;
+  z-index: 5;
 }
 
-.arpg-layout {
-  position: relative;
-  width: 800px;
+@media (max-width: 900px) {
+  .arpg-minimap {
+    top: 10px;
+    left: 60px;
+
+    transform: scale(0.58);
+    transform-origin: top left;
+  }
 }
 
 @media (max-width: 900px) {
@@ -2520,21 +2523,5 @@ td {
 
     font-size: 20px !important;
     border-radius: 9px !important;
-  }
-}
-
-@media (max-width: 900px) {
-  .arpg-layout {
-    position: relative;
-    width: 100%;
-    height: 100%;
-  }
-
-  .arpg-minimap {
-    top: 10px;
-    left: 120px;
-
-    transform: scale(0.58);
-    transform-origin: top left;
   }
 }
