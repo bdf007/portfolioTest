@@ -3,7 +3,7 @@ import Arpg from "../component/arpg/arpg";
 
 const ArpgPage = () => {
   return (
-    <div className="dungeon-page">
+    <div className="arpg-page">
       <Arpg />
     </div>
   );
