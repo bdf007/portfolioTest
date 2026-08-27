@@ -614,6 +614,13 @@ export const ITEM_DEFS = {
     description: "Un coffre verrouillé.",
     stackable: false,
   },
+  greenApple: {
+    id: "greenApple",
+    category: "questItem",
+    name: "Pomme verte",
+    description: "Une pomme fraîche et juteuse.",
+    stackable: false,
+  },
 
   woodenShield: {
     id: "woodenShield",
