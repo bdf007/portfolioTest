@@ -685,18 +685,24 @@ const LOOT_TABLES = {
     { itemId: "ironSword", weight: 10 },
     { itemId: "huntingBow", weight: 10 },
     { itemId: "crossbow", weight: 10 },
+    { itemId: "ironDagger", weight: 10 },
+    { itemId: "ironSickle", weight: 10 },
+    { itemId: "ironShovel", weight: 10 },
+    { itemId: "ironAxe", weight: 10 },
+    { itemId: "ironMace", weight: 10 },
+    { itemId: "ironMallet", weight: 10 },
+    { itemId: "ironPickaxe", weight: 10 },
+    { itemId: "ironHammer", weight: 10 },
+    { itemId: "ironSpear", weight: 10 },
     { itemId: "leatherArmor", weight: 8 },
     { itemId: "vitalityCharm", weight: 2 },
   ],
 
   enemyDrop: [
-    { itemId: null, weight: 40 }, // la plupart des ennemis ne laissent rien
+    { itemId: null, weight: 50 }, // la plupart des ennemis ne laissent rien
     { itemId: "gold", weight: 28, quantityRange: [1, 5] },
     { itemId: "healthPotion", weight: 10 },
     { itemId: "manaPotion", weight: 10 },
-    { itemId: "ironSword", weight: 10 },
-    { itemId: "ironSickle", weight: 10 },
-    { itemId: "ironShovel", weight: 10 },
     { itemId: "woodenArrow", weight: 13, quantityRange: [1, 4] },
     { itemId: "woodenCrossbowBolt", weight: 13, quantityRange: [1, 4] },
   ],
