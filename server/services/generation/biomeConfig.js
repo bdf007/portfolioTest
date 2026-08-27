@@ -37,7 +37,7 @@ const BIOMES = [
       "angryBrownMushroom",
       "colorBat6",
       "fairy2",
-      "elementalfairy1",
+      "elementalFairy1",
       "monks1",
       "gazer4",
       "soldier4",
