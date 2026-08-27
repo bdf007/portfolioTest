@@ -2434,17 +2434,9 @@ td {
 }
 .arpg-minimap {
   position: absolute;
-  z-index: 5;
-}
-
-@media (max-width: 900px) {
-  .arpg-minimap {
-    top: 10px;
-    left: 120px;
-
-    transform: scale(0.58);
-    transform-origin: top left;
-  }
+  top: 0;
+  left: calc(100% + 5px);
+  z-index: 20;
 }
 
 @media (max-width: 900px) {
@@ -2541,7 +2533,7 @@ td {
 
   .arpg-minimap {
     top: 10px;
-    left: 110px;
+    left: 120px;
     transform: scale(0.58);
     transform-origin: top left;
   }

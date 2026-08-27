@@ -674,7 +674,7 @@ export default function Arpg() {
           }}
           title="Sauvegarder et quitter"
         >
-          {isMobile ? "💾" : "💾 Sauvegarder et quitter"}
+          {isMobile ? "💾" : "💾 et quitter"}
         </button>
       </div>
 
