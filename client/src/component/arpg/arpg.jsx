@@ -674,7 +674,7 @@ export default function Arpg() {
           }}
           title="Sauvegarder et quitter"
         >
-          {isMobile ? "💾" : "💾  et quitter"}
+          {isMobile ? "💾" : "💾 Sauvegarder et quitter"}
         </button>
       </div>
 
@@ -703,288 +703,35 @@ export default function Arpg() {
         </div>
       )}
 
-      <div className="arpg-layout">
+      <div
+        className={
+          isMobile ? "arpg-game-area arpg-game-area-mobile" : "arpg-game-area"
+        }
+        style={{
+          position: "relative",
+          flex: isMobile ? 1 : undefined,
+          minHeight: isMobile ? 0 : undefined,
+          overflow: "hidden",
+        }}
+      >
         <div
-          className={
-            isMobile ? "arpg-game-area arpg-game-area-mobile" : "arpg-game-area"
+          ref={containerRef}
+          id="arpg-container"
+          className="arpg-container"
+          style={
+            isMobile
+              ? {
+                  width: "100%",
+                  height: "100%",
+                  position: "absolute",
+                  inset: 0,
+                }
+              : undefined
           }
-          style={{
-            position: "relative",
-            flex: isMobile ? 1 : undefined,
-            minHeight: isMobile ? 0 : undefined,
-            overflow: "hidden",
-          }}
-        >
-          <div
-            ref={containerRef}
-            id="arpg-container"
-            className="arpg-container"
-            style={
-              isMobile
-                ? {
-                    width: "100%",
-                    height: "100%",
-                    position: "absolute",
-                    inset: 0,
-                  }
-                : undefined
-            }
-          />
+        />
 
-          {isMobile && <TouchControls gameRef={gameRef} />}
+        {isMobile && <TouchControls gameRef={gameRef} />}
 
-          {loadError && (
-            <div
-              style={{
-                position: "absolute",
-                inset: 0,
-                zIndex: 10,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                background: "rgba(0,0,0,0.7)",
-                color: "#fff",
-              }}
-            >
-              Erreur de chargement du niveau : {loadError}
-            </div>
-          )}
-
-          {gameOver && (
-            <div
-              style={{
-                position: "absolute",
-                inset: 0,
-                zIndex: 10,
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-                background: "rgba(0,0,0,0.7)",
-                color: "#fff",
-                fontSize: 22,
-                gap: 14,
-              }}
-            >
-              <div>Game over</div>
-              <div style={{ fontSize: 14, color: "#ccc" }}>
-                Étage {gameOver.depth} - XP total : {gameOver.xp}
-              </div>
-              <button
-                onClick={handleRetry}
-                style={{
-                  padding: "8px 18px",
-                  fontSize: 14,
-                  borderRadius: 6,
-                  border: "1px solid #555",
-                  background: "#2a2a35",
-                  color: "#eee",
-                  cursor: "pointer",
-                }}
-              >
-                Réessayer cet étage
-              </button>
-            </div>
-          )}
-
-          {npcDialog && (
-            <div
-              style={{
-                position: "absolute",
-                bottom: isMobile ? 100 : 20,
-                left: isMobile ? 10 : 20,
-                right: isMobile ? 10 : 20,
-                zIndex: 20,
-                background: "rgba(20,18,15,0.95)",
-                border: "2px solid #8a7050",
-                borderRadius: 8,
-                padding: isMobile ? 12 : 16,
-                color: "#f0e6d0",
-                fontSize: isMobile ? 13 : 14,
-              }}
-            >
-              <div style={{ marginBottom: 12 }}>{npcDialog.text}</div>
-              <div style={{ display: "flex", gap: 10 }}>
-                {npcDialog.canAccept && (
-                  <button
-                    onClick={handleAcceptQuest}
-                    style={{
-                      padding: "6px 14px",
-                      fontSize: 13,
-                      borderRadius: 6,
-                      border: "1px solid #8a7050",
-                      background: "#3a2f20",
-                      color: "#f0e6d0",
-                      cursor: "pointer",
-                    }}
-                  >
-                    Accepter
-                  </button>
-                )}
-                {npcDialog.canTurnIn && (
-                  <button
-                    onClick={handleTurnInQuest}
-                    style={{
-                      padding: "6px 14px",
-                      fontSize: 13,
-                      borderRadius: 6,
-                      border: "1px solid #8a7050",
-                      background: "#3a2f20",
-                      color: "#f0e6d0",
-                      cursor: "pointer",
-                    }}
-                  >
-                    Rendre
-                  </button>
-                )}
-                <button
-                  onClick={handleCloseDialog}
-                  style={{
-                    padding: "6px 14px",
-                    fontSize: 13,
-                    borderRadius: 6,
-                    border: "1px solid #555",
-                    background: "#2a2a35",
-                    color: "#eee",
-                    cursor: "pointer",
-                  }}
-                >
-                  Fermer
-                </button>
-              </div>
-            </div>
-          )}
-
-          {upstairsPrompt && (
-            <div
-              style={{
-                position: "absolute",
-                inset: 0,
-                zIndex: 10,
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-                background: "rgba(0,0,0,0.75)",
-                color: "#fff",
-                fontSize: 18,
-                gap: 16,
-              }}
-            >
-              <div>Redescendre à l'étage précédent ?</div>
-              <div style={{ display: "flex", gap: 12 }}>
-                <button
-                  onClick={handleConfirmUpstairs}
-                  style={{
-                    padding: "8px 20px",
-                    fontSize: 14,
-                    borderRadius: 6,
-                    border: "1px solid #dc3030",
-                    background: "#3a1f1f",
-                    color: "#f0d0d0",
-                    cursor: "pointer",
-                  }}
-                >
-                  Oui
-                </button>
-                <button
-                  onClick={handleCancelUpstairs}
-                  style={{
-                    padding: "8px 20px",
-                    fontSize: 14,
-                    borderRadius: 6,
-                    border: "1px solid #555",
-                    background: "#2a2a35",
-                    color: "#eee",
-                    cursor: "pointer",
-                  }}
-                >
-                  Non
-                </button>
-              </div>
-            </div>
-          )}
-          {exitPrompt && (
-            <div
-              style={{
-                position: "absolute",
-                inset: 0,
-                zIndex: 10,
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-                background: "rgba(0,0,0,0.75)",
-                color: "#fff",
-                fontSize: 18,
-                gap: 16,
-              }}
-            >
-              <div>Descendre à l'étage suivant ?</div>
-              <div style={{ display: "flex", gap: 12 }}>
-                <button
-                  onClick={handleConfirmExit}
-                  style={{
-                    padding: "8px 20px",
-                    fontSize: 14,
-                    borderRadius: 6,
-                    border: "1px solid #ffd700",
-                    background: "#3a3320",
-                    color: "#f0e8c0",
-                    cursor: "pointer",
-                  }}
-                >
-                  Oui
-                </button>
-                <button
-                  onClick={handleCancelExit}
-                  style={{
-                    padding: "8px 20px",
-                    fontSize: 14,
-                    borderRadius: 6,
-                    border: "1px solid #555",
-                    background: "#2a2a35",
-                    color: "#eee",
-                    cursor: "pointer",
-                  }}
-                >
-                  Non
-                </button>
-              </div>
-            </div>
-          )}
-          {inventoryOpen && (
-            <InventoryScreen
-              inventory={inventory}
-              equipped={equipped}
-              stats={combatStats}
-              heroId={heroId}
-              onEquip={handleEquip}
-              onUnequip={handleUnequip}
-              onUse={handleUseConsumable}
-              onClose={handleCloseInventory}
-            />
-          )}
-          {questsOpen && (
-            <QuestsScreen quests={quests} onClose={handleCloseQuests} />
-          )}
-          {travelDestinations && (
-            <TravelHubScreen
-              destinations={travelDestinations}
-              onTravel={handleTravelToDepth}
-              onClose={handleCloseTravelHub}
-            />
-          )}
-          {shopStock && (
-            <ShopScreen
-              stock={shopStock}
-              inventory={inventory}
-              onBuy={handleBuyItem}
-              onSell={handleSellItem}
-              onClose={handleCloseShop}
-            />
-          )}
-        </div>
         {minimapVisible && minimapData && (
           <div className="arpg-minimap">
             <Minimap
@@ -995,6 +742,258 @@ export default function Arpg() {
               upstairsTile={minimapData.upstairsTile}
             />
           </div>
+        )}
+
+        {loadError && (
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              zIndex: 10,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              background: "rgba(0,0,0,0.7)",
+              color: "#fff",
+            }}
+          >
+            Erreur de chargement du niveau : {loadError}
+          </div>
+        )}
+
+        {gameOver && (
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              zIndex: 10,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              background: "rgba(0,0,0,0.7)",
+              color: "#fff",
+              fontSize: 22,
+              gap: 14,
+            }}
+          >
+            <div>Game over</div>
+            <div style={{ fontSize: 14, color: "#ccc" }}>
+              Étage {gameOver.depth} - XP total : {gameOver.xp}
+            </div>
+            <button
+              onClick={handleRetry}
+              style={{
+                padding: "8px 18px",
+                fontSize: 14,
+                borderRadius: 6,
+                border: "1px solid #555",
+                background: "#2a2a35",
+                color: "#eee",
+                cursor: "pointer",
+              }}
+            >
+              Réessayer cet étage
+            </button>
+          </div>
+        )}
+
+        {npcDialog && (
+          <div
+            style={{
+              position: "absolute",
+              bottom: isMobile ? 100 : 20,
+              left: isMobile ? 10 : 20,
+              right: isMobile ? 10 : 20,
+              zIndex: 20,
+              background: "rgba(20,18,15,0.95)",
+              border: "2px solid #8a7050",
+              borderRadius: 8,
+              padding: isMobile ? 12 : 16,
+              color: "#f0e6d0",
+              fontSize: isMobile ? 13 : 14,
+            }}
+          >
+            <div style={{ marginBottom: 12 }}>{npcDialog.text}</div>
+            <div style={{ display: "flex", gap: 10 }}>
+              {npcDialog.canAccept && (
+                <button
+                  onClick={handleAcceptQuest}
+                  style={{
+                    padding: "6px 14px",
+                    fontSize: 13,
+                    borderRadius: 6,
+                    border: "1px solid #8a7050",
+                    background: "#3a2f20",
+                    color: "#f0e6d0",
+                    cursor: "pointer",
+                  }}
+                >
+                  Accepter
+                </button>
+              )}
+              {npcDialog.canTurnIn && (
+                <button
+                  onClick={handleTurnInQuest}
+                  style={{
+                    padding: "6px 14px",
+                    fontSize: 13,
+                    borderRadius: 6,
+                    border: "1px solid #8a7050",
+                    background: "#3a2f20",
+                    color: "#f0e6d0",
+                    cursor: "pointer",
+                  }}
+                >
+                  Rendre
+                </button>
+              )}
+              <button
+                onClick={handleCloseDialog}
+                style={{
+                  padding: "6px 14px",
+                  fontSize: 13,
+                  borderRadius: 6,
+                  border: "1px solid #555",
+                  background: "#2a2a35",
+                  color: "#eee",
+                  cursor: "pointer",
+                }}
+              >
+                Fermer
+              </button>
+            </div>
+          </div>
+        )}
+
+        {upstairsPrompt && (
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              zIndex: 10,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              background: "rgba(0,0,0,0.75)",
+              color: "#fff",
+              fontSize: 18,
+              gap: 16,
+            }}
+          >
+            <div>Redescendre à l'étage précédent ?</div>
+            <div style={{ display: "flex", gap: 12 }}>
+              <button
+                onClick={handleConfirmUpstairs}
+                style={{
+                  padding: "8px 20px",
+                  fontSize: 14,
+                  borderRadius: 6,
+                  border: "1px solid #dc3030",
+                  background: "#3a1f1f",
+                  color: "#f0d0d0",
+                  cursor: "pointer",
+                }}
+              >
+                Oui
+              </button>
+              <button
+                onClick={handleCancelUpstairs}
+                style={{
+                  padding: "8px 20px",
+                  fontSize: 14,
+                  borderRadius: 6,
+                  border: "1px solid #555",
+                  background: "#2a2a35",
+                  color: "#eee",
+                  cursor: "pointer",
+                }}
+              >
+                Non
+              </button>
+            </div>
+          </div>
+        )}
+        {exitPrompt && (
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              zIndex: 10,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              background: "rgba(0,0,0,0.75)",
+              color: "#fff",
+              fontSize: 18,
+              gap: 16,
+            }}
+          >
+            <div>Descendre à l'étage suivant ?</div>
+            <div style={{ display: "flex", gap: 12 }}>
+              <button
+                onClick={handleConfirmExit}
+                style={{
+                  padding: "8px 20px",
+                  fontSize: 14,
+                  borderRadius: 6,
+                  border: "1px solid #ffd700",
+                  background: "#3a3320",
+                  color: "#f0e8c0",
+                  cursor: "pointer",
+                }}
+              >
+                Oui
+              </button>
+              <button
+                onClick={handleCancelExit}
+                style={{
+                  padding: "8px 20px",
+                  fontSize: 14,
+                  borderRadius: 6,
+                  border: "1px solid #555",
+                  background: "#2a2a35",
+                  color: "#eee",
+                  cursor: "pointer",
+                }}
+              >
+                Non
+              </button>
+            </div>
+          </div>
+        )}
+        {inventoryOpen && (
+          <InventoryScreen
+            inventory={inventory}
+            equipped={equipped}
+            stats={combatStats}
+            heroId={heroId}
+            onEquip={handleEquip}
+            onUnequip={handleUnequip}
+            onUse={handleUseConsumable}
+            onClose={handleCloseInventory}
+          />
+        )}
+        {questsOpen && (
+          <QuestsScreen quests={quests} onClose={handleCloseQuests} />
+        )}
+        {travelDestinations && (
+          <TravelHubScreen
+            destinations={travelDestinations}
+            onTravel={handleTravelToDepth}
+            onClose={handleCloseTravelHub}
+          />
+        )}
+        {shopStock && (
+          <ShopScreen
+            stock={shopStock}
+            inventory={inventory}
+            onBuy={handleBuyItem}
+            onSell={handleSellItem}
+            onClose={handleCloseShop}
+          />
         )}
       </div>
     </div>
