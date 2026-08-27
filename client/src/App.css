@@ -19,6 +19,7 @@
    14. Page : Dungeon
    15. Page : Admin
    16. Page : Admin Dungeon
+   17. Page : ARPG
    ============================================================================ */
 
 /* ============================================================================
@@ -2393,5 +2394,134 @@ td {
     flex-wrap: wrap;
     gap: 0.3rem 0.7rem;
     color: var(--text-light);
+  }
+}
+
+/* ============================================================================
+   17. PAGE : ARPG (préfixe .arpg-page)
+   ============================================================================ */
+
+.arpg-page {
+  min-height: 100vh;
+  padding: 3rem 1.5rem 4rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow-x: hidden;
+  background: radial-gradient(
+    circle at top,
+    var(--bg-darkBlue),
+    var(--bg-dark) 70%
+  );
+  color: var(--text-light);
+  font-family: "Space Grotesk", sans-serif;
+}
+
+.arpg-hud {
+  width: 100%;
+}
+
+.mobile-button-icon {
+  display: none;
+}
+
+.arpg-game-area {
+  position: relative;
+}
+
+.arpg-container {
+  position: relative;
+}
+.arpg-minimap {
+  position: absolute;
+  z-index: 5;
+}
+
+@media (max-width: 900px) {
+  .arpg-minimap {
+    top: 10px;
+    left: 10px;
+
+    transform: scale(0.58);
+    transform-origin: top left;
+  }
+}
+
+@media (max-width: 900px) {
+  .arpg-container {
+    width: 100%;
+    height: 100%;
+  }
+
+  .arpg-container canvas {
+    display: block;
+  }
+}
+
+@media (max-width: 900px) {
+  .arpg-game-area-mobile {
+    width: 100%;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+  }
+}
+
+@media (max-width: 900px) {
+  .desktop-button-label {
+    display: none;
+  }
+
+  .mobile-button-icon {
+    display: inline;
+  }
+}
+
+@media (max-width: 900px) {
+  .arpg-page {
+    min-height: 100dvh;
+    height: 100dvh;
+    padding: 0;
+    display: block;
+    overflow: hidden;
+  }
+}
+
+@media (max-width: 900px) {
+  .arpg-hud-mobile {
+    width: 100%;
+    height: 54px;
+
+    padding: 5px 8px;
+
+    background: rgba(5, 8, 14, 0.96);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+
+    overflow: hidden;
+  }
+
+  .arpg-hud-mobile > span {
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .arpg-hud-mobile button {
+    flex-shrink: 0;
+  }
+}
+
+@media (max-width: 900px) {
+  .arpg-hud-mobile button {
+    width: 42px;
+    height: 42px;
+
+    padding: 0 !important;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 20px !important;
+    border-radius: 9px !important;
   }
 }

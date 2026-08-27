@@ -540,27 +540,28 @@ export default function Arpg() {
 
   return (
     <div
+      className={isMobile ? "arpg arpg-mobile" : "arpg"}
       style={{
         position: "relative",
-        width: isMobile ? "100dvw" : 800,
+        width: isMobile ? "100%" : 800,
         height: isMobile ? "100dvh" : undefined,
-        display: "flex",
-        flexDirection: "column",
-        overflow: isMobile ? "hidden" : undefined,
+        display: isMobile ? "flex" : undefined,
+        flexDirection: isMobile ? "column" : undefined,
+        overflow: "hidden",
+        boxSizing: "border-box",
       }}
     >
       <div
+        className={isMobile ? "arpg-hud arpg-hud-mobile" : "arpg-hud"}
         style={{
           display: "flex",
           gap: isMobile ? 8 : 20,
-          marginBottom: isMobile ? 2 : 6,
-          padding: isMobile ? "4px 6px" : 0,
+          marginBottom: isMobile ? 0 : 6,
           fontSize: isMobile ? 12 : 14,
           alignItems: "center",
           flexShrink: 0,
-          flexWrap: isMobile ? "nowrap" : "wrap",
-          whiteSpace: "nowrap",
-          overflow: "hidden",
+          flexWrap: "nowrap",
+          boxSizing: "border-box",
         }}
       >
         <span>Étage : {depth}</span>
@@ -595,7 +596,8 @@ export default function Arpg() {
           }}
           title="Carte"
         >
-          🗺️
+          <span className="desktop-button-label">🗺️ Carte</span>
+          <span className="mobile-button-icon">🗺️</span>
         </button>
 
         {!isMobile && (
@@ -603,6 +605,7 @@ export default function Arpg() {
             onClick={handleToggleKeyboardLayout}
             title="Basculer la disposition clavier"
             style={{
+              marginLeft: "auto",
               padding: "4px 12px",
               fontSize: 13,
               borderRadius: 6,
@@ -672,7 +675,7 @@ export default function Arpg() {
         <div
           style={{
             position: "absolute",
-            top: isMobile ? 6 : 44,
+            top: isMobile ? 60 : 44,
             left: "50%",
             transform: "translateX(-50%)",
             zIndex: 20,
@@ -694,36 +697,44 @@ export default function Arpg() {
       )}
 
       <div
+        className={
+          isMobile ? "arpg-game-area arpg-game-area-mobile" : "arpg-game-area"
+        }
         style={{
           position: "relative",
-          flex: isMobile ? "1 1 0" : undefined,
+          flex: isMobile ? 1 : undefined,
           minHeight: isMobile ? 0 : undefined,
-          minWidth: isMobile ? 0 : undefined,
-          width: "100%",
           overflow: "hidden",
         }}
       >
         <div
           ref={containerRef}
           id="arpg-container"
-          style={{
-            width: "100%",
-            height: "100%",
-            overflow: "hidden",
-          }}
+          className="arpg-container"
+          style={
+            isMobile
+              ? {
+                  width: "100%",
+                  height: "100%",
+                  position: "absolute",
+                  inset: 0,
+                }
+              : undefined
+          }
         />
 
         {isMobile && <TouchControls gameRef={gameRef} />}
 
         {minimapVisible && minimapData && (
-          <Minimap
-            grid={minimapData.grid}
-            fogState={minimapData.fogState}
-            playerTile={minimapData.playerTile}
-            exitTile={minimapData.exitTile}
-            upstairsTile={minimapData.upstairsTile}
-            isMobile={isMobile}
-          />
+          <div className="arpg-minimap">
+            <Minimap
+              grid={minimapData.grid}
+              fogState={minimapData.fogState}
+              playerTile={minimapData.playerTile}
+              exitTile={minimapData.exitTile}
+              upstairsTile={minimapData.upstairsTile}
+            />
+          </div>
         )}
 
         {loadError && (
@@ -784,16 +795,16 @@ export default function Arpg() {
           <div
             style={{
               position: "absolute",
-              bottom: isMobile ? 80 : 20,
-              left: isMobile ? 8 : 20,
-              right: isMobile ? 8 : 20,
+              bottom: isMobile ? 100 : 20,
+              left: isMobile ? 10 : 20,
+              right: isMobile ? 10 : 20,
               zIndex: 20,
               background: "rgba(20,18,15,0.95)",
               border: "2px solid #8a7050",
               borderRadius: 8,
-              padding: isMobile ? 10 : 16,
+              padding: isMobile ? 12 : 16,
               color: "#f0e6d0",
-              fontSize: isMobile ? 12 : 14,
+              fontSize: isMobile ? 13 : 14,
             }}
           >
             <div style={{ marginBottom: 12 }}>{npcDialog.text}</div>
