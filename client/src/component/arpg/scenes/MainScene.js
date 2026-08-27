@@ -473,6 +473,7 @@ export default class MainScene extends Phaser.Scene {
       ps.currentFloorOpenedChests || [],
       ps.currentFloorLootSeed || null,
       ps.fogState || null,
+      ps.playerPosition || null,
     );
 
     // reutilise les events existants pour que le HUD React se mette a
@@ -836,46 +837,53 @@ export default class MainScene extends Phaser.Scene {
    * pas encore (premiere sauvegarde d'une partie fraiche).
    */
   async persistProgressAsync() {
-    if (!this.currentSeed) return; // aucun niveau charge pour l'instant
-    try {
-      const discoveredTiles = [];
+  if (!this.currentSeed) return; // aucun niveau charge pour l'instant
 
-      if (this.fogState?.state) {
-        for (let y = 0; y < this.fogState.state.length; y++) {
-          for (let x = 0; x < this.fogState.state[y].length; x++) {
-            if (this.fogState.state[y][x] !== 0) {
-              discoveredTiles.push(`${x},${y}`);
-            }
+  try {
+    const discoveredTiles = [];
+
+    if (this.fogState?.state) {
+      for (let y = 0; y < this.fogState.state.length; y++) {
+        for (let x = 0; x < this.fogState.state[y].length; x++) {
+          if (this.fogState.state[y][x] !== 0) {
+            discoveredTiles.push(`${x},${y}`);
           }
         }
       }
-      const res = await saveProgress(
-        this.currentGameId,
-        this.currentDepth,
-        this.currentSeed,
-        this.visitedFloors,
-        {
-          xp: this.xp,
-          level: this.playerLevel,
-          hp: this.playerHp,
-          mana: this.playerMana,
-          heroId: this.heroSpriteKey,
-          currentFloorKills: this.currentFloorKills,
-          currentFloorOpenedChests: this.currentFloorOpenedChests,
-          currentFloorLootSeed: this.currentFloorLootSeed,
-          quests: this.quests,
-          inventory: this.inventory,
-          equipped: this.equipped,
-          timePlayedSeconds: this.getTotalTimePlayed(),
-          // Exploration du niveau actuellement sauvegardé
-          fogState: discoveredTiles
-        },
-      );
-      if (res && res.gameId) this.currentGameId = res.gameId;
-    } catch (err) {
-      console.warn("[MainScene] echec de sauvegarde", err);
     }
+
+    const res = await saveProgress(
+      this.currentGameId,
+      this.currentDepth,
+      this.currentSeed,
+      this.visitedFloors,
+      {
+        xp: this.xp,
+        level: this.playerLevel,
+        hp: this.playerHp,
+        mana: this.playerMana,
+        heroId: this.heroSpriteKey,
+        currentFloorKills: this.currentFloorKills,
+        currentFloorOpenedChests: this.currentFloorOpenedChests,
+        currentFloorLootSeed: this.currentFloorLootSeed,
+        quests: this.quests,
+        inventory: this.inventory,
+        equipped: this.equipped,
+        timePlayedSeconds: this.getTotalTimePlayed(),
+
+        // Exploration du niveau actuellement sauvegardé
+        fogState: discoveredTiles,
+
+        // Position du joueur au moment de la sauvegarde
+        playerPosition: this.lastPlayerTile,
+      },
+    );
+
+    if (res && res.gameId) this.currentGameId = res.gameId;
+  } catch (err) {
+    console.warn("[MainScene] echec de sauvegarde", err);
   }
+}
 
   /**
    * Sauvegarde la progression courante - fire-and-forget, appelee par les
@@ -938,6 +946,7 @@ export default class MainScene extends Phaser.Scene {
     openedChestIndices = [],
     lootSeed = null,
     savedFogState = null,
+    savedPlayerPosition = null,
   ) {
     this.events.emit("level-loading", { depth });
     const effectiveLootSeed = lootSeed || `${Date.now()}-${Math.random()}`;
@@ -1169,13 +1178,21 @@ export default class MainScene extends Phaser.Scene {
     this.layer.setCollision(WALL);
     this.layer.setDepth(0);
 
+    const startPosition = savedPlayerPosition || playerSpawn;
+
     const heroSprite = SPRITE_REGISTRY[this.heroSpriteKey];
+
     this.hero = this.physics.add.sprite(
-      playerSpawn.x * TILE_SIZE + TILE_SIZE / 2,
-      playerSpawn.y * TILE_SIZE + TILE_SIZE / 2,
+      startPosition.x * TILE_SIZE + TILE_SIZE / 2,
+      startPosition.y * TILE_SIZE + TILE_SIZE / 2,
       heroSprite.key,
       heroSprite.animations.idleDown,
     );
+
+    this.lastPlayerTile = {
+      x: startPosition.x,
+      y: startPosition.y,
+    };
     this.hero.setScale(heroSprite.scale);
     this.hero.setCollideWorldBounds(true);
     // hitbox calculee par spriteRegistry.js (computeSafeHitbox) a partir
@@ -1467,7 +1484,7 @@ export default class MainScene extends Phaser.Scene {
         }
       }
     }
-    this.lastPlayerTile = { x: playerSpawn.x, y: playerSpawn.y };
+    this.lastPlayerTile = { x: startPosition.x, y: startPosition.y };
 
     // pas de brouillard de guerre dans les villes - zone sure, tout est
     // visible d'emblee. On garde quand meme la structure fogState/fogLayer
@@ -1503,8 +1520,8 @@ export default class MainScene extends Phaser.Scene {
       this.applyFogChanges(allChanges);
     } else {
       const initialChanges = this.fogState.update(
-        playerSpawn.x,
-        playerSpawn.y,
+        startPosition.x,
+        startPosition.y,
         this.playerVisionRadius,
       );
       this.applyFogChanges(initialChanges);
