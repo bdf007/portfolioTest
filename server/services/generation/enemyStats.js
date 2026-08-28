@@ -968,6 +968,7 @@ function getEnemyStatsForDepth(depth, typeKey = "enemyDefault") {
     // attaquer a distance plutot qu'au contact (cf. les nagas,
     // MainScene.updateEnemyAttacks/updateEnemyProjectiles cote client)
     attackType: type.attackType || "melee",
+    questLoot: type.questLoot || null,
   };
 }
 
