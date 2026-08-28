@@ -102,12 +102,15 @@ function App() {
                 </>
               )}
 
-              {user && (user.role === "gamer" || user.role === "admin") && (
-                <>
-                  <Route path="/Contact" element={<Contact />} />
-                  <Route path="/Dungeon" element={<DungeonPage />} />
-                </>
-              )}
+              {user &&
+                (user.role === "gamer" ||
+                  user.role === "admin" ||
+                  user.role === "betatester") && (
+                  <>
+                    <Route path="/Contact" element={<Contact />} />
+                    <Route path="/Dungeon" element={<DungeonPage />} />
+                  </>
+                )}
 
               <Route
                 path="/AdminDungeon"
@@ -122,7 +125,11 @@ function App() {
               <Route
                 path="/Arpg"
                 element={
-                  user?.role === "admin" ? <ArpgPage /> : <Navigate to="/" />
+                  user?.role === "admin" || user?.role === "betatester" ? (
+                    <ArpgPage />
+                  ) : (
+                    <Navigate to="/" />
+                  )
                 }
               />
 
