@@ -231,6 +231,7 @@ const ENEMY_TYPES = {
   angryBrownMushroom: {
     base: { hp: 12, damage: 4, xpReward: 1 },
     growthRate: { hp: 1.16, damage: 1.13, xpReward: 1.11 },
+    questLoot: 'orangeMushroom'
     speedBase: 90,
     speedMax: 140,
     speedGrowthPerDepth: 2,
