@@ -22,11 +22,12 @@ const {
   findUpstairsTile,
   findNearbyFloorTile,
 } = require("../services/generation/spawnUtils");
-const { getEnemyStatsForDepth } = require("../services/generation/enemyStats");
+const { getEnemyStatsForDepth, ENNEMY_TYPES } = require("../services/generation/enemyStats");
 const {
   generateQuestForNpc,
   generateObtainItemQuest,
   generateDefeatBossQuest,
+  generateObtainEnemyLootQuest,
   getFixedQuest,
 } = require("../services/generation/questTypes");
 const {
@@ -258,54 +259,42 @@ async function getLevel(req, res) {
       const bossDepthsThisDecade = getBossDepthsInCurrentDecade(depth);
       const bossItemPool = getQuestItemIds();
 
-      questNpcs = npcPositions.map((pos, npcIndex) => {
-        // une quete ecrite a la main pour CE PNJ precis prend le pas sur
-        // le tirage aleatoire, si elle existe (cf. FIXED_QUESTS dans
-        // questTypes.js) - sinon, comportement habituel. Seed DISTINCTE
-        // par PNJ (inclut son index), pour que plusieurs PNJ du meme
-        // etage n'aient jamais la meme quete par coincidence.
-        const fixedQuest = getFixedQuest(depth, npcIndex);
-        let quest;
-        if (fixedQuest) {
-          quest = fixedQuest;
-        } else {
-          const npcSeed = `${seed}-npc-${npcIndex}`;
-          // tirage a 3 branches en UN SEUL jet (jamais deux verifications
-          // independantes empilees, qui fausseraient les probabilites
-          // reelles) : 25% obtainItem, 25% defeatBoss, 50% killEnemies
-          const questTypeRng = createRng(`${npcSeed}-quest-type-choice`);
-          const roll = questTypeRng();
+      // bassin des paires {itemId, enemyType} pour la quete "recuperer sur un
+      // ennemi normal" - uniquement les types du bassin de cette ville
+      // (enemyTypePool, deja construit plus haut) qui declarent un questLoot.
+      // Peut etre vide (aucun type eligible pres de cette ville) - la branche
+      // correspondante retombe alors sur killEnemies, cf. plus bas.
+      const enemyLootPool = enemyTypePool
+        .filter((typeKey) => ENEMY_TYPES[typeKey] && ENEMY_TYPES[typeKey].questLoot)
+        .map((typeKey) => ({ itemId: ENEMY_TYPES[typeKey].questLoot, enemyType: typeKey }));
 
-          if (roll < 0.5) {
-            // obtainItem (roll < 0.25) OU defeatBoss (0.25 <= roll < 0.5) -
-            // partagent le meme choix de boss cible (cf.
-            // getBossDepthsInCurrentDecade plus haut)
-            const bossPickRng = createRng(`${npcSeed}-boss-pick`);
-            const relevantBossDepth =
-              bossDepthsThisDecade[
-                Math.floor(bossPickRng() * bossDepthsThisDecade.length)
-              ];
-            const relevantBossType =
-              getBossConfigForDepth(relevantBossDepth).type;
-            quest =
-              roll < 0.25
-                ? generateObtainItemQuest(
-                    npcSeed,
-                    bossItemPool,
-                    relevantBossDepth,
-                    relevantBossType,
-                  )
-                : generateDefeatBossQuest(
-                    npcSeed,
-                    relevantBossDepth,
-                    relevantBossType,
-                  );
-          } else {
-            quest = generateQuestForNpc(npcSeed, enemyTypePool);
-          }
+      questNpcs = npcPositions.map((pos, npcIndex) => {
+      const fixedQuest = getFixedQuest(depth, npcIndex);
+      let quest;
+      if (fixedQuest) {
+        quest = fixedQuest;
+      } else {
+        const npcSeed = `${seed}-npc-${npcIndex}`;
+        // tirage a 4 branches en UN SEUL jet : 20% obtainItem(boss), 20%
+        // defeatBoss, 20% obtainEnemyLoot (ennemi normal), 40% killEnemies
+        const questTypeRng = createRng(`${npcSeed}-quest-type-choice`);
+        const roll = questTypeRng();
+
+        if (roll < 0.4) {
+          const bossPickRng = createRng(`${npcSeed}-boss-pick`);
+          const relevantBossDepth = bossDepthsThisDecade[Math.floor(bossPickRng() * bossDepthsThisDecade.length)];
+          const relevantBossType = getBossConfigForDepth(relevantBossDepth).type;
+          quest = roll < 0.2
+            ? generateObtainItemQuest(npcSeed, bossItemPool, [relevantBossDepth])
+            : generateDefeatBossQuest(npcSeed, relevantBossDepth, relevantBossType);
+        } else if (roll < 0.6 && enemyLootPool.length > 0) {
+          quest = generateObtainEnemyLootQuest(npcSeed, enemyLootPool);
+        } else {
+          quest = generateQuestForNpc(npcSeed, enemyTypePool);
         }
-        return { x: pos.x, y: pos.y, npcIndex, ...quest };
-      });
+      }
+      return { x: pos.x, y: pos.y, npcIndex, ...quest };
+    });
     }
 
     // hub de voyage rapide - uniquement dans les villes. Ne transporte
@@ -448,6 +437,7 @@ async function getLevel(req, res) {
         // (rollLoot singulier, cf. plus haut) - la garantie d'objet de
         // quete y est plus delicate a toucher sans risque, hors du
         // perimetre de cette demande.
+        questLoot: stats.questLoot || null,
         drops: rollMultipleLoot("enemyDrop", enemyLootRng, 2),
       };
     });
