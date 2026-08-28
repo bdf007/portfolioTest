@@ -1403,6 +1403,7 @@ export default class MainScene extends Phaser.Scene {
         defense: enemyData.defense,
         xpReward: enemyData.xpReward,
         attackType: enemyData.attackType || "melee", // 'melee' (contact) ou 'ranged' (projectile) - cf. updateEnemyAttacks
+        questLoot: enemyData.questLoot || null,
         drops: enemyData.drops || [], // PLURIEL - tableau (peut etre vide), plus jamais un singulier + null - cf. ArpgController.js
         attackCooldown: createCooldown(ENEMY_ATTACK_COOLDOWN),
       });
