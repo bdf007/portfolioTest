@@ -6,7 +6,7 @@ import "../App.css";
 
 const API = process.env.REACT_APP_API_URL;
 
-const ROLES = ["user", "gamer", "admin"];
+const ROLES = ["user", "gamer", "admin", "betatester"];
 
 // Terminée = mort OU abandon, regroupées dans un seul filtre — la distinction
 // entre les deux n'a pas d'importance pour repérer ce qui est nettoyable.

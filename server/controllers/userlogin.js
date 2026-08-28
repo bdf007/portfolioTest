@@ -102,7 +102,7 @@ exports.deleteUserById = async (req, res) => {
 exports.updateUserRole = async (req, res) => {
   try {
     const { role } = req.body;
-    const validRoles = ["user", "gamer", "admin"]; // ajuste ici si tu ajoutes d'autres rôles un jour
+    const validRoles = ["user", "gamer", "admin", "betatester"]; // ajuste ici si tu ajoutes d'autres rôles un jour
 
     if (!validRoles.includes(role)) {
       return res.status(400).json({ error: "Rôle invalide." });

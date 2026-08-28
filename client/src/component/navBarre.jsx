@@ -46,7 +46,7 @@ const NavBarre = () => {
           to={isGamer ? "/Dungeon" : "/"}
           onClick={() => setIsOpen(false)}
         >
-          {isGamer ? (
+          {isGamer || user?.role === "betatester" ? (
             "Skip the Dungeon"
           ) : (
             <>
@@ -105,16 +105,18 @@ const NavBarre = () => {
                         Admin Donjon
                       </NavLink>
                     </li>
-                    <li className="nav-item">
-                      <NavLink
-                        className="nav-link app-nav-link"
-                        to="/Arpg"
-                        onClick={() => setIsOpen(false)}
-                      >
-                        ARPG
-                      </NavLink>
-                    </li>
                   </>
+                )}
+                {(user.role === "betatester" || user?.role === "admin") && (
+                  <li className="nav-item">
+                    <NavLink
+                      className="nav-link app-nav-link"
+                      to="/Arpg"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      ARPG
+                    </NavLink>
+                  </li>
                 )}
                 <li className="nav-item">
                   <span
