@@ -2195,34 +2195,25 @@ if (this.fogDisabled) {
 
     if (qs.questId === "obtainItem") {
       const itemName = resolveItemDef(qs.targetItemId).name;
-      // l'objet appartient au PNJ, pas au joueur : l'avoir en poche ne
-      // suffit pas, il faut le RENDRE (cf. turnInQuest) pour toucher la
-      // recompense - ce dialogue distingue donc "je l'ai, pret a le
-      // rendre" de "je l'ai pas encore trouve", contrairement a
-      // killEnemies qui n'a que 3 etats (pas 4)
-      const hasItem = this.inventory.some((i) => i.itemId === qs.targetItemId);
+      const requiredQty = qs.targetQuantity || 1; // repli 1 : compat avec l'ancienne forme (quete boss, qui n'a jamais eu ce champ)
+      const haveQty = this.inventory
+        .filter((i) => i.itemId === qs.targetItemId)
+        .reduce((sum, i) => sum + i.quantity, 0);
+      const hasEnough = haveQty >= requiredQty;
+      const qtyLabel = requiredQty > 1 ? `${requiredQty} ${itemName}` : itemName;
+
       if (qs.completed) {
-        text = custom.complete || `Merci pour ${itemName} !`;
-      } else if (qs.accepted && hasItem) {
-        text =
-          custom.progress ||
-          `Tu l'as trouvé ! Rends-moi ${itemName} contre une récompense.`;
+        text = custom.complete || `Merci pour ${qtyLabel} !`;
+      } else if (qs.accepted && hasEnough) {
+        text = custom.progress || `Tu en as assez ! Rends-moi ${qtyLabel} contre une récompense.`;
         canTurnIn = true;
       } else if (qs.accepted) {
-        text =
-          custom.progress ||
-          `Toujours à la recherche de ${itemName} - reviens me voir une fois que tu l'auras trouvé.`;
+        text = custom.progress || `Toujours à la recherche de ${qtyLabel} (tu en as ${haveQty}/${requiredQty}) - reviens me voir une fois que tu en auras assez.`;
       } else {
-        // indice de lieu uniquement si le serveur a fourni un boss
-        // connu (cf. ArpgController.js/bossConfig.getMostRecentBossDepth)
-        // - toujours le PLUS RECENT deja rencontre, jamais fige sur le
-        // tout premier boss du jeu. Absent (FIXED_QUESTS, ou aucun boss
-        // encore croise) = pas d'indice, texte generique seul.
-        const bossHint =
-          qs.bossDepth && qs.bossType
-            ? ` Le ${resolveEnemyDisplayName(qs.bossType)} de l'étage ${qs.bossDepth} le détient.`
-            : "";
-        text = custom.offer || `Peux-tu me rapporter ${itemName} ?${bossHint}`;
+        const bossHint = qs.bossDepth && qs.bossType
+          ? ` Le ${resolveEnemyDisplayName(qs.bossType)} de l'étage ${qs.bossDepth} le détient.`
+          : "";
+        text = custom.offer || `Peux-tu me rapporter ${qtyLabel} ?${bossHint}`;
         canAccept = true;
       }
     } else if (qs.questId === "defeatBoss") {
@@ -2368,14 +2359,25 @@ if (this.fogDisabled) {
       return;
 
     if (qs.questId === "obtainItem") {
-      const itemIndex = this.inventory.findIndex(
-        (i) => i.itemId === qs.targetItemId,
-      );
-      if (itemIndex === -1) return; // defensif - ne devrait pas arriver si le bouton n'etait propose que l'objet en main
+      const requiredQty = qs.targetQuantity || 1;
+      const haveQty = this.inventory
+        .filter((i) => i.itemId === qs.targetItemId)
+        .reduce((sum, i) => sum + i.quantity, 0);
+      // verifie AVANT tout retrait - sans ca, un retrait partiel pourrait
+      // avoir lieu puis etre abandonne en cours de route (stock
+      // insuffisant), faisant perdre des objets au joueur SANS lui donner
+      // la recompense en retour
+      if (haveQty < requiredQty) return;
 
-      const item = this.inventory[itemIndex];
-      item.quantity -= 1;
-      if (item.quantity <= 0) this.inventory.splice(itemIndex, 1);
+      let remaining = requiredQty;
+      for (let i = this.inventory.length - 1; i >= 0 && remaining > 0; i--) {
+        const entry = this.inventory[i];
+        if (entry.itemId !== qs.targetItemId) continue;
+        const take = Math.min(entry.quantity, remaining);
+        entry.quantity -= take;
+        remaining -= take;
+        if (entry.quantity <= 0) this.inventory.splice(i, 1);
+      }
     } else if (qs.questId === "defeatBoss") {
       if (!qs.bossDefeated) return; // defensif - ne devrait pas arriver si le bouton n'etait propose qu'une fois le boss vaincu
     } else {
