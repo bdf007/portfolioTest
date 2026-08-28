@@ -285,6 +285,7 @@ export default class MainScene extends Phaser.Scene {
     this.recalculatePlayerStats();
     this.playerHp = this.playerMaxHp;
     this.playerMana = this.playerMaxMana;
+    this.playerStatusEffects = []; // saignement/brulure actifs sur le heros - cf. updateStatusEffects
     this.meleeCooldown = createCooldown(PLAYER_MELEE_COOLDOWN);
     this.rangedCooldown = createCooldown(PLAYER_RANGED_COOLDOWN);
     this.isDead = false;
@@ -1071,6 +1072,7 @@ export default class MainScene extends Phaser.Scene {
     this.projectiles = [];
     this.enemyProjectiles.forEach((p) => p.sprite.destroy());
     this.enemyProjectiles = [];
+    this.playerStatusEffects = []; // remis a zero a chaque changement d'etage, comme les projectiles
 
     // ne soigne PLUS automatiquement a chaque changement d'etage (montee/
     // descente/voyage) - preserve les PV actuels par defaut (clamped au
@@ -1497,59 +1499,59 @@ export default class MainScene extends Phaser.Scene {
     this.fogDisabled = data.tileset === "town";
 
     // brouillard de guerre : calque separe, initialement opaque partout,
-// que l'on eclaircit progressivement selon ce que le joueur decouvre
-const fogTileset = this.map.addTilesetImage(
-  this.fogTilesetKey,
-  this.fogTilesetKey,
-  TILE_SIZE,
-  TILE_SIZE,
-  0,
-  0,
-);
+    // que l'on eclaircit progressivement selon ce que le joueur decouvre
+    const fogTileset = this.map.addTilesetImage(
+      this.fogTilesetKey,
+      this.fogTilesetKey,
+      TILE_SIZE,
+      TILE_SIZE,
+      0,
+      0,
+    );
 
-this.fogLayer = this.map.createBlankLayer("fog", fogTileset, 0, 0);
-this.fogLayer.fill(0);
-this.fogLayer.setDepth(5);
+    this.fogLayer = this.map.createBlankLayer("fog", fogTileset, 0, 0);
+    this.fogLayer.fill(0);
+    this.fogLayer.setDepth(5);
 
-if (this.fogDisabled) {
-  const allChanges = [];
+    if (this.fogDisabled) {
+      const allChanges = [];
 
-  for (let y = 0; y < grid.length; y++) {
-    for (let x = 0; x < grid[0].length; x++) {
-      this.fogState.state[y][x] = 2;
-      allChanges.push({ x, y });
-    }
-  }
-
-  this.applyFogChanges(allChanges);
-} else {
-  // Si on charge une sauvegarde, restaurer visuellement
-  // les cases déjà découvertes.
-  if (savedFogState) {
-    for (const tile of savedFogState) {
-      const [x, y] = tile.split(",").map(Number);
-
-      if (
-        y >= 0 &&
-        y < this.fogState.state.length &&
-        x >= 0 &&
-        x < this.fogState.state[y].length
-      ) {
-        this.fogState.state[y][x] = 1;
-        this.fogLayer.putTileAt(1, x, y);
+      for (let y = 0; y < grid.length; y++) {
+        for (let x = 0; x < grid[0].length; x++) {
+          this.fogState.state[y][x] = 2;
+          allChanges.push({ x, y });
+        }
       }
+
+      this.applyFogChanges(allChanges);
+    } else {
+      // Si on charge une sauvegarde, restaurer visuellement
+      // les cases déjà découvertes.
+      if (savedFogState) {
+        for (const tile of savedFogState) {
+          const [x, y] = tile.split(",").map(Number);
+
+          if (
+            y >= 0 &&
+            y < this.fogState.state.length &&
+            x >= 0 &&
+            x < this.fogState.state[y].length
+          ) {
+            this.fogState.state[y][x] = 1;
+            this.fogLayer.putTileAt(1, x, y);
+          }
+        }
+      }
+
+      // Puis révéler la zone autour de la position actuelle du joueur.
+      const initialChanges = this.fogState.update(
+        startPosition.x,
+        startPosition.y,
+        this.playerVisionRadius,
+      );
+
+      this.applyFogChanges(initialChanges);
     }
-  }
-
-  // Puis révéler la zone autour de la position actuelle du joueur.
-  const initialChanges = this.fogState.update(
-    startPosition.x,
-    startPosition.y,
-    this.playerVisionRadius,
-  );
-
-  this.applyFogChanges(initialChanges);
-}
 
     this.events.emit("level-loaded", { depth, biome: data.biome });
     // etat initial pour React, qui n'a sinon aucune valeur tant que le
@@ -2625,6 +2627,7 @@ if (this.fogDisabled) {
     this.updateEnemyAttacks(now);
     this.updateProjectiles();
     this.updateEnemyProjectiles();
+    this.updateStatusEffects(now);
     this.updateNpcMovement(this.questNpcs);
     this.updateNpcMovement(this.ambientNpcs);
     this.drawHpBars();
@@ -3427,6 +3430,93 @@ if (this.fogDisabled) {
       ephemeral: true, // jamais pousse dans currentFloorOpenedChests a l'ouverture, cf. performInteraction
     });
     this.nextLootChestId++;
+  }
+    /**
+   * Tire (aleatoire simple, Math.random - meme esprit que rollCritical
+   * dans combat.js) si une source (arme du joueur ou type d'ennemi,
+   * toutes deux au format {inflictsEffect: {type, chance, damagePerTick,
+   * tickIntervalMs, ticks}}) declenche son effet de statut sur CE coup
+   * precis. Renvoie l'effet a appliquer, ou null si la source n'en
+   * inflige aucun ou si le tirage a echoue.
+   */
+  rollStatusEffect(sourceDef) {
+    if (!sourceDef || !sourceDef.inflictsEffect) return null;
+    const { type, chance, damagePerTick, tickIntervalMs, ticks } = sourceDef.inflictsEffect;
+    if (Math.random() >= chance) return null;
+    return { type, damagePerTick, tickIntervalMs, ticksRemaining: ticks, nextTickAt: 0 };
+  }
+
+  /**
+   * Ajoute/rafraichit un effet de statut sur une cible (enemy OU
+   * this.hero via this.playerStatusEffects, meme forme des deux cotes).
+   * Un effet du MEME type REMPLACE l'existant (rafraichit la duree)
+   * plutot que de s'empiler - evite un empilement a l'infini si
+   * plusieurs coups touchent rapidement.
+   */
+  applyStatusEffect(list, effect) {
+    if (!effect) return;
+    const existingIndex = list.findIndex((e) => e.type === effect.type);
+    if (existingIndex !== -1) list.splice(existingIndex, 1);
+    list.push({ ...effect, nextTickAt: this.time.now + effect.tickIntervalMs });
+  }
+
+  /**
+   * Flash de teinte bref pour signaler un tic de saignement (rouge) ou
+   * de brulure (orange) - meme mecanisme que le flash de degats deja
+   * existant (setTint + delayedCall clearTint), juste une couleur
+   * differente par type d'effet.
+   */
+  flashStatusTint(sprite, effectType) {
+    if (!sprite || !sprite.active) return;
+    const color = effectType === 'burn' ? 0xff8800 : 0xcc0000;
+    sprite.setTint(color).setTintMode(Phaser.TintModes.FILL);
+    this.time.delayedCall(150, () => {
+      if (sprite.active) {
+        sprite.clearTint();
+        sprite.setTintMode(Phaser.TintModes.MULTIPLY);
+      }
+    });
+  }
+
+  /**
+   * Fait avancer tous les effets de statut actifs - cote ENNEMIS
+   * (enemy.statusEffects) ET cote JOUEUR (this.playerStatusEffects). Un
+   * tic passe TOUJOURS par damageEnemy / la reduction normale de
+   * playerHp (jamais une mutation directe de hp) - un tic qui acheve une
+   * cible doit declencher exactement les memes consequences qu'un coup
+   * normal (XP/butin/progression de quete pour un ennemi, isDead pour
+   * le joueur).
+   */
+  updateStatusEffects(now) {
+    for (const enemy of this.enemies) {
+      if (!enemy.statusEffects || enemy.statusEffects.length === 0) continue;
+      const remaining = [];
+      for (const effect of enemy.statusEffects) {
+        if (now >= effect.nextTickAt) {
+          this.damageEnemy(enemy, effect.damagePerTick);
+          effect.ticksRemaining -= 1;
+          effect.nextTickAt = now + effect.tickIntervalMs;
+          this.flashStatusTint(enemy.sprite, effect.type);
+        }
+        if (effect.ticksRemaining > 0 && enemy.hp > 0) remaining.push(effect);
+      }
+      enemy.statusEffects = remaining;
+    }
+
+    if (this.playerStatusEffects.length > 0 && !this.isDead) {
+      const remaining = [];
+      for (const effect of this.playerStatusEffects) {
+        if (now >= effect.nextTickAt) {
+          this.playerHp = Math.max(0, this.playerHp - effect.damagePerTick);
+          this.events.emit('player-hp-changed', { hp: this.playerHp, maxHp: this.playerMaxHp });
+          effect.ticksRemaining -= 1;
+          effect.nextTickAt = now + effect.tickIntervalMs;
+          this.flashStatusTint(this.hero, effect.type);
+        }
+        if (effect.ticksRemaining > 0) remaining.push(effect);
+      }
+      this.playerStatusEffects = remaining;
+    }
   }
 
   damageEnemy(enemy, amount) {
