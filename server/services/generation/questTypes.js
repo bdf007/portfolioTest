@@ -190,6 +190,7 @@ function getFixedQuest(depth, npcIndex) {
 
 const OBTAIN_ENEMY_LOOT_XP_REWARD = 30; // entre killEnemies (20) et obtainItem/boss (40)
 const OBTAIN_ENEMY_LOOT_GOLD_REWARD_RANGE = [15, 35];
+const OBTAIN_ENEMY_LOOT_QUANTITY_RANGE = [1, 3]; // nombre d'exemplaires a rapporter, tire aleatoirement
 
 /**
  * Quête "récupérer tel objet sur tel type d'ennemi NORMAL" - variante de
@@ -214,17 +215,20 @@ function generateObtainEnemyLootQuest(seed, lootPool) {
   const choice = lootPool[Math.floor(rng() * lootPool.length)];
   const [minGold, maxGold] = OBTAIN_ENEMY_LOOT_GOLD_REWARD_RANGE;
   const goldReward = minGold + Math.floor(rng() * (maxGold - minGold + 1));
+  const [minQty, maxQty] = OBTAIN_ENEMY_LOOT_QUANTITY_RANGE;
+  const targetQuantity = minQty + Math.floor(rng() * (maxQty - minQty + 1));
   const itemDef = ITEM_TYPES[choice.itemId];
   const itemName = itemDef ? itemDef.name : choice.itemId;
 
   return {
     questId: "obtainItem",
     targetItemId: choice.itemId,
+    targetQuantity,
     xpReward: OBTAIN_ENEMY_LOOT_XP_REWARD,
     goldReward,
     itemReward: null,
     dialogText: {
-      offer: `Peux-tu me rapporter ${itemName} ? On en trouve parfois sur ${choice.enemyType}.`,
+      offer: `Peux-tu me rapporter ${targetQuantity} ${itemName} ? On en trouve parfois sur ${choice.enemyType}.`,
     },
   };
 }
