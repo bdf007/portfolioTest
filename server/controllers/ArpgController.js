@@ -22,7 +22,10 @@ const {
   findUpstairsTile,
   findNearbyFloorTile,
 } = require("../services/generation/spawnUtils");
-const { getEnemyStatsForDepth, ENNEMY_TYPES } = require("../services/generation/enemyStats");
+const {
+  getEnemyStatsForDepth,
+  ENEMY_TYPES,
+} = require("../services/generation/enemyStats");
 const {
   generateQuestForNpc,
   generateObtainItemQuest,
@@ -172,6 +175,7 @@ async function getLevel(req, res) {
         speed: bossConfig.stats.speed,
         xpReward: bossConfig.stats.xpReward,
         attackType: bossConfig.stats.attackType || "melee", // pas encore defini dans BOSS_ASSIGNMENTS (cf. bossConfig.js) - repli explicite, prêt si un futur boss veut attaquer a distance
+        inflictsEffect: bossConfig.stats.inflictsEffect || null,
         drop: rollLoot("bossDrop", bossLootRng),
       };
     } else {
@@ -200,7 +204,7 @@ async function getLevel(req, res) {
     // l'echelle pour plusieurs PNJ). D'autres conditions d'apparition
     // (aleatoire sur un etage normal, sous condition) sont prevues plus
     // tard mais pas construites ici.
-       let questNpcs = [];
+    let questNpcs = [];
     if (biome.id === "town") {
       const npcCountRng = createRng(seed + "-quest-npc-count");
       const npcCount = 1 + Math.floor(npcCountRng() * 3); // 1 a 3
@@ -265,8 +269,13 @@ async function getLevel(req, res) {
       // etre vide (aucun type eligible pres de cette ville) - la branche
       // correspondante retombe alors sur killEnemies, cf. plus bas.
       const enemyLootPool = enemyTypePool
-        .filter((typeKey) => ENEMY_TYPES[typeKey] && ENEMY_TYPES[typeKey].questLoot)
-        .map((typeKey) => ({ itemId: ENEMY_TYPES[typeKey].questLoot, enemyType: typeKey }));
+        .filter(
+          (typeKey) => ENEMY_TYPES[typeKey] && ENEMY_TYPES[typeKey].questLoot,
+        )
+        .map((typeKey) => ({
+          itemId: ENEMY_TYPES[typeKey].questLoot,
+          enemyType: typeKey,
+        }));
 
       questNpcs = npcPositions.map((pos, npcIndex) => {
         // une quete ecrite a la main pour CE PNJ precis prend le pas sur
@@ -299,7 +308,9 @@ async function getLevel(req, res) {
               getBossConfigForDepth(relevantBossDepth).type;
             quest =
               roll < 0.2
-                ? generateObtainItemQuest(npcSeed, bossItemPool, [relevantBossDepth])
+                ? generateObtainItemQuest(npcSeed, bossItemPool, [
+                    relevantBossDepth,
+                  ])
                 : generateDefeatBossQuest(
                     npcSeed,
                     relevantBossDepth,
@@ -322,13 +333,14 @@ async function getLevel(req, res) {
       // ces monstres). Jamais de hub/boutique/PNJ ambiants ici, reserves
       // aux villes uniquement.
       const dungeonNpcChanceRng = createRng(`${seed}-dungeon-npc-chance`);
-      if (dungeonNpcChanceRng() < 0.3) {
+      if (dungeonNpcChanceRng() < 0.7) {
         const npcSpawns = generateEnemySpawns({
           grid,
           seed: seed + "-dungeon-npc-position",
           playerSpawn,
           enemyCount: 1,
-          minDistanceFromPlayer: 3,
+          minDistanceFromPlayer: 2,
+          maxDistanceFromPlayer: 4,
           minDistanceBetweenEnemies: 4,
           allowedTiles, // meme contrainte que les ennemis normaux - jamais dans la salle de boss scellee
         });
@@ -508,6 +520,7 @@ async function getLevel(req, res) {
         // quete y est plus delicate a toucher sans risque, hors du
         // perimetre de cette demande.
         questLoot: stats.questLoot || null,
+        inflictsEffect: stats.inflictsEffect || null,
         drops: rollMultipleLoot("enemyDrop", enemyLootRng, 2),
       };
     });

@@ -20,6 +20,7 @@ const BASE_STATS = {
   rangedDamage: 5,
   defense: 0,
   mana: 0,
+  stamina: 0,
 };
 
 const GROWTH_PER_LEVEL = {
@@ -28,6 +29,7 @@ const GROWTH_PER_LEVEL = {
   rangedDamage: 1,
   defense: 1,
   mana: 0,
+  stamina: 0,
 };
 
 const XP_BASE = 40; // XP pour passer du niveau 1 au niveau 2
@@ -90,6 +92,7 @@ function getPlayerStatsForLevel(level, statsOverride = null) {
     rangedDamage: Math.round(base.rangedDamage + growth.rangedDamage * n),
     defense: Math.round(base.defense + growth.defense * n),
     mana: Math.round(base.mana + growth.mana * n),
+    stamina: Math.round(base.stamina + growth.stamina * n),
   };
 }
 

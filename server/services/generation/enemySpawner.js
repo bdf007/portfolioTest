@@ -28,6 +28,7 @@ const FLOOR = 0;
  * @param {{x:number, y:number}} options.playerSpawn position de spawn du joueur (en cases)
  * @param {number} [options.enemyCount=6] nombre d'ennemis souhaité
  * @param {number} [options.minDistanceFromPlayer=5] distance minimale (en cases) par rapport au spawn joueur
+ * @param {number} [options.maxDistanceFromPlayer] distance maximale (en cases) par rapport au spawn joueur (optionnel)
  * @param {number} [options.minDistanceBetweenEnemies=3] distance minimale entre deux ennemis
  * @param {Set<string>} [options.allowedTiles] si fourni, restreint les
  *   candidats a cet ensemble ("x,y") - sert a exclure une zone scellee
@@ -43,6 +44,7 @@ function generateEnemySpawns({
   enemyCount = 6,
   minDistanceFromPlayer = 5,
   minDistanceBetweenEnemies = 3,
+  maxDistanceFromPlayer = Infinity,
   allowedTiles = null,
 }) {
   const height = grid.length;
@@ -57,7 +59,7 @@ function generateEnemySpawns({
       if (grid[y][x] !== FLOOR) continue;
       if (allowedTiles && !allowedTiles.has(`${x},${y}`)) continue;
       const dist = Math.hypot(x - playerSpawn.x, y - playerSpawn.y);
-      if (dist >= minDistanceFromPlayer) {
+      if (dist >= minDistanceFromPlayer && dist <= maxDistanceFromPlayer) {
         candidates.push({ x, y });
       }
     }

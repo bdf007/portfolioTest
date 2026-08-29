@@ -229,9 +229,9 @@ const ENEMY_TYPES = {
     defenseGrowthEveryNDepths: 3,
   },
   angryBrownMushroom: {
-    base: { hp: 12, damage: 4, xpReward: 1 },
+    base: { hp: 20, damage: 4, xpReward: 1 },
     growthRate: { hp: 1.16, damage: 1.13, xpReward: 1.11 },
-    questLoot: 'orangeMushroom',
+    questLoot: "orangeMushroom",
     speedBase: 90,
     speedMax: 140,
     speedGrowthPerDepth: 2,
@@ -286,12 +286,19 @@ const ENEMY_TYPES = {
     defenseGrowthEveryNDepths: 3,
   },
   demonLady1: {
-    base: { hp: 12, damage: 5, xpReward: 1 },
+    base: { hp: 20, damage: 5, xpReward: 1 },
     growthRate: { hp: 1.18, damage: 1.15, xpReward: 1.1 },
     speedBase: 90,
     speedMax: 140,
     speedGrowthPerDepth: 2,
     defenseGrowthEveryNDepths: 3,
+    inflictsEffect: {
+      type: "bleed",
+      chance: 0.15,
+      damagePerTick: 2,
+      tickIntervalMs: 1000,
+      ticks: 3,
+    },
   },
   demonLady2: {
     base: { hp: 22, damage: 5, xpReward: 12 },
@@ -969,6 +976,7 @@ function getEnemyStatsForDepth(depth, typeKey = "enemyDefault") {
     // MainScene.updateEnemyAttacks/updateEnemyProjectiles cote client)
     attackType: type.attackType || "melee",
     questLoot: type.questLoot || null,
+    inflictsEffect: type.inflictsEffect || null,
   };
 }
 

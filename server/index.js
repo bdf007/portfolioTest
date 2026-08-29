@@ -11,9 +11,27 @@ const cookieParser = require("cookie-parser");
 // compress all responses
 app.use(compression());
 
+function normalizeOrigin(url) {
+  return url ? url.replace(/\/$/, "") : url; // retire un eventuel slash final avant comparaison
+}
+
+const frontendUrls = (process.env.FRONTEND_URL || "http://localhost:3000")
+  .split(",")
+  .map((url) => normalizeOrigin(url.trim()));
+
+const ALLOWED_ORIGINS = [...frontendUrls, "http://192.168.1.108:3000"];
+
 app.use(
   cors({
-    origin: "http://localhost:3000", // l'URL exacte de ton front, PAS "*"
+    origin: (origin, callback) => {
+      const normalized = normalizeOrigin(origin);
+      if (!origin || ALLOWED_ORIGINS.includes(normalized)) {
+        callback(null, true);
+      } else {
+        console.warn("[CORS] Origine rejetée :", origin);
+        callback(new Error("Origine non autorisée par CORS"));
+      }
+    },
     credentials: true,
   }),
 );
@@ -55,12 +73,7 @@ const arpgRoutes = require("./routes/arpg");
 
 // middleware
 app.use(json({ limit: "10mb" }));
-app.use(
-  cors({
-    origin: process.env.FRONTEND_URL.split(",") ?? "http://localhost:3000",
-    credentials: true,
-  }),
-);
+
 app.use(urlencoded({ limit: "10mb", extended: false }));
 app.use(cookieParser());
 

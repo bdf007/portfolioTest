@@ -27,6 +27,8 @@ import {
 } from "../spriteRegistry";
 import { resolveItemDef } from "../itemDefs";
 import { computeEquipmentBonuses } from "../equipment";
+import { resolveAbilityDef, ABILITY_DEFS } from "../abilityDefs";
+import { resolveFuryDef } from "../furyDefs";
 
 const TILE_SIZE = 32;
 const WALL = 1;
@@ -48,6 +50,17 @@ const PLAYER_MOVE_SPEED_DEFAULT = 150; // repli si le profil d'archetype ne defi
 // Un attaque au corps a corps ne doit toucher que devant le heros, pas
 // tout autour (cf. le rapport correspondant).
 const MELEE_CONE_DOT_THRESHOLD = 0.5;
+// regeneration PASSIVE (hors combat comme pendant), TRES faible par
+// design - grimpe legerement avec le niveau (base + croissance*n, meme
+// esprit que les autres stats). Globales plutot que par archetype pour
+// rester simple - a decliner par archetype plus tard si tu veux varier
+// entre heros.
+const HP_REGEN_PER_SEC_BASE = 0.3;
+const HP_REGEN_PER_SEC_GROWTH = 0.05; // par niveau
+const MANA_REGEN_PER_SEC_BASE = 0.2;
+const MANA_REGEN_PER_SEC_GROWTH = 0.03;
+const STAMINA_REGEN_PER_SEC_BASE = 1; // reprend ta valeur deja ajustee
+const STAMINA_REGEN_PER_SEC_GROWTH = 0.1;
 // detection d'aggro : le joueur est dans l'angle mort d'un ennemi si le
 // produit scalaire entre la direction ou l'ennemi fait face (lastDir) et
 // le vecteur ennemi->joueur tombe sous ce seuil - -0.5 correspond a un
@@ -67,7 +80,20 @@ const PLAYER_RANGED_COOLDOWN = 650;
 const PROJECTILE_SPEED = 320;
 const PROJECTILE_MAX_DISTANCE_DEFAULT = 380; // repli si le profil d'archetype ne definit pas rangedRange
 const PROJECTILE_RADIUS = 5;
-
+const CONSUMABLE_COOLDOWN_MS = 2000; // ajustable - meme delai pour toutes les potions pour l'instant
+// couleur de flash par TYPE d'effet de statut - seul endroit du code ou
+// la chaine `type` (arbitraire, choisie dans chaque itemDefs.js/
+// abilityDefs.js) influence quoi que ce soit d'autre que l'identifiant
+// de deduplication. Repli sur le rouge (bleed/generique) si un type
+// inconnu de cette table apparait un jour.
+const FURY_KILLS_REQUIRED = 10; // ajustable
+const STATUS_EFFECT_COLORS = {
+  burn: 0xff8800, // orange
+  bleed: 0xcc0000, // rouge
+  slow: 0x4488ff, // bleu - coherent avec l'explosion de performAoeDebuffAbility
+  haste: 0x44ff88, // vert clair - pour un futur flash sur soi-meme si besoin
+  acid: 0x88ff00, // vert
+};
 // combat ennemi
 const ENEMY_ATTACK_COOLDOWN = 900;
 const ENEMY_ATTACK_RANGE = 34; // portee de contact (attackType 'melee')
@@ -88,6 +114,7 @@ const AMBIENT_NPC_GREETINGS = [
   "J'ai entendu dire qu'il y avait un trésor par ici...",
   "Content de voir un nouveau visage en ville.",
   "Les affaires sont calmes en ce moment.",
+  "On en a gros!",
 ];
 
 const TILESET_COLORS = {
@@ -134,10 +161,6 @@ export default class MainScene extends Phaser.Scene {
     if (this.anims.exists(prefix + "walk-down")) return; // deja cree
 
     const { key: textureKey, animations: f } = entry;
-    // repeat:0 (une seule fois) pour les entrees purement visuelles comme
-    // meleeSlashEffect - un cycle de marche infini n'aurait aucun sens
-    // pour un flash de degats. repeat:-1 (boucle) pour tout le reste,
-    // comportement inchange.
     const walkRepeat = entry.oneShot ? 0 : -1;
     this.anims.create({
       key: prefix + "walk-down",
@@ -196,21 +219,8 @@ export default class MainScene extends Phaser.Scene {
       this.createAnimationsForEntry(entryKey, entry);
     }
 
-    // heros choisi a l'ecran de selection (React), transmis via le
-    // registre Phaser (donnee globale au niveau du jeu, pas de la scene -
-    // cf. arpg.jsx qui fait game.registry.set('heroId', ...) avant de
-    // demarrer). Repli sur hero1 si absent (ne devrait pas arriver en usage
-    // normal, mais evite un plantage si jamais la scene demarre sans
-    // passer par l'ecran de selection).
     this.heroSpriteKey = this.registry.get("heroId") || "hero1";
 
-    // attributs FIXES propres a l'archetype (pas de progression par
-    // niveau, contrairement aux stats de combat gerees par
-    // recalculatePlayerStats) - vitesse de deplacement, rayon de vision,
-    // portee de melee/a distance (cf. HERO_STATS_PROFILES dans
-    // spriteRegistry.js). Repli sur les anciennes valeurs uniformes si
-    // le profil ne definit pas (encore) l'un de ces champs - jamais de
-    // plantage sur un profil incomplet.
     const heroProfile = resolveHeroStatsOverride(this.heroSpriteKey);
     this.playerMoveSpeed = heroProfile?.moveSpeed ?? PLAYER_MOVE_SPEED_DEFAULT;
     this.playerVisionRadius =
@@ -221,14 +231,6 @@ export default class MainScene extends Phaser.Scene {
       heroProfile?.rangedRange ?? PROJECTILE_MAX_DISTANCE_DEFAULT;
 
     this.cursors = this.input.keyboard.createCursorKeys();
-    // deux jeux de touches de deplacement enregistres SIMULTANEMENT
-    // (AZERTY ZQSD et QWERTY WASD) plutot qu'un seul choisi a la
-    // creation - permet de basculer de l'un a l'autre en cours de partie
-    // (cf. this.keyboardLayout, setKeyboardLayout) sans avoir a recreer
-    // les objets Key de Phaser. S est commun aux deux dispositions (meme
-    // position physique sur AZERTY et QWERTY), une seule touche suffit
-    // pour "bas". Par defaut AZERTY, la disposition la plus repandue
-    // pour un clavier francais.
     this.keyboardLayout = "azerty";
     this.keys = this.input.keyboard.addKeys({
       upAzerty: Phaser.Input.Keyboard.KeyCodes.Z,
@@ -240,6 +242,7 @@ export default class MainScene extends Phaser.Scene {
       melee: Phaser.Input.Keyboard.KeyCodes.SPACE,
       ranged: Phaser.Input.Keyboard.KeyCodes.SHIFT,
       action: Phaser.Input.Keyboard.KeyCodes.E,
+      fury: Phaser.Input.Keyboard.KeyCodes.X,
     });
 
     this.hero = null;
@@ -249,23 +252,15 @@ export default class MainScene extends Phaser.Scene {
     this.fogGrid = null;
     this.lastPlayerTile = null;
     this.lastDir = "down";
-    this.lastAimVector = { x: 0, y: 1 }; // correspond a 'down' (y positif = vers le bas a l'ecran)
-    // controles tactiles (cf. TouchControls.jsx cote React) - vecteur
-    // ANALOGIQUE du joystick virtuel (magnitude 0 a 1, pas juste 4
-    // booleens comme le clavier), fusionne avec le clavier dans update()
-    // plutot que de le remplacer - permet de tenir un appareil tactile
-    // ET un clavier branche sans que l'un exclue l'autre. Les drapeaux
-    // d'attaque sont consommes puis remis a false dans update() (meme
-    // semantique que Phaser.Input.Keyboard.JustDown pour le clavier) -
-    // jamais appeles directement depuis React, pour ne jamais contourner
-    // les gardes de pause/mort deja en tete d'update().
+    this.lastAimVector = { x: 0, y: 1 };
     this.touchMoveVector = { x: 0, y: 0 };
     this.touchMeleeRequested = false;
     this.touchRangedRequested = false;
     this.touchActionRequested = false;
     this.enemies = [];
     this.projectiles = [];
-    this.enemyProjectiles = []; // distinct des projectiles du joueur (this.projectiles) - collision inversee (touche le heros, jamais les ennemis)
+    this.enemyProjectiles = [];
+    this.abilityProjectiles = []; // projectiles de competences (ex: boule de feu) - distinct de this.projectiles (attaque a distance normale) car l'impact declenche une explosion en zone, pas des degats mono-cible
 
     this.xp = 0;
     this.playerLevel = 1;
@@ -281,10 +276,11 @@ export default class MainScene extends Phaser.Scene {
       ring2: null,
       necklace: null,
       quiver: null,
-    }; // itemId par emplacement, ou null - AVANT recalculatePlayerStats
+    };
     this.recalculatePlayerStats();
     this.playerHp = this.playerMaxHp;
     this.playerMana = this.playerMaxMana;
+    this.playerStamina = this.playerMaxStamina;
     this.playerStatusEffects = []; // saignement/brulure actifs sur le heros - cf. updateStatusEffects
     this.meleeCooldown = createCooldown(PLAYER_MELEE_COOLDOWN);
     this.rangedCooldown = createCooldown(PLAYER_RANGED_COOLDOWN);
@@ -294,24 +290,10 @@ export default class MainScene extends Phaser.Scene {
     this.hpBarGraphics = this.add.graphics();
     this.hpBarGraphics.setDepth(20);
 
-    // groupe physique des ennemis : une collision auto-geree par Phaser
-    // entre TOUS les membres du groupe (self-collision), plutot que
-    // d'avoir a poser une collision par paire manuellement. Cree une
-    // seule fois, persiste a travers les changements de niveau (seul son
-    // contenu change, cf. loadLevel). Sans ca, les ennemis peuvent se
-    // superposer sur la meme case et se deplacer comme un seul bloc.
     this.enemyGroup = this.physics.add.group();
     this.physics.add.collider(this.enemyGroup, this.enemyGroup);
-    // colliders crees PENDANT loadLevel() (contre this.layer/this.questNpcs,
-    // tous deux recrees a chaque changement d'etage) - traces ici pour
-    // etre explicitement detruits au debut du loadLevel() suivant, cf.
-    // le commentaire la-bas. Ne contient JAMAIS le collider ci-dessus
-    // (self-collision du groupe), qui lui doit persister pour toujours.
     this.levelColliders = [];
 
-    // tileset du brouillard : tuile 0 = noir plein (jamais vu),
-    // tuile 1 = noir semi-transparent (deja vu, hors de vue actuelle) -
-    // genere une seule fois, reutilise pour tous les niveaux
     const fogTilesetKey = "fog-tiles";
     const fogCanvasTex = this.textures.createCanvas(
       fogTilesetKey,
@@ -327,29 +309,34 @@ export default class MainScene extends Phaser.Scene {
     this.fogTilesetKey = fogTilesetKey;
 
     this.currentSeed = null;
-    this.currentGameId = null; // id de la partie en base - null tant qu'aucune sauvegarde n'a encore ete creee
-    this.visitedFloors = []; // historique {depth, seed} - permet de regenerer exactement le meme plan en y retournant
-    this.currentFloorKills = []; // indices des ennemis tues lors de la visite EN COURS (ecrase a chaque loadLevel)
-    this.currentFloorOpenedChests = []; // meme principe pour les coffres
-    this.quests = {}; // quetes actives/terminees, indexees par "depth-npcIndex" - cf. createQuestNpcs
-    this.activeDialogQuestKey = null; // quelle quete le dialogue actuellement ouvert concerne (cf. openQuestDialog/acceptQuest)
-    this.activeTalkingNpc = null; // quel PNJ (quete ou ambiant) est en train de parler, s'il y en a un (cf. openQuestDialog/openAmbientDialog/releaseTalkingNpc)
-    this.inventory = []; // {itemId, quantity}[] - persiste pour toute la partie, jamais reinitialise entre niveaux
-    this.gamePaused = false; // vrai pendant la confirmation de remontee (cf. showUpstairsPrompt)
-    this.pauseReasons = new Set(); // cf. pauseGame/unpauseGame - plusieurs sources de pause possibles (remontee, inventaire...) sans qu'elles se marchent dessus
+    this.currentGameId = null;
+    this.visitedFloors = [];
+    // Mémoire des points remarquables découverts par étage.
+    this.discoveredLandmarks = {};
+    // brouillard deja decouvert par etage, pour les retours EN COURS DE
+    // SESSION (distinct de la version sauvegardee, qui ne couvre que
+    // sauvegarder+recharger la page) - cf. loadLevel/persistProgressAsync/
+    // resumeFromSave
+    this.floorFogCache = {};
+    this.currentFloorKills = [];
+    this.currentFloorOpenedChests = [];
+    this.quests = {};
+    this.unlockedAbilities = []; // ids de competences debloquees (kit de depart + niveau + loot/achat)
+    this.furyKillCount = 0;
+    this.pendingWeaponImbue = null; // enchantement du prochain coup en attente - consomme au premier coup qui TOUCHE, restitue si le coup rate
+    this.touchFuryRequested = false;
+    this.hotbarSlots = new Array(9).fill(null); // {type:'ability', id} | {type:'item', itemId} | null, par emplacement 1..9
+    this.abilityCooldowns = {}; // {abilityId: timestamp du prochain tir autorise} - meme esprit que meleeCooldown/rangedCooldown mais par competence, pas un seul cooldown global
+    this.itemCooldowns = {}; // {itemId prefixe: timestamp} - meme principe que abilityCooldowns, mais pour les consommables de la barre de raccourcis
+    this.activeDialogQuestKey = null;
+    this.activeTalkingNpc = null;
+    this.inventory = [];
+    this.gamePaused = false;
+    this.pauseReasons = new Set();
 
-    // temps de jeu : baseline chargee depuis la sauvegarde (0 pour une
-    // partie fraiche) + temps ecoule depuis le debut de CETTE session,
-    // recalcule a chaque fois plutot qu'accumule par petits bouts - evite
-    // tout risque de derive. sessionStartedAt reste "maintenant" que la
-    // partie soit fraiche ou reprise (seule la baseline differe).
     this.timePlayedBaseline = 0;
     this.sessionStartedAt = Date.now();
 
-    // sauvegarde automatique periodique - complement des sauvegardes
-    // immediates (changement d'etage, montee de niveau) pour capturer
-    // aussi les degats/soins encaisses en combat sans sauvegarder a
-    // chaque coup (ce qui spammerait l'API pendant un combat rapproche)
     this.time.addEvent({
       delay: 8000,
       loop: true,
@@ -359,14 +346,6 @@ export default class MainScene extends Phaser.Scene {
     this.startGame();
   }
 
-  /**
-   * Reprend une partie sauvegardee si React en a trouve une (deposee dans
-   * le registre Phaser via game.registry.set('resumeSave', save) avant le
-   * demarrage - cf. arpg.jsx), sinon demarre une nouvelle partie a
-   * l'etage 1. React a deja fait l'appel fetchMyGames() pour construire
-   * l'ecran de selection de partie - pas la peine de le refaire ici, on
-   * reutilise directement ce qu'il a trouve.
-   */
   async startGame() {
     const resumeSave = this.registry.get("resumeSave");
     if (resumeSave) {
@@ -377,24 +356,13 @@ export default class MainScene extends Phaser.Scene {
     this.loadLevel(this.currentDepth);
   }
 
-  /**
-   * Donne ET equipe automatiquement le kit de depart de l'archetype
-   * choisi (arme en bois +1, bouclier/fleches selon le cas - cf.
-   * HERO_STATS_PROFILES dans spriteRegistry.js) - UNIQUEMENT pour une
-   * partie NEUVE (jamais appelee sur resumeFromSave, qui restaure deja
-   * l'equipement exact de la sauvegarde). Utilise addItemToInventory +
-   * equipItem tels quels (deja testes) plutot que de manipuler
-   * this.equipped directement, sauf pour les flèches (cf.
-   * equipArrows - mecanique dediee, jamais retirees de l'inventaire en
-   * s'equipant, contrairement a une arme/armure classique).
-   */
   giveStartingKit() {
     const profile = resolveHeroStatsOverride(this.heroSpriteKey);
     if (!profile) return;
 
     for (const itemId of profile.startingEquipment || []) {
       this.addItemToInventory(itemId, 1);
-      const newIndex = this.inventory.length - 1; // addItemToInventory vient de le pousser en dernier (objet non empilable, jamais fusionne avec une entree existante)
+      const newIndex = this.inventory.length - 1;
       this.equipItem(newIndex);
     }
 
@@ -404,13 +372,13 @@ export default class MainScene extends Phaser.Scene {
         profile.startingAmmo.quantity,
       );
       this.equipped.quiver = profile.startingAmmo.itemId;
-      // sans cet evenement, React (equipped.quiver cote arpg.jsx) ne
-      // recevait JAMAIS cette affectation directe - le carquois etait
-      // bien rempli en interne (scene Phaser), mais son itemId restait
-      // `null` cote React, donc le filtre qui masque les fleches
-      // equipees de la liste "Objets" (cf. InventoryScreen.jsx) ne les
-      // reconnaissait jamais comme equipees
       this.events.emit("equipment-updated", { ...this.equipped });
+    }
+    if (profile.startingAbilities) {
+      for (const abilityId of profile.startingAbilities) {
+        this.unlockedAbilities.push(abilityId);
+      }
+      this.events.emit("abilities-updated", [...this.unlockedAbilities]);
     }
   }
 
@@ -426,17 +394,14 @@ export default class MainScene extends Phaser.Scene {
     this.currentGameId = save.gameId || null;
     this.visitedFloors = save.floors || [];
     const ps = save.playerState || {};
+    this.discoveredLandmarks = ps.discoveredLandmarks || {};
     this.xp = ps.xp || 0;
     this.playerLevel = ps.level || 1;
-    this.quests = ps.quests || {}; // restaure AVANT loadLevel : createQuestNpc n'ecrase jamais une entree deja presente
+    this.quests = ps.quests || {};
     this.inventory = ps.inventory || [];
-    // fusionne avec la forme par defaut plutot que ps.equipped || {...} :
-    // une sauvegarde ANTERIEURE a l'ajout des emplacements
-    // casque/pantalon/bottes n'aurait que weapon/armor/accessory dans
-    // son objet - sans fusion, ces nouveaux emplacements resteraient
-    // `undefined` plutot que `null` (fonctionnellement equivalent pour
-    // computeEquipmentBonuses, mais incoherent si jamais compare
-    // explicitement a `null` ailleurs)
+    this.hotbarSlots = ps.hotbarSlots || new Array(9).fill(null);
+    this.unlockedAbilities = ps.unlockedAbilities || [];
+    this.furyKillCount = ps.furyKillCount || 0;
     this.equipped = {
       mainHand: null,
       offHand: null,
@@ -451,20 +416,21 @@ export default class MainScene extends Phaser.Scene {
       quiver: null,
       ...(ps.equipped || {}),
     };
-    this.timePlayedBaseline = ps.timePlayedSeconds || 0; // sessionStartedAt reste "maintenant" (deja fixe dans create())
+    this.timePlayedBaseline = ps.timePlayedSeconds || 0;
 
     const stats = getPlayerStatsForLevel(
       this.playerLevel,
       resolveHeroStatsOverride(this.heroSpriteKey),
     );
-    this.recalculatePlayerStats(); // combine niveau + bonus d'equipement (this.equipped deja restaure ci-dessus)
-    // contrairement aux PV (cf. hpOverride passe a loadLevel juste en
-    // dessous, qui EMPECHE le soin complet par defaut a chaque
-    // chargement d'etage), le mana n'est jamais reinitialise par
-    // loadLevel - fixe ici suffit, rien a modifier la-bas. `?? ` plutot
-    // que `||` : un mana a 0 (legitime, ex: juste apres avoir tout
-    // depense) ne doit pas etre remplace par le max
+    this.recalculatePlayerStats();
     this.playerMana = ps.mana ?? this.playerMaxMana;
+
+    // restaure la memoire de TOUS les etages deja explores (pas
+    // seulement celui qu'on s'apprete a charger) - alimente le repli
+    // automatique de loadLevel (effectiveSavedFogState) pour chaque
+    // etage qu'on revisitera plus tard dans cette session reprise,
+    // exactement comme si on n'avait jamais quitte le jeu
+    this.floorFogCache = ps.floorFogCache || {};
 
     await this.loadLevel(
       save.depth,
@@ -473,12 +439,10 @@ export default class MainScene extends Phaser.Scene {
       ps.currentFloorKills || [],
       ps.currentFloorOpenedChests || [],
       ps.currentFloorLootSeed || null,
-      ps.fogState || null,
+      null, // savedFogState explicite retire - this.floorFogCache (deja restaure ci-dessus) le fournit desormais via le repli automatique de loadLevel
       ps.playerPosition || null,
     );
 
-    // reutilise les events existants pour que le HUD React se mette a
-    // jour avec l'etat restaure, sans avoir besoin d'un event dedie
     this.events.emit("xp-changed", { xp: this.xp });
     this.events.emit("player-mana-changed", {
       mana: this.playerMana,
@@ -487,12 +451,6 @@ export default class MainScene extends Phaser.Scene {
     this.events.emit("level-up", { level: this.playerLevel, stats });
   }
 
-  /**
-   * Temps de jeu total (secondes) pour cette partie : baseline chargee a
-   * la reprise + temps ecoule depuis le debut de cette session precise.
-   * Recalcule a chaque appel plutot qu'accumule progressivement, pour ne
-   * jamais deriver.
-   */
   getTotalTimePlayed() {
     return (
       this.timePlayedBaseline +
@@ -500,15 +458,6 @@ export default class MainScene extends Phaser.Scene {
     );
   }
 
-  /**
-   * Ajoute un objet a l'inventaire - fusionne dans une pile existante si
-   * l'objet est empilable (potions, or...), sinon cree une entree
-   * distincte par exemplaire (equipement : chaque epee trouvee reste
-   * separee, meme si on en a plusieurs). `resolveItemDef` gere le repli
-   * si l'objet n'est pas encore connu du client (nouvel objet ajoute
-   * cote serveur avant mise a jour de itemDefs.js) - stackable=true par
-   * defaut dans ce cas, choix le moins surprenant.
-   */
   addItemToInventory(itemId, quantity = 1) {
     if (!itemId || quantity <= 0) return;
     const def = resolveItemDef(itemId);
@@ -527,37 +476,14 @@ export default class MainScene extends Phaser.Scene {
     this.persistProgress();
   }
 
-  /**
-   * Affiche une ligne de log transitoire (butin trouve) - remplace toute
-   * ligne encore affichee, s'efface automatiquement au bout d'un
-   * moment. Cote React, gere par un simple timer qui reinitialise a
-   * chaque nouvel appel (cf. arpg.jsx) - remplace les anciennes fenetres
-   * de notification (npc-dialog) qu'il fallait fermer manuellement,
-   * genant pour un evenement aussi frequent qu'un simple ramassage
-   * d'objet.
-   */
   showLootToast(text) {
     this.events.emit("loot-toast", text);
   }
 
-  /**
-   * Point d'entree pour le joystick virtuel (cf. TouchControls.jsx) -
-   * vecteur ANALOGIQUE (magnitude entre 0 et 1, jamais juste -1/0/1
-   * comme le clavier), fusionne avec le clavier dans update() plutot
-   * que de le remplacer. {x:0,y:0} = relache.
-   */
   setTouchMoveVector(x, y) {
     this.touchMoveVector = { x, y };
   }
 
-  /**
-   * Points d'entree pour les boutons d'attaque/action tactiles - se
-   * contentent de LEVER un drapeau, consomme puis remis a false dans
-   * update() (meme semantique que JustDown pour le clavier). Jamais
-   * d'appel direct a performMeleeAttack/performRangedAttack/
-   * performInteraction depuis React : ça contournerait les gardes de
-   * pause/mort deja en tete d'update().
-   */
   requestTouchMelee() {
     this.touchMeleeRequested = true;
   }
@@ -570,25 +496,13 @@ export default class MainScene extends Phaser.Scene {
     this.touchActionRequested = true;
   }
 
-  /**
-   * Bascule la disposition clavier utilisee pour le deplacement -
-   * 'azerty' (ZQSD, defaut) ou 'qwerty' (WASD). Ne recree jamais les
-   * objets Key de Phaser (les deux jeux sont deja enregistres en
-   * parallele des la creation, cf. create()) - change juste lequel des
-   * deux est lu dans update().
-   */
+  requestTouchFury() {
+    this.touchFuryRequested = true;
+  }
+
   setKeyboardLayout(layout) {
     this.keyboardLayout = layout === "qwerty" ? "qwerty" : "azerty";
   }
-
-  /**
-   * Recalcule les stats de combat actuelles (niveau + bonus d'equipement
-   * combines) et met a jour les champs caches (this.playerMaxHp etc.) -
-   * NE TOUCHE JAMAIS this.playerHp lui-meme : c'est a l'appelant de
-   * decider quoi en faire (soin complet a la montee de niveau,
-   * preservation de l'ecart manquant a l'equipement...), cf. les points
-   * d'appel (create, resumeFromSave, checkLevelUp, equipItem, unequipItem).
-   */
 
   recalculatePlayerStats() {
     const heroProfile = resolveHeroStatsOverride(this.heroSpriteKey);
@@ -603,6 +517,7 @@ export default class MainScene extends Phaser.Scene {
     this.playerDefense = base.defense + bonus.defense;
 
     this.playerMaxMana = base.mana + bonus.mana;
+    this.playerMaxStamina = base.stamina + (bonus.stamina ?? 0);
 
     this.playerMeleeRange =
       (heroProfile?.meleeRange ?? PLAYER_MELEE_RANGE_DEFAULT) +
@@ -621,15 +536,6 @@ export default class MainScene extends Phaser.Scene {
       (bonus.moveSpeed ?? 0);
   }
 
-  /**
-   * Ajuste this.playerHp apres un changement de playerMaxHp (equiper/
-   * deséquiper un objet a charme de vitalite, par exemple) - preserve
-   * l'ECART de PV manquants plutot que de soigner gratuitement ou, a
-   * l'inverse, punir injustement le joueur. Ex: 80/100 PV, equipe +20
-   * maxHp -> 100/120 (toujours 20 PV manquants, pas 100/120 soigne a
-   * fond gratuitement). Jamais sous 1 PV (pas de mort instantanee juste
-   * en deséquipant un objet).
-   */
   adjustHpAfterMaxHpChange(oldMaxHp) {
     const delta = this.playerMaxHp - oldMaxHp;
     this.playerHp = Math.max(
@@ -642,48 +548,24 @@ export default class MainScene extends Phaser.Scene {
     });
   }
 
-  /**
-   * Equipe un objet de l'inventaire (par son index) dans son emplacement
-   * (cf. def.slot) - l'objet precedemment equipe a cet emplacement, s'il
-   * y en avait un, retourne dans l'inventaire. Ignore silencieusement si
-   * l'index est invalide ou si l'objet n'est pas equipable (pas de
-   * raison de planter sur un clic UI mal aligne).
-   *
-   * Deux regles specifiques aux emplacements de main (mainHand/offHand,
-   * cf. def.slot==='mainHand' et le shield eventuel en offHand) :
-   *
-   * - Une arme A DEUX MAINS (def.twoHanded) occupe mainHand ET libere
-   *   offHand en meme temps - offHand reste `null` (jamais une
-   *   reference dupliquee vers la meme arme, ce qui aurait double son
-   *   bonus de stats dans computeEquipmentBonuses) ; equiper QUOI QUE CE
-   *   SOIT dans offHand alors qu'une arme a 2 mains occupe mainHand
-   *   libere cette derniere au passage (les deux etats sont mutuellement
-   *   exclusifs).
-   * - Une arme a UNE main equipee alors que mainHand est deja occupe par
-   *   une AUTRE arme a une main (et offHand est libre) bascule
-   *   automatiquement vers offHand plutot que de remplacer - permet le
-   *   double armement (deux epees, une par main) sans avoir besoin de
-   *   donnees "main gauche"/"main droite" separees par objet.
-   *
-   * Meme principe generalise pour les bagues (def.slot==='ring',
-   * emplacement VIRTUEL - resolu vers ring1 ou ring2, quel que soit
-   * celui de libre) : un objet "bague" n'est jamais fige sur un doigt
-   * precis.
-   */
   equipItem(index) {
     const item = this.inventory[index];
     if (!item) return;
     const def = resolveItemDef(item.itemId);
-
-    // munitions (flèches) : mecanique DEDIEE, jamais retirees de
-    // l'inventaire en s'equipant (contrairement a une arme/armure
-    // classique, non empilable) - "equiper" signifie juste "cette pile
-    // devient la source active pour le tir a distance" (cf.
-    // performRangedAttack, qui decremente directement cette meme entree
-    // d'inventaire a chaque tir). Pas de recalculatePlayerStats ici :
-    // le bonus de statBonus des flèches (cf. itemDefs.js) est deja pris
-    // en compte par computeEquipmentBonuses via this.equipped.quiver,
-    // sans changement necessaire a cette fonction.
+    // restriction d'archetype eventuelle (armes/armures reservees a
+    // certains heros, cf. def.archetypes optionnel dans itemDefs.js) -
+    // absent/vide = equipable par tous, comportement inchange. Meme
+    // mecanisme que pour les competences (cf. checkLevelUp/useConsumable
+    // plus haut dans ce fichier).
+    if (def.archetypes && def.archetypes.length > 0) {
+      const heroArchetype = resolveHeroStatsOverride(
+        this.heroSpriteKey,
+      )?.archetype;
+      if (!heroArchetype || !def.archetypes.includes(heroArchetype)) {
+        this.showLootToast("Cet objet ne convient pas à ton archétype");
+        return;
+      }
+    }
     if (def.category === "ammo") {
       this.equipped[def.slot] = item.itemId;
       const oldMaxHp = this.playerMaxHp;
@@ -698,9 +580,6 @@ export default class MainScene extends Phaser.Scene {
 
     let targetSlot = def.slot;
 
-    // bague : emplacement virtuel, resolu vers le premier libre (ring1
-    // puis ring2), ou ring1 par defaut si les deux sont deja pris
-    // (remplace alors ring1, choix arbitraire mais deterministe)
     if (targetSlot === "ring") {
       targetSlot = !this.equipped.ring1
         ? "ring1"
@@ -709,9 +588,6 @@ export default class MainScene extends Phaser.Scene {
           : "ring1";
     }
 
-    // double armement automatique : arme a une main, mainHand deja
-    // occupe par une AUTRE arme a une main, offHand libre -> bascule
-    // vers offHand plutot que de remplacer mainHand
     if (targetSlot === "mainHand" && !def.twoHanded) {
       const mainOccupantId = this.equipped.mainHand;
       const mainOccupantDef = mainOccupantId
@@ -728,16 +604,12 @@ export default class MainScene extends Phaser.Scene {
     const previousInTarget = this.equipped[targetSlot];
     if (previousInTarget) itemsToReturnToInventory.push(previousInTarget);
 
-    // arme a 2 mains : libere aussi offHand (jamais de reference
-    // dupliquee vers la meme arme dans les deux emplacements)
     if (def.twoHanded && targetSlot === "mainHand") {
       const previousOffHand = this.equipped.offHand;
       if (previousOffHand) itemsToReturnToInventory.push(previousOffHand);
       this.equipped.offHand = null;
     }
 
-    // equiper dans offHand alors qu'une arme a 2 mains occupe mainHand :
-    // celle-ci doit d'abord etre liberee (etats mutuellement exclusifs)
     if (targetSlot === "offHand") {
       const mainHandItemId = this.equipped.mainHand;
       if (mainHandItemId) {
@@ -764,18 +636,11 @@ export default class MainScene extends Phaser.Scene {
     this.persistProgress();
   }
 
-  /**
-   * Deséquipe l'objet d'un emplacement donne (arme/armure/accessoire) -
-   * revient dans l'inventaire.
-   */
   unequipItem(slot) {
     const itemId = this.equipped[slot];
     if (!itemId) return;
     this.equipped[slot] = null;
 
-    // munitions : jamais repoussees dans l'inventaire - elles n'en sont
-    // JAMAIS sorties en s'equipant (cf. equipItem), les repousser ici
-    // dupliquerait la pile deja presente
     if (slot !== "quiver") {
       this.inventory.push({ itemId, quantity: 1 });
     }
@@ -789,16 +654,68 @@ export default class MainScene extends Phaser.Scene {
     this.persistProgress();
   }
 
-  /**
-   * Utilise un consommable de l'inventaire (par son index) - applique
-   * son effet (soin, pour l'instant le seul effet existant) et retire un
-   * exemplaire de la pile (supprime l'entree si elle tombe a 0).
-   */
   useConsumable(index) {
     const item = this.inventory[index];
     if (!item) return;
     const def = resolveItemDef(item.itemId);
+
+    if (def.category === "abilityScroll") {
+      const abilityDef = resolveAbilityDef(def.grantsAbility);
+      const heroArchetype = resolveHeroStatsOverride(
+        this.heroSpriteKey,
+      )?.archetype;
+      if (
+        abilityDef.archetypes &&
+        abilityDef.archetypes.length > 0 &&
+        !abilityDef.archetypes.includes(heroArchetype)
+      ) {
+        this.showLootToast("Ce parchemin ne convient pas à ton archétype");
+        return;
+      }
+      if (abilityDef.staminaCost && this.playerMaxStamina <= 0) {
+        this.showLootToast(
+          "Tu n'as pas de stamina à dépenser pour cette compétence",
+        );
+        return;
+      }
+      if (abilityDef.manaCost && this.playerMaxMana <= 0) {
+        this.showLootToast(
+          "Tu n'as pas de mana à dépenser pour cette compétence",
+        );
+        return;
+      }
+      if (this.unlockedAbilities.includes(def.grantsAbility)) {
+        this.showLootToast(`Tu connais déjà ${abilityDef.name}`);
+        return;
+      }
+
+      this.unlockedAbilities.push(def.grantsAbility);
+      this.events.emit("abilities-updated", [...this.unlockedAbilities]);
+      this.showLootToast(`Compétence apprise : ${abilityDef.name} !`);
+
+      item.quantity -= 1;
+      if (item.quantity <= 0) this.inventory.splice(index, 1);
+
+      this.events.emit("inventory-updated", [...this.inventory]);
+      this.persistProgress();
+      return;
+    }
+
     if (def.category !== "consumable" || !def.effect) return;
+
+    const now = this.time.now;
+    const cooldownKey = `item:${item.itemId}`;
+    const readyAt = this.itemCooldowns[cooldownKey] || 0;
+    if (now < readyAt) {
+      this.showLootToast("Objet en recharge");
+      return;
+    }
+    this.itemCooldowns[cooldownKey] = now + CONSUMABLE_COOLDOWN_MS;
+    this.events.emit("hotbar-cooldown-started", {
+      key: cooldownKey,
+      cooldownMs: CONSUMABLE_COOLDOWN_MS,
+      startedAt: Date.now(),
+    });
 
     if (def.effect.heal) {
       this.playerHp = Math.min(
@@ -830,80 +747,80 @@ export default class MainScene extends Phaser.Scene {
   }
 
   /**
-   * Coeur de la sauvegarde, en version async attendable - persistProgress()
-   * (fire-and-forget, utilisee par les hooks automatiques) et
-   * saveAndQuit() (qui a besoin d'attendre la confirmation avant de
-   * quitter) partagent cette meme logique plutot que de la dupliquer.
-   * Capture le gameId renvoye par le serveur si cette partie n'en avait
-   * pas encore (premiere sauvegarde d'une partie fraiche).
+   * Coeur de la sauvegarde, en version async attendable.
    */
   async persistProgressAsync() {
-  if (!this.currentSeed) return; // aucun niveau charge pour l'instant
+    if (!this.currentSeed) return; // aucun niveau charge pour l'instant
 
-  try {
-    const discoveredTiles = [];
-
-    if (this.fogState?.state) {
-      for (let y = 0; y < this.fogState.state.length; y++) {
-        for (let x = 0; x < this.fogState.state[y].length; x++) {
-          if (this.fogState.state[y][x] !== 0) {
-            discoveredTiles.push(`${x},${y}`);
+    try {
+      // brouillard de TOUS les etages deja explores (pas seulement
+      // l'etage courant) - fusionne le cache en memoire (floorFogCache,
+      // alimente a chaque changement d'etage, cf. loadLevel) avec l'etat
+      // LIVE de l'etage courant : ce dernier n'est mis en cache QUE
+      // lorsqu'on le QUITTE (cf. le debut de loadLevel), jamais en
+      // continu pendant qu'on y est - sans cette fusion, l'etage sur
+      // lequel le joueur se trouve AU MOMENT precis de la sauvegarde
+      // manquerait toujours a l'appel.
+      const currentFloorTiles = [];
+      if (this.fogState?.state) {
+        for (let y = 0; y < this.fogState.state.length; y++) {
+          for (let x = 0; x < this.fogState.state[y].length; x++) {
+            if (this.fogState.state[y][x] !== 0) {
+              currentFloorTiles.push(`${x},${y}`);
+            }
           }
         }
       }
+      const floorFogCacheToSave = {
+        ...this.floorFogCache,
+        ...(this.currentDepth != null
+          ? { [this.currentDepth]: currentFloorTiles }
+          : {}),
+      };
+
+      const res = await saveProgress(
+        this.currentGameId,
+        this.currentDepth,
+        this.currentSeed,
+        this.visitedFloors,
+        {
+          xp: this.xp,
+          level: this.playerLevel,
+          hp: this.playerHp,
+          mana: this.playerMana,
+          heroId: this.heroSpriteKey,
+          currentFloorKills: this.currentFloorKills,
+          currentFloorOpenedChests: this.currentFloorOpenedChests,
+          currentFloorLootSeed: this.currentFloorLootSeed,
+          quests: this.quests,
+          inventory: this.inventory,
+          hotbarSlots: this.hotbarSlots,
+          furyKillCount: this.furyKillCount,
+          unlockedAbilities: this.unlockedAbilities,
+          equipped: this.equipped,
+          discoveredLandmarks: this.discoveredLandmarks,
+          timePlayedSeconds: this.getTotalTimePlayed(),
+
+          // remplace l'ancien champ `fogState` (un seul etage, celui
+          // courant) - desormais TOUS les etages deja explores, sous
+          // forme de map {profondeur: tuiles decouvertes[]}
+          floorFogCache: floorFogCacheToSave,
+
+          // Position du joueur au moment de la sauvegarde
+          playerPosition: this.lastPlayerTile,
+        },
+      );
+
+      if (res && res.gameId) this.currentGameId = res.gameId;
+    } catch (err) {
+      console.warn("[MainScene] echec de sauvegarde", err);
     }
-
-    const res = await saveProgress(
-      this.currentGameId,
-      this.currentDepth,
-      this.currentSeed,
-      this.visitedFloors,
-      {
-        xp: this.xp,
-        level: this.playerLevel,
-        hp: this.playerHp,
-        mana: this.playerMana,
-        heroId: this.heroSpriteKey,
-        currentFloorKills: this.currentFloorKills,
-        currentFloorOpenedChests: this.currentFloorOpenedChests,
-        currentFloorLootSeed: this.currentFloorLootSeed,
-        quests: this.quests,
-        inventory: this.inventory,
-        equipped: this.equipped,
-        timePlayedSeconds: this.getTotalTimePlayed(),
-
-        // Exploration du niveau actuellement sauvegardé
-        fogState: discoveredTiles,
-
-        // Position du joueur au moment de la sauvegarde
-        playerPosition: this.lastPlayerTile,
-      },
-    );
-
-    if (res && res.gameId) this.currentGameId = res.gameId;
-  } catch (err) {
-    console.warn("[MainScene] echec de sauvegarde", err);
   }
-}
 
-  /**
-   * Sauvegarde la progression courante - fire-and-forget, appelee par les
-   * hooks automatiques (changement d'etage, montee de niveau, game over,
-   * minuteur periodique). Une sauvegarde ratee ne doit jamais interrompre
-   * la partie en cours, d'ou l'absence d'attente ici (cf.
-   * persistProgressAsync pour la version attendable).
-   */
   persistProgress() {
     this.persistProgressAsync();
   }
 
-  /**
-   * Sauvegarde explicitement (bouton "Sauvegarder et quitter" du HUD),
-   * PUIS signale a React de revenir a l'ecran de selection de partie -
-   * contrairement a persistProgress(), on attend la confirmation de la
-   * sauvegarde avant de quitter, pour que le bouton tienne vraiment sa
-   * promesse plutot que de partir sur une simple esperance.
-   */
   async saveAndQuit() {
     await this.persistProgressAsync();
     this.events.emit("quit-to-menu");
@@ -911,33 +828,7 @@ export default class MainScene extends Phaser.Scene {
 
   /**
    * Charge un étage via l'API (GET /api/arpg/level) et reconstruit
-   * entièrement la scène à partir de la réponse serveur : tilemap,
-   * position du joueur, ennemis avec leurs stats déjà calculées.
-   *
-   * @param {number} depth
-   * @param {string} [seed] seed a reutiliser (reprise de sauvegarde) - si
-   *   absente, le serveur en genere une nouvelle
-   * @param {number} [hpOverride] si fourni, remplace le soin complet par
-   *   defaut - utilise uniquement lors d'une reprise de sauvegarde, pour
-   *   ne pas transformer un rechargement de page en soin gratuit
-   * @param {number[]} [killedIndices] indices des ennemis DEJA tues LORS
-   *   DE CETTE VISITE precise de l'etage (cf. this.currentFloorKills) -
-   *   ne sont jamais recrees. Vide par defaut : changer de profondeur
-   *   (goToDepth vers une AUTRE profondeur) fait toujours reapparaitre
-   *   tous les ennemis, comme voulu a l'origine (le farm via un vrai
-   *   aller-retour reste possible et intentionnel). Seule une reprise de
-   *   sauvegarde POUR CETTE MEME VISITE restaure cette liste - sinon
-   *   sauvegarder+quitter+reprendre reviendrait a un aller-retour gratuit,
-   *   sans le cout (trajet, risque) qui rend le vrai farm legitime.
-   * @param {string} [lootSeed] seed du CONTENU du butin (ennemis/coffres/
-   *   boss), distincte de `seed` (qui reste la disposition du niveau,
-   *   fixe pour toujours) - si absente, une nouvelle est generee ICI a
-   *   chaque appel : donc chaque vrai changement d'etage (goToDepth) tire
-   *   un contenu different, alors qu'une reprise de sauvegarde (qui PASSE
-   *   explicitement la valeur sauvegardee) retrouve exactement le meme
-   *   butin qu'avant de quitter. Sans cette distinction, un coffre repere
-   *   comme "donne une arme" serait une source infinie du meme objet en
-   *   faisant de simples allers-retours d'etage.
+   * entièrement la scène à partir de la réponse serveur.
    */
   async loadLevel(
     depth,
@@ -949,6 +840,22 @@ export default class MainScene extends Phaser.Scene {
     savedFogState = null,
     savedPlayerPosition = null,
   ) {
+    // cache le brouillard de l'etage qu'on QUITTE (this.fogState/
+    // this.currentDepth valent encore l'ANCIEN etage ici, avant d'etre
+    // ecrases plus bas) - permet de le restaurer si le joueur y revient
+    // plus tard dans la MEME session, sans avoir besoin de sauvegarder+
+    // recharger la page
+    if (this.fogState?.state && this.currentDepth != null) {
+      const discoveredTiles = [];
+      for (let y = 0; y < this.fogState.state.length; y++) {
+        for (let x = 0; x < this.fogState.state[y].length; x++) {
+          if (this.fogState.state[y][x] !== 0)
+            discoveredTiles.push(`${x},${y}`);
+        }
+      }
+      this.floorFogCache[this.currentDepth] = discoveredTiles;
+    }
+
     this.events.emit("level-loading", { depth });
     const effectiveLootSeed = lootSeed || `${Date.now()}-${Math.random()}`;
     this.currentFloorLootSeed = effectiveLootSeed;
@@ -975,43 +882,52 @@ export default class MainScene extends Phaser.Scene {
       chests,
       tileset,
     } = data;
+
+    // priorite au parametre explicite (reprise de sauvegarde), repli sur
+    // le cache en memoire (retour en cours de session), sinon rien
+    // (premiere visite)
+    const effectiveSavedFogState =
+      savedFogState || this.floorFogCache[depth] || null;
+
     this.currentDepth = depth;
     this.currentSeed = data.seed;
+    // Initialise la mémoire des landmarks de cet étage.
+    if (!this.discoveredLandmarks[depth]) {
+      this.discoveredLandmarks[depth] = {
+        exitTile: exitTile ? { ...exitTile } : null,
+        exitDiscovered: false,
+
+        upstairsTile: upstairsTile ? { ...upstairsTile } : null,
+        upstairsDiscovered: false,
+
+        questNpcs: {},
+      };
+    } else {
+      this.discoveredLandmarks[depth].exitTile = exitTile
+        ? { ...exitTile }
+        : null;
+
+      this.discoveredLandmarks[depth].upstairsTile = upstairsTile
+        ? { ...upstairsTile }
+        : null;
+    }
     this.fogGrid = grid;
-    this.currentFloorKills = [...killedIndices]; // copie fraiche, alimentee au fil des kills de cette visite
-    this.currentFloorOpenedChests = [...openedChestIndices]; // meme principe, pour les coffres
+    this.currentFloorKills = [...killedIndices];
+    this.currentFloorOpenedChests = [...openedChestIndices];
     this.bossData = boss || null;
     this.travelHubTile = travelHubTile || null;
     this.shopData = shop || null;
     this.bossDoorTile = bossDoorTile || null;
-    // porte fermee et boss pas encore invoque tant que les autres ennemis
-    // ne sont pas nettoyes - reinitialise a CHAQUE visite (pas de mort
-    // permanente : redescendre puis remonter oblige a recombattre, cf.
-    // /areas/phaser-arpg.md)
     this.bossRoomOpen = false;
-    this.bossAlive = this.bossData ? true : null; // null = pas de boss sur cet etage
+    this.bossAlive = this.bossData ? true : null;
 
-    // alimente l'historique des etages visites - seule la PREMIERE fois
-    // qu'un etage est atteint (sa seed y est figee pour toujours ensuite,
-    // cf. la remontee qui reutilise cette seed exacte)
     if (!this.visitedFloors.find((f) => f.depth === depth)) {
       this.visitedFloors.push({ depth, seed: data.seed });
     }
 
-    // detruit d'abord les colliders qui referencent des objets du niveau
-    // PRECEDENT (this.layer, this.questNpcs) - sans ca, ils continuent
-    // d'exister dans le monde physique de Phaser apres que ces objets
-    // soient detruits juste apres, et le moteur plante en tentant de
-    // verifier une collision contre une tilemap layer qui n'existe plus
-    // (Cannot read properties of undefined (reading 'tileWidth')).
-    // this.enemyGroup vs lui-meme (cf. create()) n'est PAS dans cette
-    // liste : il ne reference rien de propre a un niveau, il doit
-    // persister a travers tous les changements d'etage.
     this.levelColliders.forEach((c) => c.destroy());
     this.levelColliders = [];
 
-    // detruit l'ancienne tilemap, le brouillard, l'ancien hero et les
-    // anciens ennemis avant de reconstruire
     if (this.layer) {
       this.layer.destroy();
       this.layer = null;
@@ -1056,33 +972,27 @@ export default class MainScene extends Phaser.Scene {
       this.ambientNpcs.forEach((n) => n.sprite.destroy());
     }
     this.ambientNpcs = [];
-    this.activeTalkingNpc = null; // au cas ou un dialogue serait reste ouvert a travers un changement de niveau - evite une reference vers un sprite deja detruit
+    this.activeTalkingNpc = null;
     if (this.chests) {
       this.chests.forEach((c) => c.sprite.destroy());
     }
     this.chests = [];
-    this.nextLootChestId = 0; // identifiants negatifs pour les coffres de butin d'ennemi (cf. spawnLootChest), jamais confondus avec un index de coffre pre-place (toujours >= 0)
+    this.nextLootChestId = 0;
     this.dialogOpen = false;
     this.gamePaused = false;
     this.pauseReasons.clear();
     this.enemies.forEach((e) => e.sprite.destroy());
-    if (this.enemyGroup) this.enemyGroup.clear(false, false); // vide la liste du groupe, sprites deja detruits ci-dessus
+    if (this.enemyGroup) this.enemyGroup.clear(false, false);
     this.enemies = [];
     this.projectiles.forEach((p) => p.sprite.destroy());
     this.projectiles = [];
     this.enemyProjectiles.forEach((p) => p.sprite.destroy());
     this.enemyProjectiles = [];
+    this.abilityProjectiles.forEach((p) => p.sprite.destroy());
+    this.abilityProjectiles = [];
     this.playerStatusEffects = []; // remis a zero a chaque changement d'etage, comme les projectiles
+    this.pendingWeaponImbue = null; // transitoire, remis a zero a chaque changement d'etage comme les autres etats de combat
 
-    // ne soigne PLUS automatiquement a chaque changement d'etage (montee/
-    // descente/voyage) - preserve les PV actuels par defaut (clamped au
-    // cas ou playerMaxHp aurait change entre-temps, ex: niveau gagne ou
-    // objet retire). hpOverride (fourni par resumeFromSave) reste
-    // prioritaire quand present. Un soin complet EXPLICITE reste
-    // legitime pour "Reessayer" apres une mort (cf. retryLevel, qui fixe
-    // this.playerHp AVANT d'appeler loadLevel) et pour une partie neuve
-    // (this.playerHp deja a this.playerMaxHp depuis create(), preserve
-    // tel quel ici).
     this.playerHp =
       typeof hpOverride === "number"
         ? Math.min(hpOverride, this.playerMaxHp)
@@ -1092,14 +1002,13 @@ export default class MainScene extends Phaser.Scene {
       hp: this.playerHp,
       maxHp: this.playerMaxHp,
     });
-    // contrairement aux PV juste au-dessus, le mana n'est JAMAIS
-    // reinitialise a chaque changement d'etage (pas de "soin complet"
-    // equivalent pour le mana) - simple synchronisation de la valeur
-    // deja en place (fixee dans create() pour une partie neuve, ou dans
-    // resumeFromSave pour une reprise), pour que React en soit informe
     this.events.emit("player-mana-changed", {
       mana: this.playerMana,
       maxMana: this.playerMaxMana,
+    });
+    this.events.emit("player-stamina-changed", {
+      stamina: this.playerStamina,
+      maxStamina: this.playerMaxStamina,
     });
 
     const worldW = grid[0].length * TILE_SIZE;
@@ -1115,17 +1024,6 @@ export default class MainScene extends Phaser.Scene {
     );
     const ctx = canvasTex.getContext();
 
-    // vraies images si ce biome en a (cf. TILE_IMAGE_REGISTRY), sinon
-    // repli sur les couleurs pleines habituelles - meme mise en page dans
-    // les deux cas (index 0 = sol, index 1 = mur), donc tout le reste du
-    // code (grille brute utilisee comme indices de tuile, setCollision,
-    // ouverture de la porte du boss via putTileAt...) reste inchange quel
-    // que soit le chemin pris ici.
-    //
-    // Sol et mur decident CHACUN separement s'ils ont une vraie image
-    // disponible - un biome peut tres bien n'avoir qu'un mur en vraie
-    // image (ex: tree.floorKey=null dans TILE_IMAGE_REGISTRY) et garder
-    // un sol en couleur pleine, plutot que d'exiger les deux a la fois.
     const tileImages = TILE_IMAGE_REGISTRY[tileset];
     const hasRealFloor =
       tileImages &&
@@ -1197,10 +1095,6 @@ export default class MainScene extends Phaser.Scene {
     };
     this.hero.setScale(heroSprite.scale);
     this.hero.setCollideWorldBounds(true);
-    // hitbox calculee par spriteRegistry.js (computeSafeHitbox) a partir
-    // des dimensions/echelle propres a cette entree - cf. le commentaire
-    // dans spriteRegistry.js pour le detail du calcul et pourquoi une
-    // hitbox trop grande bloque le passage dans les couloirs/portes 1 case
     const hb = heroSprite.hitbox;
     this.hero.body
       .setSize(hb.width, hb.height)
@@ -1211,15 +1105,6 @@ export default class MainScene extends Phaser.Scene {
     this.lastAimVector = { x: 0, y: 1 };
 
     this.levelColliders.push(this.physics.add.collider(this.hero, this.layer));
-    // le groupe entier contre les murs - this.layer change a chaque
-    // niveau, donc cette collision doit etre reposee ici plutot que dans
-    // create() (contrairement a l'auto-collision du groupe, qui elle est
-    // etablie une seule fois puisqu'elle ne reference aucun objet
-    // recree a chaque niveau). Reference conservee dans levelColliders
-    // pour etre detruite au prochain changement d'etage (cf. le debut de
-    // cette fonction) - sinon elle continue d'exister dans le monde
-    // physique apres que this.layer soit detruit, et Phaser plante en
-    // tentant de tester une collision contre une layer qui n'existe plus.
     this.levelColliders.push(
       this.physics.add.collider(this.enemyGroup, this.layer),
     );
@@ -1227,20 +1112,9 @@ export default class MainScene extends Phaser.Scene {
     this.cameras.main.setBounds(0, 0, worldW, worldH);
     this.cameras.main.startFollow(this.hero, true, 0.1, 0.1);
 
-    // zoom sur mobile pour que la zone de visibilite (this.playerVisionRadius,
-    // cf. le brouillard de guerre) remplisse une bonne partie de l'ecran -
-    // sans ca, sur un petit telephone, le cercle visible (petit par
-    // rapport aux 800x600 logiques du canvas) restait difficile a voir/
-    // utiliser, la majeure partie de l'ecran affichant du brouillard
-    // noir. Jamais sur desktop, ou le canvas 800x600 offre deja assez
-    // d'espace visible. Calcule a partir du rayon de vision REEL du
-    // heros (varie par archetype, cf. HERO_STATS_PROFILES) plutot qu'une
-    // valeur fixe - un guerrier (vision plus courte) zoome davantage
-    // qu'un archer (vision plus large) pour remplir la meme proportion
-    // d'ecran.
     if (this.registry.get("isMobile")) {
       const visionDiameterPx = this.playerVisionRadius * TILE_SIZE * 2;
-      const targetFraction = 0.85; // la zone visible doit remplir ~85% de la plus petite dimension de la camera
+      const targetFraction = 0.85;
       const smallerDimension = Math.min(
         this.cameras.main.width,
         this.cameras.main.height,
@@ -1250,11 +1124,6 @@ export default class MainScene extends Phaser.Scene {
       );
     }
 
-    // marqueur de sortie : place sous le calque de brouillard (depth 2,
-    // entre le sol a 0 et le brouillard a 5) pour qu'il reste cache tant
-    // que le joueur n'a pas explore/vu cette case, comme le reste du
-    // niveau - pas de raccourci "on voit la sortie a travers le
-    // brouillard"
     this.exitTile = exitTile;
     this.exitMarker = this.add.image(
       exitTile.x * TILE_SIZE + TILE_SIZE / 2,
@@ -1263,10 +1132,6 @@ export default class MainScene extends Phaser.Scene {
     );
     this.exitMarker.setDepth(2);
 
-    // marqueur de remontee (jamais a l'etage 1) - meme principe que la
-    // sortie (cache par le brouillard tant que non explore), PAS de
-    // declenchement automatique a l'arrivee dessus (contrairement a la
-    // sortie) : une confirmation est necessaire, cf. showUpstairsPrompt()
     this.upstairsTile = upstairsTile;
     if (upstairsTile) {
       this.upstairsMarker = this.add.image(
@@ -1277,10 +1142,6 @@ export default class MainScene extends Phaser.Scene {
       this.upstairsMarker.setDepth(2);
     }
 
-    // marqueur de la porte du boss (visible seulement une fois explore,
-    // comme les autres - cf. depth=2 vs fog) - pas encore d'ouverture
-    // automatique, ni de sprite de boss : juste un repere visuel sur un
-    // mur qui, pour l'instant, se comporte comme n'importe quel autre mur
     if (this.bossDoorTile) {
       this.bossDoorMarker = this.add.circle(
         this.bossDoorTile.x * TILE_SIZE + TILE_SIZE / 2,
@@ -1300,8 +1161,6 @@ export default class MainScene extends Phaser.Scene {
       });
     }
 
-    // hub de voyage rapide (uniquement en ville) - cyan, distinct du
-    // dore (sortie), rouge (remontee) et violet (porte du boss)
     if (this.travelHubTile) {
       this.travelHubMarker = this.add.circle(
         this.travelHubTile.x * TILE_SIZE + TILE_SIZE / 2,
@@ -1321,8 +1180,6 @@ export default class MainScene extends Phaser.Scene {
       });
     }
 
-    // boutique (uniquement en ville) - or/jaune, coherent thematiquement,
-    // distinct de tous les autres marqueurs
     if (this.shopData) {
       this.shopMarker = this.add.circle(
         this.shopData.x * TILE_SIZE + TILE_SIZE / 2,
@@ -1342,29 +1199,14 @@ export default class MainScene extends Phaser.Scene {
       });
     }
 
-    // ennemis : comportement (patrol/guard/rest) tire localement a partir
-    // de la seed de niveau - c'est un detail de rendu/IA cote client, pas
-    // une donnee de gameplay a faire transiter par l'API (cf.
-    // enemyBehavior.js). Les stats de combat, elles, viennent
-    // integralement du serveur (data.enemies[i]) et ne sont jamais
-    // recalculees ici.
     const behaviorRng = createRng(data.seed + "-behaviors");
     enemies.forEach((enemyData, spawnIndex) => {
       const spawnPos = { x: enemyData.x, y: enemyData.y };
 
-      // createEnemyBehavior DOIT etre appele pour CHAQUE ennemi de la
-      // liste, meme deja tue lors de cette visite - il consomme le flux
-      // RNG partage de facon sequentielle, le sauter decalerait le
-      // tirage de tous les ennemis suivants et romprait le determinisme
-      // (deux joueurs avec la meme seed n'auraient plus les memes
-      // comportements pour les ennemis restants)
       const behavior = createEnemyBehavior(grid, spawnPos, behaviorRng);
 
-      if (this.currentFloorKills.includes(spawnIndex)) return; // deja tue cette visite, pas de sprite
+      if (this.currentFloorKills.includes(spawnIndex)) return;
 
-      // le type (donc le sprite) vient du serveur (enemyData.type) - le
-      // client ne tire jamais ce choix lui-meme, sinon visuel et stats
-      // pourraient diverger entre les deux (cf. spriteRegistry.js)
       const { entry: enemySprite, spriteKey } = resolveEnemySprite(
         enemyData.type,
       );
@@ -1386,8 +1228,8 @@ export default class MainScene extends Phaser.Scene {
       this.enemies.push({
         sprite,
         spriteKey,
-        spawnIndex, // identifiant stable pour cette visite - cf. currentFloorKills
-        archetype: enemyData.type, // type d'ennemi cote serveur (enemyDefault/goblin/...) - cf. quete ciblee. DISTINCT de `type` ci-dessous (comportement IA), qui reutilise deja ce nom
+        spawnIndex,
+        archetype: enemyData.type,
         type: behavior.type,
         state: behavior.state,
         home: behavior.home,
@@ -1398,29 +1240,20 @@ export default class MainScene extends Phaser.Scene {
         path: null,
         pathIndex: 0,
         lastDir: "down",
-        // stats fournies par le serveur, jamais recalculees ici
         hp: enemyData.hp,
         maxHp: enemyData.maxHp,
         damage: enemyData.damage,
         defense: enemyData.defense,
         xpReward: enemyData.xpReward,
-        attackType: enemyData.attackType || "melee", // 'melee' (contact) ou 'ranged' (projectile) - cf. updateEnemyAttacks
-        questLoot: enemyData.questLoot || null,
-        drops: enemyData.drops || [], // PLURIEL - tableau (peut etre vide), plus jamais un singulier + null - cf. ArpgController.js
+        attackType: enemyData.attackType || "melee",
+        questLoot: enemyData.questLoot || null, // objet garanti si une quete obtainItem le cible precisement - cf. damageEnemy
+        inflictsEffect: enemyData.inflictsEffect || null, // saignement/brulure eventuel inflige au joueur - cf. rollStatusEffect/updateEnemyAttacks
+        statusEffects: [], // saignement/brulure actifs SUR cet ennemi (infliges par le joueur) - cf. updateStatusEffects
+        drops: enemyData.drops || [],
         attackCooldown: createCooldown(ENEMY_ATTACK_COOLDOWN),
       });
     });
 
-    // coffres - places et remplis par le serveur (data.chests),
-    // deterministe comme le reste. Deja ouverts cette visite
-    // (currentFloorOpenedChests, meme principe que currentFloorKills
-    // pour les ennemis) restent visibles mais dans un etat "ouvert"
-    // distinct, sans interaction possible - sinon sauvegarder+quitter+
-    // reprendre permettrait de re-piocher leur contenu gratuitement.
-    //
-    // variante de couleur choisie au hasard, seedee sur la seed du
-    // niveau + l'index du coffre - meme apparence a chaque revisite du
-    // meme etage, coherent avec le reste de la generation
     const chestVariantRng = createRng(`${this.currentSeed}-chest-variants`);
     (chests || []).forEach((chestData, index) => {
       const alreadyOpened = this.currentFloorOpenedChests.includes(index);
@@ -1433,18 +1266,8 @@ export default class MainScene extends Phaser.Scene {
         alreadyOpened ? variant.openFrame : variant.closedFrame,
       );
       sprite.setDepth(7);
-      this.physics.add.existing(sprite, true); // corps statique, bloque le passage du joueur (jamais des ennemis, cf. juste en dessous)
+      this.physics.add.existing(sprite, true);
       this.levelColliders.push(this.physics.add.collider(this.hero, sprite));
-      // PAS de collider ennemi ici, contrairement au PNJ de quete - un
-      // coffre bloquant le chemin d'un ennemi permettait un exploit :
-      // rester pres d'un coffre non ouvert (sans le declencher) pour
-      // coincer un ennemi derriere, puis le mitrailler a distance sans
-      // jamais subir de riposte. Les ennemis traversent donc les coffres
-      // comme s'ils n'existaient pas - seul le joueur ne peut pas passer
-      // a travers un coffre ferme.
-      // deja ouvert lors d'une session precedente (restaure via
-      // currentFloorOpenedChests) : la collision doit etre desactivee
-      // des la creation, pas seulement au moment ou on l'ouvre en direct
       if (alreadyOpened) sprite.body.checkCollision.none = true;
 
       this.chests.push({
@@ -1458,11 +1281,6 @@ export default class MainScene extends Phaser.Scene {
       });
     });
 
-    // PNJ de quete - places et definis par le serveur (data.questNpcs,
-    // tableau vide s'il n'y en a pas sur cet etage). Le client ne decide
-    // plus rien lui meme (position, objectif) : uniquement des villes
-    // pour l'instant (cf. ArpgController.getLevel), plusieurs PNJ
-    // possibles par ville desormais (1 a 3).
     if (data.questNpcs && data.questNpcs.length > 0) {
       this.createQuestNpcs(data.questNpcs);
     }
@@ -1473,8 +1291,8 @@ export default class MainScene extends Phaser.Scene {
 
     this.fogState = createFogState(grid);
 
-    if (savedFogState) {
-      for (const tile of savedFogState) {
+    if (effectiveSavedFogState) {
+      for (const tile of effectiveSavedFogState) {
         const [x, y] = tile.split(",").map(Number);
 
         if (
@@ -1482,24 +1300,15 @@ export default class MainScene extends Phaser.Scene {
           y < this.fogState.state.length &&
           x >= 0 &&
           x < this.fogState.state[y].length
-          ) {
+        ) {
           this.fogState.state[y][x] = 1;
         }
       }
     }
     this.lastPlayerTile = { x: startPosition.x, y: startPosition.y };
 
-    // pas de brouillard de guerre dans les villes - zone sure, tout est
-    // visible d'emblee. On garde quand meme la structure fogState/fogLayer
-    // intacte (pas de cas particulier a gerer partout ailleurs - minimap,
-    // visibilite des ennemis... tout continue de lire le meme etat) : on
-    // revele juste TOUTES les cases directement, en bypassant le calcul
-    // par ligne de vue habituel (des batiments bloqueraient sinon la vue
-    // meme avec un rayon enorme).
     this.fogDisabled = data.tileset === "town";
 
-    // brouillard de guerre : calque separe, initialement opaque partout,
-    // que l'on eclaircit progressivement selon ce que le joueur decouvre
     const fogTileset = this.map.addTilesetImage(
       this.fogTilesetKey,
       this.fogTilesetKey,
@@ -1525,10 +1334,10 @@ export default class MainScene extends Phaser.Scene {
 
       this.applyFogChanges(allChanges);
     } else {
-      // Si on charge une sauvegarde, restaurer visuellement
-      // les cases déjà découvertes.
-      if (savedFogState) {
-        for (const tile of savedFogState) {
+      // Si on avait un brouillard restaure (sauvegarde OU cache
+      // session), restaurer visuellement les cases deja decouvertes.
+      if (effectiveSavedFogState) {
+        for (const tile of effectiveSavedFogState) {
           const [x, y] = tile.split(",").map(Number);
 
           if (
@@ -1543,7 +1352,6 @@ export default class MainScene extends Phaser.Scene {
         }
       }
 
-      // Puis révéler la zone autour de la position actuelle du joueur.
       const initialChanges = this.fogState.update(
         startPosition.x,
         startPosition.y,
@@ -1554,57 +1362,31 @@ export default class MainScene extends Phaser.Scene {
     }
 
     this.events.emit("level-loaded", { depth, biome: data.biome });
-    // etat initial pour React, qui n'a sinon aucune valeur tant que le
-    // joueur n'a rien ramasse/equipe cette session (notamment en
-    // reprenant une partie dont l'inventaire n'est pas vide)
     this.events.emit("inventory-updated", [...this.inventory]);
     this.events.emit("equipment-updated", { ...this.equipped });
+    this.events.emit("hotbar-updated", [...this.hotbarSlots]);
+    this.events.emit("fury-progress", {
+      count: this.furyKillCount,
+      required: FURY_KILLS_REQUIRED,
+    });
+    this.events.emit("abilities-updated", [...this.unlockedAbilities]);
     this.persistProgress();
   }
 
-  /**
-   * Recharge le même étage avec une nouvelle seed - appelé par le bouton
-   * "Réessayer" du composant React après un game over. Contrairement a
-   * un changement d'etage normal (qui ne soigne plus, cf. loadLevel),
-   * "Réessayer" doit repartir a PLEINE vie - sans quoi le joueur
-   * redemarrerait a 0 PV (celui de sa mort) et mourrait a nouveau
-   * instantanement. Fixe explicitement AVANT l'appel a loadLevel, qui
-   * preserve desormais this.playerHp tel quel par defaut.
-   */
   retryLevel() {
     this.playerHp = this.playerMaxHp;
     this.loadLevel(this.currentDepth, "retry-" + Date.now());
   }
 
-  /**
-   * Declenche la descente vers l'etage suivant - appele quand le joueur
-   * atteint la case de sortie. Reutilise loadLevel() telle quelle
-   * (nouvelle profondeur, nouvel appel API, reconstruction complete de
-   * la scene), exactement comme retryLevel() le fait pour un game over.
-   */
   descendStairs() {
     this.goToDepth(this.currentDepth + 1);
   }
 
-  /**
-   * Charge un etage en reutilisant sa seed d'origine si on y est deja
-   * alle (cf. visitedFloors) - garantit exactement le meme plan a chaque
-   * retour. Si jamais visite, aucune seed n'est passee : le serveur en
-   * genere une nouvelle (comportement inchange pour une premiere
-   * descente). Point d'entree commun pour descendre ET remonter.
-   */
   goToDepth(targetDepth) {
     const existing = this.visitedFloors.find((f) => f.depth === targetDepth);
     this.loadLevel(targetDepth, existing ? existing.seed : undefined);
   }
 
-  /**
-   * Ouvre le hub de voyage rapide (evenement React, cf. arpg.jsx) - met
-   * le jeu en pause (comme l'inventaire, cf. pauseGame) le temps du
-   * choix. Envoie la liste des etages deja visites SAUF l'etage courant
-   * (rien a faire d'y "voyager") - le client connait deja tout via
-   * this.visitedFloors, aucun aller-retour serveur necessaire ici.
-   */
   openTravelHub() {
     this.pauseGame("travelHub");
     const destinations = this.visitedFloors.filter(
@@ -1613,46 +1395,22 @@ export default class MainScene extends Phaser.Scene {
     this.events.emit("travel-hub", destinations);
   }
 
-  /**
-   * Voyage vers un etage deja visite, choisi dans le hub (bouton cote
-   * React) - reutilise goToDepth telle quelle (meme mecanisme que la
-   * remontee/descente normale : reutilise la seed stockee, donc le meme
-   * plan qu'a la derniere visite).
-   */
   travelToDepth(targetDepth) {
     this.unpauseGame("travelHub");
     this.events.emit("travel-hub", null);
     this.goToDepth(targetDepth);
   }
 
-  /**
-   * Ferme le hub sans voyager (bouton "Fermer" cote React).
-   */
   closeTravelHub() {
     this.unpauseGame("travelHub");
     this.events.emit("travel-hub", null);
   }
 
-  /**
-   * Ouvre la boutique (evenement React, cf. arpg.jsx) - met le jeu en
-   * pause (meme mecanisme a raisons comptees que l'inventaire/le hub,
-   * cf. pauseGame). Le stock est deja connu (this.shopData.stock, fixe a
-   * la generation) - pas besoin de recalculer quoi que ce soit ici, le
-   * prix affichable cote React se contente de comparer au montant d'or
-   * deja suivi dans l'inventaire (evenement 'inventory-updated').
-   */
   openShop() {
     this.pauseGame("shop");
     this.events.emit("shop", this.shopData.stock);
   }
 
-  /**
-   * Achete un objet du stock de la boutique (par son index) - deduit le
-   * prix de l'or en inventaire, ajoute l'objet achete. Ignore
-   * silencieusement si l'or est insuffisant (l'interface devrait deja
-   * avoir desactive le bouton dans ce cas - pas de raison de planter sur
-   * un clic qui n'aurait pas du etre possible).
-   */
   buyItem(shopItemIndex) {
     const shopItem = this.shopData?.stock?.[shopItemIndex];
     if (!shopItem) return;
@@ -1665,56 +1423,34 @@ export default class MainScene extends Phaser.Scene {
     if (goldEntry.quantity <= 0)
       this.inventory = this.inventory.filter((i) => i !== goldEntry);
 
-    this.addItemToInventory(shopItem.itemId, 1); // emet deja 'inventory-updated' et persiste
+    this.addItemToInventory(shopItem.itemId, 1);
   }
 
-  /**
-   * Vend un objet de l'inventaire (par son index) - retire un exemplaire,
-   * ajoute de l'or a la moitie du prix d'achat (SELL_PRICE_RATIO,
-   * convention classique de RPG : eviter qu'acheter puis revendre soit
-   * gratuit/rentable). Jamais l'or lui-meme (pas de `price`, deja exclu
-   * naturellement par le garde ci-dessous) ni un objet de quete (idem,
-   * `ancientRelic` n'a pas de `price` dans itemDefs.js). Un objet
-   * EQUIPE n'est jamais dans this.inventory (retire a l'equipement, cf.
-   * equipItem) - impossible de vendre par erreur ce qu'on porte.
-   */
   sellItem(inventoryIndex) {
     const item = this.inventory[inventoryIndex];
     if (!item) return;
     const def = resolveItemDef(item.itemId);
-    if (!def.price) return; // pas de prix defini = jamais vendable
+    if (!def.price) return;
 
     const sellPrice = Math.floor(def.price * SELL_PRICE_RATIO);
 
     item.quantity -= 1;
     if (item.quantity <= 0) this.inventory.splice(inventoryIndex, 1);
 
-    this.addItemToInventory("gold", sellPrice); // emet deja 'inventory-updated' et persiste
+    this.addItemToInventory("gold", sellPrice);
   }
 
-  /**
-   * Ferme la boutique (bouton "Fermer" cote React).
-   */
   closeShop() {
     this.unpauseGame("shop");
     this.events.emit("shop", null);
   }
 
-  /**
-   * Ouvre la porte de la salle du boss (mur -> sol, visuellement ET
-   * physiquement) et fait apparaitre le boss - appele une seule fois par
-   * visite, quand le dernier ennemi NORMAL de l'etage tombe (cf.
-   * damageEnemy). Le boss reutilise exactement le meme pipeline que les
-   * ennemis normaux (enemyGroup, colliders deja en place, resolveEnemySprite
-   * pour le visuel) - seul son comportement est force en garde
-   * ({guard:1}), jamais patrouille/repos.
-   */
   openBossDoor() {
     this.bossRoomOpen = true;
 
     const { x, y } = this.bossDoorTile;
-    this.layer.putTileAt(0, x, y); // 0 = sol, ouvre physiquement (plus de collision a cet endroit)
-    this.fogGrid[y][x] = 0; // coherence pour le pathfinding/la ligne de vue, qui lisent this.fogGrid
+    this.layer.putTileAt(0, x, y);
+    this.fogGrid[y][x] = 0;
 
     if (this.bossDoorMarker) {
       this.bossDoorMarker.destroy();
@@ -1736,9 +1472,6 @@ export default class MainScene extends Phaser.Scene {
     sprite.setDepth(8);
     sprite.anims.play(spriteKey + "-idle-down");
 
-    // {guard:1} force 100% garde (jamais patrouille/repos), cf. la
-    // demande initiale - createEnemyBehavior accepte deja ce parametre
-    // optionnel, pas besoin de toucher enemyBehavior.js
     const behaviorRng = createRng(this.currentSeed + "-boss-behavior");
     const behavior = createEnemyBehavior(
       this.fogGrid,
@@ -1750,7 +1483,7 @@ export default class MainScene extends Phaser.Scene {
     this.enemies.push({
       sprite,
       spriteKey,
-      spawnIndex: -1, // pas de suivi currentFloorKills pour le boss - toujours recree a chaque visite, jamais de mort permanente
+      spawnIndex: -1,
       isBoss: true,
       archetype: this.bossData.type,
       type: behavior.type,
@@ -1769,6 +1502,8 @@ export default class MainScene extends Phaser.Scene {
       defense: this.bossData.defense,
       xpReward: this.bossData.xpReward,
       attackType: this.bossData.attackType || "melee",
+      inflictsEffect: this.bossData.inflictsEffect || null, // saignement/brulure eventuel - meme mecanisme que les ennemis normaux
+      statusEffects: [], // saignement/brulure actifs SUR le boss (infliges par le joueur)
       drop: this.bossData.drop || null,
       attackCooldown: createCooldown(ENEMY_ATTACK_COOLDOWN),
     });
@@ -1776,134 +1511,106 @@ export default class MainScene extends Phaser.Scene {
     this.events.emit("boss-room-opened");
   }
 
-  /**
-   * Met le jeu en pause pour une RAISON donnee (une chaine libre,
-   * ex: 'upstairs', 'inventory') - plusieurs raisons peuvent etre
-   * actives en meme temps sans se marcher dessus (ouvrir l'inventaire
-   * pendant que la confirmation de remontee est affichee, par exemple) :
-   * this.gamePaused ne redevient false que lorsque TOUTES les raisons
-   * ont ete levees via unpauseGame(). Immobilise aussi le heros.
-   */
   pauseGame(reason) {
+    const wasAlreadyPaused = this.gamePaused;
     this.pauseReasons.add(reason);
     this.gamePaused = true;
     if (this.hero) this.hero.setVelocity(0, 0);
+
+    if (!wasAlreadyPaused) {
+      // marque le debut REEL de la pause - uniquement au premier passage
+      // non-pause -> pause, jamais re-decale si une DEUXIEME raison
+      // s'empile par-dessus une pause deja active
+      this.pauseStartedAt = this.time.now;
+    }
+
+    for (const enemy of this.enemies) {
+      if (enemy.sprite?.body) enemy.sprite.setVelocity(0, 0);
+    }
+    for (const npc of this.questNpcs || []) {
+      if (npc.sprite?.body) npc.sprite.setVelocity(0, 0);
+    }
+    for (const npc of this.ambientNpcs || []) {
+      if (npc.sprite?.body) npc.sprite.setVelocity(0, 0);
+    }
+    for (const proj of this.projectiles) {
+      if (proj.sprite?.body) proj.sprite.setVelocity(0, 0);
+    }
+    for (const proj of this.enemyProjectiles) {
+      if (proj.sprite?.body) proj.sprite.setVelocity(0, 0);
+    }
+    for (const proj of this.abilityProjectiles || []) {
+      if (proj.sprite?.body) proj.sprite.setVelocity(0, 0);
+    }
   }
 
-  /**
-   * Leve une raison de pause - ne reprend le jeu que si plus aucune
-   * autre raison n'est active.
-   */
   unpauseGame(reason) {
     this.pauseReasons.delete(reason);
-    this.gamePaused = this.pauseReasons.size > 0;
+    const stillPaused = this.pauseReasons.size > 0;
+
+    if (this.gamePaused && !stillPaused) {
+      // on sort REELLEMENT de pause (plus aucune raison active) - decale
+      // tous les cooldowns en cours du temps ecoule pendant la pause,
+      // pour qu'ils n'aient jamais avance "gratuitement" pendant que le
+      // jeu semblait fige. HP/mana/stamina/statusEffects n'ont pas besoin
+      // de ce traitement : ils ne progressent QUE via update() (cf.
+      // updateRegen/updateStatusEffects), deja completement arrete par
+      // gamePaused - seuls abilityCooldowns/itemCooldowns comparent un
+      // timestamp absolu HORS de la boucle update(), d'ou ce trou.
+      const pausedDuration = this.time.now - this.pauseStartedAt;
+      for (const key of Object.keys(this.abilityCooldowns)) {
+        this.abilityCooldowns[key] += pausedDuration;
+      }
+      for (const key of Object.keys(this.itemCooldowns)) {
+        this.itemCooldowns[key] += pausedDuration;
+      }
+    }
+
+    this.gamePaused = stillPaused;
   }
 
-  /**
-   * Affiche la confirmation de remontee et met le jeu en pause (evenement
-   * React, cf. arpg.jsx) - jamais de descente/remontee instantanee au
-   * contact, contrairement a la sortie, pour ne pas punir un passage
-   * involontaire (couloir, fuite de combat) sur cette case.
-   */
   showUpstairsPrompt() {
-    if (this.pauseReasons.has("upstairs")) return; // deja affiche, pas de re-declenchement
+    if (this.pauseReasons.has("upstairs")) return;
     this.pauseGame("upstairs");
     this.events.emit("upstairs-prompt", true);
   }
 
-  /**
-   * Confirme la remontee (bouton "Oui" cote React).
-   */
   confirmGoUpstairs() {
     this.unpauseGame("upstairs");
     this.events.emit("upstairs-prompt", null);
     this.goToDepth(this.currentDepth - 1);
   }
 
-  /**
-   * Annule la remontee (bouton "Non" cote React) - repart normalement,
-   * sans re-declencher tant que le joueur reste sur cette case (le
-   * prompt ne se redeclenche qu'au PROCHAIN changement de case, cf. le
-   * bloc dans update()).
-   */
   cancelGoUpstairs() {
     this.unpauseGame("upstairs");
     this.events.emit("upstairs-prompt", null);
   }
 
-  /**
-   * Ouvre le prompt de confirmation pour la sortie (etage suivant) -
-   * meme principe que showUpstairsPrompt : met le jeu en pause pendant
-   * la decision, evite qu'un simple passage dans le couloir force la
-   * descente sans choix possible, et evite qu'un ennemi continue a se
-   * deplacer (traversant potentiellement le joueur) pendant le delai
-   * reseau du chargement du niveau suivant (loadLevel est asynchrone).
-   */
   showExitPrompt() {
-    if (this.pauseReasons.has("exit")) return; // deja affiche, pas de re-declenchement
+    if (this.pauseReasons.has("exit")) return;
     this.pauseGame("exit");
     this.events.emit("exit-prompt", true);
   }
 
-  /**
-   * Confirme la descente (bouton "Oui" cote React).
-   */
   confirmDescend() {
     this.unpauseGame("exit");
     this.events.emit("exit-prompt", null);
     this.descendStairs();
   }
 
-  /**
-   * Annule la descente (bouton "Non" cote React) - repart normalement,
-   * sans re-declencher tant que le joueur reste sur cette case (meme
-   * logique que cancelGoUpstairs).
-   */
   cancelDescend() {
     this.unpauseGame("exit");
     this.events.emit("exit-prompt", null);
   }
 
-  /**
-   * Cree le PNJ de quete a partir des donnees du serveur (position et
-   * objectif deja decides la-bas, cf. ArpgController.getLevel) - le
-   * client n'a plus a chercher de case ni a inventer d'objectif.
-   * Plusieurs PNJ possibles par ville (data.questNpcs, un tableau).
-   *
-   * N'ecrase JAMAIS une progression deja existante (cf. this.quests,
-   * restaure par resumeFromSave le cas echeant) - seule une PREMIERE
-   * rencontre avec un PNJ precis initialise une entree fraiche. Chaque
-   * quete est identifiee par une cle `${depth}-${npcIndex}` plutot que
-   * par la seule profondeur, pour distinguer plusieurs PNJ du meme etage.
-   */
-  /**
-   * Bassin des sprites utilisables pour les PNJ de quete - tout ce qui
-   * commence par "NPC_town" dans le registre. Calcule dynamiquement
-   * (pas une liste en dur) : ajouter un nouveau sprite NPC_town* au
-   * registre l'integre automatiquement au tirage, sans toucher a ce
-   * fichier.
-   */
   createQuestNpcs(npcDataArray) {
     const npcSpritePool = Object.keys(SPRITE_REGISTRY).filter((key) =>
       key.startsWith("NPC_town"),
     );
-    // seedee sur la seed du niveau (this.currentSeed) + l'index du PNJ -
-    // meme apparence a chaque revisite du meme etage, coherent avec le
-    // reste de la generation (seed identique = niveau identique)
     const spriteRng = createRng(`${this.currentSeed}-quest-npc-sprites`);
     const patrolRng = createRng(`${this.currentSeed}-quest-npc-patrol`);
     this.questNpcs = [];
 
-    // PREMIER PASSAGE, AVANT la boucle normale : resout les livraisons
-    // EN ATTENTE (role 'giver', style 'crossTown', receiverKey encore
-    // null) dont CET etage est justement la cible - doit tourner avant
-    // la boucle ci-dessous, pour que son garde habituel
-    // (if (!this.quests[questKey])) saute le PNJ ainsi reserve comme
-    // destinataire plutot que de lui assigner une quete normale du
-    // serveur. Attribution par index croissant (0, 1, 2...) si plusieurs
-    // livraisons visent le meme etage - jamais plus de destinataires que
-    // de PNJ reellement presents ici ; l'exces reste simplement non
-    // resolu (tres rare en pratique).
     let nextReceiverIndex = 0;
     for (const questKey of Object.keys(this.quests)) {
       const giverQs = this.quests[questKey];
@@ -1928,13 +1635,11 @@ export default class MainScene extends Phaser.Scene {
       giverQs.receiverKey = receiverKey;
     }
 
-    const freshlyCreatedKeys = []; // pour l'injection eventuelle d'une NOUVELLE livraison, cf. maybeInjectDeliveryQuest plus bas
+    const freshlyCreatedKeys = [];
 
     for (const npcData of npcDataArray) {
       const questKey = `${this.currentDepth}-${npcData.npcIndex}`;
 
-      // repli sur hero1 si aucun sprite NPC_town* n'existe dans le
-      // registre (projet frais, avant l'ajout de tels sprites)
       const npcSpriteKey =
         npcSpritePool.length > 0
           ? npcSpritePool[Math.floor(spriteRng() * npcSpritePool.length)]
@@ -1948,20 +1653,13 @@ export default class MainScene extends Phaser.Scene {
         npcSprite.animations.idleDown,
       );
       sprite.setScale(npcSprite.scale);
-      // plus de teinte doree ici : c'etait un pis-aller pour distinguer
-      // le PNJ du heros quand les deux reutilisaient la texture hero1 -
-      // desormais de vrais sprites NPC distincts, la teinte ferait plus
-      // de mal (fausse leur couleur reelle) que de bien
       sprite.anims.play(`${npcSpriteKey}-idle-down`);
-      sprite.setDepth(9); // entre les ennemis (8) et le heros (10)
-      // bouge desormais (meme mecanisme de patrouille que les PNJ
-      // ambiants, cf. updateNpcMovement) - il lui faut donc aussi un
-      // collider avec les murs, en plus du heros et des ennemis
+      sprite.setDepth(9);
       this.levelColliders.push(this.physics.add.collider(sprite, this.layer));
-      this.levelColliders.push(this.physics.add.collider(this.hero, sprite)); // pour ne pas pouvoir traverser le PNJ
+      this.levelColliders.push(this.physics.add.collider(this.hero, sprite));
       this.levelColliders.push(
         this.physics.add.collider(this.enemyGroup, sprite),
-      ); // idem pour les ennemis
+      );
 
       const route = pickPatrolRoute(
         this.fogGrid,
@@ -1971,6 +1669,7 @@ export default class MainScene extends Phaser.Scene {
 
       this.questNpcs.push({
         sprite,
+        npcIndex: npcData.npcIndex,
         questKey,
         spriteKey: npcSpriteKey,
         lastDir: "down",
@@ -1985,52 +1684,29 @@ export default class MainScene extends Phaser.Scene {
           questId: npcData.questId,
           target: npcData.target,
           xpReward: npcData.xpReward,
-          goldReward: npcData.goldReward, // pour questId==='obtainItem'|'defeatBoss' - undefined sinon, sans consequence
+          goldReward: npcData.goldReward,
           itemReward: npcData.itemReward || null,
           targetEnemyType: npcData.targetEnemyType,
-          targetItemId: npcData.targetItemId, // uniquement pour questId==='obtainItem' - undefined sinon, sans consequence
-          targetBossDepth: npcData.targetBossDepth, // uniquement pour questId==='defeatBoss' - undefined sinon, sans consequence
-          targetBossType: npcData.targetBossType, // idem
-          dialogText: npcData.dialogText || null, // texte personnalise (quete fixe) - null = texte generique
+          targetItemId: npcData.targetItemId,
+          targetQuantity: npcData.targetQuantity, // uniquement pour questId==='obtainItem' - undefined sinon (repli sur 1 cote client, cf. openQuestDialog/turnInQuest)
+          targetBossDepth: npcData.targetBossDepth,
+          targetBossType: npcData.targetBossType,
+          dialogText: npcData.dialogText || null,
           accepted: false,
           completed: false,
           killCount: 0,
-          // vrai des que le boss cible (targetBossDepth) meurt APRES
-          // acceptation - jamais retroactif : un boss deja vaincu avant
-          // d'accepter ne compte pas (cf. generateDefeatBossQuest). Ce
-          // jeu re-affronte le meme boss a chaque visite (jamais de mort
-          // permanente), donc revenir le refaire est toujours possible.
           bossDefeated: false,
         };
         freshlyCreatedKeys.push(questKey);
       }
     }
 
-    // SECOND PASSAGE : injecte EVENTUELLEMENT une NOUVELLE quete de
-    // livraison (donneur) sur l'un des PNJ FRAICHEMENT crees ci-dessus -
-    // remplace le type fourni par le serveur pour ce PNJ precis. Jamais
-    // sur une entree deja existante (progression potentielle en jeu).
     this.maybeInjectDeliveryQuest(freshlyCreatedKeys);
   }
 
   /**
    * Decide, avec une certaine probabilite, d'injecter une quete de
-   * livraison entre PNJ CLIENT-SIDE - le serveur ne peut PAS generer ce
-   * type lui-meme, il n'a aucune connaissance des etages deja visites
-   * (this.visitedFloors, la seule source fiable pour savoir quelles
-   * villes existent deja) ni de leur seed.
-   *
-   * Deux styles bien distincts, JAMAIS l'un un simple repli de l'autre :
-   * - 'crossTown' : cible une ville FUTURE, jamais encore visitee (sinon
-   *   il suffirait de se teleporter via le hub de voyage - aucun interet).
-   *   Le destinataire n'est PAS connu tout de suite (cette ville n'existe
-   *   pas encore) - resolu plus tard, des que le joueur la visite pour la
-   *   premiere fois (cf. le PREMIER PASSAGE de createQuestNpcs).
-   * - 'sameTown' : delibere, assume comme un clin d'oeil moqueur envers
-   *   les jeux qui font faire l'aller-retour entre deux PNJ situes juste
-   *   a cote l'un de l'autre - PAS un repli faute de mieux. Le
-   *   destinataire est un AUTRE PNJ de cette meme ville, deja connu
-   *   immediatement.
+   * livraison entre PNJ CLIENT-SIDE.
    */
   maybeInjectDeliveryQuest(eligibleKeys) {
     if (eligibleKeys.length === 0) return;
@@ -2041,14 +1717,21 @@ export default class MainScene extends Phaser.Scene {
     const giverKey =
       eligibleKeys[Math.floor(injectRng() * eligibleKeys.length)];
 
-    // villes futures (multiples de 10, au-dela de l'etage courant, dans
-    // la limite du jeu) PAS encore dans this.visitedFloors
+    // villes futures (VRAIS multiples de 10 - cf. TOWN_INTERVAL cote
+    // serveur, biomeConfig.js - jamais currentDepth+10*k, qui ne
+    // correspond a une vraie ville que si currentDepth est deja lui-meme
+    // un multiple de 10 par coincidence. Bug corrige : depuis l'etage 1,
+    // l'ancien calcul donnait 11/21/31...91 - aucun de ces etages n'est
+    // une ville, rendant la quete de livraison IMPOSSIBLE a completer,
+    // faute de PNJ destinataire a cet endroit) au-dela de l'etage
+    // courant, dans la limite du jeu, PAS encore dans this.visitedFloors
+    const firstFutureTown = Math.floor(this.currentDepth / 10) * 10 + 10;
     const futureCandidates = [];
-    for (let d = this.currentDepth + 10; d <= 100; d += 10) {
+    for (let d = firstFutureTown; d <= 100; d += 10) {
       if (!this.visitedFloors.find((f) => f.depth === d))
         futureCandidates.push(d);
     }
-    const canSameTown = eligibleKeys.length >= 2; // il faut au moins un AUTRE PNJ fraichement cree dans cette meme ville
+    const canSameTown = eligibleKeys.length >= 2;
 
     let style, targetDepth;
     if (futureCandidates.length > 0 && (!canSameTown || injectRng() < 0.7)) {
@@ -2059,10 +1742,10 @@ export default class MainScene extends Phaser.Scene {
       style = "sameTown";
       targetDepth = this.currentDepth;
     } else {
-      return; // ni l'un ni l'autre possible (ex: derniere ville du jeu, un seul PNJ ici) - pas de livraison cette fois
+      return;
     }
 
-    const goldReward = 20 + Math.floor(injectRng() * 21); // 20-40
+    const goldReward = 20 + Math.floor(injectRng() * 21);
 
     const giverQs = this.quests[giverKey];
     giverQs.questId = "delivery";
@@ -2091,21 +1774,8 @@ export default class MainScene extends Phaser.Scene {
       };
       giverQs.receiverKey = receiverKey;
     }
-    // crossTown : receiverKey reste null, resolu plus tard (cf. le
-    // PREMIER PASSAGE de createQuestNpcs, ci-dessus) des que cette ville
-    // cible sera visitee pour la premiere fois.
   }
 
-  /**
-   * Cree les PNJ ambiants a partir des positions du serveur - purement
-   * decoratifs, jamais de quete ni de vente. Chacun patrouille (meme
-   * mecanisme que le comportement 'patrol' des ennemis - pickPatrolRoute,
-   * cf. enemyBehavior.js) autour de son point de spawn, et s'arrete
-   * (this.talking) quand on lui parle, jusqu'a la fermeture du dialogue -
-   * cf. openAmbientDialog/closeDialog. Sprite ET salutation choisis au
-   * hasard, seedes separement des PNJ de quete (memes graines de base +
-   * suffixe different) pour ne jamais coincider par accident.
-   */
   createAmbientNpcs(npcDataArray) {
     const npcSpritePool = Object.keys(SPRITE_REGISTRY).filter((key) =>
       key.startsWith("NPC_town"),
@@ -2130,20 +1800,13 @@ export default class MainScene extends Phaser.Scene {
       );
       sprite.setScale(npcSprite.scale);
       sprite.anims.play(`${npcSpriteKey}-idle-down`);
-      sprite.setDepth(9); // entre les ennemis (8) et le heros (10), comme les PNJ de quete
-      // contrairement au PNJ de quete, celui-ci BOUGE : il lui faut son
-      // propre collider avec les murs (this.layer), en plus du heros et
-      // des ennemis (pour ne traverser personne, ni etre traverse)
+      sprite.setDepth(9);
       this.levelColliders.push(this.physics.add.collider(sprite, this.layer));
       this.levelColliders.push(this.physics.add.collider(this.hero, sprite));
       this.levelColliders.push(
         this.physics.add.collider(this.enemyGroup, sprite),
       );
 
-      // meme mecanisme de patrouille que les ennemis de type 'patrol' -
-      // route calculee une fois a la creation, autour du point de spawn.
-      // Pas de route trouvee (carte trop exigue) = null = reste immobile,
-      // degradation propre plutot qu'une erreur
       const route = pickPatrolRoute(
         this.fogGrid,
         { x: npcData.x, y: npcData.y },
@@ -2167,21 +1830,6 @@ export default class MainScene extends Phaser.Scene {
     }
   }
 
-  /**
-   * Ouvre le dialogue d'UN PNJ precis (evenement React, cf. arpg.jsx) -
-   * propose la quete si elle n'a pas encore ete acceptee, un message de
-   * fin sinon. Retient `questKey` (this.activeDialogQuestKey) pour que
-   * acceptQuest() sache sur quelle quete precise agir - plusieurs PNJ
-   * peuvent etre presents sur le meme etage desormais.
-   */
-  /**
-   * Ouvre le dialogue d'UN PNJ de quete precis (evenement React, cf.
-   * arpg.jsx) - propose la quete si elle n'a pas encore ete acceptee, un
-   * message de fin sinon. Fige ce PNJ (npc.talking, lu par
-   * updateNpcMovement) le temps du dialogue, exactement comme un PNJ
-   * ambiant - cf. this.activeTalkingNpc, liberee a la fermeture quel que
-   * soit le bouton presse (Fermer/Accepter/Rendre).
-   */
   openQuestDialog(npc) {
     const questKey = npc.questKey;
     this.dialogOpen = true;
@@ -2197,34 +1845,35 @@ export default class MainScene extends Phaser.Scene {
 
     if (qs.questId === "obtainItem") {
       const itemName = resolveItemDef(qs.targetItemId).name;
-      const requiredQty = qs.targetQuantity || 1; // repli 1 : compat avec l'ancienne forme (quete boss, qui n'a jamais eu ce champ)
+      const requiredQty = qs.targetQuantity || 1;
       const haveQty = this.inventory
         .filter((i) => i.itemId === qs.targetItemId)
         .reduce((sum, i) => sum + i.quantity, 0);
       const hasEnough = haveQty >= requiredQty;
-      const qtyLabel = requiredQty > 1 ? `${requiredQty} ${itemName}` : itemName;
+      const qtyLabel =
+        requiredQty > 1 ? `${requiredQty} ${itemName}` : itemName;
 
       if (qs.completed) {
         text = custom.complete || `Merci pour ${qtyLabel} !`;
       } else if (qs.accepted && hasEnough) {
-        text = custom.progress || `Tu en as assez ! Rends-moi ${qtyLabel} contre une récompense.`;
+        text =
+          custom.progress ||
+          `Tu en as assez ! Rends-moi ${qtyLabel} contre une récompense.`;
         canTurnIn = true;
       } else if (qs.accepted) {
-        text = custom.progress || `Toujours à la recherche de ${qtyLabel} (tu en as ${haveQty}/${requiredQty}) - reviens me voir une fois que tu en auras assez.`;
+        text =
+          custom.progress ||
+          `Toujours à la recherche de ${qtyLabel} (tu en as ${haveQty}/${requiredQty}) - reviens me voir une fois que tu en auras assez.`;
       } else {
-        const bossHint = qs.bossDepth && qs.bossType
-          ? ` Le ${resolveEnemyDisplayName(qs.bossType)} de l'étage ${qs.bossDepth} le détient.`
-          : "";
+        const bossHint =
+          qs.bossDepth && qs.bossType
+            ? ` Le ${resolveEnemyDisplayName(qs.bossType)} de l'étage ${qs.bossDepth} le détient.`
+            : "";
         text = custom.offer || `Peux-tu me rapporter ${qtyLabel} ?${bossHint}`;
         canAccept = true;
       }
     } else if (qs.questId === "defeatBoss") {
       const bossName = resolveEnemyDisplayName(qs.targetBossType);
-      // meme distinction a 4 etats qu'obtainItem (accepte-pas-fait /
-      // accepte-fait-pret-a-rendre / termine), mais la condition de
-      // "pret a rendre" est bossDefeated plutot que "l'objet est dans
-      // l'inventaire" - rien a retirer de l'inventaire a la remise
-      // (cf. turnInQuest), juste une confirmation
       if (qs.completed) {
         text = custom.complete || `Merci d'avoir vaincu ${bossName} !`;
       } else if (qs.accepted && qs.bossDefeated) {
@@ -2244,10 +1893,6 @@ export default class MainScene extends Phaser.Scene {
       }
     } else if (qs.questId === "delivery") {
       if (qs.role === "giver") {
-        // le donneur n'a RIEN a faire apres l'acceptation - l'objet est
-        // deja donne (cf. acceptQuest), toute la suite se joue chez le
-        // destinataire (cf. la branche 'receiver' ci-dessous). Revenir
-        // le voir n'est que du texte d'ambiance, jamais d'action.
         if (qs.completed) {
           text = custom.complete || `Merci d'avoir livré mon colis !`;
         } else if (qs.accepted) {
@@ -2257,10 +1902,6 @@ export default class MainScene extends Phaser.Scene {
               ? `Le colis est en route vers son destinataire, juste à côté.`
               : `Le colis est en route vers l'étage ${qs.targetDepth}.`);
         } else {
-          // clin d'oeil assume pour le style 'sameTown' (cf.
-          // maybeInjectDeliveryQuest) - le donneur sait pertinemment que
-          // c'est absurde de faire porter un message juste a cote, et le
-          // dit lui-meme plutot que de feindre une urgence
           text =
             custom.offer ||
             (qs.style === "sameTown"
@@ -2269,9 +1910,6 @@ export default class MainScene extends Phaser.Scene {
           canAccept = true;
         }
       } else {
-        // role 'receiver' : deja "accepte" implicitement des la creation
-        // (cf. createQuestNpcs) - pas de bouton "Accepter" cote
-        // destinataire, juste "Rendre" une fois l'objet en poche
         if (qs.completed) {
           text = custom.complete || `Merci pour le colis !`;
         } else {
@@ -2282,9 +1920,6 @@ export default class MainScene extends Phaser.Scene {
               `Tu as mon colis ! Merci de me l'avoir apporté.`;
             canTurnIn = true;
           } else {
-            // defensif - ne devrait pas arriver (l'objet est donne des
-            // l'acceptation cote donneur), mais matche le meme filet de
-            // securite qu'obtainItem au cas ou
             text = custom.progress || `J'attends toujours mon colis...`;
           }
         }
@@ -2306,17 +1941,10 @@ export default class MainScene extends Phaser.Scene {
     this.events.emit("npc-dialog", { text, canAccept, canTurnIn });
   }
 
-  /**
-   * Accepte la quete du PNJ dont le dialogue est actuellement ouvert -
-   * appele depuis React (bouton "Accepter" du dialogue).
-   */
   acceptQuest() {
     const qs = this.quests[this.activeDialogQuestKey];
     if (!qs) return;
     qs.accepted = true;
-    // livraison : l'objet est donne IMMEDIATEMENT a l'acceptation (pas a
-    // trouver/gagner comme obtainItem) - c'est litteralement le colis a
-    // transporter jusqu'au destinataire
     if (qs.questId === "delivery" && qs.role === "giver") {
       this.addItemToInventory(qs.itemId, 1);
     }
@@ -2328,28 +1956,6 @@ export default class MainScene extends Phaser.Scene {
     this.persistProgress();
   }
 
-  /**
-   * Rend une quete de type "obtainItem" (objet a rapporter) ou
-   * "defeatBoss" (simple confirmation, rien a retirer de l'inventaire) -
-   * appele depuis React (bouton "Rendre"/"Confirmer" du dialogue).
-   * L'objet obtainItem appartient au PNJ, pas au joueur : l'avoir en
-   * poche ne suffit pas (cf. openQuestDialog, qui n'affiche le bouton
-   * que si l'objet est bien present ou, pour defeatBoss, si
-   * qs.bossDefeated est vrai). Marque la quete terminee, donne l'XP et
-   * l'or dans les deux cas.
-   */
-  /**
-   * Rend une quete de type "obtainItem" (objet a rapporter), "defeatBoss"
-   * (simple confirmation, rien a retirer de l'inventaire) ou "delivery"
-   * cote destinataire (objet a remettre, ET clot AUSSI le donneur lie via
-   * linkedKey - sinon il resterait eternellement "en cours" meme apres
-   * livraison effective) - appele depuis React (bouton "Rendre"/
-   * "Confirmer" du dialogue). L'objet obtainItem appartient au PNJ, pas
-   * au joueur : l'avoir en poche ne suffit pas (cf. openQuestDialog, qui
-   * n'affiche le bouton que si l'objet est bien present ou, pour
-   * defeatBoss, si qs.bossDefeated est vrai). Marque la quete terminee,
-   * donne l'XP et l'or dans tous les cas.
-   */
   turnInQuest() {
     const qs = this.quests[this.activeDialogQuestKey];
     if (!qs || qs.completed) return;
@@ -2365,10 +1971,6 @@ export default class MainScene extends Phaser.Scene {
       const haveQty = this.inventory
         .filter((i) => i.itemId === qs.targetItemId)
         .reduce((sum, i) => sum + i.quantity, 0);
-      // verifie AVANT tout retrait - sans ca, un retrait partiel pourrait
-      // avoir lieu puis etre abandonne en cours de route (stock
-      // insuffisant), faisant perdre des objets au joueur SANS lui donner
-      // la recompense en retour
       if (haveQty < requiredQty) return;
 
       let remaining = requiredQty;
@@ -2381,18 +1983,15 @@ export default class MainScene extends Phaser.Scene {
         if (entry.quantity <= 0) this.inventory.splice(i, 1);
       }
     } else if (qs.questId === "defeatBoss") {
-      if (!qs.bossDefeated) return; // defensif - ne devrait pas arriver si le bouton n'etait propose qu'une fois le boss vaincu
+      if (!qs.bossDefeated) return;
     } else {
-      // delivery, role receiver
       const itemIndex = this.inventory.findIndex((i) => i.itemId === qs.itemId);
-      if (itemIndex === -1) return; // defensif - meme raison que obtainItem
+      if (itemIndex === -1) return;
 
       const item = this.inventory[itemIndex];
       item.quantity -= 1;
       if (item.quantity <= 0) this.inventory.splice(itemIndex, 1);
 
-      // clot AUSSI le donneur (cf. linkedKey) - sans ca, il resterait
-      // indefiniment "en cours" alors que la livraison a bien eu lieu
       const giverQs = this.quests[qs.linkedKey];
       if (giverQs) giverQs.completed = true;
     }
@@ -2407,20 +2006,9 @@ export default class MainScene extends Phaser.Scene {
     this.events.emit("npc-dialog", null);
     this.events.emit("quests-updated", { ...this.quests });
 
-    // reutilise addItemToInventory (deja teste) pour l'or gagne - empile
-    // avec l'or existant, emet 'inventory-updated' (reflete deja le
-    // retrait de l'objet ci-dessus, le cas echeant) et persiste
     this.addItemToInventory("gold", qs.goldReward);
   }
 
-  /**
-   * Ouvre le dialogue d'un PNJ ambiant (evenement React, reutilise le
-   * MEME canal que le dialogue de quete - cf. openQuestDialog) - juste
-   * une salutation, jamais de bouton "Accepter"/"Rendre". Le PNJ
-   * s'arrete net (npc.talking, lu par updateNpcMovement) pendant que le
-   * dialogue reste ouvert, et reprend sa patrouille a la fermeture (cf.
-   * closeDialog).
-   */
   openAmbientDialog(npc) {
     this.dialogOpen = true;
     this.activeTalkingNpc = npc;
@@ -2432,13 +2020,6 @@ export default class MainScene extends Phaser.Scene {
     });
   }
 
-  /**
-   * Libere le PNJ actuellement fige par un dialogue (quete OU ambiant -
-   * this.activeTalkingNpc couvre les deux, cf. openQuestDialog/
-   * openAmbientDialog) - reprend sa patrouille au prochain update.
-   * Appelee par les 3 chemins de fermeture du dialogue (Fermer/Accepter/
-   * Rendre), pour ne jamais dupliquer cette logique.
-   */
   releaseTalkingNpc() {
     if (this.activeTalkingNpc) {
       this.activeTalkingNpc.talking = false;
@@ -2446,10 +2027,6 @@ export default class MainScene extends Phaser.Scene {
     }
   }
 
-  /**
-   * Ferme le dialogue sans accepter - appele depuis React (bouton
-   * "Fermer").
-   */
   closeDialog() {
     this.dialogOpen = false;
     this.activeDialogQuestKey = null;
@@ -2457,16 +2034,14 @@ export default class MainScene extends Phaser.Scene {
     this.events.emit("npc-dialog", null);
   }
 
-  update() {
+  update(time, delta) {
     if (!this.hero || this.isDead) return;
-    if (this.gamePaused) return; // confirmation de remontee en cours - tout le gameplay est gele
+    if (this.gamePaused) return;
+    this.updateRegen(delta);
 
-    const speed = this.playerMoveSpeed;
+    const speed = this.getEffectivePlayerMoveSpeed();
     let vx = 0,
       vy = 0;
-    // haut/gauche dependent de la disposition active (cf.
-    // setKeyboardLayout) - droite/bas sont communs aux deux (D et S
-    // occupent la meme position physique en AZERTY et QWERTY)
     const azertyLayout = this.keyboardLayout !== "qwerty";
     const left =
       this.cursors.left.isDown ||
@@ -2484,17 +2059,9 @@ export default class MainScene extends Phaser.Scene {
     if (up) vy -= 1;
     if (down) vy += 1;
 
-    // fusionne avec le joystick tactile (vecteur analogique, cf.
-    // setTouchMoveVector) plutot que de le remplacer - un appareil
-    // tactile ET un clavier branche fonctionnent tous les deux en meme
-    // temps, aucun n'exclut l'autre
     vx += this.touchMoveVector.x;
     vy += this.touchMoveVector.y;
 
-    // normalise seulement si la magnitude depasse 1 (mouvement clavier
-    // en diagonale, ou clavier+tactile combines) - un joystick pousse a
-    // moitie (magnitude 0.5) doit rester a mi-vitesse, jamais remonte a
-    // pleine vitesse artificiellement
     const mag = Math.hypot(vx, vy);
     if (mag > 1) {
       vx /= mag;
@@ -2505,9 +2072,6 @@ export default class MainScene extends Phaser.Scene {
 
     this.hero.setVelocity(vx, vy);
 
-    // direction d'ANIMATION : reste forcement cardinale (le sprite n'a que
-    // 4 directions), on choisit l'axe dominant plutot que de toujours
-    // privilegier l'horizontal comme avant
     let dir = this.lastDir;
     const moving = vx !== 0 || vy !== 0;
     if (moving) {
@@ -2528,9 +2092,6 @@ export default class MainScene extends Phaser.Scene {
       this.hero.anims.play(this.heroSpriteKey + "-idle-" + this.lastDir, true);
     }
 
-    // direction de VISEE : vecteur normalise complet, capture les vraies
-    // diagonales (contrairement a `dir` ci-dessus) - utilise par le tir a
-    // distance pour ne pas etre limite aux 4 directions cardinales
     if (moving) {
       const len = Math.hypot(vx, vy);
       this.lastAimVector = { x: vx / len, y: vy / len };
@@ -2554,9 +2115,6 @@ export default class MainScene extends Phaser.Scene {
       }
       this.updateEnemyDecisions(tileX, tileY);
 
-      // bloque tant qu'un boss est vivant sur cet etage - this.bossAlive
-      // vaut null s'il n'y a pas de boss (comportement normal, inchange),
-      // false une fois vaincu (sortie de nouveau accessible)
       if (
         this.exitTile &&
         tileX === this.exitTile.x &&
@@ -2564,13 +2122,6 @@ export default class MainScene extends Phaser.Scene {
         this.bossAlive !== true
       ) {
         this.showExitPrompt();
-        // pas de return : on ne recharge rien immediatement, on met le
-        // jeu en pause en attendant la reponse du joueur (cf.
-        // showExitPrompt) - avant, le passage direct par ce couloir
-        // forcait la descente sans aucun choix possible, et le temps
-        // d'attente du chargement (async, appel reseau) n'etait pas mis
-        // en pause : un ennemi pouvait continuer a se deplacer et
-        // traverser le joueur pendant ce court delai
       }
 
       if (
@@ -2579,7 +2130,6 @@ export default class MainScene extends Phaser.Scene {
         tileY === this.upstairsTile.y
       ) {
         this.showUpstairsPrompt();
-        // pas de return ici non plus, meme raison
       }
     }
 
@@ -2605,13 +2155,16 @@ export default class MainScene extends Phaser.Scene {
       this.touchActionRequested = false;
       this.performInteraction();
     }
+    if (
+      Phaser.Input.Keyboard.JustDown(this.keys.fury) ||
+      this.touchFuryRequested
+    ) {
+      this.touchFuryRequested = false;
+      this.useFury();
+    }
 
     this.updateEnemyMovement();
 
-    // meme regle pour les coffres - un vrai oubli jusqu'ici (jamais
-    // couverts par le controle de visibilite applique aux ennemis/PNJ,
-    // pas une regression d'un correctif precedent : ils n'avaient tout
-    // simplement jamais ete inclus dans cette boucle)
     for (const chest of this.chests) {
       const chestTileX = Math.floor(chest.sprite.x / TILE_SIZE);
       const chestTileY = Math.floor(chest.sprite.y / TILE_SIZE);
@@ -2627,6 +2180,7 @@ export default class MainScene extends Phaser.Scene {
     this.updateEnemyAttacks(now);
     this.updateProjectiles();
     this.updateEnemyProjectiles();
+    this.updateAbilityProjectiles();
     this.updateStatusEffects(now);
     this.updateNpcMovement(this.questNpcs);
     this.updateNpcMovement(this.ambientNpcs);
@@ -2641,42 +2195,101 @@ export default class MainScene extends Phaser.Scene {
     }
   }
 
+  getQuestNpcMinimapData() {
+    if (!this.questNpcs || !this.fogState?.state) return [];
+
+    const state = this.fogState.state;
+    const landmarks = this.discoveredLandmarks?.[this.currentDepth];
+
+    if (!landmarks) return [];
+
+    if (!landmarks.questNpcs) {
+      landmarks.questNpcs = {};
+    }
+
+    for (const npc of this.questNpcs) {
+      if (npc.npcIndex === undefined || !npc.sprite) continue;
+
+      if (landmarks.questNpcs[npc.npcIndex]?.discovered) {
+        continue;
+      }
+
+      const x = Math.floor(npc.sprite.x / TILE_SIZE);
+      const y = Math.floor(npc.sprite.y / TILE_SIZE);
+
+      if (x < 0 || y < 0 || y >= state.length || x >= state[0].length) {
+        continue;
+      }
+
+      if (state[y][x] >= 1) {
+        landmarks.questNpcs[npc.npcIndex] = {
+          x,
+          y,
+          discovered: true,
+        };
+      }
+    }
+
+    return Object.entries(landmarks.questNpcs)
+      .filter(([, npc]) => npc?.discovered)
+      .map(([npcIndex, npc]) => ({
+        npcIndex: Number(npcIndex),
+        x: npc.x,
+        y: npc.y,
+      }));
+  }
+
   applyFogChanges(changes) {
     for (const { x, y } of changes) {
       const s = this.fogState.state[y][x];
-      if (s === 2) this.fogLayer.removeTileAt(x, y);
-      else if (s === 1) this.fogLayer.putTileAt(1, x, y);
-      else this.fogLayer.putTileAt(0, x, y);
+
+      if (s === 2) {
+        this.fogLayer.removeTileAt(x, y);
+      } else if (s === 1) {
+        this.fogLayer.putTileAt(1, x, y);
+      } else {
+        this.fogLayer.putTileAt(0, x, y);
+      }
     }
 
-    // pour la minimap React : renvoie les references directement (pas de
-    // copie) - fogState.state est mute en place par createFogState, donc
-    // ce n'est fiable que parce qu'on emet a chaque fois qu'il change,
-    // jamais en cache/differe cote React
+    const landmarks = this.discoveredLandmarks[this.currentDepth];
+
+    if (landmarks) {
+      if (
+        landmarks.exitTile &&
+        this.fogState.state[landmarks.exitTile.y]?.[landmarks.exitTile.x] >= 1
+      ) {
+        landmarks.exitDiscovered = true;
+      }
+
+      if (
+        landmarks.upstairsTile &&
+        this.fogState.state[landmarks.upstairsTile.y]?.[
+          landmarks.upstairsTile.x
+        ] >= 1
+      ) {
+        landmarks.upstairsDiscovered = true;
+      }
+    }
+
+    const questNpcs = this.getQuestNpcMinimapData();
+
     this.events.emit("fog-changed", {
       grid: this.fogGrid,
       fogState: this.fogState.state,
       playerTile: this.lastPlayerTile,
       exitTile: this.exitTile,
       upstairsTile: this.upstairsTile,
+      questNpcs,
     });
   }
 
-  /**
-   * Le joueur est-il dans l'angle mort (derriere) de cet ennemi ? Se
-   * base sur enemy.lastDir (direction cardinale ou l'ennemi fait
-   * actuellement face, mise a jour par le mouvement - reste valable a
-   * l'arret, meme logique que le heros) plutot que sur une direction
-   * "de visee" separee, qui n'existe pas cote ennemi. Coordonnees en
-   * CASES (comme le reste de updateEnemyDecisions), pas en pixels - la
-   * distance elle-meme n'a pas d'importance ici, seul l'angle compte.
-   */
   isPlayerBehindEnemy(enemy, ex, ey, playerTileX, playerTileY) {
     const facing = ENEMY_DIR_VECTORS[enemy.lastDir] || ENEMY_DIR_VECTORS.down;
     const dx = playerTileX - ex;
     const dy = playerTileY - ey;
     const dist = Math.hypot(dx, dy);
-    if (dist < 0.001) return false; // superposition exacte - pas de sens directionnel, ne bloque jamais la detection
+    if (dist < 0.001) return false;
     const dot = (dx / dist) * facing.x + (dy / dist) * facing.y;
     return dot < DETECTION_BEHIND_DOT_THRESHOLD;
   }
@@ -2745,11 +2358,6 @@ export default class MainScene extends Phaser.Scene {
 
   updateEnemyMovement() {
     for (const enemy of this.enemies) {
-      // visible seulement dans la zone de vision actuelle du heros (pas
-      // la memoire du brouillard - un ennemi bouge, on ne "voit" plus sa
-      // position passee comme on le fait pour le decor) ; conditionne le
-      // rendu ET stocke le resultat pour que les fonctions de combat
-      // n'aient pas a refaire le calcul
       enemy.visible = this.isEnemyVisible(enemy);
       enemy.sprite.setVisible(enemy.visible);
 
@@ -2759,25 +2367,12 @@ export default class MainScene extends Phaser.Scene {
           this.hero.y - enemy.sprite.y,
         );
         const isRanged = enemy.attackType === "ranged";
-        // distance d'arret differente selon attackType - un ennemi a
-        // distance s'arrete bien avant la melee (ENEMY_RANGED_STOP_DISTANCE),
-        // pour pouvoir tirer sans jamais avoir besoin de s'approcher au
-        // contact. Comportement melee inchange (ENEMY_STOP_DISTANCE).
         const stopDistance = isRanged
           ? ENEMY_RANGED_STOP_DISTANCE
           : ENEMY_STOP_DISTANCE;
         const stopForMelee =
           enemy.state === "chase" && distToHero < stopDistance;
 
-        // ennemi a distance, joueur trop proche (sous
-        // ENEMY_RANGED_RETREAT_DISTANCE) -> recule ACTIVEMENT plutot que
-        // de simplement s'arreter. Recule ET tire en meme temps (choisi
-        // explicitement) : les deux systemes restent decouples,
-        // updateEnemyAttacks continue de fonctionner independamment de
-        // l'etat du mouvement, pas besoin de s'arreter pour viser.
-        // Velocite directe (pas de pathfinding vers un point precis) :
-        // la direction de fuite est juste "l'oppose du joueur", pas une
-        // destination fixe.
         if (
           enemy.state === "chase" &&
           isRanged &&
@@ -2786,8 +2381,8 @@ export default class MainScene extends Phaser.Scene {
           const dx = enemy.sprite.x - this.hero.x;
           const dy = enemy.sprite.y - this.hero.y;
           const mag = Math.hypot(dx, dy) || 1;
-          const vx = (dx / mag) * ENEMY_SPEED;
-          const vy = (dy / mag) * ENEMY_SPEED;
+          const vx = (dx / mag) * this.getEffectiveEnemySpeed(enemy);
+          const vy = (dy / mag) * this.getEffectiveEnemySpeed(enemy);
           enemy.sprite.setVelocity(vx, vy);
           const edir =
             Math.abs(vx) > Math.abs(vy)
@@ -2817,7 +2412,7 @@ export default class MainScene extends Phaser.Scene {
         this.moveEnemyToward(
           enemy,
           enemy.path[enemy.pathIndex],
-          ENEMY_SPEED,
+          this.getEffectiveEnemySpeed(enemy),
           () => enemy.pathIndex++,
         );
         continue;
@@ -2829,15 +2424,21 @@ export default class MainScene extends Phaser.Scene {
         enemy.patrolPath.length > 1
       ) {
         const waypoint = enemy.patrolPath[enemy.patrolIndex];
-        this.moveEnemyToward(enemy, waypoint, ENEMY_SPEED * 0.6, () => {
-          if (
-            enemy.patrolIndex + enemy.patrolDirection < 0 ||
-            enemy.patrolIndex + enemy.patrolDirection >= enemy.patrolPath.length
-          ) {
-            enemy.patrolDirection *= -1;
-          }
-          enemy.patrolIndex += enemy.patrolDirection;
-        });
+        this.moveEnemyToward(
+          enemy,
+          waypoint,
+          this.getEffectiveEnemySpeed(enemy) * 0.6,
+          () => {
+            if (
+              enemy.patrolIndex + enemy.patrolDirection < 0 ||
+              enemy.patrolIndex + enemy.patrolDirection >=
+                enemy.patrolPath.length
+            ) {
+              enemy.patrolDirection *= -1;
+            }
+            enemy.patrolIndex += enemy.patrolDirection;
+          },
+        );
         continue;
       }
 
@@ -2846,12 +2447,6 @@ export default class MainScene extends Phaser.Scene {
     }
   }
 
-  /**
-   * Un ennemi n'est visible que si sa case actuelle est dans la zone de
-   * vision immediate du joueur (etat 2 du brouillard) - pas la memoire
-   * (etat 1), contrairement au decor : un ennemi bouge, "se souvenir" de
-   * sa position passee n'aurait pas de sens.
-   */
   isEnemyVisible(enemy) {
     const ex = Math.floor(enemy.sprite.x / TILE_SIZE);
     const ey = Math.floor(enemy.sprite.y / TILE_SIZE);
@@ -2861,16 +2456,6 @@ export default class MainScene extends Phaser.Scene {
     return state[ey][ex] === 2;
   }
 
-  /**
-   * Deplace une entite (ennemi, PNJ de quete ou PNJ ambiant - fonction
-   * partagee) vers une case cible. Inclut une detection de blocage : si
-   * la position n'a quasiment pas bouge depuis ~500ms malgre une vitesse
-   * non nulle (collision avec un mur/batiment, un autre PNJ...), force
-   * le passage a l'etape suivante (onArrive quand meme) plutot que de
-   * laisser l'entite pousser indefiniment contre l'obstacle avec
-   * l'animation de marche qui tourne sans jamais vraiment avancer - bug
-   * constate en jeu avec un PNJ ambiant coince contre un batiment.
-   */
   moveEnemyToward(enemy, waypointTile, speed, onArrive) {
     const targetX = waypointTile.x * TILE_SIZE + TILE_SIZE / 2;
     const targetY = waypointTile.y * TILE_SIZE + TILE_SIZE / 2;
@@ -2892,9 +2477,6 @@ export default class MainScene extends Phaser.Scene {
           enemy.sprite.y - enemy.stuckCheck.y,
         );
         if (moved < 3) {
-          // quasiment aucun progres en 500ms malgre une vitesse non
-          // nulle : bloque par un obstacle, abandonne cette case et
-          // passe a la suivante plutot que de rester coince
           enemy.stuckCheck = null;
           onArrive();
           return;
@@ -2919,26 +2501,54 @@ export default class MainScene extends Phaser.Scene {
   }
 
   /**
-   * Deplace chaque PNJ ambiant le long de sa route de patrouille (meme
-   * logique que le comportement 'patrol' des ennemis, reutilise
-   * moveEnemyToward tel quel) - s'arrete net (this.talking) pendant
-   * qu'on lui parle, cf. openAmbientDialog. Visibilite au brouillard
-   * recalculee chaque frame comme les ennemis (case ACTUELLEMENT
-   * visible, pas juste deja vue) : contrairement au PNJ de quete
-   * (immobile), celui-ci bouge, "se souvenir" de sa position passee
-   * n'aurait pas de sens.
+   * Regeneration PASSIVE de PV/mana/stamina - tres lente par design, et
+   * grimpe legerement avec le niveau (formule base + croissance*niveau).
+   * Appelee chaque frame depuis update(). Jamais au-dela du maximum de
+   * chaque stat, et aucun evenement emis si deja au max (evite du bruit
+   * inutile).
    */
-  /**
-   * Deplace une LISTE de PNJ mobiles le long de leur route de patrouille
-   * (meme logique que le comportement 'patrol' des ennemis, reutilise
-   * moveEnemyToward tel quel) - s'arrete net (npc.talking) pendant qu'on
-   * leur parle. Fonction partagee entre PNJ de quete ET PNJ ambiants :
-   * les deux ont exactement la meme mecanique de deplacement desormais,
-   * seule leur interaction differe (dialogue de quete vs simple
-   * salutation). Visibilite au brouillard recalculee chaque frame comme
-   * les ennemis (case ACTUELLEMENT visible, pas juste deja vue) : ces
-   * PNJ bougent, contrairement au decor.
-   */
+  updateRegen(deltaMs) {
+    const n = this.playerLevel - 1;
+    const deltaSec = deltaMs / 1000;
+
+    if (this.playerHp < this.playerMaxHp) {
+      const rate = HP_REGEN_PER_SEC_BASE + HP_REGEN_PER_SEC_GROWTH * n;
+      this.playerHp = Math.min(
+        this.playerMaxHp,
+        this.playerHp + rate * deltaSec,
+      );
+      this.events.emit("player-hp-changed", {
+        hp: this.playerHp,
+        maxHp: this.playerMaxHp,
+      });
+    }
+
+    if (this.playerMana < this.playerMaxMana) {
+      const rate = MANA_REGEN_PER_SEC_BASE + MANA_REGEN_PER_SEC_GROWTH * n;
+      this.playerMana = Math.min(
+        this.playerMaxMana,
+        this.playerMana + rate * deltaSec,
+      );
+      this.events.emit("player-mana-changed", {
+        mana: this.playerMana,
+        maxMana: this.playerMaxMana,
+      });
+    }
+
+    if (this.playerStamina < this.playerMaxStamina) {
+      const rate =
+        STAMINA_REGEN_PER_SEC_BASE + STAMINA_REGEN_PER_SEC_GROWTH * n;
+      this.playerStamina = Math.min(
+        this.playerMaxStamina,
+        this.playerStamina + rate * deltaSec,
+      );
+      this.events.emit("player-stamina-changed", {
+        stamina: this.playerStamina,
+        maxStamina: this.playerMaxStamina,
+      });
+    }
+  }
+
   updateNpcMovement(npcList) {
     if (!npcList) return;
     const state = this.fogState.state;
@@ -2979,23 +2589,7 @@ export default class MainScene extends Phaser.Scene {
     }
   }
 
-  /**
-   * Toute interaction NON combative a portee - PNJ de quete/ambiant,
-   * hub de voyage, boutique, porte du boss, coffres. Scindee de
-   * performMeleeAttack (qui gerait auparavant les deux a la fois, meme
-   * touche) a la demande explicite : Espace n'attaque plus que les
-   * ennemis, E ne fait plus qu'interagir. Pas de cooldown ici
-   * (contrairement au combat) - parler/ouvrir un coffre n'a pas besoin
-   * d'etre limite en cadence.
-   */
   performInteraction() {
-    // interaction avec un PNJ de quete : pas de degats, on ouvre le
-    // dialogue a la place. On n'attaque pas les ennemis ce coup-ci
-    // si un PNJ est a portee, pour eviter d'ouvrir le dialogue en pleine
-    // baston contre un ennemi qui se trouverait juste a cote. Plusieurs
-    // PNJ possibles par etage desormais, mais l'espacement minimal impose
-    // a la generation (4 cases) est deja plus grand que la portee de
-    // melee - jamais deux a la fois a portee, un simple `find` suffit.
     if (!this.dialogOpen) {
       const npc = this.questNpcs.find(
         (n) =>
@@ -3008,11 +2602,6 @@ export default class MainScene extends Phaser.Scene {
       }
     }
 
-    // interaction avec un PNJ ambiant : meme principe, mais purement
-    // decoratif (juste une salutation, pas de quete/vente) - PEUT y avoir
-    // plusieurs PNJ ambiants a portee simultanement (contrairement aux
-    // PNJ de quete, leur espacement minimal - 4 cases - n'exclut pas ce
-    // cas), donc on prend le premier trouve, ordre arbitraire mais stable
     if (!this.dialogOpen) {
       const ambient = this.ambientNpcs.find(
         (n) =>
@@ -3025,8 +2614,6 @@ export default class MainScene extends Phaser.Scene {
       }
     }
 
-    // hub de voyage rapide (uniquement en ville) - pas de degats, ouvre
-    // la liste des etages deja visites (evenement React, cf. arpg.jsx)
     if (this.travelHubTile && !this.dialogOpen) {
       const hubPx = this.travelHubTile.x * TILE_SIZE + TILE_SIZE / 2;
       const hubPy = this.travelHubTile.y * TILE_SIZE + TILE_SIZE / 2;
@@ -3037,8 +2624,6 @@ export default class MainScene extends Phaser.Scene {
       }
     }
 
-    // boutique (uniquement en ville) - pas de degats, ouvre l'ecran
-    // d'achat (evenement React, cf. arpg.jsx)
     if (this.shopData && !this.dialogOpen) {
       const shopPx = this.shopData.x * TILE_SIZE + TILE_SIZE / 2;
       const shopPy = this.shopData.y * TILE_SIZE + TILE_SIZE / 2;
@@ -3049,11 +2634,6 @@ export default class MainScene extends Phaser.Scene {
       }
     }
 
-    // interaction avec la porte scellee du boss (tant qu'elle n'est pas
-    // ouverte) - meme principe que le PNJ : pas de degats, juste un
-    // message informatif rappelant pourquoi elle reste fermee. Position
-    // en cases (pas en pixels comme les sprites) puisque la porte n'est
-    // qu'une case de mur, pas un objet Phaser a part entiere.
     if (this.bossDoorTile && !this.bossRoomOpen && !this.dialogOpen) {
       const doorPx = this.bossDoorTile.x * TILE_SIZE + TILE_SIZE / 2;
       const doorPy = this.bossDoorTile.y * TILE_SIZE + TILE_SIZE / 2;
@@ -3068,11 +2648,6 @@ export default class MainScene extends Phaser.Scene {
       }
     }
 
-    // ouverture de coffre : pas de degats, ajoute le butin a l'inventaire
-    // et marque le coffre ouvert POUR CETTE VISITE (cf.
-    // currentFloorOpenedChests - meme logique anti-exploit que les
-    // ennemis, sans quoi sauvegarder+quitter+reprendre permettrait de
-    // re-piocher un contenu frais indefiniment)
     if (!this.dialogOpen) {
       const chest = this.chests.find((c) => {
         if (c.opened) return false;
@@ -3086,11 +2661,7 @@ export default class MainScene extends Phaser.Scene {
       if (chest) {
         chest.opened = true;
         chest.sprite.setFrame(chest.variant.openFrame);
-        chest.sprite.body.checkCollision.none = true; // sinon il faut sauvegarder+reprendre pour que le passage se debloque (le corps physique du coffre nouvellement ouvert n'est jamais retouche autrement)
-        // jamais pour un coffre EPHEMERE (butin d'ennemi, cf.
-        // spawnLootChest) - il n'existe pas dans la liste generee par le
-        // serveur, son index (negatif) n'aurait aucun sens a y figurer,
-        // et il n'est de toute facon jamais recree a une revisite
+        chest.sprite.body.checkCollision.none = true;
         if (!chest.ephemeral) this.currentFloorOpenedChests.push(chest.index);
 
         if (chest.loot) {
@@ -3100,10 +2671,6 @@ export default class MainScene extends Phaser.Scene {
             `Trouvé : ${itemDef.name} x${chest.loot.quantity}`,
           );
         } else if (chest.lootItems && chest.lootItems.length > 0) {
-          // coffre de butin d'ennemi : PLUSIEURS objets a la fois (cf.
-          // spawnLootChest) - un seul toast combine plutot qu'un par
-          // objet, qui se chevaucheraient (showLootToast remplace
-          // toujours la ligne precedente, cf. sa propre doc)
           for (const drop of chest.lootItems) {
             this.addItemToInventory(drop.itemId, drop.quantity);
           }
@@ -3119,14 +2686,17 @@ export default class MainScene extends Phaser.Scene {
     }
   }
 
-  /**
-   * Attaque au corps a corps PURE desormais (cf. performInteraction
-   * ci-dessus pour tout ce qui n'inflige pas de degats) - ne fait plus
-   * que blesser les ennemis a portee, dans le cone devant le heros.
-   */
   performMeleeAttack(now) {
     if (!this.meleeCooldown.isReady(now)) return;
     this.meleeCooldown.trigger(now);
+
+    const meleeWeaponDef = this.equipped.mainHand
+      ? resolveItemDef(this.equipped.mainHand)
+      : null;
+
+    const imbue = this.pendingWeaponImbue;
+    this.pendingWeaponImbue = null;
+    let anyHit = false;
 
     for (const enemy of this.enemies) {
       const dx = enemy.sprite.x - this.hero.x;
@@ -3134,10 +2704,6 @@ export default class MainScene extends Phaser.Scene {
       const dist = Math.hypot(dx, dy);
       if (dist > this.playerMeleeRange || !this.isEnemyVisible(enemy)) continue;
 
-      // ne touche que dans un cone devant le heros, pas tout autour -
-      // produit scalaire entre le vecteur heros->cible normalise et la
-      // direction de visee reelle (capture aussi les diagonales, pas
-      // seulement les 4 directions cardinales de lastDir)
       if (dist > 0.001) {
         const nx = dx / dist;
         const ny = dy / dist;
@@ -3145,20 +2711,30 @@ export default class MainScene extends Phaser.Scene {
         if (dot < MELEE_CONE_DOT_THRESHOLD) continue;
       }
 
-      // critique GARANTI si cet ennemi n'a pas encore repere le joueur
-      // (etat autre que 'chase' - patrol/guard/rest/returning), sinon
-      // simple chance (cf. rollCritical dans combat.js)
       const isCrit = rollCritical(enemy.state !== "chase");
-      const rawDamage = this.playerMeleeDamage * (isCrit ? CRIT_MULTIPLIER : 1);
+      let rawDamage =
+        this.getEffectivePlayerMeleeDamage() * (isCrit ? CRIT_MULTIPLIER : 1);
+      if (imbue) rawDamage += imbue.bonusDamage;
       this.damageEnemy(enemy, computeDamage(rawDamage, enemy.defense));
+      anyHit = true;
+
+      if (enemy.hp > 0) {
+        this.applyStatusEffect(
+          enemy.statusEffects,
+          this.rollStatusEffect(meleeWeaponDef),
+        );
+        if (imbue)
+          this.applyStatusEffect(
+            enemy.statusEffects,
+            this.rollStatusEffect(imbue),
+          );
+      }
     }
 
-    // effet visuel directionnel (eclair de griffe qui s'estompe), oriente
-    // vers la meme direction que le cone de degats ci-dessus - remplace
-    // l'ancien flash en cercle plein (qui suggerait a tort un impact tout
-    // autour du heros). Meme bucketing axe-dominant que l'animation de
-    // marche (cf. plus haut dans update()), pour rester cohent avec le
-    // reste du jeu quand la visee est en diagonale.
+    if (imbue && !anyHit) {
+      this.pendingWeaponImbue = imbue; // coup dans le vide - restitue plutot que gaspille
+    }
+
     const aimDir =
       Math.abs(this.lastAimVector.x) > Math.abs(this.lastAimVector.y)
         ? this.lastAimVector.x > 0
@@ -3167,7 +2743,7 @@ export default class MainScene extends Phaser.Scene {
         : this.lastAimVector.y > 0
           ? "down"
           : "up";
-    const slashOffset = 22; // entre le heros et le bord de la portee (46)
+    const slashOffset = 22;
     const slash = this.add.sprite(
       this.hero.x + this.lastAimVector.x * slashOffset,
       this.hero.y + this.lastAimVector.y * slashOffset,
@@ -3179,21 +2755,6 @@ export default class MainScene extends Phaser.Scene {
     slash.once("animationcomplete", () => slash.destroy());
   }
 
-  /**
-   * Le joueur ne peut tirer a distance que s'il porte une arme marquee
-   * grantsRanged en main principale OU secondaire (cf. itemDefs.js -
-   * l'arc, a 2 mains, ou l'arbalete, a 1 main et donc cumulable avec une
-   * epee). Contrairement au comportement d'origine, l'attaque a distance
-   * n'est plus une capacite universelle disponible quel que soit
-   * l'equipement : une epee + un bouclier ne la debloque jamais.
-   */
-  /**
-   * Renvoie la definition de l'arme a distance ACTUELLEMENT equipee
-   * (mainHand ou offHand, quel que soit celui qui a grantsRanged) - ou
-   * null si aucune. Complete canUseRangedAttack (qui dit juste SI le
-   * joueur peut tirer) : celle-ci dit AVEC QUOI, utile pour verifier
-   * requiresAmmo sans redérouler la meme logique deux fois.
-   */
   getActiveRangedWeaponDef() {
     const mainDef = this.equipped.mainHand
       ? resolveItemDef(this.equipped.mainHand)
@@ -3214,20 +2775,10 @@ export default class MainScene extends Phaser.Scene {
     if (!this.rangedCooldown.isReady(now)) return;
     const weaponDef = this.getActiveRangedWeaponDef();
     if (!weaponDef) {
-      // pas de declenchement du cooldown ici - aucune attaque n'a
-      // reellement eu lieu, le laisser intact pour la prochaine fois ou
-      // le joueur aura une vraie arme a distance equipee
       this.showLootToast("Aucune arme à distance équipée");
       return;
     }
 
-    // arme PHYSIQUE (arc/arbalete) : consomme une munition de la pile
-    // encochee (this.equipped.quiver) - MAIS uniquement si c'est la
-    // BONNE munition (requiresAmmo est desormais l'itemId EXACT requis,
-    // pas juste un booleen "a besoin de munitions") : un carreau ne peut
-    // jamais alimenter un arc, ni une fleche une arbalete. Arme MAGIQUE
-    // (baton, requiresAmmo absent/false) : tir illimite. Meme garde "pas
-    // de cooldown declenche" que ci-dessus si la bonne munition manque.
     if (weaponDef.requiresAmmo) {
       const requiredAmmoId = weaponDef.requiresAmmo;
 
@@ -3270,21 +2821,12 @@ export default class MainScene extends Phaser.Scene {
       this.events.emit("inventory-updated", [...this.inventory]);
     }
 
-    // arme MAGIQUE (baton) : coute du mana au lieu de munitions
-    // physiques - meme structure de garde que requiresAmmo ci-dessus
-    // (bloque, sans declencher le cooldown, si pas assez de mana). A sec,
-    // le joueur retombe naturellement sur la melee pure (le baton n'a
-    // aucun bonus de meleeDamage, cf. itemDefs.js) - aucun code
-    // supplementaire necessaire pour "forcer" ce repli, il decoule deja
-    // du fait que Space (melee) reste toujours disponible independamment.
     if (weaponDef.manaCost) {
       if (this.playerMana < weaponDef.manaCost) {
         this.showLootToast("Plus assez de mana !");
         return;
       }
       this.playerMana -= weaponDef.manaCost;
-      // pas de persistProgress() ici non plus - meme raisonnement que
-      // les munitions ci-dessus (trop frequent, la sauvegarde periodique suffit)
       this.events.emit("player-mana-changed", {
         mana: this.playerMana,
         maxMana: this.playerMaxMana,
@@ -3293,13 +2835,6 @@ export default class MainScene extends Phaser.Scene {
 
     this.rangedCooldown.trigger(now);
 
-    // vise automatiquement l'ennemi VISIBLE le plus proche a portee,
-    // INDEPENDAMMENT de la direction de deplacement actuelle - sans ca,
-    // le vecteur de visee etait toujours celui du deplacement
-    // (lastAimVector), rendant impossible de reculer tout en tirant sur
-    // un ennemi qui poursuit (il fallait s'arreter, se retourner, tirer,
-    // refuir, en boucle). Repli sur lastAimVector si aucun ennemi n'est
-    // trouve - permet quand meme de tirer "a vue" pour explorer/tester.
     let v = this.lastAimVector;
     let nearestDist = Infinity;
     for (const enemy of this.enemies) {
@@ -3323,7 +2858,25 @@ export default class MainScene extends Phaser.Scene {
     sprite.setDepth(12);
     sprite.body.setVelocity(v.x * PROJECTILE_SPEED, v.y * PROJECTILE_SPEED);
 
-    this.projectiles.push({ sprite, startX: this.hero.x, startY: this.hero.y });
+    // weaponDef ET la munition equipee (this.equipped.quiver) sont TOUTES
+    // DEUX capturees ICI (au moment du tir) - une munition (fleche,
+    // carreau) peut porter son PROPRE inflictsEffect, independant de
+    // celui de l'arme qui la propulse (ex: une fleche enflammee tiree par
+    // un arc normal, ou l'inverse). null si aucune munition equipee
+    // (arme magique comme le baton, requiresAmmo absent).
+    const ammoDef = this.equipped.quiver
+      ? resolveItemDef(this.equipped.quiver)
+      : null;
+    const imbue = this.pendingWeaponImbue;
+    this.pendingWeaponImbue = null;
+    this.projectiles.push({
+      sprite,
+      startX: this.hero.x,
+      startY: this.hero.y,
+      weaponDef,
+      ammoDef,
+      imbue,
+    });
   }
 
   updateProjectiles() {
@@ -3344,16 +2897,15 @@ export default class MainScene extends Phaser.Scene {
         tileX >= grid[0].length;
       const hitWall = !outOfBounds && grid[tileY][tileX] === WALL;
 
-      // meme logique que isEnemyVisible : le projectile ne s'affiche que
-      // dans la zone de vision actuelle - sinon sa trajectoire (ou l'endroit
-      // ou il s'arrete brusquement contre un mur) reverlerait la forme du
-      // niveau a travers le brouillard, un "sonar" non voulu
       const fogState = this.fogState.state;
       const projVisible = !outOfBounds && fogState[tileY][tileX] === 2;
       proj.sprite.setVisible(projVisible);
 
       if (traveled >= this.playerRangedRange || outOfBounds || hitWall) {
         proj.sprite.destroy();
+        if (proj.imbue && !this.pendingWeaponImbue) {
+          this.pendingWeaponImbue = proj.imbue;
+        }
         continue;
       }
 
@@ -3365,9 +2917,26 @@ export default class MainScene extends Phaser.Scene {
         );
         if (dist <= PROJECTILE_RADIUS + 14 && this.isEnemyVisible(enemy)) {
           const isCrit = rollCritical(enemy.state !== "chase");
-          const rawDamage =
-            this.playerRangedDamage * (isCrit ? CRIT_MULTIPLIER : 1);
+          let rawDamage =
+            this.getEffectivePlayerRangedDamage() *
+            (isCrit ? CRIT_MULTIPLIER : 1);
+          if (proj.imbue) rawDamage += proj.imbue.bonusDamage;
           this.damageEnemy(enemy, computeDamage(rawDamage, enemy.defense));
+          if (enemy.hp > 0) {
+            this.applyStatusEffect(
+              enemy.statusEffects,
+              this.rollStatusEffect(proj.weaponDef),
+            );
+            this.applyStatusEffect(
+              enemy.statusEffects,
+              this.rollStatusEffect(proj.ammoDef),
+            );
+            if (proj.imbue)
+              this.applyStatusEffect(
+                enemy.statusEffects,
+                this.rollStatusEffect(proj.imbue),
+              );
+          }
           hit = true;
           break;
         }
@@ -3383,22 +2952,6 @@ export default class MainScene extends Phaser.Scene {
     this.projectiles = remaining;
   }
 
-  /**
-   * Fait apparaitre un coffre de butin a une position PIXEL donnee (pas
-   * en cases, contrairement aux coffres pre-places du niveau) - utilise
-   * par damageEnemy a la mort d'un ennemi normal avec du butin (cf.
-   * enemy.drops), plutot que de donner les objets instantanement comme
-   * avant. Reutilise EXACTEMENT le meme systeme visuel/d'interaction que
-   * les coffres pre-places (this.chests, meme boucle d'ouverture dans
-   * performInteraction) - simplement cree au RUNTIME plutot qu'a la
-   * generation du niveau.
-   *
-   * JAMAIS suivi dans currentFloorOpenedChests (contrairement aux
-   * coffres pre-places) : ephemere par nature - si le joueur quitte
-   * l'etage et revient, tous les ennemis sont de toute facon regeneres,
-   * un coffre de butin d'une visite precedente n'aurait pas de sens a
-   * faire persister.
-   */
   spawnLootChest(pixelX, pixelY, lootItems) {
     if (!lootItems || lootItems.length === 0) return;
 
@@ -3416,22 +2969,519 @@ export default class MainScene extends Phaser.Scene {
     sprite.setDepth(7);
     this.physics.add.existing(sprite, true);
     this.levelColliders.push(this.physics.add.collider(this.hero, sprite));
-    // pas de collider ennemi, meme raison que les coffres pre-places
-    // (cf. le commentaire correspondant plus haut dans loadLevel)
 
     this.chests.push({
       sprite,
-      index: -1 - this.nextLootChestId, // negatif = jamais confondu avec un index de coffre pre-place (toujours >= 0)
+      index: -1 - this.nextLootChestId,
       opened: false,
-      lootItems, // TABLEAU (nouveau champ) - distinct de `loot` (singulier, coffres pre-places), cf. performInteraction
+      lootItems,
       x: Math.round(pixelX / TILE_SIZE - 0.5),
       y: Math.round(pixelY / TILE_SIZE - 0.5),
       variant,
-      ephemeral: true, // jamais pousse dans currentFloorOpenedChests a l'ouverture, cf. performInteraction
+      ephemeral: true,
     });
     this.nextLootChestId++;
   }
-    /**
+
+  /**
+   * Active l'emplacement `slotIndex` (0-8, correspond aux touches 1-9) de
+   * la barre de raccourcis - un pouvoir OU un objet (potion), selon ce qui
+   * y est assigne. Meme garde de pause/mort que performMeleeAttack/
+   * performRangedAttack (jamais appelee directement par React sans passer
+   * par ce chemin).
+   */
+  useHotbarSlot(slotIndex) {
+    const slot = this.hotbarSlots[slotIndex];
+    if (!slot) return;
+
+    if (slot.type === "item") {
+      const def = resolveItemDef(slot.itemId);
+
+      if (def.category === "abilityScroll") {
+        this.useScrollFromHotbar(slot.itemId);
+        return;
+      }
+
+      const invIndex = this.inventory.findIndex(
+        (i) => i.itemId === slot.itemId,
+      );
+      if (invIndex === -1) {
+        this.showLootToast("Objet épuisé");
+        return;
+      }
+      this.useConsumable(invIndex); // le cooldown est verifie A L'INTERIEUR desormais
+      return;
+    }
+
+    this.performAbility(slot.id);
+  }
+
+  /**
+   * Utilise un parchemin DEPUIS LA BARRE - different de useConsumable
+   * (qui APPREND definitivement) : si l'archetype correspond, retombe
+   * sur l'apprentissage normal (un parchemin compatible reste toujours
+   * preferable a apprendre plutot qu'a "gaspiller" en usage unique). Si
+   * l'archetype ne correspond PAS, devient un consommable a USAGE UNIQUE
+   * - lance la competence UNE FOIS, jamais apprise, sans cout en mana/
+   * stamina (le parchemin porte deja son propre "cout" : il disparait),
+   * avec le MEME cooldown que les potions (itemCooldowns).
+   */
+  useScrollFromHotbar(itemId) {
+    const invIndex = this.inventory.findIndex((i) => i.itemId === itemId);
+    if (invIndex === -1) {
+      this.showLootToast("Parchemin épuisé");
+      return;
+    }
+
+    const def = resolveItemDef(itemId);
+    const abilityDef = resolveAbilityDef(def.grantsAbility);
+    const heroArchetype = resolveHeroStatsOverride(
+      this.heroSpriteKey,
+    )?.archetype;
+
+    const archetypeMatches =
+      !abilityDef.archetypes ||
+      abilityDef.archetypes.length === 0 ||
+      abilityDef.archetypes.includes(heroArchetype);
+    // meme garde que les autres chemins d'apprentissage (checkLevelUp,
+    // useConsumable) - une competence dont la ressource necessaire est
+    // plafonnee a 0 pour ce heros ne peut JAMAIS etre apprise
+    // "normalement", peu importe si l'archetype correspond par ailleurs
+    const resourceAvailable =
+      (!abilityDef.staminaCost || this.playerMaxStamina > 0) &&
+      (!abilityDef.manaCost || this.playerMaxMana > 0);
+
+    if (archetypeMatches && resourceAvailable) {
+      this.useConsumable(invIndex);
+      return;
+    }
+
+    const now = this.time.now;
+    const cooldownKey = `item:${itemId}`;
+    const readyAt = this.itemCooldowns[cooldownKey] || 0;
+    if (now < readyAt) {
+      this.showLootToast("Parchemin en recharge");
+      return;
+    }
+
+    if (abilityDef.effectType === "aoe") {
+      this.performAoeAbility(abilityDef);
+    } else if (abilityDef.effectType === "projectileAoe") {
+      this.performProjectileAoeAbility(abilityDef);
+    } else if (abilityDef.effectType === "selfBuff") {
+      this.performSelfBuffAbility(abilityDef);
+    } else if (abilityDef.effectType === "aoeDebuff") {
+      this.performAoeDebuffAbility(abilityDef);
+    } else if (abilityDef.effectType === "pierce") {
+      this.performPierceAbility(abilityDef);
+    } else {
+      this.showLootToast(`${abilityDef.name} : effet pas encore implémenté`);
+      return;
+    }
+
+    this.itemCooldowns[cooldownKey] = now + CONSUMABLE_COOLDOWN_MS;
+    this.events.emit("hotbar-cooldown-started", {
+      key: cooldownKey,
+      cooldownMs: CONSUMABLE_COOLDOWN_MS,
+      startedAt: Date.now(),
+    });
+
+    const item = this.inventory[invIndex];
+    item.quantity -= 1;
+    if (item.quantity <= 0) this.inventory.splice(invIndex, 1);
+    this.events.emit("inventory-updated", [...this.inventory]);
+    this.showLootToast(`${abilityDef.name} utilisé (usage unique) !`);
+    this.persistProgress();
+  }
+
+  /**
+   * Execute une competence par son id - verifie cooldown INDIVIDUEL (par
+   * competence, pas un seul cooldown global comme pour melee/ranged) et
+   * stamina, puis dispatche selon effectType. Seul 'aoe' est implemente
+   * pour l'instant - 'pierce'/'debuff'/'buff' a construire sur le meme
+   * schema, cf. abilityDefs.js.
+   */
+  performAbility(abilityId) {
+    if (!this.unlockedAbilities.includes(abilityId)) return;
+
+    const def = resolveAbilityDef(abilityId);
+    const now = this.time.now;
+    const readyAt = this.abilityCooldowns[abilityId] || 0;
+    if (now < readyAt) {
+      this.showLootToast("Compétence en recharge");
+      return;
+    }
+
+    // ressource consommee : stamina OU mana, jamais les deux - chaque
+    // competence declare UN SEUL des deux couts (cf. abilityDefs.js) selon
+    // ce qui est coherent avec son archetype (coup physique -> stamina,
+    // sort -> mana)
+    if (def.staminaCost && this.playerStamina < def.staminaCost) {
+      this.showLootToast("Pas assez de stamina !");
+      return;
+    }
+    if (def.manaCost && this.playerMana < def.manaCost) {
+      this.showLootToast("Pas assez de mana !");
+      return;
+    }
+
+    if (def.effectType === "aoe") {
+      this.performAoeAbility(def);
+    } else if (def.effectType === "projectileAoe") {
+      this.performProjectileAoeAbility(def);
+    } else if (def.effectType === "selfBuff") {
+      this.performSelfBuffAbility(def);
+    } else if (def.effectType === "aoeDebuff") {
+      this.performAoeDebuffAbility(def);
+    } else if (def.effectType === "pierce") {
+      this.performPierceAbility(def);
+    } else if (def.effectType === "weaponImbue") {
+      this.performWeaponImbueAbility(def);
+    } else {
+      this.showLootToast(`${def.name} : effet pas encore implémenté`);
+      return;
+    }
+
+    if (def.staminaCost) {
+      this.playerStamina -= def.staminaCost;
+      this.events.emit("player-stamina-changed", {
+        stamina: this.playerStamina,
+        maxStamina: this.playerMaxStamina,
+      });
+    }
+    if (def.manaCost) {
+      this.playerMana -= def.manaCost;
+      this.events.emit("player-mana-changed", {
+        mana: this.playerMana,
+        maxMana: this.playerMaxMana,
+      });
+    }
+
+    this.abilityCooldowns[abilityId] = now + def.cooldownMs;
+    this.abilityCooldowns[abilityId] = now + def.cooldownMs;
+    this.events.emit("hotbar-cooldown-started", {
+      key: `ability:${abilityId}`,
+      cooldownMs: def.cooldownMs,
+      startedAt: Date.now(),
+    });
+  }
+
+  /**
+   * Degats en zone autour du heros (rayon def.radius) - touche TOUS les
+   * ennemis visibles dans ce rayon, pas juste un cone comme la melee de
+   * base. Reutilise damageEnemy tel quel (meme consequences qu'un coup
+   * normal : XP/butin/quete/mort). Pas de critique ici (les competences
+   * ont leurs propres degats fixes, distincts du systeme melee/ranged).
+   */
+  performAoeAbility(def) {
+    for (const enemy of this.enemies) {
+      if (!this.isEnemyVisible(enemy)) continue;
+      const dist = Math.hypot(
+        enemy.sprite.x - this.hero.x,
+        enemy.sprite.y - this.hero.y,
+      );
+      if (dist > def.radius) continue;
+      this.damageEnemy(enemy, computeDamage(def.damage, enemy.defense));
+      if (enemy.hp > 0) {
+        this.applyStatusEffect(enemy.statusEffects, this.rollStatusEffect(def));
+      }
+    }
+
+    const circle = this.add.circle(this.hero.x, this.hero.y, 10, 0xff6600, 0.5);
+    circle.setDepth(14);
+    this.tweens.add({
+      targets: circle,
+      radius: def.radius,
+      alpha: 0,
+      duration: 300,
+      onComplete: () => circle.destroy(),
+    });
+  }
+  /**
+   * Lance un projectile de competence (boule de feu) - meme auto-visee
+   * que l'attaque a distance normale (ennemi visible le plus proche,
+   * repli sur lastAimVector), mais stocke dans this.abilityProjectiles
+   * (SEPARE de this.projectiles) car son impact declenche une explosion
+   * en zone plutot que des degats mono-cible.
+   */
+  performProjectileAoeAbility(def) {
+    let v = this.lastAimVector;
+    let nearestDist = Infinity;
+    for (const enemy of this.enemies) {
+      if (!this.isEnemyVisible(enemy)) continue;
+      const dx = enemy.sprite.x - this.hero.x;
+      const dy = enemy.sprite.y - this.hero.y;
+      const dist = Math.hypot(dx, dy);
+      if (dist > this.playerRangedRange || dist >= nearestDist) continue;
+      nearestDist = dist;
+      const mag = dist || 1;
+      v = { x: dx / mag, y: dy / mag };
+    }
+
+    const sprite = this.add.circle(this.hero.x, this.hero.y, 8, 0xff6600);
+    this.physics.add.existing(sprite);
+    sprite.setDepth(12);
+    sprite.body.setVelocity(
+      v.x * def.projectileSpeed,
+      v.y * def.projectileSpeed,
+    );
+
+    this.abilityProjectiles.push({
+      sprite,
+      startX: this.hero.x,
+      startY: this.hero.y,
+      def,
+    });
+  }
+  performWeaponImbueAbility(def) {
+    this.pendingWeaponImbue = def;
+    this.showLootToast(
+      `${def.name} activée - le prochain coup sera renforcé !`,
+    );
+  }
+  /**
+   * Lance un projectile PERFORANT - meme auto-visee que les autres
+   * projectiles, mais NE S'ARRETE JAMAIS au premier contact (cf.
+   * updateAbilityProjectiles, qui distingue le comportement via
+   * def.effectType). hitEnemyIds (un Set de references d'objets ennemi,
+   * pas d'ids numeriques) evite de toucher DEUX FOIS le meme ennemi
+   * pendant qu'il reste dans le rayon de collision sur plusieurs frames
+   * consecutives.
+   */
+  performPierceAbility(def) {
+    let v = this.lastAimVector;
+    let nearestDist = Infinity;
+    for (const enemy of this.enemies) {
+      if (!this.isEnemyVisible(enemy)) continue;
+      const dx = enemy.sprite.x - this.hero.x;
+      const dy = enemy.sprite.y - this.hero.y;
+      const dist = Math.hypot(dx, dy);
+      if (dist > this.playerRangedRange || dist >= nearestDist) continue;
+      nearestDist = dist;
+      const mag = dist || 1;
+      v = { x: dx / mag, y: dy / mag };
+    }
+
+    const sprite = this.add.circle(this.hero.x, this.hero.y, 6, 0xffdd44);
+    this.physics.add.existing(sprite);
+    sprite.setDepth(12);
+    sprite.body.setVelocity(
+      v.x * def.projectileSpeed,
+      v.y * def.projectileSpeed,
+    );
+
+    this.abilityProjectiles.push({
+      sprite,
+      startX: this.hero.x,
+      startY: this.hero.y,
+      def,
+      hitEnemyIds: new Set(),
+      pierceCount: 0,
+    });
+  }
+  /**
+   * Buff temporaire SUR LE JOUEUR lui-meme (ex: hate) - reutilise
+   * applyStatusEffect/this.playerStatusEffects, kind:'modifier'. Aucune
+   * cible a viser, applique immediatement.
+   */
+  performSelfBuffAbility(def) {
+    this.applyStatusEffect(this.playerStatusEffects, {
+      type: def.id,
+      kind: "modifier",
+      statModifiers: def.statModifiers,
+      durationMs: def.durationMs,
+    });
+    this.showLootToast(`${def.name} activé !`);
+  }
+
+  /**
+   * Debuff temporaire (ex: ralentissement) a TOUS les ennemis visibles
+   * dans def.radius - meme perimetre que performAoeAbility (degats) mais
+   * applique un statusEffect plutot qu'un coup instantane.
+   */
+  performAoeDebuffAbility(def) {
+    for (const enemy of this.enemies) {
+      if (!this.isEnemyVisible(enemy)) continue;
+      const dist = Math.hypot(
+        enemy.sprite.x - this.hero.x,
+        enemy.sprite.y - this.hero.y,
+      );
+      if (dist > def.radius) continue;
+      this.applyStatusEffect(enemy.statusEffects, {
+        type: def.id,
+        kind: "modifier",
+        statModifiers: def.statModifiers,
+        durationMs: def.durationMs,
+      });
+    }
+
+    const circle = this.add.circle(this.hero.x, this.hero.y, 10, 0x4488ff, 0.4); // bleu, distinct de l'orange feu
+    circle.setDepth(14);
+    this.tweens.add({
+      targets: circle,
+      radius: def.radius,
+      alpha: 0,
+      duration: 300,
+      onComplete: () => circle.destroy(),
+    });
+  }
+
+  /**
+   * Explosion au point d'impact d'une competence-projectile - touche TOUS
+   * les ennemis visibles dans def.radius autour de CE POINT (pas autour
+   * du heros, contrairement a performAoeAbility). Reutilise damageEnemy
+   * tel quel.
+   */
+  explodeAbilityProjectile(def, x, y) {
+    for (const enemy of this.enemies) {
+      if (!this.isEnemyVisible(enemy)) continue;
+      const dist = Math.hypot(enemy.sprite.x - x, enemy.sprite.y - y);
+      if (dist > def.radius) continue;
+      this.damageEnemy(enemy, computeDamage(def.damage, enemy.defense));
+      if (enemy.hp > 0) {
+        this.applyStatusEffect(enemy.statusEffects, this.rollStatusEffect(def));
+      }
+    }
+
+    const circle = this.add.circle(x, y, 10, 0xff6600, 0.5);
+    circle.setDepth(14);
+    this.tweens.add({
+      targets: circle,
+      radius: def.radius,
+      alpha: 0,
+      duration: 300,
+      onComplete: () => circle.destroy(),
+    });
+  }
+
+  /**
+   * Fait avancer this.abilityProjectiles - meme structure que
+   * updateProjectiles (deplacement, sortie de limites/mur, visibilite au
+   * brouillard), mais l'impact declenche explodeAbilityProjectile
+   * (explosion en zone) plutot que des degats mono-cible.
+   */
+  updateAbilityProjectiles() {
+    const grid = this.fogGrid;
+    const remaining = [];
+
+    for (const proj of this.abilityProjectiles) {
+      const traveled = Math.hypot(
+        proj.sprite.x - proj.startX,
+        proj.sprite.y - proj.startY,
+      );
+      const tileX = Math.floor(proj.sprite.x / TILE_SIZE);
+      const tileY = Math.floor(proj.sprite.y / TILE_SIZE);
+      const outOfBounds =
+        tileX < 0 ||
+        tileY < 0 ||
+        tileY >= grid.length ||
+        tileX >= grid[0].length;
+      const hitWall = !outOfBounds && grid[tileY][tileX] === WALL;
+
+      const fogState = this.fogState.state;
+      proj.sprite.setVisible(!outOfBounds && fogState[tileY][tileX] === 2);
+
+      if (
+        traveled >= (proj.def.maxDistance ?? this.playerRangedRange) ||
+        outOfBounds ||
+        hitWall
+      ) {
+        proj.sprite.destroy();
+        continue;
+      }
+
+      if (proj.def.effectType === "pierce") {
+        for (const enemy of this.enemies) {
+          if (proj.hitEnemyIds.has(enemy)) continue;
+          const dist = Math.hypot(
+            enemy.sprite.x - proj.sprite.x,
+            enemy.sprite.y - proj.sprite.y,
+          );
+          if (dist <= 14 && this.isEnemyVisible(enemy)) {
+            this.damageEnemy(
+              enemy,
+              computeDamage(proj.def.damage, enemy.defense),
+            );
+            if (enemy.hp > 0) {
+              this.applyStatusEffect(
+                enemy.statusEffects,
+                this.rollStatusEffect(proj.def),
+              );
+            }
+            proj.hitEnemyIds.add(enemy);
+            proj.pierceCount++;
+          }
+        }
+        if (
+          proj.def.maxPierceCount &&
+          proj.pierceCount >= proj.def.maxPierceCount
+        ) {
+          proj.sprite.destroy();
+          continue;
+        }
+        remaining.push(proj);
+        continue;
+      }
+
+      let hit = false;
+      for (const enemy of this.enemies) {
+        const dist = Math.hypot(
+          enemy.sprite.x - proj.sprite.x,
+          enemy.sprite.y - proj.sprite.y,
+        );
+        if (dist <= 14 && this.isEnemyVisible(enemy)) {
+          this.explodeAbilityProjectile(proj.def, proj.sprite.x, proj.sprite.y);
+          hit = true;
+          break;
+        }
+      }
+      if (hit) {
+        proj.sprite.destroy();
+        continue;
+      }
+
+      remaining.push(proj);
+    }
+
+    this.abilityProjectiles = remaining;
+  }
+  /**
+   * Assigne une competence OU un objet (potion) a un emplacement de la
+   * barre de raccourcis (0-8). Si ce MEME pouvoir/objet est deja assigne
+   * a un AUTRE emplacement, on le retire de la-bas d'abord (deplace
+   * plutot que duplique) - purement une question de clarte pour le
+   * joueur (fonctionnellement, un doublon ne casserait rien : le
+   * cooldown est partage par abilityId, pas par emplacement), mais deux
+   * touches pour exactement la meme action preterait a confusion.
+   */
+  assignHotbarSlot(slotIndex, payload) {
+    if (slotIndex < 0 || slotIndex > 8) return;
+
+    if (payload) {
+      for (let i = 0; i < this.hotbarSlots.length; i++) {
+        if (i === slotIndex) continue;
+        const existing = this.hotbarSlots[i];
+        if (!existing) continue;
+        const sameAbility =
+          payload.type === "ability" &&
+          existing.type === "ability" &&
+          existing.id === payload.id;
+        const sameItem =
+          payload.type === "item" &&
+          existing.type === "item" &&
+          existing.itemId === payload.itemId;
+        if (sameAbility || sameItem) {
+          this.hotbarSlots[i] = null;
+          this.showLootToast(`Déplacé depuis l'emplacement ${i + 1}`);
+        }
+      }
+    }
+
+    this.hotbarSlots[slotIndex] = payload;
+    this.events.emit("hotbar-updated", [...this.hotbarSlots]);
+  }
+
+  /**
    * Tire (aleatoire simple, Math.random - meme esprit que rollCritical
    * dans combat.js) si une source (arme du joueur ou type d'ennemi,
    * toutes deux au format {inflictsEffect: {type, chance, damagePerTick,
@@ -3441,34 +3491,60 @@ export default class MainScene extends Phaser.Scene {
    */
   rollStatusEffect(sourceDef) {
     if (!sourceDef || !sourceDef.inflictsEffect) return null;
-    const { type, chance, damagePerTick, tickIntervalMs, ticks } = sourceDef.inflictsEffect;
-    if (Math.random() >= chance) return null;
-    return { type, damagePerTick, tickIntervalMs, ticksRemaining: ticks, nextTickAt: 0 };
+    const inflict = sourceDef.inflictsEffect;
+    if (Math.random() >= inflict.chance) return null;
+
+    if (inflict.kind === "modifier") {
+      return {
+        type: inflict.type,
+        kind: "modifier",
+        statModifiers: inflict.statModifiers,
+        durationMs: inflict.durationMs,
+      };
+    }
+
+    // dot (saignement/brulure, inchange)
+    return {
+      type: inflict.type,
+      kind: "dot",
+      damagePerTick: inflict.damagePerTick,
+      tickIntervalMs: inflict.tickIntervalMs,
+      ticksRemaining: inflict.ticks,
+    };
   }
 
   /**
-   * Ajoute/rafraichit un effet de statut sur une cible (enemy OU
-   * this.hero via this.playerStatusEffects, meme forme des deux cotes).
-   * Un effet du MEME type REMPLACE l'existant (rafraichit la duree)
-   * plutot que de s'empiler - evite un empilement a l'infini si
-   * plusieurs coups touchent rapidement.
+   * Ajoute/rafraichit un effet de statut sur une cible (enemy.statusEffects
+   * OU this.playerStatusEffects, meme forme des deux cotes). Un effet du
+   * MEME type REMPLACE l'existant (rafraichit la duree) plutot que de
+   * s'empiler.
    */
   applyStatusEffect(list, effect) {
     if (!effect) return;
     const existingIndex = list.findIndex((e) => e.type === effect.type);
     if (existingIndex !== -1) list.splice(existingIndex, 1);
-    list.push({ ...effect, nextTickAt: this.time.now + effect.tickIntervalMs });
+    if (effect.kind === "modifier") {
+      // buff/debuff : PAS de tic - juste une expiration a verifier chaque
+      // frame (cf. updateStatusEffects). L'effet reste actif tant que
+      // present dans la liste - getEffectiveEnemySpeed/
+      // getEffectivePlayerMoveSpeed relisent la liste EN DIRECT, jamais
+      // de valeur mise en cache a "annuler" explicitement a l'expiration.
+      list.push({ ...effect, expiresAt: this.time.now + effect.durationMs });
+    } else {
+      list.push({
+        ...effect,
+        nextTickAt: this.time.now + effect.tickIntervalMs,
+      });
+    }
   }
 
   /**
    * Flash de teinte bref pour signaler un tic de saignement (rouge) ou
-   * de brulure (orange) - meme mecanisme que le flash de degats deja
-   * existant (setTint + delayedCall clearTint), juste une couleur
-   * differente par type d'effet.
+   * de brulure (orange).
    */
   flashStatusTint(sprite, effectType) {
     if (!sprite || !sprite.active) return;
-    const color = effectType === 'burn' ? 0xff8800 : 0xcc0000;
+    const color = STATUS_EFFECT_COLORS[effectType] ?? 0xcc0000;
     sprite.setTint(color).setTintMode(Phaser.TintModes.FILL);
     this.time.delayedCall(150, () => {
       if (sprite.active) {
@@ -3482,16 +3558,17 @@ export default class MainScene extends Phaser.Scene {
    * Fait avancer tous les effets de statut actifs - cote ENNEMIS
    * (enemy.statusEffects) ET cote JOUEUR (this.playerStatusEffects). Un
    * tic passe TOUJOURS par damageEnemy / la reduction normale de
-   * playerHp (jamais une mutation directe de hp) - un tic qui acheve une
-   * cible doit declencher exactement les memes consequences qu'un coup
-   * normal (XP/butin/progression de quete pour un ennemi, isDead pour
-   * le joueur).
+   * playerHp.
    */
   updateStatusEffects(now) {
     for (const enemy of this.enemies) {
       if (!enemy.statusEffects || enemy.statusEffects.length === 0) continue;
       const remaining = [];
       for (const effect of enemy.statusEffects) {
+        if (effect.kind === "modifier") {
+          if (now < effect.expiresAt) remaining.push(effect);
+          continue; // jamais de degats/flash pour un modificateur pur
+        }
         if (now >= effect.nextTickAt) {
           this.damageEnemy(enemy, effect.damagePerTick);
           effect.ticksRemaining -= 1;
@@ -3506,9 +3583,16 @@ export default class MainScene extends Phaser.Scene {
     if (this.playerStatusEffects.length > 0 && !this.isDead) {
       const remaining = [];
       for (const effect of this.playerStatusEffects) {
+        if (effect.kind === "modifier") {
+          if (now < effect.expiresAt) remaining.push(effect);
+          continue;
+        }
         if (now >= effect.nextTickAt) {
           this.playerHp = Math.max(0, this.playerHp - effect.damagePerTick);
-          this.events.emit('player-hp-changed', { hp: this.playerHp, maxHp: this.playerMaxHp });
+          this.events.emit("player-hp-changed", {
+            hp: this.playerHp,
+            maxHp: this.playerMaxHp,
+          });
           effect.ticksRemaining -= 1;
           effect.nextTickAt = now + effect.tickIntervalMs;
           this.flashStatusTint(this.hero, effect.type);
@@ -3519,7 +3603,190 @@ export default class MainScene extends Phaser.Scene {
     }
   }
 
+  /**
+   * Vitesse de deplacement EFFECTIVE d'un ennemi - base ENEMY_SPEED
+   * (globale : le champ enemy.speed calcule cote serveur par archetype
+   * n'est PAS branche cote client aujourd'hui, hors perimetre de cette
+   * demande) moduleé par les effets de statut actifs portant
+   * statModifiers.moveSpeedPercent (ex: 'slow' a -0.5). Jamais sous 20%
+   * de la vitesse de base - un ennemi ralenti reste toujours un minimum
+   * mobile, jamais totalement fige.
+   */
+  getEffectiveEnemySpeed(enemy) {
+    let multiplier = 1;
+    for (const effect of enemy.statusEffects) {
+      if (effect.statModifiers?.moveSpeedPercent) {
+        multiplier += effect.statModifiers.moveSpeedPercent;
+      }
+    }
+    return Math.max(ENEMY_SPEED * 0.2, ENEMY_SPEED * multiplier);
+  }
+
+  /**
+   * Meme principe pour le heros - this.playerMoveSpeed (deja calcule par
+   * recalculatePlayerStats, niveau+equipement) module par les effets
+   * actifs (ex: 'haste' a +0.6).
+   */
+  getEffectivePlayerMoveSpeed() {
+    let multiplier = 1;
+    for (const effect of this.playerStatusEffects) {
+      if (effect.statModifiers?.moveSpeedPercent) {
+        multiplier += effect.statModifiers.moveSpeedPercent;
+      }
+    }
+    return Math.max(
+      this.playerMoveSpeed * 0.2,
+      this.playerMoveSpeed * multiplier,
+    );
+  }
+
+  getEffectivePlayerMeleeDamage() {
+    let multiplier = 1;
+    for (const effect of this.playerStatusEffects) {
+      if (effect.statModifiers?.meleeDamagePercent)
+        multiplier += effect.statModifiers.meleeDamagePercent;
+    }
+    return this.playerMeleeDamage * multiplier;
+  }
+
+  getEffectivePlayerRangedDamage() {
+    let multiplier = 1;
+    for (const effect of this.playerStatusEffects) {
+      if (effect.statModifiers?.rangedDamagePercent)
+        multiplier += effect.statModifiers.rangedDamagePercent;
+    }
+    return this.playerRangedDamage * multiplier;
+  }
+
+  getEffectivePlayerDefense() {
+    let multiplier = 1;
+    for (const effect of this.playerStatusEffects) {
+      if (effect.statModifiers?.defensePercent)
+        multiplier += effect.statModifiers.defensePercent;
+    }
+    return this.playerDefense * multiplier;
+  }
+  /**
+   * Declenche la furie de l'archetype actuel - disponible uniquement une
+   * fois this.furyKillCount >= FURY_KILLS_REQUIRED. Contrairement aux
+   * competences normales : AUCUN cout en ressource, AUCUN cooldown
+   * temporel.
+   */
+  useFury() {
+    if (this.furyKillCount < FURY_KILLS_REQUIRED) {
+      this.showLootToast(
+        `Furie pas encore prête (${this.furyKillCount}/${FURY_KILLS_REQUIRED} ennemis)`,
+      );
+      return;
+    }
+
+    const heroArchetype = resolveHeroStatsOverride(
+      this.heroSpriteKey,
+    )?.archetype;
+    const fury = resolveFuryDef(heroArchetype);
+    if (!fury) {
+      this.showLootToast("Aucune furie pour cet archétype");
+      return;
+    }
+
+    this.furyKillCount = 0;
+    this.events.emit("fury-progress", {
+      count: 0,
+      required: FURY_KILLS_REQUIRED,
+    });
+
+    if (fury.aoeDamage) {
+      for (const enemy of this.enemies) {
+        if (!this.isEnemyVisible(enemy)) continue;
+        const dist = Math.hypot(
+          enemy.sprite.x - this.hero.x,
+          enemy.sprite.y - this.hero.y,
+        );
+        if (dist > fury.aoeRadius) continue;
+        this.damageEnemy(enemy, computeDamage(fury.aoeDamage, enemy.defense));
+      }
+      const circle = this.add.circle(
+        this.hero.x,
+        this.hero.y,
+        10,
+        0xff2200,
+        0.5,
+      );
+      circle.setDepth(14);
+      this.tweens.add({
+        targets: circle,
+        radius: fury.aoeRadius,
+        alpha: 0,
+        duration: 400,
+        onComplete: () => circle.destroy(),
+      });
+    }
+
+    if (fury.buffStatModifiers) {
+      this.applyStatusEffect(this.playerStatusEffects, {
+        type: fury.id,
+        kind: "modifier",
+        statModifiers: fury.buffStatModifiers,
+        durationMs: fury.buffDurationMs,
+      });
+    }
+
+    if (fury.healPercent) {
+      this.playerHp = Math.min(
+        this.playerMaxHp,
+        this.playerHp + (this.playerMaxHp - this.playerHp) * fury.healPercent,
+      );
+      this.playerMana = Math.min(
+        this.playerMaxMana,
+        this.playerMana +
+          (this.playerMaxMana - this.playerMana) * fury.healPercent,
+      );
+      this.playerStamina = Math.min(
+        this.playerMaxStamina,
+        this.playerStamina +
+          (this.playerMaxStamina - this.playerStamina) * fury.healPercent,
+      );
+      this.events.emit("player-hp-changed", {
+        hp: this.playerHp,
+        maxHp: this.playerMaxHp,
+      });
+      this.events.emit("player-mana-changed", {
+        mana: this.playerMana,
+        maxMana: this.playerMaxMana,
+      });
+      this.events.emit("player-stamina-changed", {
+        stamina: this.playerStamina,
+        maxStamina: this.playerMaxStamina,
+      });
+    }
+
+    this.showLootToast(`${fury.name} déclenchée !`);
+  }
   damageEnemy(enemy, amount) {
+    // se faire TOUCHER physiquement est TOUJOURS une detection, quelle
+    // que soit la position (dos ou face) - contrairement a
+    // decideNextState (base uniquement sur position/ligne de vue), etre
+    // frappe ne peut pas rester "non detecte" indefiniment. Sans ca, un
+    // ennemi jamais repere restait eternellement en patrol/guard/etc,
+    // rendant CHAQUE coup un critique GARANTI a l'infini (cf.
+    // rollCritical(enemy.state !== 'chase'), deja calcule par l'appelant
+    // AVANT ce point - le coup EN COURS garde donc son statut de critique
+    // deja decide, seuls les coups SUIVANTS perdent la garantie).
+    if (enemy.state !== "chase") {
+      enemy.state = "chase";
+      const ex = Math.floor(enemy.sprite.x / TILE_SIZE);
+      const ey = Math.floor(enemy.sprite.y / TILE_SIZE);
+      const playerTileX = Math.floor(this.hero.x / TILE_SIZE);
+      const playerTileY = Math.floor(this.hero.y / TILE_SIZE);
+      const path = findPath(
+        this.fogGrid,
+        { x: ex, y: ey },
+        { x: playerTileX, y: playerTileY },
+      );
+      enemy.path = path;
+      enemy.pathIndex = path ? 1 : 0;
+    }
+
     const result = applyDamage(enemy, amount);
     enemy.hp = result.hp;
 
@@ -3527,34 +3794,43 @@ export default class MainScene extends Phaser.Scene {
       this.xp += enemy.xpReward;
       this.events.emit("xp-changed", { xp: this.xp });
       this.checkLevelUp();
-      this.currentFloorKills.push(enemy.spawnIndex); // ne reapparait plus si on sauvegarde+reprend SANS avoir quitte cet etage
-      // ennemi NORMAL avec du butin : fait apparaitre un coffre a
-      // ouvrir plutot que de donner les objets instantanement (cf.
-      // spawnLootChest) - peut contenir PLUSIEURS objets a la fois
-      // (enemy.drops, tableau, cf. ArpgController.js/rollMultipleLoot),
-      // contrairement a l'ancien ramassage automatique d'un seul objet.
-      // Les BOSS gardent leur comportement instantane inchange (cf. le
-      // bloc enemy.isBoss plus bas, qui utilise toujours enemy.drop
-      // singulier) - hors du perimetre de cette demande.
+      this.currentFloorKills.push(enemy.spawnIndex);
+      // alimente la furie - plafonne a FURY_KILLS_REQUIRED, jamais au-dela
+      // (pas besoin de deborder, useFury remet a 0 de toute facon au
+      // declenchement)
+      if (this.furyKillCount < FURY_KILLS_REQUIRED) {
+        this.furyKillCount++;
+        this.events.emit("fury-progress", {
+          count: this.furyKillCount,
+          required: FURY_KILLS_REQUIRED,
+        });
+        if (this.furyKillCount >= FURY_KILLS_REQUIRED) {
+          this.showLootToast("Furie prête !");
+        }
+      }
       if (enemy.drops && enemy.drops.length > 0) {
         this.spawnLootChest(enemy.sprite.x, enemy.sprite.y, enemy.drops);
       }
 
-      // un boss vaincu donne TOUJOURS l'objet cible de toute quete
-      // "recuperer tel objet" active (acceptee, pas encore terminee),
-      // EN PLUS du butin normal ci-dessus - sans quete active pour un
-      // objet donne, il ne tombe jamais du tout (absent de
-      // LOOT_TABLES.bossDrop cote serveur). Garantit que la quete reste
-      // toujours faisable, sans dependre d'un tirage aleatoire - avant
-      // ce changement, l'objet avait une simple CHANCE de tomber meme
-      // sans quete active, ce qui rendait la quete elle-meme peu fiable
-      // (bug remonte : "j'ai essaye le boss mais rien").
-      //
-      // Compte, par objet cible, combien d'EXEMPLAIRES sont necessaires
-      // (plusieurs quetes actives peuvent viser le meme objet - rare
-      // mais possible) contre combien on en a deja, et ne complete que
-      // l'ecart - evite qu'une quete "vole" l'exemplaire deja destine a
-      // une autre sur le meme kill.
+      // objet de quete garanti pour un ennemi NORMAL (cf. enemy.questLoot,
+      // derive de ENEMY_TYPES[...].questLoot cote serveur) - INDEPENDANT
+      // du coffre de butin classique ci-dessus. Un seul objet par ennemi
+      // (contrairement au boss, qui garantit TOUS les objets de quete
+      // actifs a la fois) - jamais de drop sans quete active qui cible
+      // PRECISEMENT cet objet.
+      if (!enemy.isBoss && enemy.questLoot) {
+        for (const questKey of Object.keys(this.quests)) {
+          const qs = this.quests[questKey];
+          if (qs.questId !== "obtainItem" || !qs.accepted || qs.completed)
+            continue;
+          if (qs.targetItemId !== enemy.questLoot) continue;
+          this.addItemToInventory(enemy.questLoot, 1);
+          const lootDef = resolveItemDef(enemy.questLoot);
+          this.showLootToast(`${lootDef.name} obtenu !`);
+          break;
+        }
+      }
+
       if (enemy.isBoss) {
         const neededCounts = {};
         for (const questKey of Object.keys(this.quests)) {
@@ -3578,10 +3854,6 @@ export default class MainScene extends Phaser.Scene {
           }
         }
 
-        // quetes "vaincre le boss de l'etage X" : marque bossDefeated
-        // des que LE BON boss (meme profondeur cible) meurt, APRES
-        // acceptation - ne complete jamais la quete ici directement, le
-        // joueur doit encore revenir en informer le PNJ (cf. turnInQuest)
         let anyDefeatBossUpdated = false;
         for (const questKey of Object.keys(this.quests)) {
           const qs = this.quests[questKey];
@@ -3602,15 +3874,8 @@ export default class MainScene extends Phaser.Scene {
         }
       }
 
-      // suivi GLOBAL de toutes les quetes actives, pas seulement celle de
-      // l'etage courant : une quete acceptee en ville (0 ennemi sur
-      // place) ne peut compter que des kills faits ailleurs, sur
-      // d'autres etages, potentiellement bien plus tard. Plusieurs
-      // quetes actives simultanement (etages differents) progressent
-      // toutes en meme temps sur un seul kill - mais SEULEMENT si le
-      // type de l'ennemi tue correspond a celui vise par la quete.
       let anyQuestUpdated = false;
-      let justCompletedReward = null; // au cas ou plusieurs quetes se terminent sur le meme kill, n'affiche que la premiere - tres rare en pratique
+      let justCompletedReward = null;
       for (const questKey of Object.keys(this.quests)) {
         const qs = this.quests[questKey];
         if (!qs.accepted || qs.completed) continue;
@@ -3635,9 +3900,6 @@ export default class MainScene extends Phaser.Scene {
         this.events.emit("quests-updated", { ...this.quests });
         this.persistProgress();
       }
-      // notification immediate de la recompense en objet - la quete est
-      // deja terminee et l'objet deja ajoute a l'inventaire a cet instant,
-      // pas la peine d'attendre que le joueur retourne parler au PNJ
       if (justCompletedReward) {
         const itemDef = resolveItemDef(justCompletedReward.itemId);
         this.showLootToast(
@@ -3649,11 +3911,6 @@ export default class MainScene extends Phaser.Scene {
       this.enemies = this.enemies.filter((e) => e !== enemy);
 
       if (enemy.isBoss) {
-        // le boss vient de mourir : deverrouille la sortie (qui se
-        // trouve DANS la salle du boss, cf. ArpgController). Pas de mort
-        // permanente : redescendre puis remonter regenere l'etage depuis
-        // la meme seed, donc un boss frais a recombattre (cf.
-        // /areas/phaser-arpg.md)
         this.bossAlive = false;
         this.events.emit("boss-defeated");
       } else if (
@@ -3661,15 +3918,9 @@ export default class MainScene extends Phaser.Scene {
         !this.bossRoomOpen &&
         this.enemies.length === 0
       ) {
-        // dernier ennemi NORMAL de l'etage tombe, et une salle de boss
-        // scellee existe : ouvre la porte et fait apparaitre le boss
         this.openBossDoor();
       }
     } else {
-      // flash blanc bref pour signaler qu'un coup a touche - Phaser 4 :
-      // setTintFill() ne fait plus rien (breaking change), remplace par
-      // setTint() + setTintMode(FILL). Revient a clearTint() ensuite (pas
-      // de teinte d'etat persistante sur les ennemis, cf. leur propre sprite)
       enemy.sprite.setTint(0xffffff).setTintMode(Phaser.TintModes.FILL);
       this.time.delayedCall(80, () => {
         if (enemy.sprite.active) {
@@ -3680,22 +3931,40 @@ export default class MainScene extends Phaser.Scene {
     }
   }
 
-  /**
-   * Verifie si l'XP cumulee fait passer un ou plusieurs niveaux (un seul
-   * kill pourrait theoriquement en franchir plusieurs si l'XP gagnee est
-   * grosse - la boucle est dans computeLevelFromXp, pas ici). Un niveau
-   * gagne applique immediatement les nouvelles stats et soigne
-   * entierement le joueur - un vrai pic de puissance, pas une simple
-   * ligne dans un journal.
-   */
   checkLevelUp() {
     const { level } = computeLevelFromXp(this.xp);
     if (level <= this.playerLevel) return;
 
     this.playerLevel = level;
-    this.recalculatePlayerStats(); // niveau + bonus d'equipement combines
-    this.playerHp = this.playerMaxHp; // leve de niveau soigne entierement
-    this.playerMana = this.playerMaxMana; // idem pour le mana
+    this.recalculatePlayerStats();
+    this.playerHp = this.playerMaxHp;
+    this.playerMana = this.playerMaxMana;
+    this.playerStamina = this.playerMaxStamina;
+
+    let anyAbilityUnlocked = false;
+    const heroArchetype = resolveHeroStatsOverride(
+      this.heroSpriteKey,
+    )?.archetype;
+    for (const def of Object.values(ABILITY_DEFS)) {
+      if (
+        def.archetypes &&
+        def.archetypes.length > 0 &&
+        !def.archetypes.includes(heroArchetype)
+      )
+        continue;
+      if (def.unlockLevel == null || def.unlockLevel > level) continue;
+      if (this.unlockedAbilities.includes(def.id)) continue;
+      // <-- LES 2 NOUVELLES LIGNES, ICI, entre le filtre "deja debloquee"
+      // et le push - jamais debloquer une competence dont la ressource
+      // necessaire est plafonnee a 0 pour ce heros precis
+      if (def.staminaCost && this.playerMaxStamina <= 0) continue;
+      if (def.manaCost && this.playerMaxMana <= 0) continue;
+      this.unlockedAbilities.push(def.id);
+      anyAbilityUnlocked = true;
+      this.showLootToast(`Nouvelle compétence débloquée : ${def.name} !`);
+    }
+    if (anyAbilityUnlocked)
+      this.events.emit("abilities-updated", [...this.unlockedAbilities]);
 
     this.events.emit("player-hp-changed", {
       hp: this.playerHp,
@@ -3705,23 +3974,14 @@ export default class MainScene extends Phaser.Scene {
       mana: this.playerMana,
       maxMana: this.playerMaxMana,
     });
+    this.events.emit("player-stamina-changed", {
+      stamina: this.playerStamina,
+      maxStamina: this.playerMaxStamina,
+    });
     this.events.emit("level-up", { level });
     this.persistProgress();
   }
 
-  /**
-   * Attaque de chaque ennemi a portee, en chasse, et pret (cooldown) -
-   * deux branches selon enemy.attackType (cf. enemyStats.js/bossConfig.js
-   * cote serveur) :
-   * - 'melee' (par defaut) : degats INSTANTANES au contact, comportement
-   *   inchange depuis le debut du projet.
-   * - 'ranged' : tire un PROJECTILE vers le heros au lieu de degats
-   *   instantanes - les degats ne s'appliquent que si le projectile
-   *   touche reellement, cf. updateEnemyProjectiles. Portee de
-   *   declenchement bien plus large que le contact (ENEMY_RANGED_ATTACK_RANGE
-   *   vs ENEMY_ATTACK_RANGE), sinon un ennemi a distance se comporterait
-   *   comme un ennemi de melee qui rate juste sa portee.
-   */
   updateEnemyAttacks(now) {
     for (const enemy of this.enemies) {
       if (enemy.state !== "chase") continue;
@@ -3737,13 +3997,10 @@ export default class MainScene extends Phaser.Scene {
 
         const dx = this.hero.x - enemy.sprite.x;
         const dy = this.hero.y - enemy.sprite.y;
-        const mag = Math.hypot(dx, dy) || 1; // || 1 : garde-fou si jamais le heros et l'ennemi sont exactement superposes (division par zero)
+        const mag = Math.hypot(dx, dy) || 1;
         const vx = dx / mag;
         const vy = dy / mag;
 
-        // rouge/orange pour se distinguer visuellement du projectile bleu
-        // du joueur (cf. performRangedAttack) - le joueur doit pouvoir
-        // reconnaitre au premier coup d'oeil qui a tire quoi
         const sprite = this.add.circle(
           enemy.sprite.x,
           enemy.sprite.y,
@@ -3757,14 +4014,14 @@ export default class MainScene extends Phaser.Scene {
           vy * ENEMY_PROJECTILE_SPEED,
         );
 
-        // damage capture ICI (stat de l'ennemi au moment du tir), jamais
-        // relue plus tard - un ennemi tue apres avoir tire ne doit pas
-        // faire disparaitre son propre projectile deja en vol
+        // damage ET inflictsEffect captures ICI (etat de l'ennemi au
+        // moment du tir), jamais relus plus tard
         this.enemyProjectiles.push({
           sprite,
           startX: enemy.sprite.x,
           startY: enemy.sprite.y,
           damage: enemy.damage,
+          inflictsEffect: enemy.inflictsEffect,
         });
         continue;
       }
@@ -3783,6 +4040,12 @@ export default class MainScene extends Phaser.Scene {
         maxHp: this.playerMaxHp,
       });
 
+      // effet de statut eventuel de cet ennemi (saignement/brulure)
+      this.applyStatusEffect(
+        this.playerStatusEffects,
+        this.rollStatusEffect(enemy),
+      );
+
       this.hero.setTint(0xff8888).setTintMode(Phaser.TintModes.FILL);
       this.time.delayedCall(100, () => {
         if (this.hero) {
@@ -3793,14 +4056,6 @@ export default class MainScene extends Phaser.Scene {
     }
   }
 
-  /**
-   * Fait avancer les projectiles ENNEMIS (this.enemyProjectiles, distinct
-   * de this.projectiles qui appartient au joueur) - meme structure que
-   * updateProjectiles, mais collision INVERSEE : teste la distance au
-   * heros, jamais aux ennemis. Degats bases sur proj.damage (capture au
-   * moment du tir, cf. updateEnemyAttacks), pas une relecture de
-   * l'ennemi qui a tire.
-   */
   updateEnemyProjectiles() {
     const grid = this.fogGrid;
     const remaining = [];
@@ -3819,10 +4074,6 @@ export default class MainScene extends Phaser.Scene {
         tileX >= grid[0].length;
       const hitWall = !outOfBounds && grid[tileY][tileX] === WALL;
 
-      // meme logique de visibilite que les projectiles du joueur - ne
-      // s'affiche que dans la zone de vision ACTUELLE, jamais a travers
-      // le brouillard (meme raison : eviter un "sonar" non voulu qui
-      // reveler la forme du niveau)
       const fogState = this.fogState.state;
       const projVisible = !outOfBounds && fogState[tileY][tileX] === 2;
       proj.sprite.setVisible(projVisible);
@@ -3843,6 +4094,13 @@ export default class MainScene extends Phaser.Scene {
           hp: this.playerHp,
           maxHp: this.playerMaxHp,
         });
+
+        // effet de statut capture au TIR (proj.inflictsEffect), pas une
+        // relecture de l'ennemi qui a tire
+        this.applyStatusEffect(
+          this.playerStatusEffects,
+          this.rollStatusEffect({ inflictsEffect: proj.inflictsEffect }),
+        );
 
         this.hero.setTint(0xff8888).setTintMode(Phaser.TintModes.FILL);
         this.time.delayedCall(100, () => {
@@ -3869,7 +4127,7 @@ export default class MainScene extends Phaser.Scene {
       barH = 4;
 
     for (const enemy of this.enemies) {
-      if (!enemy.visible) continue; // pas de barre de vie pour un ennemi cache par le brouillard
+      if (!enemy.visible) continue;
       const ratio = enemy.hp / enemy.maxHp;
       const bx = enemy.sprite.x - barW / 2;
       const by = enemy.sprite.y - 26;
