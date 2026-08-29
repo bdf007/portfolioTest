@@ -14,40 +14,46 @@ import { computeLevelFromXp, getPlayerStatsForLevel } from "./leveling";
 import { resolveHeroStatsOverride } from "./spriteRegistry";
 import { computeEquipmentBonuses } from "./equipment";
 import { fetchMyGames, abandonGame, deleteGame } from "../../api/arpgClient";
+import { resolveAbilityDef } from "./abilityDefs";
+import { resolveItemDef } from "./itemDefs";
+import HotbarScreen from "./HotbarScreen";
+import { ItemIcon, hasIconFrame } from "./InventoryScreen";
 
 /**
- * Composant React qui héberge le jeu Phaser et le HUD (PV, XP, game over).
- *
- * Le HUD est rendu en JSX normal, piloté par du state React mis à jour
- * via les événements émis par MainScene (this.events.emit(...)) - pas de
- * document.getElementById() comme dans la démo de prototypage. Cette
- * séparation est ce qui permet au composant de survivre proprement à un
- * démontage/remontage (navigation ailleurs sur le site puis retour) sans
- * laisser de références DOM obsolètes.
- *
- * Flux : au chargement, liste des parties en cours (comme Skip the
- * Dungeon) - reprendre l'une d'elles saute directement le jeu, sinon
- * "Nouvelle partie" mène à l'écran de sélection du héros. Le jeu ne se
- * monte QUE une fois un héros connu (choisi ou déjà fixé par la partie
- * reprise).
+ * Overlay sombre qui se dissout progressivement au-dessus d'un
+ * emplacement en recharge - transition CSS pilotee UNE SEULE fois (pas
+ * de boucle JS qui recalcule a chaque frame). `key={startedAt}` sur le
+ * parent (cf. plus bas) force un vrai remontage a chaque nouvelle
+ * recharge, meme pour la MEME competence/objet - sinon une recharge
+ * declenchee en plein milieu d'une precedente ne redemarrerait jamais
+ * proprement l'animation depuis opacite 1.
  */
+function HotbarCooldownOverlay({ startedAt, cooldownMs }) {
+  const [opacity, setOpacity] = useState(1);
+  useEffect(() => {
+    setOpacity(1);
+    const raf = requestAnimationFrame(() => setOpacity(0));
+    return () => cancelAnimationFrame(raf);
+  }, [startedAt, cooldownMs]);
+
+  return (
+    <div
+      style={{
+        position: "absolute",
+        inset: 0,
+        background: "rgba(0,0,0,0.65)",
+        opacity,
+        transition: `opacity ${cooldownMs}ms linear`,
+        pointerEvents: "none",
+      }}
+    />
+  );
+}
+
 export default function Arpg() {
   const containerRef = useRef(null);
   const gameRef = useRef(null);
 
-  // detection du POINTEUR PRINCIPAL (pas juste "capacite tactile
-  // presente") - decide a la fois l'affichage des controles tactiles ET
-  // le besoin de forcer le mode paysage. `(pointer: coarse) and (hover:
-  // none)` est le motif standard pour "l'appareil principal est un
-  // doigt, sans souris/trackpad" - contrairement a un simple test de
-  // capacite tactile (ontouchstart/maxTouchPoints), qui declenche a tort
-  // sur un ecran ou trackpad tactile de BUREAU (le bureau garde une
-  // souris comme pointeur principal, donc hover:hover - un vrai
-  // telephone n'a jamais de survol possible). Bug trouve en testant :
-  // l'ancienne detection affichait les controles tactiles/le
-  // verrouillage paysage meme sur un poste de bureau equipe d'un ecran
-  // tactile. Une seule lecture au montage : le TYPE d'appareil ne change
-  // jamais en cours de partie, inutile de re-detecter a chaque render.
   const [isMobile] = useState(
     () =>
       typeof window !== "undefined" &&
@@ -67,12 +73,6 @@ export default function Arpg() {
     window.addEventListener("resize", handleOrientationChange);
     window.addEventListener("orientationchange", handleOrientationChange);
 
-    // tentative de verrouillage natif - fonctionne sur certains
-    // Android/Chrome (generalement en plein ecran uniquement), jamais
-    // sur iOS Safari (API absente) - simple amelioration progressive.
-    // Le vrai filet de securite reste l'overlay "tournez votre appareil"
-    // plus bas (isPortrait), qui fonctionne partout sans permission
-    // particuliere - on ne bloque jamais sur l'echec de cette tentative.
     if (window.screen.orientation && window.screen.orientation.lock) {
       window.screen.orientation.lock("landscape").catch(() => {});
     }
@@ -82,23 +82,31 @@ export default function Arpg() {
       window.removeEventListener("orientationchange", handleOrientationChange);
     };
   }, [isMobile]);
-  const lootToastTimerRef = useRef(null); // pour reinitialiser le delai d'effacement a chaque nouvelle ligne (cf. le listener 'loot-toast')
+  const lootToastTimerRef = useRef(null);
 
-  const [phase, setPhase] = useState("loading"); // 'loading' | 'picker' | 'select' | 'playing'
+  const [phase, setPhase] = useState("loading");
   const [games, setGames] = useState([]);
   const [heroId, setHeroId] = useState(null);
-  const [resumeSave, setResumeSave] = useState(null); // partie a reprendre, si choisie dans la liste
+  const [resumeSave, setResumeSave] = useState(null);
 
   const [playerHp, setPlayerHp] = useState({ hp: 100, maxHp: 100 });
   const [playerMana, setPlayerMana] = useState({ mana: 0, maxMana: 0 });
+  const [playerStamina, setPlayerStamina] = useState({
+    stamina: 0,
+    maxStamina: 0,
+  });
+  const [hotbarSlots, setHotbarSlots] = useState(new Array(9).fill(null));
+  const [furyProgress, setFuryProgress] = useState({ count: 0, required: 10 });
+  const [cooldownEvents, setCooldownEvents] = useState({});
+  const [unlockedAbilities, setUnlockedAbilities] = useState([]);
   const [xp, setXp] = useState(0);
   const [level, setLevel] = useState(1);
   const [depth, setDepth] = useState(1);
-  const [gameOver, setGameOver] = useState(null); // null | { xp, depth }
+  const [gameOver, setGameOver] = useState(null);
   const [loadError, setLoadError] = useState(null);
-  const [minimapData, setMinimapData] = useState(null); // null | { grid, fogState, playerTile }
-  const [npcDialog, setNpcDialog] = useState(null); // null | { text, canAccept }
-  const [quests, setQuests] = useState({}); // { [depth]: { accepted, completed, killCount, target } }
+  const [minimapData, setMinimapData] = useState(null);
+  const [npcDialog, setNpcDialog] = useState(null);
+  const [quests, setQuests] = useState({});
   const [upstairsPrompt, setUpstairsPrompt] = useState(false);
   const [exitPrompt, setExitPrompt] = useState(false);
   const [inventory, setInventory] = useState([]);
@@ -116,15 +124,12 @@ export default function Arpg() {
     quiver: null,
   });
   const [inventoryOpen, setInventoryOpen] = useState(false);
-  const [travelDestinations, setTravelDestinations] = useState(null); // null = ferme, tableau = ouvert avec ces destinations
-  const [shopStock, setShopStock] = useState(null); // null = ferme, tableau = ouvert avec ce stock
+  const [travelDestinations, setTravelDestinations] = useState(null);
+  const [shopStock, setShopStock] = useState(null);
   const [questsOpen, setQuestsOpen] = useState(false);
-  const [lootToast, setLootToast] = useState(null); // texte de la derniere ligne de butin, ou null - s'efface automatiquement (cf. useEffect du listener 'loot-toast')
+  const [hotbarScreenOpen, setHotbarScreenOpen] = useState(false);
+  const [lootToast, setLootToast] = useState(null);
   const [minimapVisible, setMinimapVisible] = useState(true);
-  // disposition de deplacement au clavier - 'azerty' (ZQSD, defaut) ou
-  // 'qwerty' (WASD) - cf. MainScene.setKeyboardLayout. Etat duplique ici
-  // (en plus de this.keyboardLayout cote scene) uniquement pour afficher
-  // le libelle correct sur le bouton de bascule.
   const [keyboardLayout, setKeyboardLayoutState] = useState("azerty");
   const [username, setUsername] = useState(null);
 
@@ -134,48 +139,29 @@ export default function Arpg() {
         setGames(games || []);
         setUsername(username || null);
       })
-      .catch(() => setGames([])) // en cas d'echec reseau, liste vide plutot que de bloquer l'ecran
+      .catch(() => setGames([]))
       .finally(() => setPhase("picker"));
   };
 
-  // au montage : charge la liste des parties en cours
   useEffect(() => {
     loadGamesList();
   }, []);
 
-  // monte Phaser uniquement une fois un heros connu (phase === 'playing')
   useEffect(() => {
     if (phase !== "playing" || !heroId) return;
 
     const config = {
       type: Phaser.AUTO,
-      width: 800,
-      height: 600,
+      width: 1000,
+      height: 750,
       parent: containerRef.current,
       pixelArt: true,
-      // adapte le canvas 800x600 (resolution LOGIQUE, inchangee - tout le
-      // reste du jeu continue de raisonner en ces coordonnees) a la
-      // taille REELLE du conteneur parent, en conservant le ratio
-      // d'aspect (letterboxing si besoin) plutot que de deborder. Sans
-      // ca, un mobile plus etroit que 800px de large ne montrait tout
-      // simplement pas le canvas (deborde hors du viewport visible) -
-      // sur desktop ou le conteneur mesure deja exactement 800x600,
-      // aucun effet visuel (echelle = 1, no-op).
       scale: {
         mode: Phaser.Scale.FIT,
         autoCenter: Phaser.Scale.CENTER_BOTH,
-        width: 800,
-        height: 600,
+        width: 1000,
+        height: 750,
       },
-      // aucun son dans le jeu pour l'instant - desactive completement le
-      // systeme audio de Phaser (donc son AudioContext) plutot que de
-      // laisser une instance en creer un a chaque montage. Sans ca, le
-      // Fast Refresh de CRA (qui detruit et recree le jeu a chaque
-      // modif de fichier sans recharger la page) peut laisser Phaser
-      // tenter de suspendre/reprendre l'AudioContext d'une instance
-      // precedente deja fermee - "Cannot suspend/resume a closed
-      // AudioContext". Confirme comme un probleme connu pour les SPA qui
-      // recreent le jeu sans reload complet (doc Phaser 4).
       audio: { noAudio: true },
       physics: {
         default: "arcade",
@@ -184,31 +170,17 @@ export default function Arpg() {
       scene: [BootScene, MainScene],
     };
 
-    // drapeau ferme sur une variable locale (pas une ref) : chaque
-    // invocation de cet effet a sa PROPRE variable `destroyed`, contrairement
-    // a une ref qui survivrait au cycle monte->nettoie->remonte que React 18
-    // (StrictMode) et le Fast Refresh de CRA declenchent en dev. Sans ca, si
-    // le chargement du sprite finit APRES un destroy() (montage->nettoyage->
-    // remontage rapide au hot-reload), le callback 'ready' de l'instance
-    // detruite essaie quand meme d'ecrire dans un jeu mort -> crash.
     let destroyed = false;
 
     const game = new Phaser.Game(config);
     gameRef.current = game;
 
-    // heros choisi (et partie a reprendre, le cas echeant) transmis a
-    // Phaser via son registre global - lu par MainScene.create()/startGame()
     game.registry.set("heroId", heroId);
     if (resumeSave) game.registry.set("resumeSave", resumeSave);
-    // idem pour isMobile - lu par MainScene pour zoomer la camera sur
-    // mobile (cf. le commentaire de setZoom dans MainScene.js)
     game.registry.set("isMobile", isMobile);
 
-    // les listeners ne peuvent s'attacher qu'une fois la scène créée -
-    // on les branche via l'événement 'ready' du système de scènes plutôt
-    // que d'espérer un timing correct
     game.events.once("ready", () => {
-      if (destroyed) return; // cette instance a deja ete demontee, on ignore
+      if (destroyed) return;
       const scene = game.scene.getScene("MainScene");
       if (!scene) return;
 
@@ -217,6 +189,24 @@ export default function Arpg() {
       );
       scene.events.on("player-mana-changed", ({ mana, maxMana }) =>
         setPlayerMana({ mana, maxMana }),
+      );
+      scene.events.on("player-stamina-changed", ({ stamina, maxStamina }) =>
+        setPlayerStamina({ stamina, maxStamina }),
+      );
+      scene.events.on("hotbar-updated", (slots) => setHotbarSlots(slots));
+      scene.events.on(
+        "hotbar-cooldown-started",
+        ({ key, cooldownMs, startedAt }) =>
+          setCooldownEvents((prev) => ({
+            ...prev,
+            [key]: { cooldownMs, startedAt },
+          })),
+      );
+      scene.events.on("fury-progress", ({ count, required }) =>
+        setFuryProgress({ count, required }),
+      );
+      scene.events.on("abilities-updated", (abilities) =>
+        setUnlockedAbilities(abilities),
       );
       scene.events.on("xp-changed", ({ xp }) => setXp(xp));
       scene.events.on("level-up", ({ level }) => setLevel(level));
@@ -249,6 +239,10 @@ export default function Arpg() {
         setPhase("picker");
         loadGamesList();
       });
+      // note : plus de listener sur 'quest-npcs-updated' - jamais emis
+      // par MainScene.js, la liste des PNJ decouverts vient deja via
+      // 'fog-changed' -> minimapData.questNpcs (cf. applyFogChanges/
+      // getQuestNpcMinimapData cote scene)
     });
 
     return () => {
@@ -280,7 +274,7 @@ export default function Arpg() {
 
   const handleSaveAndQuit = () => {
     const scene = gameRef.current?.scene.getScene("MainScene");
-    if (scene) scene.saveAndQuit(); // la scene emet 'quit-to-menu' une fois la sauvegarde confirmee
+    if (scene) scene.saveAndQuit();
   };
 
   const handleConfirmUpstairs = () => {
@@ -342,6 +336,23 @@ export default function Arpg() {
     if (scene) scene.unpauseGame("quests");
   };
 
+  const handleOpenHotbarScreen = () => {
+    setHotbarScreenOpen(true);
+    const scene = gameRef.current?.scene.getScene("MainScene");
+    if (scene) scene.pauseGame("hotbar");
+  };
+
+  const handleCloseHotbarScreen = () => {
+    setHotbarScreenOpen(false);
+    const scene = gameRef.current?.scene.getScene("MainScene");
+    if (scene) scene.unpauseGame("hotbar");
+  };
+
+  const handleAssignHotbarSlot = (index, payload) => {
+    const scene = gameRef.current?.scene.getScene("MainScene");
+    if (scene) scene.assignHotbarSlot(index, payload);
+  };
+
   const handleToggleKeyboardLayout = () => {
     const next = keyboardLayout === "azerty" ? "qwerty" : "azerty";
     setKeyboardLayoutState(next);
@@ -349,16 +360,6 @@ export default function Arpg() {
     if (scene) scene.setKeyboardLayout(next);
   };
 
-  // raccourcis clavier globaux - I (inventaire), R (quetes), V (carte) -
-  // basculent (ouvre si ferme, ferme si ouvert), meme principe que le
-  // bouton Carte deja existant, plutot que de toujours ouvrir sans
-  // jamais pouvoir fermer au clavier. e.key (caractere, pas keyCode) :
-  // I/R/V occupent la MEME position physique en AZERTY et QWERTY (seuls
-  // Q/W/A/Z/Z autour d'eux different), pas besoin de la meme gestion de
-  // disposition que le deplacement (cf. MainScene.setKeyboardLayout).
-  // Ne fait rien tant qu'aucune partie n'est en cours (gameRef.current
-  // absent) - evite un effet sur les ecrans de menu (selection de
-  // personnage, liste de parties).
   useEffect(() => {
     function handleGlobalKeyDown(e) {
       if (!gameRef.current) return;
@@ -371,6 +372,9 @@ export default function Arpg() {
         else handleOpenQuests();
       } else if (key === "v") {
         setMinimapVisible((v) => !v);
+      } else if (key >= "1" && key <= "9") {
+        const scene = gameRef.current.scene.getScene("MainScene");
+        if (scene) scene.useHotbarSlot(Number(key) - 1);
       }
     }
     window.addEventListener("keydown", handleGlobalKeyDown);
@@ -379,7 +383,7 @@ export default function Arpg() {
 
   const handleTravelToDepth = (depth) => {
     const scene = gameRef.current?.scene.getScene("MainScene");
-    if (scene) scene.travelToDepth(depth); // la scene emet 'travel-hub': null, pas besoin de setTravelDestinations ici
+    if (scene) scene.travelToDepth(depth);
   };
 
   const handleCloseTravelHub = () => {
@@ -424,18 +428,11 @@ export default function Arpg() {
 
   const handleSelectHero = (id) => {
     setHeroId(id);
-    setResumeSave(null); // partie fraiche, pas de reprise
+    setResumeSave(null);
 
-    // reinitialise TOUT l'etat de progression avant de demarrer - sans
-    // ca, une partie fraichement lancee affichait les valeurs LAISSEES
-    // par une precedente partie de cette meme session de navigateur
-    // (meme si celle-ci avait ete abandonnee/supprimee entre temps) :
-    // le state React ne se remettait jamais a zero tout seul, seul un
-    // vrai cycle sauvegarde/reprise le corrigeait ensuite (en ecrasant
-    // avec les vraies donnees serveur) - d'ou l'illusion d'un "bug
-    // d'affichage qui garde en memoire une autre partie".
     setPlayerHp({ hp: 100, maxHp: 100 });
     setPlayerMana({ mana: 0, maxMana: 0 });
+    setPlayerStamina({ stamina: 0, maxStamina: 0 });
     setXp(0);
     setLevel(1);
     setDepth(1);
@@ -460,6 +457,9 @@ export default function Arpg() {
       necklace: null,
       quiver: null,
     });
+    setHotbarSlots(new Array(9).fill(null));
+    setUnlockedAbilities([]);
+    setFuryProgress({ count: 0, required: 10 });
     setInventoryOpen(false);
     setTravelDestinations(null);
     setShopStock(null);
@@ -493,13 +493,6 @@ export default function Arpg() {
     );
   }
 
-  // force le mode paysage UNIQUEMENT pendant la partie elle-meme (pas
-  // les ecrans de menu ci-dessus, qui restent lisibles en portrait) - le
-  // jeu a besoin de largeur (canvas 800px, controles tactiles aux deux
-  // coins bas) pour rester jouable. Bloque completement le rendu du jeu
-  // plutot qu'un simple overlay par-dessus : un canvas Phaser affiche en
-  // portrait sur un ecran etroit serait deja visuellement casse avant
-  // meme que l'overlay ne s'affiche par-dessus.
   if (isMobile && isPortrait) {
     return (
       <div
@@ -538,8 +531,6 @@ export default function Arpg() {
         meleeDamage: base.meleeDamage + bonus.meleeDamage,
         rangedDamage: base.rangedDamage + bonus.rangedDamage,
         defense: base.defense + bonus.defense,
-        // pas de bonus.mana - computeEquipmentBonuses n'a pas ce champ,
-        // meme choix que dans MainScene.recalculatePlayerStats
         mana: base.mana,
       };
     })(),
@@ -550,7 +541,7 @@ export default function Arpg() {
       className={isMobile ? "arpg arpg-mobile" : "arpg"}
       style={{
         position: "relative",
-        width: isMobile ? "100%" : 800,
+        width: isMobile ? "100%" : 1000,
         height: isMobile ? "100dvh" : undefined,
         display: isMobile ? "flex" : undefined,
         flexDirection: isMobile ? "column" : undefined,
@@ -575,14 +566,27 @@ export default function Arpg() {
         <span>Niv. : {level}</span>
 
         <span>
-          ❤️ {Math.max(0, playerHp.hp)}/{playerHp.maxHp}
+          ❤️ {Math.round(Math.max(0, playerHp.hp))}/{playerHp.maxHp}
         </span>
 
         {playerMana.maxMana > 0 && (
           <span>
-            💧 {Math.max(0, playerMana.mana)}/{playerMana.maxMana}
+            💧 {Math.round(Math.max(0, playerMana.mana))}/{playerMana.maxMana}
           </span>
         )}
+
+        {playerStamina.maxStamina > 0 && (
+          <span>
+            🏃 {Math.round(Math.max(0, playerStamina.stamina))}/
+            {playerStamina.maxStamina}
+          </span>
+        )}
+
+        <span
+          title={`Furie : ${furyProgress.count}/${furyProgress.required} ennemis`}
+        >
+          🔥 {furyProgress.count}/{furyProgress.required}
+        </span>
 
         <span>
           XP : {xpProgress.xpIntoLevel}/{xpProgress.xpForNextLevel}
@@ -640,7 +644,7 @@ export default function Arpg() {
           }}
           title="Quêtes"
         >
-          {isMobile ? "📜" : "📜 Quêtes"}
+          {isMobile ? "📜" : "📜"}
         </button>
 
         <button
@@ -657,9 +661,24 @@ export default function Arpg() {
           }}
           title="Inventaire"
         >
-          {isMobile ? "🎒" : "🎒 Inventaire"}
+          {isMobile ? "🎒" : "🎒"}
         </button>
-
+        <button
+          onClick={handleOpenHotbarScreen}
+          style={{
+            padding: isMobile ? "4px 7px" : "4px 12px",
+            fontSize: isMobile ? 14 : 13,
+            borderRadius: 6,
+            border: "1px solid #555",
+            background: "#2a2a35",
+            color: "#eee",
+            cursor: "pointer",
+            flexShrink: 0,
+          }}
+          title="Raccourcis"
+        >
+          {isMobile ? "⚡" : "⚡"}
+        </button>
         <button
           onClick={handleSaveAndQuit}
           style={{
@@ -681,11 +700,11 @@ export default function Arpg() {
       {lootToast && (
         <div
           style={{
-            position: "absolute",
+            position: "fixed", // <-- etait "absolute" - ancre au VIEWPORT reel, immunise contre tout defilement (page ou conteneur interne)
             top: isMobile ? 60 : 44,
             left: "50%",
             transform: "translateX(-50%)",
-            zIndex: 20,
+            zIndex: 999, // <-- etait 20 - au-dessus de TOUS les ecrans superposes (inventaire=22, dialogue=20, etc.)
             padding: isMobile ? "5px 10px" : "6px 16px",
             fontSize: isMobile ? 11 : 13,
             borderRadius: 6,
@@ -730,7 +749,125 @@ export default function Arpg() {
           }
         />
 
-        {isMobile && <TouchControls gameRef={gameRef} />}
+        {isMobile && (
+          <TouchControls
+            gameRef={gameRef}
+            furyReady={furyProgress.count >= furyProgress.required}
+          />
+        )}
+
+        <div
+          style={{
+            position: "absolute",
+            bottom: isMobile ? 10 : 12,
+            left: "50%",
+            transform: "translateX(-50%)",
+            zIndex: 15,
+            display: "flex",
+            gap: 6,
+            pointerEvents: "auto", // purement informatif - l'activation reste au clavier (1-9), pas de clic
+          }}
+        >
+          {hotbarSlots.map((slot, index) => {
+            const iconId = slot
+              ? slot.type === "item"
+                ? slot.itemId
+                : slot.id
+              : null;
+            const showIcon = iconId && hasIconFrame(iconId);
+            const label = slot
+              ? slot.type === "ability"
+                ? resolveAbilityDef(slot.id).name
+                : resolveItemDef(slot.itemId).name
+              : null;
+            const cooldownKey = slot
+              ? slot.type === "ability"
+                ? `ability:${slot.id}`
+                : `item:${slot.itemId}`
+              : null;
+            const cooldownInfo = cooldownKey
+              ? cooldownEvents[cooldownKey]
+              : null;
+            const quantity =
+              slot?.type === "item"
+                ? (inventory.find((i) => i.itemId === slot.itemId)?.quantity ??
+                  0)
+                : null;
+
+            return (
+              <div
+                key={index}
+                onClick={() => {
+                  const scene = gameRef.current?.scene.getScene("MainScene");
+                  if (scene) scene.useHotbarSlot(index);
+                }}
+                style={{
+                  width: 42,
+                  height: 42,
+                  borderRadius: 6,
+                  border: "1px solid #555",
+                  background: slot
+                    ? "rgba(58,47,32,0.9)"
+                    : "rgba(30,32,41,0.6)",
+                  color: "#f0e6d0",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 9,
+                  textAlign: "center",
+                  padding: 2,
+                  boxSizing: "border-box",
+                  position: "relative",
+                  overflow: "hidden",
+                  cursor: slot ? "pointer" : "default", // <-- indication visuelle sur desktop
+                }}
+                title={label || "Vide"}
+              >
+                <div style={{ fontSize: 10, color: "#8a7050" }}>
+                  {index + 1}
+                </div>
+                {showIcon ? (
+                  <ItemIcon itemId={iconId} scale={1.3} />
+                ) : (
+                  label && (
+                    <div
+                      style={{
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                        width: "100%",
+                      }}
+                    >
+                      {label}
+                    </div>
+                  )
+                )}
+                {quantity !== null && (
+                  <div
+                    style={{
+                      position: "absolute",
+                      bottom: 1,
+                      right: 3,
+                      fontSize: 9,
+                      color: "#f0e6d0",
+                      textShadow: "0 0 2px #000, 0 0 2px #000",
+                    }}
+                  >
+                    x{quantity}
+                  </div>
+                )}
+                {cooldownInfo && (
+                  <HotbarCooldownOverlay
+                    key={cooldownInfo.startedAt}
+                    startedAt={cooldownInfo.startedAt}
+                    cooldownMs={cooldownInfo.cooldownMs}
+                  />
+                )}
+              </div>
+            );
+          })}
+        </div>
 
         {minimapVisible && minimapData && (
           <div className="arpg-minimap">
@@ -740,6 +877,8 @@ export default function Arpg() {
               playerTile={minimapData.playerTile}
               exitTile={minimapData.exitTile}
               upstairsTile={minimapData.upstairsTile}
+              questNpcs={minimapData.questNpcs || []}
+              isMobile={isMobile}
             />
           </div>
         )}
@@ -974,6 +1113,15 @@ export default function Arpg() {
             onUnequip={handleUnequip}
             onUse={handleUseConsumable}
             onClose={handleCloseInventory}
+          />
+        )}
+        {hotbarScreenOpen && (
+          <HotbarScreen
+            hotbarSlots={hotbarSlots}
+            unlockedAbilities={unlockedAbilities}
+            inventory={inventory}
+            onAssign={handleAssignHotbarSlot}
+            onClose={handleCloseHotbarScreen}
           />
         )}
         {questsOpen && (

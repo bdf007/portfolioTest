@@ -188,10 +188,56 @@ function getFixedQuest(depth, npcIndex) {
   return forDepth[npcIndex] || null;
 }
 
+const OBTAIN_ENEMY_LOOT_XP_REWARD = 30; // entre killEnemies (20) et obtainItem/boss (40)
+const OBTAIN_ENEMY_LOOT_GOLD_REWARD_RANGE = [15, 35];
+const OBTAIN_ENEMY_LOOT_QUANTITY_RANGE = [1, 3]; // nombre d'exemplaires a rapporter, tire aleatoirement
+
+/**
+ * Quête "récupérer tel objet sur tel type d'ennemi NORMAL" - variante de
+ * generateObtainItemQuest (qui cible un boss) : chaque type d'ennemi
+ * peut declarer un questLoot (cf. enemyStats.js) qui ne tombe QUE si une
+ * quete active le cible (cf. MainScene.damageEnemy).
+ *
+ * Reutilise le MEME questId ('obtainItem') que la variante boss -
+ * MainScene.js (openQuestDialog/turnInQuest) traite deja ce type
+ * generiquement, aucun changement necessaire la-bas tant que
+ * dialogText.offer est fourni (ce qui est le cas ici).
+ *
+ * @param {string} seed seed DEJA distincte par PNJ
+ * @param {{itemId:string, enemyType:string}[]} lootPool paires eligibles
+ * @returns {object|null} null si lootPool est vide - l'appelant doit
+ *   alors retomber sur un autre type de quete
+ */
+function generateObtainEnemyLootQuest(seed, lootPool) {
+  if (!lootPool || lootPool.length === 0) return null;
+
+  const rng = createRng(String(seed) + "-obtain-enemy-loot");
+  const choice = lootPool[Math.floor(rng() * lootPool.length)];
+  const [minGold, maxGold] = OBTAIN_ENEMY_LOOT_GOLD_REWARD_RANGE;
+  const goldReward = minGold + Math.floor(rng() * (maxGold - minGold + 1));
+  const [minQty, maxQty] = OBTAIN_ENEMY_LOOT_QUANTITY_RANGE;
+  const targetQuantity = minQty + Math.floor(rng() * (maxQty - minQty + 1));
+  const itemDef = ITEM_TYPES[choice.itemId];
+  const itemName = itemDef ? itemDef.name : choice.itemId;
+
+  return {
+    questId: "obtainItem",
+    targetItemId: choice.itemId,
+    targetQuantity,
+    xpReward: OBTAIN_ENEMY_LOOT_XP_REWARD,
+    goldReward,
+    itemReward: null,
+    dialogText: {
+      offer: `Peux-tu me rapporter ${targetQuantity} ${itemName} ? On en trouve parfois sur ${choice.enemyType}.`,
+    },
+  };
+}
+
 module.exports = {
   QUEST_TYPES,
   FIXED_QUESTS,
   generateQuestForNpc,
   generateObtainItemQuest,
   getFixedQuest,
+  generateObtainEnemyLootQuest,
 };

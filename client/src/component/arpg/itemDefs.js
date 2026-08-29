@@ -26,6 +26,7 @@ export const ITEM_DEFS = {
       "+1 dégât au corps à corps et -2 à la distance d'attaque. Arme d'entraînement de départ.",
     statBonus: { meleeDamage: 1, meleeRange: -2 },
     stackable: false,
+    archetypes: ["voleur"],
     price: 2,
   },
   woodenSword: {
@@ -38,7 +39,15 @@ export const ITEM_DEFS = {
     description: "+1 dégât au corps à corps. Arme d'entraînement de départ.",
     statBonus: { meleeDamage: 1 },
     stackable: false,
+    archetypes: ["guerrier"],
     price: 2,
+    inflictsEffect: {
+      type: "bleed",
+      chance: 0.9,
+      damagePerTick: 1,
+      tickIntervalMs: 1000,
+      ticks: 3,
+    },
   },
   woodenBow: {
     id: "woodenBow",
@@ -52,6 +61,7 @@ export const ITEM_DEFS = {
       "+1 dégât à distance. Nécessite des flèches. Arme d'entraînement de départ.",
     statBonus: { rangedDamage: 1 },
     stackable: false,
+    archetypes: ["archer"],
     price: 2,
   },
   woodenCrossbow: {
@@ -65,6 +75,7 @@ export const ITEM_DEFS = {
     description:
       "+1 dégât à distance, Nécessite des carreaux. +1 de distance d'attaque. Arme d'entraînement de départ.",
     statBonus: { rangedDamage: 1, rangedRange: 1 },
+    archetypes: ["archer", "voleur"],
     stackable: false,
     price: 2,
   },
@@ -79,6 +90,7 @@ export const ITEM_DEFS = {
       "+1 dégât au corps à corps. +2 de distance d'attaque. Arme d'entraînement de départ.",
     statBonus: { meleeDamage: 1, meleeRange: 2 },
     stackable: false,
+    archetypes: ["guerrier", "voleur"],
     price: 2,
   },
   woodenAxe: {
@@ -91,6 +103,7 @@ export const ITEM_DEFS = {
     description: "+1 dégât au corps à corps. Arme d'entraînement de départ.",
     statBonus: { meleeDamage: 1 },
     stackable: false,
+    archetypes: ["guerrier"],
     price: 2,
   },
   woodenMallet: {
@@ -103,6 +116,7 @@ export const ITEM_DEFS = {
     description: "+1 dégât au corps à corps. Arme d'entraînement de départ.",
     statBonus: { meleeDamage: 1 },
     stackable: false,
+    archetypes: ["guerrier"],
     price: 2,
   },
   woodenShovel: {
@@ -116,6 +130,7 @@ export const ITEM_DEFS = {
       "+1 dégât au corps à corps. +1 de distance d'attaque. Arme d'entraînement de départ.",
     statBonus: { meleeDamage: 1, meleeRange: 1 },
     stackable: false,
+    archetypes: ["guerrier", "voleur"],
     price: 2,
   },
   woodenPickaxe: {
@@ -128,6 +143,7 @@ export const ITEM_DEFS = {
     description: "+1 dégât au corps à corps. Arme d'entraînement de départ.",
     statBonus: { meleeDamage: 1 },
     stackable: false,
+    archetypes: ["guerrier", "voleur"],
     price: 2,
   },
   woodenHammer: {
@@ -140,6 +156,7 @@ export const ITEM_DEFS = {
     description: "+1 dégât au corps à corps. Arme d'entraînement de départ.",
     statBonus: { meleeDamage: 1 },
     stackable: false,
+    archetypes: ["guerrier", "voleur"],
     price: 2,
   },
   woodenSickle: {
@@ -153,6 +170,45 @@ export const ITEM_DEFS = {
       "+1 dégât au corps à corps. +1 de distance d'attaque  Arme d'entraînement de départ.",
     statBonus: { meleeDamage: 1, meleeRange: 1 },
     stackable: false,
+    archetypes: ["guerrier", "voleur"],
+    price: 2,
+  },
+
+  woodenShield: {
+    id: "woodenShield",
+    category: "equipment",
+    slot: "offHand",
+    twoHanded: false,
+    grantsRanged: false,
+    name: "Bouclier en bois",
+    description: "+1 défense. Équipement d'entraînement de départ.",
+    statBonus: { defense: 1 },
+    archetypes: ["guerrier"],
+    stackable: false,
+    price: 2,
+  },
+
+  woodenStaff: {
+    id: "woodenStaff",
+    category: "equipment",
+    slot: "mainHand",
+    twoHanded: true,
+    grantsRanged: true,
+    requiresAmmo: false,
+    manaCost: 1,
+    name: "Bâton en bois",
+    description:
+      "+1 dégât à distance. Canalise la magie (1 mana par tir), sans munitions. Arme d'entraînement de départ.",
+    statBonus: { rangedDamage: 1 },
+    stackable: false,
+    archetypes: ["mage"],
+    inflictsEffect: {
+      type: "slow",
+      kind: "modifier", // <-- le champ qui manquait, decide TOUT le comportement
+      chance: 1,
+      statModifiers: { moveSpeedPercent: -0.4 }, // -40% de vitesse
+      durationMs: 2500, // duree en ms, PAS ticks/tickIntervalMs/damagePerTick (ca c'est la forme DOT)
+    },
     price: 2,
   },
   ironDagger: {
@@ -165,6 +221,7 @@ export const ITEM_DEFS = {
     description: "+4 dégâts au corps à corps.",
     statBonus: { meleeDamage: 5 },
     stackable: false,
+    archetypes: ["voleur", "guerrier", "archer", "mage"],
     price: 40,
   },
   ironSword: {
@@ -177,6 +234,7 @@ export const ITEM_DEFS = {
     description: "+5 dégâts au corps à corps.",
     statBonus: { meleeDamage: 5 },
     stackable: false,
+    archetypes: ["guerrier"],
     price: 60,
   },
 
@@ -191,6 +249,7 @@ export const ITEM_DEFS = {
     description: "+4 dégâts à distance. +5 de distance d'attaque",
     statBonus: { rangedDamage: 4, rangedRange: 5 },
     stackable: false,
+    archetypes: ["archer"],
     price: 55,
   },
   crossbow: {
@@ -204,6 +263,7 @@ export const ITEM_DEFS = {
     description: "+3 dégâts à distance. Se manie a une main.",
     statBonus: { rangedDamage: 3, rangedRange: 5 },
     stackable: false,
+    archetypes: ["archer", "voleur"],
     price: 50,
   },
   ironSpear: {
@@ -216,6 +276,7 @@ export const ITEM_DEFS = {
     description: "+4 dégât au corps à corps. +3 de distance d'attaque.",
     statBonus: { meleeDamage: 4, meleeRange: 3 },
     stackable: false,
+    archetypes: ["guerrier"],
     price: 55,
   },
   ironAxe: {
@@ -228,6 +289,7 @@ export const ITEM_DEFS = {
     description: "+6 dégât au corps à corps.",
     statBonus: { meleeDamage: 6 },
     stackable: false,
+    archetypes: ["guerrier"],
     price: 65,
   },
   ironMallet: {
@@ -240,6 +302,7 @@ export const ITEM_DEFS = {
     description: "+5 dégât au corps à corps.",
     statBonus: { meleeDamage: 5 },
     stackable: false,
+    archetypes: ["guerrier"],
     price: 60,
   },
   ironShovel: {
@@ -252,6 +315,7 @@ export const ITEM_DEFS = {
     description: "+4 dégât au corps à corps. +1 de distance d'attaque.",
     statBonus: { meleeDamage: 4, meleeRange: +1 },
     stackable: false,
+    archetypes: ["guerrier"],
     price: 55,
   },
   ironPickaxe: {
@@ -264,6 +328,7 @@ export const ITEM_DEFS = {
     description: "+4 dégât au corps à corps.",
     statBonus: { meleeDamage: 4 },
     stackable: false,
+    archetypes: ["guerrier"],
     price: 50,
   },
   ironHammer: {
@@ -276,6 +341,7 @@ export const ITEM_DEFS = {
     description: "+4 dégât au corps à corps.",
     statBonus: { meleeDamage: 4 },
     stackable: false,
+    archetypes: ["guerrier"],
     price: 50,
   },
   ironSickle: {
@@ -288,6 +354,7 @@ export const ITEM_DEFS = {
     description: "+5 dégât au corps à corps. +2 de distance d'attaque.",
     statBonus: { meleeDamage: 5, meleeRange: 2 },
     stackable: false,
+    archetypes: ["guerrier"],
     price: 60,
   },
   bronzeDagger: {
@@ -300,6 +367,7 @@ export const ITEM_DEFS = {
     description: "+10 dégâts au corps à corps.",
     statBonus: { meleeDamage: 10 },
     stackable: false,
+    archetypes: ["voleur", "guerrier", "archer", "mage"],
     price: 100,
   },
   bronzeSword: {
@@ -312,6 +380,7 @@ export const ITEM_DEFS = {
     description: "+12 dégâts au corps à corps. +2 de distance d'attaque.",
     statBonus: { meleeDamage: 12, meleeRange: +2 },
     stackable: false,
+    archetypes: ["guerrier"],
     price: 135,
   },
   warBow: {
@@ -325,6 +394,7 @@ export const ITEM_DEFS = {
     description: "+10 dégâts à distance. +8 de distance d'attaque.",
     statBonus: { rangedDamage: 10, rangedRange: 8 },
     stackable: false,
+    archetypes: ["archer"],
     price: 140,
   },
   warCrossbow: {
@@ -342,6 +412,7 @@ export const ITEM_DEFS = {
     description: "+3 dégâts à distance. Se manie a une main.",
     statBonus: { rangedDamage: 6, rangedRange: 6 },
     stackable: false,
+    archetypes: ["archer", "voleur"],
     price: 110,
   },
   bronzeSpear: {
@@ -354,6 +425,7 @@ export const ITEM_DEFS = {
     description: "+8 dégât au corps à corps. +4 de distance d'attaque.",
     statBonus: { meleeDamage: 8, meleeRange: 4 },
     stackable: false,
+    archetypes: ["guerrier"],
     price: 125,
   },
   bronzeAxe: {
@@ -366,6 +438,7 @@ export const ITEM_DEFS = {
     description: "+12 dégât au corps à corps.",
     statBonus: { meleeDamage: 12 },
     stackable: false,
+    archetypes: ["guerrier"],
     price: 130,
   },
   bronzeMallet: {
@@ -378,6 +451,7 @@ export const ITEM_DEFS = {
     description: "+10 dégât au corps à corps.",
     statBonus: { meleeDamage: 10 },
     stackable: false,
+    archetypes: ["guerrier"],
     price: 125,
   },
   bronzeShovel: {
@@ -390,6 +464,7 @@ export const ITEM_DEFS = {
     description: "+8 dégât au corps à corps. +2 de distance d'attaque.",
     statBonus: { meleeDamage: 8, meleeRange: +2 },
     stackable: false,
+    archetypes: ["guerrier"],
     price: 120,
   },
   bronzePickaxe: {
@@ -402,6 +477,7 @@ export const ITEM_DEFS = {
     description: "+8 dégât au corps à corps.",
     statBonus: { meleeDamage: 8 },
     stackable: false,
+    archetypes: ["guerrier"],
     price: 110,
   },
   bronzeHammer: {
@@ -414,6 +490,7 @@ export const ITEM_DEFS = {
     description: "+8 dégât au corps à corps.",
     statBonus: { meleeDamage: 8 },
     stackable: false,
+    archetypes: ["guerrier"],
     price: 110,
   },
   bronzeSickle: {
@@ -426,6 +503,7 @@ export const ITEM_DEFS = {
     description: "+10 dégât au corps à corps. +3 de distance d'attaque.",
     statBonus: { meleeDamage: 10, meleeRange: 3 },
     stackable: false,
+    archetypes: ["guerrier"],
     price: 135,
   },
   woodenArrow: {
@@ -436,7 +514,15 @@ export const ITEM_DEFS = {
     description: "+1 dégât à distance tant que des flèches sont encochées.",
     statBonus: { rangedDamage: 1 },
     stackable: true,
+    archetypes: ["archer"],
     price: 1,
+    inflictsEffect: {
+      type: "slow",
+      kind: "modifier", // <-- le champ qui manquait, decide TOUT le comportement
+      chance: 1,
+      statModifiers: { moveSpeedPercent: -0.4 }, // -40% de vitesse
+      durationMs: 2500, // duree en ms, PAS ticks/tickIntervalMs/damagePerTick (ca c'est la forme DOT)
+    },
   },
   woodenCrossbowBolt: {
     id: "woodenCrossbowBolt",
@@ -447,6 +533,7 @@ export const ITEM_DEFS = {
       "+1 dégât à distance tant que des carreaux sont disponibles. Munition de l'arbalète uniquement.",
     statBonus: { rangedDamage: 1 },
     stackable: true,
+    archetypes: ["archer", "voleur"],
     price: 1,
   },
   ironArrow: {
@@ -457,6 +544,7 @@ export const ITEM_DEFS = {
     description: "+7 dégât à distance tant que des flèches sont encochées.",
     statBonus: { rangedDamage: 7 },
     stackable: true,
+    archetypes: ["archer"],
     price: 12,
   },
   ironCrossbowBolt: {
@@ -468,6 +556,7 @@ export const ITEM_DEFS = {
       "+5 dégât à distance tant que des carreaux sont encochés. Munition de l'arbalète uniquement.",
     statBonus: { rangedDamage: 5 },
     stackable: true,
+    archetypes: ["archer", "voleur"],
     price: 10,
   },
   bronzeArrow: {
@@ -478,6 +567,7 @@ export const ITEM_DEFS = {
     description: "+15 dégât à distance tant que des flèches sont encochées.",
     statBonus: { rangedDamage: 15 },
     stackable: true,
+    archetypes: ["archer"],
     price: 35,
   },
   bronzeCrossbowBolt: {
@@ -489,6 +579,7 @@ export const ITEM_DEFS = {
       "+12 dégât à distance et +2 de distance d'attaque tant que des carreaux sont encochés. Munition de l'arbalète uniquement.",
     statBonus: { rangedDamage: 12, rangedRange: 2 },
     stackable: true,
+    archetypes: ["archer", "voleur"],
     price: 33,
   },
   acidArrow: {
@@ -499,6 +590,7 @@ export const ITEM_DEFS = {
     description: "+15 dégât à distance tant que des flèches sont encochées.",
     statBonus: { rangedDamage: 15 },
     stackable: true,
+    archetypes: ["archer"],
     price: 45,
   },
   acidCrossbowBolt: {
@@ -510,12 +602,13 @@ export const ITEM_DEFS = {
       "+12 dégât à distance et +2 de distance d'attaque tant que des carreaux sont encochés. Munition de l'arbalète uniquement.",
     statBonus: { rangedDamage: 12, rangedRange: 2 },
     stackable: true,
+    archetypes: ["archer", "voleur"],
     price: 43,
   },
   healthPotion: {
     id: "healthPotion",
     category: "consumable",
-    name: "petite potion de soin",
+    name: "Petite potion de soin",
     description: "Restaure 30 PV à l'usage.",
     effect: { heal: 30 },
     stackable: true,
@@ -526,7 +619,7 @@ export const ITEM_DEFS = {
     category: "consumable",
     name: "Moyenne potion de soin",
     description: "Restaure 60 PV à l'usage.",
-    effect: { heal: 30 },
+    effect: { heal: 60 },
     stackable: true,
     price: 50,
   },
@@ -542,10 +635,11 @@ export const ITEM_DEFS = {
   manaPotion: {
     id: "manaPotion",
     category: "consumable",
-    name: "petite potion de mana",
-    description: "Restaure 30 PM à l'usage.",
-    effect: { mana: 10 },
+    name: "Petite potion de mana",
+    description: "Restaure 20 PM à l'usage.",
+    effect: { mana: 20 },
     stackable: true,
+    archetypes: ["mage"],
     price: 12,
   },
   mediumManaPotion: {
@@ -555,6 +649,7 @@ export const ITEM_DEFS = {
     description: "Restaure 40 PM à l'usage.",
     effect: { mana: 40 },
     stackable: true,
+    archetypes: ["mage"],
     price: 45,
   },
   bigManaPotion: {
@@ -564,6 +659,7 @@ export const ITEM_DEFS = {
     description: "Restaure 80 PM à l'usage.",
     effect: { mana: 80 },
     stackable: true,
+    archetypes: ["mage"],
     price: 150,
   },
 
@@ -597,6 +693,54 @@ export const ITEM_DEFS = {
     stackable: true,
   },
 
+  //scroll
+  fireballScroll: {
+    id: "fireballScroll",
+    category: "abilityScroll",
+    name: "Parchemin : Boule de feu",
+    description: "Apprend la compétence Boule de feu (consomme du mana).",
+    grantsAbility: "fireball",
+    stackable: true,
+    price: 80,
+  },
+  whirlwindScroll: {
+    id: "whirlwindScroll",
+    category: "abilityScroll",
+    name: "Parchemin : Tourbillon",
+    description: "Apprend la compétence Tourbillon (consomme de la stamina).",
+    grantsAbility: "whirlwind",
+    stackable: true,
+    price: 90,
+  },
+  hasteScroll: {
+    id: "hasteScroll",
+    category: "abilityScroll",
+    name: "Parchemin : Hâte",
+    description: "Apprend la compétence Hâte (consomme de la stamina).",
+    grantsAbility: "haste",
+    stackable: true,
+    price: 85,
+  },
+  slowScroll: {
+    id: "slowScroll",
+    category: "abilityScroll",
+    name: "Parchemin : Lenteur",
+    description: "Apprend la compétence Lenteur (consomme du mana).",
+    grantsAbility: "slow",
+    stackable: true,
+    price: 75,
+  },
+  flameWeaponScroll: {
+    id: "flameWeaponScroll",
+    category: "abilityScroll",
+    name: "Parchemin : Lame enflammée",
+    description:
+      "Apprend la compétence Lame enflammée (consomme de la stamina).",
+    grantsAbility: "flameWeapon",
+    stackable: true,
+    price: 95,
+  },
+
   // exemple d'objet de quete - existe dans le monde, mais aucune quete
   // de type "en rapporter N" ne sait encore l'exploiter (cf. commentaire
   // en tete de fichier)
@@ -621,34 +765,6 @@ export const ITEM_DEFS = {
     description: "Une pomme fraîche et juteuse.",
     stackable: false,
   },
-
-  woodenShield: {
-    id: "woodenShield",
-    category: "equipment",
-    slot: "offHand",
-    twoHanded: false,
-    grantsRanged: false,
-    name: "Bouclier en bois",
-    description: "+1 défense. Équipement d'entraînement de départ.",
-    statBonus: { defense: 1 },
-    stackable: false,
-  },
-
-  woodenStaff: {
-    id: "woodenStaff",
-    category: "equipment",
-    slot: "mainHand",
-    twoHanded: true,
-    grantsRanged: true,
-    requiresAmmo: false,
-    manaCost: 1,
-    name: "Bâton en bois",
-    description:
-      "+1 dégât à distance. Canalise la magie (1 mana par tir), sans munitions. Arme d'entraînement de départ.",
-    statBonus: { rangedDamage: 1 },
-    stackable: false,
-  },
-
   sealedPackage: {
     id: "sealedPackage",
     category: "questItem",

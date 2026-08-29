@@ -5,11 +5,13 @@ const STICK_RADIUS = 24; // rayon du bouton mobile, en px
 
 /**
  * Overlay de contrôles tactiles - joystick virtuel (bas-gauche) pour le
- * déplacement, deux boutons (bas-droite) pour les attaques mêlée/
- * distance. Communique avec MainScene via les méthodes publiques
- * setTouchMoveVector/requestTouchMelee/requestTouchRanged (cf.
- * MainScene.js) - jamais d'appel direct aux fonctions d'attaque, pour
- * ne jamais contourner les gardes de pause/mort du jeu.
+ * déplacement, boutons (bas-droite) pour les attaques mêlée/distance,
+ * l'action (E clavier) et la furie (X clavier). Communique avec
+ * MainScene via les méthodes publiques setTouchMoveVector/
+ * requestTouchMelee/requestTouchRanged/requestTouchAction/
+ * requestTouchFury (cf. MainScene.js) - jamais d'appel direct aux
+ * fonctions d'attaque, pour ne jamais contourner les gardes de pause/
+ * mort du jeu.
  *
  * Affiché uniquement quand isMobile est vrai (cf. arpg.jsx, détection
  * par capacité tactile) - un appareil avec clavier n'en a pas besoin,
@@ -21,8 +23,14 @@ const STICK_RADIUS = 24; // rayon du bouton mobile, en px
  * etc.) - une scène résolue une seule fois au rendu pourrait rester
  * `undefined` si le jeu Phaser n'est pas encore initialisé a ce moment
  * précis, sans garantie de re-rendu ulterieur pour la rattraper.
+ *
+ * Positions (bottom/right) resserrees pour un vrai ecran de telephone
+ * en paysage - la hauteur reellement disponible pour le jeu (barre
+ * d'adresse + HUD deja retires) est bien plus courte qu'un ecran
+ * desktop ; des decalages trop genereux poussaient les boutons vers le
+ * centre de l'ecran au lieu de coller au bord bas.
  */
-export default function TouchControls({ gameRef }) {
+export default function TouchControls({ gameRef, furyReady }) {
   const joystickBaseRef = useRef(null);
   const joystickActiveTouchId = useRef(null);
   const stickElRef = useRef(null);
@@ -132,7 +140,7 @@ export default function TouchControls({ gameRef }) {
         />
       </div>
 
-      {/* boutons d'attaque - bas-droite */}
+      {/* melee - bas-droite */}
       <button
         onPointerDown={(e) => {
           e.preventDefault();
@@ -140,10 +148,10 @@ export default function TouchControls({ gameRef }) {
         }}
         style={{
           position: "absolute",
-          right: 100,
-          bottom: 40,
-          width: 64,
-          height: 64,
+          right: 110,
+          bottom: 50,
+          width: 56,
+          height: 56,
           borderRadius: "50%",
           background: "rgba(200,60,60,0.5)",
           border: "2px solid rgba(255,255,255,0.3)",
@@ -154,6 +162,8 @@ export default function TouchControls({ gameRef }) {
       >
         ⚔️
       </button>
+
+      {/* distance */}
       <button
         onPointerDown={(e) => {
           e.preventDefault();
@@ -161,10 +171,10 @@ export default function TouchControls({ gameRef }) {
         }}
         style={{
           position: "absolute",
-          right: 24,
-          bottom: 90,
-          width: 64,
-          height: 64,
+          right: 60,
+          bottom: 100,
+          width: 56,
+          height: 56,
           borderRadius: "50%",
           background: "rgba(60,120,200,0.5)",
           border: "2px solid rgba(255,255,255,0.3)",
@@ -175,6 +185,7 @@ export default function TouchControls({ gameRef }) {
       >
         🏹
       </button>
+
       {/* action (E clavier) - interagir avec coffres/PNJ/hub/boutique/porte
           du boss, jamais de degats (cf. MainScene.performInteraction) -
           necessaire depuis que E/Espace sont deux touches distinctes :
@@ -187,7 +198,7 @@ export default function TouchControls({ gameRef }) {
         }}
         style={{
           position: "absolute",
-          right: 62,
+          right: 110,
           bottom: 150,
           width: 56,
           height: 56,
@@ -200,6 +211,35 @@ export default function TouchControls({ gameRef }) {
         }}
       >
         ✋
+      </button>
+
+      {/* furie (X clavier) - grise/inactif tant que furyReady est faux
+          (cf. MainScene.furyKillCount / FURY_KILLS_REQUIRED, suivi via
+          l'evenement 'fury-progress' cote React, cf. arpg.jsx) */}
+      <button
+        onPointerDown={(e) => {
+          e.preventDefault();
+          if (!furyReady) return;
+          getScene()?.requestTouchFury();
+        }}
+        style={{
+          position: "absolute",
+          right: 170,
+          bottom: 100,
+          width: 56,
+          height: 56,
+          borderRadius: "50%",
+          background: furyReady
+            ? "rgba(255,60,20,0.6)"
+            : "rgba(100,100,100,0.3)",
+          border: "2px solid rgba(255,255,255,0.3)",
+          fontSize: 22,
+          opacity: furyReady ? 1 : 0.4,
+          touchAction: "none",
+          pointerEvents: "auto",
+        }}
+      >
+        🔥
       </button>
     </div>
   );

@@ -89,7 +89,7 @@ export default function CharacterSelectScreen({ onSelect, isMobile }) {
           gap: isMobile ? 12 : 20,
 
           width: "100%",
-          maxWidth: isMobile ? 360 : 800,
+          maxWidth: isMobile ? 360 : 1000,
 
           boxSizing: "border-box",
         }}

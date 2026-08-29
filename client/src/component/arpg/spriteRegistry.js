@@ -89,6 +89,8 @@ import floorTreeSprite from "../../assets/floor_tree.png";
 import chestsSpritesheet from "../../assets/Chests.png";
 import iconSheet1 from "../../assets/icon_sheet1.png";
 import iconSheet2 from "../../assets/icon_sheet2.png";
+import iconskill1Spritesheet from "../../assets/icon_skill_1.png";
+import items1Spritesheet from "../../assets/items1.png";
 // import animation effects
 import meleeSlashSpritesheet from "../../assets/melee_slash_effect.png";
 // import town PNJ spritesheets here when available
@@ -2137,13 +2139,22 @@ export const SPRITE_REGISTRY = {
  */
 const HERO_STATS_PROFILES = {
   guerrier: {
-    base: { maxHp: 130, meleeDamage: 10, rangedDamage: 2, defense: 3, mana: 0 },
+    archetype: "guerrier",
+    base: {
+      maxHp: 130,
+      meleeDamage: 10,
+      rangedDamage: 2,
+      defense: 3,
+      mana: 0,
+      stamina: 20,
+    },
     growth: {
       maxHp: 24,
       meleeDamage: 2.5,
       rangedDamage: 0.5,
       defense: 1.4,
       mana: 0,
+      stamina: 1,
     },
     moveSpeed: 130,
     visionRadius: 5,
@@ -2153,15 +2164,25 @@ const HERO_STATS_PROFILES = {
     // d'une partie NEUVE (jamais a une reprise, cf. MainScene.giveStartingKit)
     startingEquipment: ["woodenSword", "woodenShield"],
     startingAmmo: null,
+    startingAbilities: ["whirlwind", "haste", "flameWeapon"],
   },
   archer: {
-    base: { maxHp: 90, meleeDamage: 4, rangedDamage: 10, defense: 1, mana: 0 },
+    archetype: "archer",
+    base: {
+      maxHp: 90,
+      meleeDamage: 4,
+      rangedDamage: 10,
+      defense: 1,
+      mana: 0,
+      stamina: 15,
+    },
     growth: {
       maxHp: 16,
       meleeDamage: 1,
       rangedDamage: 2.6,
       defense: 0.8,
       mana: 0,
+      stamina: 1,
     },
     moveSpeed: 160,
     visionRadius: 8,
@@ -2169,15 +2190,25 @@ const HERO_STATS_PROFILES = {
     rangedRange: 440,
     startingEquipment: ["woodenBow"],
     startingAmmo: { itemId: "woodenArrow", quantity: 20 },
+    startingAbilities: ["piercingArrow"],
   },
   voleur: {
-    base: { maxHp: 85, meleeDamage: 11, rangedDamage: 3, defense: 0, mana: 0 },
+    archetype: "voleur",
+    base: {
+      maxHp: 85,
+      meleeDamage: 11,
+      rangedDamage: 3,
+      defense: 0,
+      mana: 0,
+      stamina: 18,
+    },
     growth: {
       maxHp: 15,
       meleeDamage: 2.8,
       rangedDamage: 0.7,
       defense: 0.6,
       mana: 0,
+      stamina: 1,
     },
     moveSpeed: 175,
     visionRadius: 7,
@@ -2185,15 +2216,25 @@ const HERO_STATS_PROFILES = {
     rangedRange: 340,
     startingEquipment: ["woodenDagger", "woodenCrossbow"],
     startingAmmo: { itemId: "woodenCrossbowBolt", quantity: 30 },
+    startingAbilities: ["haste", "slow"],
   },
   mage: {
-    base: { maxHp: 70, meleeDamage: 2, rangedDamage: 12, defense: 0, mana: 20 },
+    archetype: "mage",
+    base: {
+      maxHp: 70,
+      meleeDamage: 2,
+      rangedDamage: 12,
+      defense: 0,
+      mana: 20,
+      stamina: 20,
+    },
     growth: {
       maxHp: 12,
       meleeDamage: 0.5,
       rangedDamage: 3,
       defense: 0.4,
       mana: 1,
+      stamina: 1,
     },
     moveSpeed: 140,
     visionRadius: 6,
@@ -2201,15 +2242,25 @@ const HERO_STATS_PROFILES = {
     rangedRange: 420,
     startingEquipment: ["woodenStaff"],
     startingAmmo: null,
+    startingAbilities: [],
   },
   guerriere: {
-    base: { maxHp: 130, meleeDamage: 10, rangedDamage: 2, defense: 3, mana: 0 },
+    archetype: "guerrier",
+    base: {
+      maxHp: 130,
+      meleeDamage: 10,
+      rangedDamage: 2,
+      defense: 3,
+      mana: 0,
+      stamina: 20,
+    },
     growth: {
       maxHp: 24,
       meleeDamage: 2.5,
       rangedDamage: 0.5,
       defense: 1.4,
       mana: 0,
+      stamina: 1,
     },
     moveSpeed: 130,
     visionRadius: 5,
@@ -2217,15 +2268,25 @@ const HERO_STATS_PROFILES = {
     rangedRange: 300,
     startingEquipment: ["woodenSword", "woodenShield"],
     startingAmmo: null,
+    startingAbilities: [],
   },
   archere: {
-    base: { maxHp: 90, meleeDamage: 4, rangedDamage: 10, defense: 1, mana: 0 },
+    archetype: "archer",
+    base: {
+      maxHp: 90,
+      meleeDamage: 4,
+      rangedDamage: 10,
+      defense: 1,
+      mana: 0,
+      stamina: 15,
+    },
     growth: {
       maxHp: 16,
       meleeDamage: 1,
       rangedDamage: 2.6,
       defense: 0.8,
       mana: 0,
+      stamina: 1,
     },
     moveSpeed: 160,
     visionRadius: 8,
@@ -2233,15 +2294,25 @@ const HERO_STATS_PROFILES = {
     rangedRange: 440,
     startingEquipment: ["woodenBow"],
     startingAmmo: { itemId: "woodenArrow", quantity: 20 },
+    startingAbilities: ["piercingArrow"],
   },
   voleuse: {
-    base: { maxHp: 85, meleeDamage: 11, rangedDamage: 3, defense: 0, mana: 0 },
+    archetype: "voleur",
+    base: {
+      maxHp: 85,
+      meleeDamage: 11,
+      rangedDamage: 3,
+      defense: 0,
+      mana: 0,
+      stamina: 18,
+    },
     growth: {
       maxHp: 15,
       meleeDamage: 2.8,
       rangedDamage: 0.7,
       defense: 0.6,
       mana: 0,
+      stamina: 1,
     },
     moveSpeed: 175,
     visionRadius: 7,
@@ -2249,15 +2320,25 @@ const HERO_STATS_PROFILES = {
     rangedRange: 340,
     startingEquipment: ["woodenDagger", "woodenCrossbow"],
     startingAmmo: { itemId: "woodenCrossbowBolt", quantity: 30 },
+    startingAbilities: [],
   },
   magicienne: {
-    base: { maxHp: 70, meleeDamage: 2, rangedDamage: 12, defense: 0, mana: 20 },
+    archetype: "mage",
+    base: {
+      maxHp: 70,
+      meleeDamage: 2,
+      rangedDamage: 12,
+      defense: 0,
+      mana: 20,
+      stamina: 0,
+    },
     growth: {
       maxHp: 12,
       meleeDamage: 0.5,
       rangedDamage: 3,
       defense: 0.4,
       mana: 1,
+      stamina: 0,
     },
     moveSpeed: 140,
     visionRadius: 6,
@@ -2265,6 +2346,7 @@ const HERO_STATS_PROFILES = {
     rangedRange: 420,
     startingEquipment: ["woodenStaff"],
     startingAmmo: null,
+    startingAbilities: ["fireball"],
   },
 };
 
@@ -2425,6 +2507,24 @@ export const ICON_SPRITESHEET_2 = {
   rows: 14,
 };
 
+export const ICON_SKILL_SPRITESHEET = {
+  key: "iconskill1",
+  path: iconskill1Spritesheet,
+  frameWidth: 32,
+  frameHeight: 32,
+  columns: 8,
+  rows: 10,
+};
+
+export const ITEMS_1_SPRITESHEET = {
+  key: "items1",
+  path: items1Spritesheet,
+  frameWidth: 32,
+  frameHeight: 32,
+  columns: 20,
+  rows: 18,
+};
+
 // icon sheet 1 : 10 colonnes x 22 lignes, frames indexees ligne par ligne
 
 export const ICON_SHEET_1_FRAMES = {
@@ -2558,18 +2658,18 @@ export const ICON_SHEET_1_FRAMES = {
   skull: 127,
   otherObject55: 128,
   otherObject56: 129,
-  otherObject57: 130,
+  fireWall: 130,
   otherObject58: 131,
   otherObject59: 132,
   otherObject60: 133,
-  otherObject61: 134,
+  fireball: 134,
   otherObject62: 135,
   otherObject63: 136,
   otherObject64: 137,
   otherObject65: 138,
   otherObject66: 139,
   otherObject67: 140,
-  otherObject68: 141,
+  flameWeapon: 141,
   otherObject69: 142,
   otherObject70: 143,
   otherObject71: 144,
@@ -2581,7 +2681,7 @@ export const ICON_SHEET_1_FRAMES = {
   greenSkullBlazon: 150,
   redDwarfBlazon: 151,
   blueSkullBlazon: 152,
-  otherObject80: 153,
+  haste: 153,
   otherObject81: 154,
   otherObject82: 155,
   otherObject83: 156,
@@ -2652,6 +2752,11 @@ export const ICON_SHEET_1_FRAMES = {
 
 export const ICON_SHEET_2_FRAMES = {
   greenApple: 61,
+};
+
+export const ICON_SKILL_1_FRAMES = {
+  fireballBook: 0,
+  electricShockBook: 10,
 };
 
 /**

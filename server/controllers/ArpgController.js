@@ -22,11 +22,15 @@ const {
   findUpstairsTile,
   findNearbyFloorTile,
 } = require("../services/generation/spawnUtils");
-const { getEnemyStatsForDepth } = require("../services/generation/enemyStats");
+const {
+  getEnemyStatsForDepth,
+  ENEMY_TYPES,
+} = require("../services/generation/enemyStats");
 const {
   generateQuestForNpc,
   generateObtainItemQuest,
   generateDefeatBossQuest,
+  generateObtainEnemyLootQuest,
   getFixedQuest,
 } = require("../services/generation/questTypes");
 const {
@@ -171,6 +175,7 @@ async function getLevel(req, res) {
         speed: bossConfig.stats.speed,
         xpReward: bossConfig.stats.xpReward,
         attackType: bossConfig.stats.attackType || "melee", // pas encore defini dans BOSS_ASSIGNMENTS (cf. bossConfig.js) - repli explicite, prêt si un futur boss veut attaquer a distance
+        inflictsEffect: bossConfig.stats.inflictsEffect || null,
         drop: rollLoot("bossDrop", bossLootRng),
       };
     } else {
@@ -258,6 +263,20 @@ async function getLevel(req, res) {
       const bossDepthsThisDecade = getBossDepthsInCurrentDecade(depth);
       const bossItemPool = getQuestItemIds();
 
+      // bassin des paires {itemId, enemyType} pour la quete "recuperer
+      // sur un ennemi normal" - uniquement les types du bassin de cette
+      // ville (enemyTypePool ci-dessus) qui declarent un questLoot. Peut
+      // etre vide (aucun type eligible pres de cette ville) - la branche
+      // correspondante retombe alors sur killEnemies, cf. plus bas.
+      const enemyLootPool = enemyTypePool
+        .filter(
+          (typeKey) => ENEMY_TYPES[typeKey] && ENEMY_TYPES[typeKey].questLoot,
+        )
+        .map((typeKey) => ({
+          itemId: ENEMY_TYPES[typeKey].questLoot,
+          enemyType: typeKey,
+        }));
+
       questNpcs = npcPositions.map((pos, npcIndex) => {
         // une quete ecrite a la main pour CE PNJ precis prend le pas sur
         // le tirage aleatoire, si elle existe (cf. FIXED_QUESTS dans
@@ -270,16 +289,16 @@ async function getLevel(req, res) {
           quest = fixedQuest;
         } else {
           const npcSeed = `${seed}-npc-${npcIndex}`;
-          // tirage a 3 branches en UN SEUL jet (jamais deux verifications
+          // tirage a 4 branches en UN SEUL jet (jamais deux verifications
           // independantes empilees, qui fausseraient les probabilites
-          // reelles) : 25% obtainItem, 25% defeatBoss, 50% killEnemies
+          // reelles) : 20% obtainItem(boss), 20% defeatBoss, 20%
+          // obtainEnemyLoot (ennemi normal), 40% killEnemies
           const questTypeRng = createRng(`${npcSeed}-quest-type-choice`);
           const roll = questTypeRng();
 
-          if (roll < 0.5) {
-            // obtainItem (roll < 0.25) OU defeatBoss (0.25 <= roll < 0.5) -
-            // partagent le meme choix de boss cible (cf.
-            // getBossDepthsInCurrentDecade plus haut)
+          if (roll < 0.4) {
+            // obtainItem(boss) (roll < 0.2) OU defeatBoss (0.2 <= roll < 0.4) -
+            // partagent le meme choix de boss cible
             const bossPickRng = createRng(`${npcSeed}-boss-pick`);
             const relevantBossDepth =
               bossDepthsThisDecade[
@@ -288,24 +307,76 @@ async function getLevel(req, res) {
             const relevantBossType =
               getBossConfigForDepth(relevantBossDepth).type;
             quest =
-              roll < 0.25
-                ? generateObtainItemQuest(
-                    npcSeed,
-                    bossItemPool,
+              roll < 0.2
+                ? generateObtainItemQuest(npcSeed, bossItemPool, [
                     relevantBossDepth,
-                    relevantBossType,
-                  )
+                  ])
                 : generateDefeatBossQuest(
                     npcSeed,
                     relevantBossDepth,
                     relevantBossType,
                   );
+          } else if (roll < 0.6 && enemyLootPool.length > 0) {
+            quest = generateObtainEnemyLootQuest(npcSeed, enemyLootPool);
           } else {
             quest = generateQuestForNpc(npcSeed, enemyTypePool);
           }
         }
         return { x: pos.x, y: pos.y, npcIndex, ...quest };
       });
+    } else {
+      // etage normal : PAS de PNJ garanti (contrairement aux villes) -
+      // simple CHANCE seedee qu'un PNJ isole apparaisse, proposant une
+      // quete liee AUX MONSTRES DE CET ETAGE PRECIS (biome.enemyTypes
+      // actuel, pas le bassin precedent/suivant utilise en ville - ca
+      // n'aurait pas de sens ici, le PNJ vit litteralement au milieu de
+      // ces monstres). Jamais de hub/boutique/PNJ ambiants ici, reserves
+      // aux villes uniquement.
+      const dungeonNpcChanceRng = createRng(`${seed}-dungeon-npc-chance`);
+      if (dungeonNpcChanceRng() < 0.7) {
+        const npcSpawns = generateEnemySpawns({
+          grid,
+          seed: seed + "-dungeon-npc-position",
+          playerSpawn,
+          enemyCount: 1,
+          minDistanceFromPlayer: 2,
+          maxDistanceFromPlayer: 4,
+          minDistanceBetweenEnemies: 4,
+          allowedTiles, // meme contrainte que les ennemis normaux - jamais dans la salle de boss scellee
+        });
+        const npcPos = npcSpawns[0];
+        const collidesWithUpstairs =
+          upstairsTile &&
+          npcPos &&
+          npcPos.x === upstairsTile.x &&
+          npcPos.y === upstairsTile.y;
+
+        if (npcPos && !collidesWithUpstairs) {
+          const currentFloorEnemyTypes = biome.enemyTypes || ["enemyDefault"];
+          const enemyLootPoolThisFloor = currentFloorEnemyTypes
+            .filter(
+              (typeKey) =>
+                ENEMY_TYPES[typeKey] && ENEMY_TYPES[typeKey].questLoot,
+            )
+            .map((typeKey) => ({
+              itemId: ENEMY_TYPES[typeKey].questLoot,
+              enemyType: typeKey,
+            }));
+
+          const npcSeed = `${seed}-dungeon-npc`;
+          const questTypeRng = createRng(`${npcSeed}-quest-type-choice`);
+          // 50/50 entre "recuperer sur un ennemi de cet etage" (si au
+          // moins un type present en declare un) et "tuer N ennemis de
+          // cet etage"
+          const useEnemyLoot =
+            enemyLootPoolThisFloor.length > 0 && questTypeRng() < 0.5;
+          const quest = useEnemyLoot
+            ? generateObtainEnemyLootQuest(npcSeed, enemyLootPoolThisFloor)
+            : generateQuestForNpc(npcSeed, currentFloorEnemyTypes);
+
+          questNpcs = [{ x: npcPos.x, y: npcPos.y, npcIndex: 0, ...quest }];
+        }
+      }
     }
 
     // hub de voyage rapide - uniquement dans les villes. Ne transporte
@@ -448,6 +519,8 @@ async function getLevel(req, res) {
         // (rollLoot singulier, cf. plus haut) - la garantie d'objet de
         // quete y est plus delicate a toucher sans risque, hors du
         // perimetre de cette demande.
+        questLoot: stats.questLoot || null,
+        inflictsEffect: stats.inflictsEffect || null,
         drops: rollMultipleLoot("enemyDrop", enemyLootRng, 2),
       };
     });

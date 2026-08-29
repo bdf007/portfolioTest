@@ -58,7 +58,7 @@ function groupInventory(inventory) {
   return [...groups.values()];
 }
 
-function ItemIcon({ itemId, scale = 2 }) {
+export function ItemIcon({ itemId, scale = 2 }) {
   let frameIndex;
   let spriteSheet;
 
@@ -107,6 +107,19 @@ function ItemIcon({ itemId, scale = 2 }) {
   );
 }
 
+/**
+ * Verifie si un id (objet OU competence, generique) a une icone
+ * enregistree dans l'un des deux spritesheets d'icones - sans afficher
+ * quoi que ce soit, juste un test. Sert a decider "icone ou texte" AVANT
+ * de rendre, contrairement a ItemIcon qui rend directement (et retourne
+ * null silencieusement si rien trouve).
+ */
+export function hasIconFrame(id) {
+  return (
+    ICON_SHEET_1_FRAMES[id] !== undefined ||
+    ICON_SHEET_2_FRAMES[id] !== undefined
+  );
+}
 /**
  * Écran d'inventaire - overlay superposé au jeu (comme les dialogues),
  * ouvert/fermé par un bouton dans le HUD (cf. arpg.jsx). Toutes les
@@ -425,7 +438,8 @@ export default function InventoryScreen({
                     Équiper
                   </button>
                 )}
-                {def.category === "consumable" && (
+                {(def.category === "consumable" ||
+                  def.category === "abilityScroll") && (
                   <button
                     onClick={() => onUse(group.firstIndex)}
                     style={{
