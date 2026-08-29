@@ -1120,6 +1120,7 @@ export default function Arpg() {
             hotbarSlots={hotbarSlots}
             unlockedAbilities={unlockedAbilities}
             inventory={inventory}
+            playerLevel={level}
             onAssign={handleAssignHotbarSlot}
             onClose={handleCloseHotbarScreen}
           />

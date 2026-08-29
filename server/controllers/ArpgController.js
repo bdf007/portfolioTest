@@ -176,7 +176,7 @@ async function getLevel(req, res) {
         xpReward: bossConfig.stats.xpReward,
         attackType: bossConfig.stats.attackType || "melee", // pas encore defini dans BOSS_ASSIGNMENTS (cf. bossConfig.js) - repli explicite, prêt si un futur boss veut attaquer a distance
         inflictsEffect: bossConfig.stats.inflictsEffect || null,
-        drop: rollLoot("bossDrop", bossLootRng),
+        drop: rollLoot("bossDrop", bossLootRng, depth),
       };
     } else {
       exitTile = findExitTile(grid, playerSpawn);
@@ -319,7 +319,7 @@ async function getLevel(req, res) {
           } else if (roll < 0.6 && enemyLootPool.length > 0) {
             quest = generateObtainEnemyLootQuest(npcSeed, enemyLootPool);
           } else {
-            quest = generateQuestForNpc(npcSeed, enemyTypePool);
+            quest = generateQuestForNpc(npcSeed, enemyTypePool, depth);
           }
         }
         return { x: pos.x, y: pos.y, npcIndex, ...quest };
@@ -372,7 +372,7 @@ async function getLevel(req, res) {
             enemyLootPoolThisFloor.length > 0 && questTypeRng() < 0.5;
           const quest = useEnemyLoot
             ? generateObtainEnemyLootQuest(npcSeed, enemyLootPoolThisFloor)
-            : generateQuestForNpc(npcSeed, currentFloorEnemyTypes);
+            : generateQuestForNpc(npcSeed, currentFloorEnemyTypes, depth);
 
           questNpcs = [{ x: npcPos.x, y: npcPos.y, npcIndex: 0, ...quest }];
         }
@@ -521,7 +521,7 @@ async function getLevel(req, res) {
         // perimetre de cette demande.
         questLoot: stats.questLoot || null,
         inflictsEffect: stats.inflictsEffect || null,
-        drops: rollMultipleLoot("enemyDrop", enemyLootRng, 2),
+        drops: rollMultipleLoot("enemyDrop", enemyLootRng, 2, depth),
       };
     });
 

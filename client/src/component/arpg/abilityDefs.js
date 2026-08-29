@@ -34,7 +34,7 @@ export const ABILITY_DEFS = {
     radius: 70, // rayon de l'explosion au point d'impact
     projectileSpeed: 260,
     maxDistance: 400, // disparait sans exploser s'il ne touche rien avant cette distance
-    unlockLevel: 1,
+    unlockLevel: 2,
     inflictsEffect: {
       type: "burn",
       kind: "dot",
@@ -69,7 +69,7 @@ export const ABILITY_DEFS = {
     effectType: "selfBuff",
     statModifiers: { moveSpeedPercent: 0.6 },
     durationMs: 4000,
-    unlockLevel: null, // a debloquer via parchemin/loot pour l'instant
+    unlockLevel: 3, // a debloquer via parchemin/loot pour l'instant
   },
   slow: {
     id: "slow",
@@ -82,7 +82,7 @@ export const ABILITY_DEFS = {
     radius: 55,
     statModifiers: { moveSpeedPercent: -0.5 },
     durationMs: 3000,
-    unlockLevel: null,
+    unlockLevel: 2,
   },
   piercingArrow: {
     id: "piercingArrow",
@@ -117,6 +117,29 @@ export const ABILITY_DEFS = {
       tickIntervalMs: 1000,
       ticks: 3,
     },
+    unlockLevel: 5,
+  },
+  fireWall: {
+    id: "fireWall",
+    name: "Mur de flammes",
+    archetypes: ["mage"],
+    description:
+      "Crée un mur de flammes qui inflige des dégâts sur la durée aux ennemis qui le traversent (20 dégâts). 20 mana.",
+    manaCost: 20,
+    cooldownMs: 8000,
+    effectType: "aoe",
+    damage: 20,
+    radius: 80,
+    durationMs: 5000,
+    inflictsEffect: {
+      type: "burn",
+      kind: "dot",
+      chance: 0.8, // haute expres - c'est un coup DELIBEREMENT enchante, pas le taux passif habituel d'une arme
+      damagePerTick: 3,
+      tickIntervalMs: 1000,
+      ticks: 3,
+    },
+    unlockLevel: 1,
   },
 };
 

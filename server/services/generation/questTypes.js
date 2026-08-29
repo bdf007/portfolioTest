@@ -144,7 +144,7 @@ const FIXED_QUESTS = {};
  *   plus loin n'aurait aucun sens pour le joueur.
  * @returns {{questId:string, target:number, xpReward:number, targetEnemyType:string, itemReward:{itemId:string,quantity:number}|null}}
  */
-function generateQuestForNpc(seed, enemyTypePool) {
+function generateQuestForNpc(seed, enemyTypePool, depth) {
   const rng = createRng(String(seed) + "-quest");
   const typeKeys = Object.keys(QUEST_TYPES);
   const typeKey = typeKeys[Math.floor(rng() * typeKeys.length)];
@@ -159,11 +159,10 @@ function generateQuestForNpc(seed, enemyTypePool) {
       : ["enemyDefault"];
   const targetEnemyType = pool[Math.floor(rng() * pool.length)];
 
-  // seed distincte pour la recompense en objet, pour ne jamais coupler
-  // ce tirage a celui de l'objectif/du type cible
   const itemReward = rollLoot(
     "questReward",
     createRng(String(seed) + "-quest-reward"),
+    depth, // <-- nouveau
   );
 
   return {
