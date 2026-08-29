@@ -48,8 +48,8 @@ const ITEM_TYPES = {
     name: "Épée en bois",
     description: "+1 dégât au corps à corps. Arme d'entraînement de départ.",
     statBonus: { meleeDamage: 1 },
-    archetypes: ["guerrier"],
     stackable: false,
+    archetypes: ["guerrier"],
     price: 2,
     inflictsEffect: {
       type: "bleed",
@@ -71,7 +71,7 @@ const ITEM_TYPES = {
       "+1 dégât à distance. Nécessite des flèches. Arme d'entraînement de départ.",
     statBonus: { rangedDamage: 1 },
     stackable: false,
-    archetypes: ["archer", "guerrier"],
+    archetypes: ["archer"],
     price: 2,
   },
   woodenCrossbow: {
@@ -85,8 +85,8 @@ const ITEM_TYPES = {
     description:
       "+1 dégât à distance, Nécessite des carreaux. +1 de distance d'attaque. Arme d'entraînement de départ.",
     statBonus: { rangedDamage: 1, rangedRange: 1 },
-    stackable: false,
     archetypes: ["archer", "voleur"],
+    stackable: false,
     price: 2,
   },
   woodenSpear: {
@@ -100,7 +100,7 @@ const ITEM_TYPES = {
       "+1 dégât au corps à corps. +2 de distance d'attaque. Arme d'entraînement de départ.",
     statBonus: { meleeDamage: 1, meleeRange: 2 },
     stackable: false,
-    archetypes: ["voleur", "guerrier"],
+    archetypes: ["guerrier", "voleur"],
     price: 2,
   },
   woodenAxe: {
@@ -139,8 +139,8 @@ const ITEM_TYPES = {
     description:
       "+1 dégât au corps à corps. +1 de distance d'attaque. Arme d'entraînement de départ.",
     statBonus: { meleeDamage: 1, meleeRange: 1 },
-    archetypes: ["voleur", "guerrier"],
     stackable: false,
+    archetypes: ["guerrier", "voleur"],
     price: 2,
   },
   woodenPickaxe: {
@@ -152,8 +152,8 @@ const ITEM_TYPES = {
     name: "Pioche en bois",
     description: "+1 dégât au corps à corps. Arme d'entraînement de départ.",
     statBonus: { meleeDamage: 1 },
-    archetypes: ["voleur", "guerrier"],
     stackable: false,
+    archetypes: ["guerrier", "voleur"],
     price: 2,
   },
   woodenHammer: {
@@ -165,8 +165,8 @@ const ITEM_TYPES = {
     name: "Marteau de guerre en bois",
     description: "+1 dégât au corps à corps. Arme d'entraînement de départ.",
     statBonus: { meleeDamage: 1 },
-    archetypes: ["guerrier"],
     stackable: false,
+    archetypes: ["guerrier", "voleur"],
     price: 2,
   },
   woodenSickle: {
@@ -210,8 +210,8 @@ const ITEM_TYPES = {
     description:
       "+1 dégât à distance. Canalise la magie (1 mana par tir), sans munitions. Arme d'entraînement de départ.",
     statBonus: { rangedDamage: 1 },
-    archetypes: ["mages"],
     stackable: false,
+    archetypes: ["mage"],
     inflictsEffect: {
       type: "slow",
       kind: "modifier", // <-- le champ qui manquait, decide TOUT le comportement
@@ -232,6 +232,7 @@ const ITEM_TYPES = {
     statBonus: { meleeDamage: 5 },
     stackable: false,
     archetypes: ["voleur", "guerrier", "archer", "mage"],
+    unlockLevel: 2,
     price: 40,
   },
   ironSword: {
@@ -245,6 +246,7 @@ const ITEM_TYPES = {
     statBonus: { meleeDamage: 5 },
     stackable: false,
     archetypes: ["guerrier"],
+    unlockLevel: 2,
     price: 60,
   },
 
@@ -260,6 +262,7 @@ const ITEM_TYPES = {
     statBonus: { rangedDamage: 4, rangedRange: 5 },
     stackable: false,
     archetypes: ["archer"],
+    unlockLevel: 2,
     price: 55,
   },
   crossbow: {
@@ -274,6 +277,7 @@ const ITEM_TYPES = {
     statBonus: { rangedDamage: 3, rangedRange: 5 },
     stackable: false,
     archetypes: ["archer", "voleur"],
+    unlockLevel: 2,
     price: 50,
   },
   ironSpear: {
@@ -287,6 +291,7 @@ const ITEM_TYPES = {
     statBonus: { meleeDamage: 4, meleeRange: 3 },
     stackable: false,
     archetypes: ["guerrier"],
+    unlockLevel: 2,
     price: 55,
   },
   ironAxe: {
@@ -300,6 +305,7 @@ const ITEM_TYPES = {
     statBonus: { meleeDamage: 6 },
     stackable: false,
     archetypes: ["guerrier"],
+    unlockLevel: 2,
     price: 65,
   },
   ironMallet: {
@@ -313,6 +319,7 @@ const ITEM_TYPES = {
     statBonus: { meleeDamage: 5 },
     stackable: false,
     archetypes: ["guerrier"],
+    unlockLevel: 2,
     price: 60,
   },
   ironShovel: {
@@ -326,6 +333,7 @@ const ITEM_TYPES = {
     statBonus: { meleeDamage: 4, meleeRange: +1 },
     stackable: false,
     archetypes: ["guerrier"],
+    unlockLevel: 2,
     price: 55,
   },
   ironPickaxe: {
@@ -339,6 +347,7 @@ const ITEM_TYPES = {
     statBonus: { meleeDamage: 4 },
     stackable: false,
     archetypes: ["guerrier"],
+    unlockLevel: 2,
     price: 50,
   },
   ironHammer: {
@@ -352,6 +361,7 @@ const ITEM_TYPES = {
     statBonus: { meleeDamage: 4 },
     stackable: false,
     archetypes: ["guerrier"],
+    unlockLevel: 2,
     price: 50,
   },
   ironSickle: {
@@ -365,6 +375,7 @@ const ITEM_TYPES = {
     statBonus: { meleeDamage: 5, meleeRange: 2 },
     stackable: false,
     archetypes: ["guerrier"],
+    unlockLevel: 2,
     price: 60,
   },
   bronzeDagger: {
@@ -376,8 +387,9 @@ const ITEM_TYPES = {
     name: "Dague en bronze",
     description: "+10 dégâts au corps à corps.",
     statBonus: { meleeDamage: 10 },
-    archetypes: ["voleur", "guerrier", "archer", "mage"],
     stackable: false,
+    archetypes: ["voleur", "guerrier", "archer", "mage"],
+    unlockLevel: 5,
     price: 100,
   },
   bronzeSword: {
@@ -389,8 +401,9 @@ const ITEM_TYPES = {
     name: "Épée de bronze",
     description: "+12 dégâts au corps à corps. +2 de distance d'attaque.",
     statBonus: { meleeDamage: 12, meleeRange: +2 },
-    archetypes: ["guerrier"],
     stackable: false,
+    archetypes: ["guerrier"],
+    unlockLevel: 5,
     price: 135,
   },
   warBow: {
@@ -403,8 +416,9 @@ const ITEM_TYPES = {
     name: "Arc de guerre",
     description: "+10 dégâts à distance. +8 de distance d'attaque.",
     statBonus: { rangedDamage: 10, rangedRange: 8 },
-    archetypes: ["archer"],
     stackable: false,
+    archetypes: ["archer"],
+    unlockLevel: 5,
     price: 140,
   },
   warCrossbow: {
@@ -421,8 +435,9 @@ const ITEM_TYPES = {
     name: "Arbalète",
     description: "+3 dégâts à distance. Se manie a une main.",
     statBonus: { rangedDamage: 6, rangedRange: 6 },
-    archetypes: ["archer", "voleur"],
     stackable: false,
+    archetypes: ["archer", "voleur"],
+    unlockLevel: 5,
     price: 110,
   },
   bronzeSpear: {
@@ -434,8 +449,9 @@ const ITEM_TYPES = {
     name: "Lance en bronze",
     description: "+8 dégât au corps à corps. +4 de distance d'attaque.",
     statBonus: { meleeDamage: 8, meleeRange: 4 },
-    archetypes: ["guerrier"],
     stackable: false,
+    archetypes: ["guerrier"],
+    unlockLevel: 5,
     price: 125,
   },
   bronzeAxe: {
@@ -447,8 +463,9 @@ const ITEM_TYPES = {
     name: "Hache de guerre en bronze",
     description: "+12 dégât au corps à corps.",
     statBonus: { meleeDamage: 12 },
-    archetypes: ["guerrier"],
     stackable: false,
+    archetypes: ["guerrier"],
+    unlockLevel: 5,
     price: 130,
   },
   bronzeMallet: {
@@ -460,8 +477,9 @@ const ITEM_TYPES = {
     name: "Masse en bronze",
     description: "+10 dégât au corps à corps.",
     statBonus: { meleeDamage: 10 },
-    archetypes: ["guerrier"],
     stackable: false,
+    archetypes: ["guerrier"],
+    unlockLevel: 5,
     price: 125,
   },
   bronzeShovel: {
@@ -473,8 +491,9 @@ const ITEM_TYPES = {
     name: "Pelle en bronze",
     description: "+8 dégât au corps à corps. +2 de distance d'attaque.",
     statBonus: { meleeDamage: 8, meleeRange: +2 },
-    archetypes: ["guerrier"],
     stackable: false,
+    archetypes: ["guerrier"],
+    unlockLevel: 5,
     price: 120,
   },
   bronzePickaxe: {
@@ -486,8 +505,9 @@ const ITEM_TYPES = {
     name: "Pioche en bronze",
     description: "+8 dégât au corps à corps.",
     statBonus: { meleeDamage: 8 },
-    archetypes: ["guerrier"],
     stackable: false,
+    archetypes: ["guerrier"],
+    unlockLevel: 5,
     price: 110,
   },
   bronzeHammer: {
@@ -499,8 +519,9 @@ const ITEM_TYPES = {
     name: "Marteau de guerre en bronze",
     description: "+8 dégât au corps à corps.",
     statBonus: { meleeDamage: 8 },
-    archetypes: ["guerrier"],
     stackable: false,
+    archetypes: ["guerrier"],
+    unlockLevel: 5,
     price: 110,
   },
   bronzeSickle: {
@@ -512,8 +533,9 @@ const ITEM_TYPES = {
     name: "Faucille en bronze",
     description: "+10 dégât au corps à corps. +3 de distance d'attaque.",
     statBonus: { meleeDamage: 10, meleeRange: 3 },
-    archetypes: ["guerrier"],
     stackable: false,
+    archetypes: ["guerrier"],
+    unlockLevel: 5,
     price: 135,
   },
   woodenArrow: {
@@ -523,8 +545,9 @@ const ITEM_TYPES = {
     name: "Flèche en bois",
     description: "+1 dégât à distance tant que des flèches sont encochées.",
     statBonus: { rangedDamage: 1 },
-    archetypes: ["archer"],
     stackable: true,
+    archetypes: ["archer"],
+    unlockLevel: 1,
     price: 1,
     inflictsEffect: {
       type: "slow",
@@ -542,8 +565,9 @@ const ITEM_TYPES = {
     description:
       "+1 dégât à distance tant que des carreaux sont disponibles. Munition de l'arbalète uniquement.",
     statBonus: { rangedDamage: 1 },
-    archetypes: ["archer", "voleur"],
     stackable: true,
+    archetypes: ["archer", "voleur"],
+    unlockLevel: 1,
     price: 1,
   },
   ironArrow: {
@@ -553,8 +577,9 @@ const ITEM_TYPES = {
     name: "Flèche en fer",
     description: "+7 dégât à distance tant que des flèches sont encochées.",
     statBonus: { rangedDamage: 7 },
-    archetypes: ["archer"],
     stackable: true,
+    archetypes: ["archer"],
+    unlockLevel: 3,
     price: 12,
   },
   ironCrossbowBolt: {
@@ -565,8 +590,9 @@ const ITEM_TYPES = {
     description:
       "+5 dégât à distance tant que des carreaux sont encochés. Munition de l'arbalète uniquement.",
     statBonus: { rangedDamage: 5 },
-    archetypes: ["archer", "voleur"],
     stackable: true,
+    archetypes: ["archer", "voleur"],
+    unlockLevel: 3,
     price: 10,
   },
   bronzeArrow: {
@@ -576,8 +602,9 @@ const ITEM_TYPES = {
     name: "Flèche en bronze",
     description: "+15 dégât à distance tant que des flèches sont encochées.",
     statBonus: { rangedDamage: 15 },
-    archetypes: ["archer"],
     stackable: true,
+    archetypes: ["archer"],
+    unlockLevel: 5,
     price: 35,
   },
   bronzeCrossbowBolt: {
@@ -588,8 +615,9 @@ const ITEM_TYPES = {
     description:
       "+12 dégât à distance et +2 de distance d'attaque tant que des carreaux sont encochés. Munition de l'arbalète uniquement.",
     statBonus: { rangedDamage: 12, rangedRange: 2 },
-    archetypes: ["archer", "voleur"],
     stackable: true,
+    archetypes: ["archer", "voleur"],
+    unlockLevel: 5,
     price: 33,
   },
   acidArrow: {
@@ -600,6 +628,8 @@ const ITEM_TYPES = {
     description: "+15 dégât à distance tant que des flèches sont encochées.",
     statBonus: { rangedDamage: 15 },
     stackable: true,
+    archetypes: ["archer"],
+    unlockLevel: 5,
     price: 45,
   },
   acidCrossbowBolt: {
@@ -612,6 +642,7 @@ const ITEM_TYPES = {
     statBonus: { rangedDamage: 12, rangedRange: 2 },
     stackable: true,
     archetypes: ["archer", "voleur"],
+    unlockLevel: 5,
     price: 43,
   },
   healthPotion: {
@@ -621,6 +652,7 @@ const ITEM_TYPES = {
     description: "Restaure 30 PV à l'usage.",
     effect: { heal: 30 },
     stackable: true,
+    unlockLevel: 1,
     price: 15, // vendable en boutique - cf. shopGenerator.js. Absent = jamais en vente (or, objets de quete)
   },
   mediumHealthPotion: {
@@ -630,6 +662,7 @@ const ITEM_TYPES = {
     description: "Restaure 60 PV à l'usage.",
     effect: { heal: 60 },
     stackable: true,
+    unlockLevel: 3,
     price: 50,
   },
   bigHealthPotion: {
@@ -639,6 +672,7 @@ const ITEM_TYPES = {
     description: "Restaure 120 PV à l'usage.",
     effect: { heal: 120 },
     stackable: true,
+    unlockLevel: 5,
     price: 200,
   },
   manaPotion: {
@@ -649,6 +683,7 @@ const ITEM_TYPES = {
     effect: { mana: 20 },
     stackable: true,
     archetypes: ["mage"],
+    unlockLevel: 1,
     price: 12,
   },
   mediumManaPotion: {
@@ -659,6 +694,7 @@ const ITEM_TYPES = {
     effect: { mana: 40 },
     stackable: true,
     archetypes: ["mage"],
+    unlockLevel: 3,
     price: 45,
   },
   bigManaPotion: {
@@ -669,6 +705,7 @@ const ITEM_TYPES = {
     effect: { mana: 80 },
     stackable: true,
     archetypes: ["mage"],
+    unlockLevel: 5,
     price: 150,
   },
 
@@ -680,6 +717,7 @@ const ITEM_TYPES = {
     description: "+3 défense.",
     statBonus: { defense: 3 },
     stackable: false,
+    unlockLevel: 1,
     price: 45,
   },
 
@@ -691,6 +729,7 @@ const ITEM_TYPES = {
     description: "+20 PV maximum.",
     statBonus: { maxHp: 20 },
     stackable: false,
+    unlockLevel: 1,
     price: 70,
   },
 
@@ -702,7 +741,7 @@ const ITEM_TYPES = {
     stackable: true,
   },
 
-  // scroll
+  //scroll
   fireballScroll: {
     id: "fireballScroll",
     category: "abilityScroll",
@@ -710,6 +749,7 @@ const ITEM_TYPES = {
     description: "Apprend la compétence Boule de feu (consomme du mana).",
     grantsAbility: "fireball",
     stackable: true,
+    unlockLevel: 1,
     price: 80,
   },
   whirlwindScroll: {
@@ -719,6 +759,7 @@ const ITEM_TYPES = {
     description: "Apprend la compétence Tourbillon (consomme de la stamina).",
     grantsAbility: "whirlwind",
     stackable: true,
+    unlockLevel: 1,
     price: 90,
   },
   hasteScroll: {
@@ -728,6 +769,7 @@ const ITEM_TYPES = {
     description: "Apprend la compétence Hâte (consomme de la stamina).",
     grantsAbility: "haste",
     stackable: true,
+    unlockLevel: 1,
     price: 85,
   },
   slowScroll: {
@@ -737,6 +779,7 @@ const ITEM_TYPES = {
     description: "Apprend la compétence Lenteur (consomme du mana).",
     grantsAbility: "slow",
     stackable: true,
+    unlockLevel: 1,
     price: 75,
   },
   flameWeaponScroll: {
@@ -747,7 +790,19 @@ const ITEM_TYPES = {
       "Apprend la compétence Lame enflammée (consomme de la stamina).",
     grantsAbility: "flameWeapon",
     stackable: true,
+    unlockLevel: 5,
     price: 95,
+  },
+  flameWallScroll: {
+    id: "flameWallScroll",
+    category: "abilityScroll",
+    name: "Parchemin : Mur de flammes",
+    description:
+      "Apprend la compétence Mur de flammes (consomme de la stamina).",
+    grantsAbility: "flameWall",
+    stackable: true,
+    unlockLevel: 5,
+    price: 100,
   },
 
   // exemple d'objet de quete - existe dans le monde, mais aucune quete
@@ -824,7 +879,18 @@ const LOOT_TABLES = {
     { itemId: "whirlwindScroll", weight: 30 },
     { itemId: "hasteScroll", weight: 30 },
     { itemId: "slowScroll", weight: 30 },
-    { itemId: "flameWeaponScroll", weight: 30 },
+    { itemId: "flameWeaponScroll", weight: 30, minDepth: 6 },
+    { itemId: "ironDagger", weight: 10, minDepth: 6 },
+    { itemId: "ironSword", weight: 4, minDepth: 6 },
+    { itemId: "huntingBow", weight: 4, minDepth: 6 },
+    { itemId: "ironSpear", weight: 4, minDepth: 6 },
+    { itemId: "ironAxe", weight: 4, minDepth: 6 },
+    { itemId: "ironMallet", weight: 4, minDepth: 6 },
+    { itemId: "ironShovel", weight: 4, minDepth: 6 },
+    { itemId: "ironPickaxe", weight: 4, minDepth: 6 },
+    { itemId: "ironHammer", weight: 4, minDepth: 6 },
+    { itemId: "ironSickle", weight: 4, minDepth: 6 },
+    { itemId: "leatherArmor", weight: 2, minDepth: 6 },
   ],
 
   bossDrop: [
@@ -852,17 +918,17 @@ const LOOT_TABLES = {
     { itemId: "gold", weight: 20, quantityRange: [10, 30] },
     { itemId: "healthPotion", weight: 10 },
     { itemId: "manaPotion", weight: 10 },
-    { itemId: "ironDagger", weight: 10 },
-    { itemId: "ironSword", weight: 4 },
-    { itemId: "huntingBow", weight: 4 },
-    { itemId: "ironSpear", weight: 4 },
-    { itemId: "ironAxe", weight: 4 },
-    { itemId: "ironMallet", weight: 4 },
-    { itemId: "ironShovel", weight: 4 },
-    { itemId: "ironPickaxe", weight: 4 },
-    { itemId: "ironHammer", weight: 4 },
-    { itemId: "ironSickle", weight: 4 },
-    { itemId: "leatherArmor", weight: 2 },
+    { itemId: "ironDagger", weight: 10, minDepth: 6 },
+    { itemId: "ironSword", weight: 4, minDepth: 6 },
+    { itemId: "huntingBow", weight: 4, minDepth: 6 },
+    { itemId: "ironSpear", weight: 4, minDepth: 6 },
+    { itemId: "ironAxe", weight: 4, minDepth: 6 },
+    { itemId: "ironMallet", weight: 4, minDepth: 6 },
+    { itemId: "ironShovel", weight: 4, minDepth: 6 },
+    { itemId: "ironPickaxe", weight: 4, minDepth: 6 },
+    { itemId: "ironHammer", weight: 4, minDepth: 6 },
+    { itemId: "ironSickle", weight: 4, minDepth: 6 },
+    { itemId: "leatherArmor", weight: 2, minDepth: 6 },
   ],
 };
 
@@ -876,14 +942,28 @@ const LOOT_TABLES = {
  * @param {Function} rng générateur seedé (cf. rng.js)
  * @returns {{itemId: string, quantity: number} | null}
  */
-function rollLoot(tableName, rng) {
+function rollLoot(tableName, rng, depth = Infinity) {
   const table = LOOT_TABLES[tableName];
   if (!table) return null;
 
-  const totalWeight = table.reduce((sum, entry) => sum + entry.weight, 0);
+  // filtre les entrees pas encore accessibles a cette profondeur AVANT
+  // le tirage pondere - sinon une entree trop profonde "gaspillerait"
+  // une part du tirage en tombant sur rien, faussant les probabilites
+  // relatives des objets REELLEMENT disponibles a cet etage. minDepth
+  // absent = disponible des le debut (comportement inchange pour toute
+  // entree qui ne definit pas ce champ).
+  const eligibleTable = table.filter(
+    (entry) => !entry.minDepth || depth >= entry.minDepth,
+  );
+  if (eligibleTable.length === 0) return null;
+
+  const totalWeight = eligibleTable.reduce(
+    (sum, entry) => sum + entry.weight,
+    0,
+  );
   let roll = rng() * totalWeight;
 
-  for (const entry of table) {
+  for (const entry of eligibleTable) {
     if (roll < entry.weight) {
       if (!entry.itemId) return null;
       const quantity = entry.quantityRange
@@ -897,7 +977,7 @@ function rollLoot(tableName, rng) {
     roll -= entry.weight;
   }
 
-  return null; // filet de securite (ne devrait jamais arriver si les poids sont corrects)
+  return null;
 }
 
 /**
@@ -925,14 +1005,14 @@ function rollLoot(tableName, rng) {
  * @returns {{itemId:string, quantity:number}[]} peut etre vide (tous les
  *   tirages ont donne "rien" ou un doublon), jamais null
  */
-function rollMultipleLoot(tableName, rng, rolls) {
+function rollMultipleLoot(tableName, rng, rolls, depth = Infinity) {
   const results = [];
   const usedItemIds = new Set();
   for (let i = 0; i < rolls; i++) {
-    let result = rollLoot(tableName, rng);
+    let result = rollLoot(tableName, rng, depth);
     if (result && usedItemIds.has(result.itemId)) {
-      result = rollLoot(tableName, rng); // une seule nouvelle tentative
-      if (result && usedItemIds.has(result.itemId)) result = null; // encore en double -> abandonne ce tirage
+      result = rollLoot(tableName, rng, depth);
+      if (result && usedItemIds.has(result.itemId)) result = null;
     }
     if (result) {
       usedItemIds.add(result.itemId);

@@ -566,6 +566,10 @@ export default class MainScene extends Phaser.Scene {
         return;
       }
     }
+    if (def.unlockLevel && this.playerLevel < def.unlockLevel) {
+      this.showLootToast(`Nécessite le niveau ${def.unlockLevel}`);
+      return;
+    }
     if (def.category === "ammo") {
       this.equipped[def.slot] = item.itemId;
       const oldMaxHp = this.playerMaxHp;
@@ -672,6 +676,13 @@ export default class MainScene extends Phaser.Scene {
         this.showLootToast("Ce parchemin ne convient pas à ton archétype");
         return;
       }
+      // niveau requis pour L'OBJET parchemin lui-meme - distinct d'unlockLevel
+      // sur ABILITY_DEFS (qui gere le deblocage GRATUIT automatique par
+      // niveau, un mecanisme totalement different)
+      if (def.unlockLevel && this.playerLevel < def.unlockLevel) {
+        this.showLootToast(`Nécessite le niveau ${def.unlockLevel}`);
+        return;
+      }
       if (abilityDef.staminaCost && this.playerMaxStamina <= 0) {
         this.showLootToast(
           "Tu n'as pas de stamina à dépenser pour cette compétence",
@@ -702,6 +713,10 @@ export default class MainScene extends Phaser.Scene {
     }
 
     if (def.category !== "consumable" || !def.effect) return;
+    if (def.unlockLevel && this.playerLevel < def.unlockLevel) {
+      this.showLootToast(`Nécessite le niveau ${def.unlockLevel}`);
+      return;
+    }
 
     const now = this.time.now;
     const cooldownKey = `item:${item.itemId}`;
@@ -3034,6 +3049,10 @@ export default class MainScene extends Phaser.Scene {
     }
 
     const def = resolveItemDef(itemId);
+    if (def.unlockLevel && this.playerLevel < def.unlockLevel) {
+      this.showLootToast(`Nécessite le niveau ${def.unlockLevel}`);
+      return;
+    }
     const abilityDef = resolveAbilityDef(def.grantsAbility);
     const heroArchetype = resolveHeroStatsOverride(
       this.heroSpriteKey,

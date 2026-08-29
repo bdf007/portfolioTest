@@ -222,6 +222,7 @@ export const ITEM_DEFS = {
     statBonus: { meleeDamage: 5 },
     stackable: false,
     archetypes: ["voleur", "guerrier", "archer", "mage"],
+    unlockLevel: 2,
     price: 40,
   },
   ironSword: {
@@ -235,6 +236,7 @@ export const ITEM_DEFS = {
     statBonus: { meleeDamage: 5 },
     stackable: false,
     archetypes: ["guerrier"],
+    unlockLevel: 2,
     price: 60,
   },
 
@@ -250,6 +252,7 @@ export const ITEM_DEFS = {
     statBonus: { rangedDamage: 4, rangedRange: 5 },
     stackable: false,
     archetypes: ["archer"],
+    unlockLevel: 2,
     price: 55,
   },
   crossbow: {
@@ -264,6 +267,7 @@ export const ITEM_DEFS = {
     statBonus: { rangedDamage: 3, rangedRange: 5 },
     stackable: false,
     archetypes: ["archer", "voleur"],
+    unlockLevel: 2,
     price: 50,
   },
   ironSpear: {
@@ -277,6 +281,7 @@ export const ITEM_DEFS = {
     statBonus: { meleeDamage: 4, meleeRange: 3 },
     stackable: false,
     archetypes: ["guerrier"],
+    unlockLevel: 2,
     price: 55,
   },
   ironAxe: {
@@ -290,6 +295,7 @@ export const ITEM_DEFS = {
     statBonus: { meleeDamage: 6 },
     stackable: false,
     archetypes: ["guerrier"],
+    unlockLevel: 2,
     price: 65,
   },
   ironMallet: {
@@ -303,6 +309,7 @@ export const ITEM_DEFS = {
     statBonus: { meleeDamage: 5 },
     stackable: false,
     archetypes: ["guerrier"],
+    unlockLevel: 2,
     price: 60,
   },
   ironShovel: {
@@ -316,6 +323,7 @@ export const ITEM_DEFS = {
     statBonus: { meleeDamage: 4, meleeRange: +1 },
     stackable: false,
     archetypes: ["guerrier"],
+    unlockLevel: 2,
     price: 55,
   },
   ironPickaxe: {
@@ -329,6 +337,7 @@ export const ITEM_DEFS = {
     statBonus: { meleeDamage: 4 },
     stackable: false,
     archetypes: ["guerrier"],
+    unlockLevel: 2,
     price: 50,
   },
   ironHammer: {
@@ -342,6 +351,7 @@ export const ITEM_DEFS = {
     statBonus: { meleeDamage: 4 },
     stackable: false,
     archetypes: ["guerrier"],
+    unlockLevel: 2,
     price: 50,
   },
   ironSickle: {
@@ -355,6 +365,7 @@ export const ITEM_DEFS = {
     statBonus: { meleeDamage: 5, meleeRange: 2 },
     stackable: false,
     archetypes: ["guerrier"],
+    unlockLevel: 2,
     price: 60,
   },
   bronzeDagger: {
@@ -368,6 +379,7 @@ export const ITEM_DEFS = {
     statBonus: { meleeDamage: 10 },
     stackable: false,
     archetypes: ["voleur", "guerrier", "archer", "mage"],
+    unlockLevel: 5,
     price: 100,
   },
   bronzeSword: {
@@ -381,6 +393,7 @@ export const ITEM_DEFS = {
     statBonus: { meleeDamage: 12, meleeRange: +2 },
     stackable: false,
     archetypes: ["guerrier"],
+    unlockLevel: 5,
     price: 135,
   },
   warBow: {
@@ -395,6 +408,7 @@ export const ITEM_DEFS = {
     statBonus: { rangedDamage: 10, rangedRange: 8 },
     stackable: false,
     archetypes: ["archer"],
+    unlockLevel: 5,
     price: 140,
   },
   warCrossbow: {
@@ -413,6 +427,7 @@ export const ITEM_DEFS = {
     statBonus: { rangedDamage: 6, rangedRange: 6 },
     stackable: false,
     archetypes: ["archer", "voleur"],
+    unlockLevel: 5,
     price: 110,
   },
   bronzeSpear: {
@@ -426,6 +441,7 @@ export const ITEM_DEFS = {
     statBonus: { meleeDamage: 8, meleeRange: 4 },
     stackable: false,
     archetypes: ["guerrier"],
+    unlockLevel: 5,
     price: 125,
   },
   bronzeAxe: {
@@ -439,6 +455,7 @@ export const ITEM_DEFS = {
     statBonus: { meleeDamage: 12 },
     stackable: false,
     archetypes: ["guerrier"],
+    unlockLevel: 5,
     price: 130,
   },
   bronzeMallet: {
@@ -452,6 +469,7 @@ export const ITEM_DEFS = {
     statBonus: { meleeDamage: 10 },
     stackable: false,
     archetypes: ["guerrier"],
+    unlockLevel: 5,
     price: 125,
   },
   bronzeShovel: {
@@ -465,6 +483,7 @@ export const ITEM_DEFS = {
     statBonus: { meleeDamage: 8, meleeRange: +2 },
     stackable: false,
     archetypes: ["guerrier"],
+    unlockLevel: 5,
     price: 120,
   },
   bronzePickaxe: {
@@ -478,6 +497,7 @@ export const ITEM_DEFS = {
     statBonus: { meleeDamage: 8 },
     stackable: false,
     archetypes: ["guerrier"],
+    unlockLevel: 5,
     price: 110,
   },
   bronzeHammer: {
@@ -491,6 +511,7 @@ export const ITEM_DEFS = {
     statBonus: { meleeDamage: 8 },
     stackable: false,
     archetypes: ["guerrier"],
+    unlockLevel: 5,
     price: 110,
   },
   bronzeSickle: {
@@ -504,6 +525,7 @@ export const ITEM_DEFS = {
     statBonus: { meleeDamage: 10, meleeRange: 3 },
     stackable: false,
     archetypes: ["guerrier"],
+    unlockLevel: 5,
     price: 135,
   },
   woodenArrow: {
@@ -515,6 +537,7 @@ export const ITEM_DEFS = {
     statBonus: { rangedDamage: 1 },
     stackable: true,
     archetypes: ["archer"],
+    unlockLevel: 1,
     price: 1,
     inflictsEffect: {
       type: "slow",
@@ -534,6 +557,7 @@ export const ITEM_DEFS = {
     statBonus: { rangedDamage: 1 },
     stackable: true,
     archetypes: ["archer", "voleur"],
+    unlockLevel: 1,
     price: 1,
   },
   ironArrow: {
@@ -545,6 +569,7 @@ export const ITEM_DEFS = {
     statBonus: { rangedDamage: 7 },
     stackable: true,
     archetypes: ["archer"],
+    unlockLevel: 3,
     price: 12,
   },
   ironCrossbowBolt: {
@@ -557,6 +582,7 @@ export const ITEM_DEFS = {
     statBonus: { rangedDamage: 5 },
     stackable: true,
     archetypes: ["archer", "voleur"],
+    unlockLevel: 3,
     price: 10,
   },
   bronzeArrow: {
@@ -568,6 +594,7 @@ export const ITEM_DEFS = {
     statBonus: { rangedDamage: 15 },
     stackable: true,
     archetypes: ["archer"],
+    unlockLevel: 5,
     price: 35,
   },
   bronzeCrossbowBolt: {
@@ -580,6 +607,7 @@ export const ITEM_DEFS = {
     statBonus: { rangedDamage: 12, rangedRange: 2 },
     stackable: true,
     archetypes: ["archer", "voleur"],
+    unlockLevel: 5,
     price: 33,
   },
   acidArrow: {
@@ -591,6 +619,7 @@ export const ITEM_DEFS = {
     statBonus: { rangedDamage: 15 },
     stackable: true,
     archetypes: ["archer"],
+    unlockLevel: 5,
     price: 45,
   },
   acidCrossbowBolt: {
@@ -603,6 +632,7 @@ export const ITEM_DEFS = {
     statBonus: { rangedDamage: 12, rangedRange: 2 },
     stackable: true,
     archetypes: ["archer", "voleur"],
+    unlockLevel: 5,
     price: 43,
   },
   healthPotion: {
@@ -612,6 +642,7 @@ export const ITEM_DEFS = {
     description: "Restaure 30 PV à l'usage.",
     effect: { heal: 30 },
     stackable: true,
+    unlockLevel: 1,
     price: 15, // vendable en boutique - cf. shopGenerator.js. Absent = jamais en vente (or, objets de quete)
   },
   mediumHealthPotion: {
@@ -621,6 +652,7 @@ export const ITEM_DEFS = {
     description: "Restaure 60 PV à l'usage.",
     effect: { heal: 60 },
     stackable: true,
+    unlockLevel: 3,
     price: 50,
   },
   bigHealthPotion: {
@@ -630,6 +662,7 @@ export const ITEM_DEFS = {
     description: "Restaure 120 PV à l'usage.",
     effect: { heal: 120 },
     stackable: true,
+    unlockLevel: 5,
     price: 200,
   },
   manaPotion: {
@@ -640,6 +673,7 @@ export const ITEM_DEFS = {
     effect: { mana: 20 },
     stackable: true,
     archetypes: ["mage"],
+    unlockLevel: 1,
     price: 12,
   },
   mediumManaPotion: {
@@ -650,6 +684,7 @@ export const ITEM_DEFS = {
     effect: { mana: 40 },
     stackable: true,
     archetypes: ["mage"],
+    unlockLevel: 3,
     price: 45,
   },
   bigManaPotion: {
@@ -660,6 +695,7 @@ export const ITEM_DEFS = {
     effect: { mana: 80 },
     stackable: true,
     archetypes: ["mage"],
+    unlockLevel: 5,
     price: 150,
   },
 
@@ -671,6 +707,7 @@ export const ITEM_DEFS = {
     description: "+3 défense.",
     statBonus: { defense: 3 },
     stackable: false,
+    unlockLevel: 1,
     price: 45,
   },
 
@@ -682,6 +719,7 @@ export const ITEM_DEFS = {
     description: "+20 PV maximum.",
     statBonus: { maxHp: 20 },
     stackable: false,
+    unlockLevel: 1,
     price: 70,
   },
 
@@ -701,6 +739,7 @@ export const ITEM_DEFS = {
     description: "Apprend la compétence Boule de feu (consomme du mana).",
     grantsAbility: "fireball",
     stackable: true,
+    unlockLevel: 1,
     price: 80,
   },
   whirlwindScroll: {
@@ -710,6 +749,7 @@ export const ITEM_DEFS = {
     description: "Apprend la compétence Tourbillon (consomme de la stamina).",
     grantsAbility: "whirlwind",
     stackable: true,
+    unlockLevel: 1,
     price: 90,
   },
   hasteScroll: {
@@ -719,6 +759,7 @@ export const ITEM_DEFS = {
     description: "Apprend la compétence Hâte (consomme de la stamina).",
     grantsAbility: "haste",
     stackable: true,
+    unlockLevel: 1,
     price: 85,
   },
   slowScroll: {
@@ -728,6 +769,7 @@ export const ITEM_DEFS = {
     description: "Apprend la compétence Lenteur (consomme du mana).",
     grantsAbility: "slow",
     stackable: true,
+    unlockLevel: 1,
     price: 75,
   },
   flameWeaponScroll: {
@@ -738,7 +780,19 @@ export const ITEM_DEFS = {
       "Apprend la compétence Lame enflammée (consomme de la stamina).",
     grantsAbility: "flameWeapon",
     stackable: true,
+    unlockLevel: 5,
     price: 95,
+  },
+  flameWallScroll: {
+    id: "flameWallScroll",
+    category: "abilityScroll",
+    name: "Parchemin : Mur de flammes",
+    description:
+      "Apprend la compétence Mur de flammes (consomme de la stamina).",
+    grantsAbility: "flameWall",
+    stackable: true,
+    unlockLevel: 5,
+    price: 100,
   },
 
   // exemple d'objet de quete - existe dans le monde, mais aucune quete

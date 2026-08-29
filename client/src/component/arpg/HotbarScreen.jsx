@@ -18,6 +18,7 @@ export default function HotbarScreen({
   hotbarSlots,
   unlockedAbilities,
   inventory,
+  playerLevel,
   onAssign,
   onClose,
 }) {
@@ -46,13 +47,17 @@ export default function HotbarScreen({
       : resolveItemDef(slot.itemId).name;
   }
 
-  // les potions restent toujours une entree unique par itemId (fusionnees
-  // par addItemToInventory des lors qu'elles sont empilables, cf.
-  // MainScene.js) - pas besoin d'un vrai regroupement comme dans
-  // InventoryScreen ici, un simple filtre suffit
+  // objets/parchemins EXCLUS de la liste si pas encore utilisables au
+  // niveau actuel - inutile de les proposer a l'assignation s'ils ne
+  // servent a rien tant que le niveau requis n'est pas atteint
+  // (contrairement a un parchemin de mauvais archetype, qui lui garde
+  // un usage alternatif - usage unique - donc reste assignable)
   const consumableEntries = inventory.filter((i) => {
-    const cat = resolveItemDef(i.itemId).category;
-    return cat === "consumable" || cat === "abilityScroll";
+    const def = resolveItemDef(i.itemId);
+    const cat = def.category;
+    if (cat !== "consumable" && cat !== "abilityScroll") return false;
+    if (def.unlockLevel && playerLevel < def.unlockLevel) return false;
+    return true;
   });
 
   return (
