@@ -1,7 +1,11 @@
 import Phaser from "phaser";
 import { fetchLevel, saveProgress } from "../../../api/arpgClient";
 import { createRng } from "../rng";
-import { hasClearLineOfSight, createFogState } from "../fogOfWar";
+import {
+  hasClearLineOfSight,
+  createFogState,
+  computeVisibleTiles,
+} from "../fogOfWar";
 import { findPath } from "../pathfinding";
 import {
   createEnemyBehavior,
@@ -29,6 +33,11 @@ import { resolveItemDef } from "../itemDefs";
 import { computeEquipmentBonuses } from "../equipment";
 import { resolveAbilityDef, ABILITY_DEFS } from "../abilityDefs";
 import { resolveFuryDef } from "../furyDefs";
+import { computeWallCornerIndex } from "../autotile";
+import {
+  DUNGEON_AUTOTILE_SPRITESHEET,
+  DESERT_AUTOTILE_SPRITESHEET,
+} from "../spriteRegistry";
 
 const TILE_SIZE = 32;
 const WALL = 1;
@@ -129,6 +138,20 @@ const TILESET_COLORS = {
   temple: { wall: 0x32303c, floor: 0xbec8d7 },
   town: { wall: 0x5a4a3a, floor: 0xc8bfa0 }, // batiments en bois/pierre, place claire
 };
+
+/// index = bitmask NE|SE|SW|NW (1|2|4|8) -> tileid dans Set_A_Desert1.png
+// extrait du JSON exporte depuis Tiled (Collections de Terrains "Cliffs I")
+const WALL_CORNER_INDEX_TO_FRAME = [
+  0, 32, 0, 16, 2, 32, 1, 23, 34, 33, 2, 7, 18, 6, 22, 17,
+];
+// hypothese a tester : la planche convertie suit deja l'ordre standard
+// blob47 (le convertisseur en ligne produit generalement cet ordre) -
+// donc frame n = index blob47 n, sans peinture manuelle dans Tiled
+const AUTOTILE_ROW = 0; // laquelle des 9 rangees utiliser (0-8) - a ajuster selon la teinte voulue, cf. les bandes de couleur visibles sur la planche
+const IDENTITY_WALL_BLOB_INDEX_TO_FRAME = Array.from(
+  { length: 47 },
+  (_, i) => AUTOTILE_ROW * 47 + i,
+);
 
 /**
  * Scène de jeu principale. Contrairement à la démo de prototypage (un
@@ -905,6 +928,7 @@ export default class MainScene extends Phaser.Scene {
       savedFogState || this.floorFogCache[depth] || null;
 
     this.currentDepth = depth;
+    this.currentBiomeId = data.biome;
     this.currentSeed = data.seed;
     // Initialise la mémoire des landmarks de cet étage.
     if (!this.discoveredLandmarks[depth]) {
@@ -1029,68 +1053,170 @@ export default class MainScene extends Phaser.Scene {
     const worldW = grid[0].length * TILE_SIZE;
     const worldH = grid.length * TILE_SIZE;
 
-    const colors = TILESET_COLORS[tileset] || TILESET_COLORS.cave;
-    const tilesetKey = "tiles-" + tileset;
-    if (this.textures.exists(tilesetKey)) this.textures.remove(tilesetKey);
-    const canvasTex = this.textures.createCanvas(
-      tilesetKey,
-      TILE_SIZE * 2,
-      TILE_SIZE,
-    );
-    const ctx = canvasTex.getContext();
+    // biome(s) utilisant la vraie planche importee - a etendre au fur et a
+    // mesure que d'autres tilesets sont convertis. Les autres biomes
+    // gardent l'ancien systeme procedural (2 couleurs/images), inchange.
+    const useRealAutotile = tileset === "desert";
 
-    const tileImages = TILE_IMAGE_REGISTRY[tileset];
-    const hasRealFloor =
-      tileImages &&
-      tileImages.floorKey &&
-      this.textures.exists(tileImages.floorKey);
-    const hasRealWall =
-      tileImages &&
-      tileImages.wallKey &&
-      this.textures.exists(tileImages.wallKey);
+    let phaserTilesetKey;
+    let renderGrid;
 
-    if (hasRealFloor) {
-      ctx.drawImage(
-        this.textures.get(tileImages.floorKey).getSourceImage(),
-        0,
-        0,
-        TILE_SIZE,
+    if (useRealAutotile) {
+      phaserTilesetKey = "desert-autotile-composed";
+      if (this.textures.exists(phaserTilesetKey))
+        this.textures.remove(phaserTilesetKey);
+
+      // 1 slot pour le sol + 16 slots (un par combinaison de coin) - tout
+      // dessine a TILE_SIZE (32) directement, jamais de setScale() au
+      // niveau du layer (qui desynchronise la grille de collision Arcade,
+      // basee sur le tileWidth declare a la creation du tilemap, du rendu
+      // visuel reel)
+      const SLOT_COUNT = 17;
+      const composedTex = this.textures.createCanvas(
+        phaserTilesetKey,
+        TILE_SIZE * SLOT_COUNT,
         TILE_SIZE,
       );
-    } else {
-      ctx.fillStyle = Phaser.Display.Color.IntegerToColor(colors.floor).rgba;
-      ctx.fillRect(0, 0, TILE_SIZE, TILE_SIZE);
-    }
+      const cctx = composedTex.getContext();
+      cctx.imageSmoothingEnabled = false; // <-- cette ligne - desactive le lissage, essentiel pour agrandir du pixel art proprement
+      const sourceImg = this.textures
+        .get(DESERT_AUTOTILE_SPRITESHEET.key)
+        .getSourceImage();
+      const SOURCE_COLS = 16; // colonnes reelles du fichier source (256/16)
 
-    if (hasRealWall) {
-      ctx.drawImage(
-        this.textures.get(tileImages.wallKey).getSourceImage(),
-        TILE_SIZE,
-        0,
-        TILE_SIZE,
+      const drawSourceTileAt = (tileid, slotIndex) => {
+        const sx = (tileid % SOURCE_COLS) * 16;
+        const sy = Math.floor(tileid / SOURCE_COLS) * 16;
+
+        // dessine d'abord le sol en fond (meme reference que le slot 0,
+        // tileid=113) PUIS l'art de la tuile par-dessus - les parties
+        // transparentes d'une piece de coin (le "reste" hors falaise)
+        // laissent alors apparaitre du sable coherent plutot que du noir/vide.
+        // Sans effet sur le slot sol lui-meme (dessine deux fois la meme
+        // image, inoffensif).
+        const floorSx = (113 % SOURCE_COLS) * 16;
+        const floorSy = Math.floor(113 / SOURCE_COLS) * 16;
+        cctx.drawImage(
+          sourceImg,
+          floorSx,
+          floorSy,
+          16,
+          16,
+          slotIndex * TILE_SIZE,
+          0,
+          TILE_SIZE,
+          TILE_SIZE,
+        );
+        cctx.drawImage(
+          sourceImg,
+          sx,
+          sy,
+          16,
+          16,
+          slotIndex * TILE_SIZE,
+          0,
+          TILE_SIZE,
+          TILE_SIZE,
+        );
+      };
+
+      drawSourceTileAt(113, 0); // slot 0 = sol
+      for (let bitmask = 0; bitmask < 16; bitmask++) {
+        drawSourceTileAt(WALL_CORNER_INDEX_TO_FRAME[bitmask], bitmask + 1);
+      }
+      composedTex.refresh();
+
+      // DEBUG TEMPORAIRE - affiche la bande des 17 slots extraits en haut a
+      // gauche de l'ecran, agrandie x3, pour voir immediatement lequel est
+      // noir/errone. A retirer une fois le probleme identifie.
+      // const debugSprite = this.add
+      //   .image(0, 0, phaserTilesetKey)
+      //   .setOrigin(0, 0)
+      //   .setScale(3)
+      //   .setDepth(1000)
+      //   .setScrollFactor(0);
+
+      renderGrid = Array.from({ length: grid.length }, () =>
+        new Array(grid[0].length).fill(0),
+      );
+      for (let y = 0; y < grid.length; y++) {
+        for (let x = 0; x < grid[0].length; x++) {
+          if (grid[y][x] === 1) {
+            renderGrid[y][x] = computeWallCornerIndex(grid, x, y) + 1;
+          }
+        }
+      }
+    } else {
+      const colors = TILESET_COLORS[tileset] || TILESET_COLORS.cave;
+      phaserTilesetKey = "tiles-" + tileset;
+      if (this.textures.exists(phaserTilesetKey))
+        this.textures.remove(phaserTilesetKey);
+      const canvasTex = this.textures.createCanvas(
+        phaserTilesetKey,
+        TILE_SIZE * 2,
         TILE_SIZE,
       );
-    } else {
-      ctx.fillStyle = Phaser.Display.Color.IntegerToColor(colors.wall).rgba;
-      ctx.fillRect(TILE_SIZE, 0, TILE_SIZE, TILE_SIZE);
+      const ctx = canvasTex.getContext();
+
+      const tileImages = TILE_IMAGE_REGISTRY[tileset];
+      const hasRealFloor =
+        tileImages &&
+        tileImages.floorKey &&
+        this.textures.exists(tileImages.floorKey);
+      const hasRealWall =
+        tileImages &&
+        tileImages.wallKey &&
+        this.textures.exists(tileImages.wallKey);
+
+      if (hasRealFloor) {
+        ctx.drawImage(
+          this.textures.get(tileImages.floorKey).getSourceImage(),
+          0,
+          0,
+          TILE_SIZE,
+          TILE_SIZE,
+        );
+      } else {
+        ctx.fillStyle = Phaser.Display.Color.IntegerToColor(colors.floor).rgba;
+        ctx.fillRect(0, 0, TILE_SIZE, TILE_SIZE);
+      }
+      if (hasRealWall) {
+        ctx.drawImage(
+          this.textures.get(tileImages.wallKey).getSourceImage(),
+          TILE_SIZE,
+          0,
+          TILE_SIZE,
+          TILE_SIZE,
+        );
+      } else {
+        ctx.fillStyle = Phaser.Display.Color.IntegerToColor(colors.wall).rgba;
+        ctx.fillRect(TILE_SIZE, 0, TILE_SIZE, TILE_SIZE);
+      }
+      canvasTex.refresh();
+
+      renderGrid = grid;
     }
-    canvasTex.refresh();
 
     this.map = this.make.tilemap({
-      data: grid,
+      data: renderGrid,
       tileWidth: TILE_SIZE,
       tileHeight: TILE_SIZE,
     });
     const phaserTileset = this.map.addTilesetImage(
-      tilesetKey,
-      tilesetKey,
+      phaserTilesetKey,
+      phaserTilesetKey,
       TILE_SIZE,
       TILE_SIZE,
       0,
       0,
     );
     this.layer = this.map.createLayer(0, phaserTileset, 0, 0);
-    this.layer.setCollision(WALL);
+
+    if (useRealAutotile) {
+      this.layer.setCollisionByExclusion([0]);
+    } else {
+      this.layer.setCollision(WALL);
+    }
     this.layer.setDepth(0);
 
     const startPosition = savedPlayerPosition || playerSpawn;
@@ -1848,6 +1974,7 @@ export default class MainScene extends Phaser.Scene {
   openQuestDialog(npc) {
     const questKey = npc.questKey;
     this.dialogOpen = true;
+    this.pauseGame("dialog");
     this.activeDialogQuestKey = questKey;
     this.activeTalkingNpc = npc;
     npc.talking = true;
@@ -1942,6 +2069,10 @@ export default class MainScene extends Phaser.Scene {
     } else if (qs.completed) {
       const enemyName = resolveEnemyDisplayName(qs.targetEnemyType);
       text = custom.complete || `Merci d'avoir tué ces ${enemyName} pour moi !`;
+    } else if (qs.accepted && qs.killCount >= qs.target) {
+      text =
+        custom.progress || `C'est fait ! Reviens me voir pour ta récompense.`;
+      canTurnIn = true;
     } else if (qs.accepted) {
       const enemyName = resolveEnemyDisplayName(qs.targetEnemyType);
       text =
@@ -1950,7 +2081,7 @@ export default class MainScene extends Phaser.Scene {
     } else {
       const enemyName = resolveEnemyDisplayName(qs.targetEnemyType);
       text =
-        custom.offer || `Peux-tu tuer ${qs.target} ${enemyName} pour moi ?`;
+        custom.offer || `Peux-tu tuer ${qs.target} ${enemyName} pour toi ?`;
       canAccept = true;
     }
     this.events.emit("npc-dialog", { text, canAccept, canTurnIn });
@@ -1964,6 +2095,7 @@ export default class MainScene extends Phaser.Scene {
       this.addItemToInventory(qs.itemId, 1);
     }
     this.dialogOpen = false;
+    this.unpauseGame("dialog");
     this.activeDialogQuestKey = null;
     this.releaseTalkingNpc();
     this.events.emit("npc-dialog", null);
@@ -1977,6 +2109,7 @@ export default class MainScene extends Phaser.Scene {
     if (
       qs.questId !== "obtainItem" &&
       qs.questId !== "defeatBoss" &&
+      qs.questId !== "killEnemies" &&
       !(qs.questId === "delivery" && qs.role === "receiver")
     )
       return;
@@ -1999,6 +2132,8 @@ export default class MainScene extends Phaser.Scene {
       }
     } else if (qs.questId === "defeatBoss") {
       if (!qs.bossDefeated) return;
+    } else if (qs.questId === "killEnemies") {
+      if (qs.killCount < qs.target) return;
     } else {
       const itemIndex = this.inventory.findIndex((i) => i.itemId === qs.itemId);
       if (itemIndex === -1) return;
@@ -2016,16 +2151,26 @@ export default class MainScene extends Phaser.Scene {
     this.events.emit("xp-changed", { xp: this.xp });
 
     this.dialogOpen = false;
+    this.unpauseGame("dialog");
     this.activeDialogQuestKey = null;
     this.releaseTalkingNpc();
     this.events.emit("npc-dialog", null);
     this.events.emit("quests-updated", { ...this.quests });
 
-    this.addItemToInventory("gold", qs.goldReward);
+    if (qs.questId === "killEnemies") {
+      if (qs.itemReward) {
+        this.addItemToInventory(qs.itemReward.itemId, qs.itemReward.quantity);
+        const itemDef = resolveItemDef(qs.itemReward.itemId);
+        this.showLootToast(`Reçu : ${itemDef.name} x${qs.itemReward.quantity}`);
+      }
+    } else {
+      this.addItemToInventory("gold", qs.goldReward);
+    }
   }
 
   openAmbientDialog(npc) {
     this.dialogOpen = true;
+    this.pauseGame("dialog");
     this.activeTalkingNpc = npc;
     npc.talking = true;
     this.events.emit("npc-dialog", {
@@ -2044,6 +2189,7 @@ export default class MainScene extends Phaser.Scene {
 
   closeDialog() {
     this.dialogOpen = false;
+    this.unpauseGame("dialog");
     this.activeDialogQuestKey = null;
     this.releaseTalkingNpc();
     this.events.emit("npc-dialog", null);
@@ -2170,6 +2316,17 @@ export default class MainScene extends Phaser.Scene {
       this.touchActionRequested = false;
       this.performInteraction();
     }
+    // si l'interaction qu'on vient de traiter a declenche une pause (ex:
+    // ouverture d'un dialogue), on s'arrete IMMEDIATEMENT plutot que de
+    // laisser le reste de CETTE MEME frame continuer a tourner - sinon
+    // updateEnemyMovement (plus bas) recalculerait une derniere vitesse
+    // fraiche pour les ennemis juste apres que pauseGame vienne de la
+    // remettre a zero, qui continuerait ensuite a glisser indefiniment
+    // (plus aucune frame suivante pour la re-annuler, gamePaused bloquant
+    // tout des le haut de la fonction a partir de la prochaine frame)
+    if (this.gamePaused) return;
+
+    this.updateEnemyMovement();
     if (
       Phaser.Input.Keyboard.JustDown(this.keys.fury) ||
       this.touchFuryRequested
@@ -3075,6 +3232,16 @@ export default class MainScene extends Phaser.Scene {
       return;
     }
 
+    if (
+      abilityDef.disabledBiomes &&
+      abilityDef.disabledBiomes.includes(this.currentBiomeId)
+    ) {
+      this.showLootToast(
+        `${abilityDef.name} est désactivée sur ce type de niveau`,
+      );
+      return;
+    }
+
     const now = this.time.now;
     const cooldownKey = `item:${itemId}`;
     const readyAt = this.itemCooldowns[cooldownKey] || 0;
@@ -3124,6 +3291,13 @@ export default class MainScene extends Phaser.Scene {
     if (!this.unlockedAbilities.includes(abilityId)) return;
 
     const def = resolveAbilityDef(abilityId);
+    if (
+      def.disabledBiomes &&
+      def.disabledBiomes.includes(this.currentBiomeId)
+    ) {
+      this.showLootToast(`${def.name} est désactivée sur ce type de niveau`);
+      return;
+    }
     const now = this.time.now;
     const readyAt = this.abilityCooldowns[abilityId] || 0;
     if (now < readyAt) {
@@ -3156,6 +3330,8 @@ export default class MainScene extends Phaser.Scene {
       this.performPierceAbility(def);
     } else if (def.effectType === "weaponImbue") {
       this.performWeaponImbueAbility(def);
+    } else if (def.effectType === "fogPulse") {
+      this.performFogPulseAbility(def);
     } else {
       this.showLootToast(`${def.name} : effet pas encore implémenté`);
       return;
@@ -3344,7 +3520,41 @@ export default class MainScene extends Phaser.Scene {
       onComplete: () => circle.destroy(),
     });
   }
+  /**
+   * Cases de sol atteignables depuis une position, sans jamais traverser
+   * un mur - sert a EXCLURE la salle du boss (scellee tant que la porte
+   * n'est pas ouverte : elle EST un mur dans this.fogGrid) des effets qui
+   * ignorent normalement les murs (ex: le pulse d'exploration) - une
+   * zone structurellement inaccessible ne doit jamais etre revelee, meme
+   * par un effet qui "voit a travers".
+   */
+  computeReachableFloorTiles(originX, originY) {
+    const grid = this.fogGrid;
+    const height = grid.length;
+    const width = grid[0].length;
+    const visited = new Set();
+    const queue = [{ x: originX, y: originY }];
+    visited.add(originX + "," + originY);
 
+    while (queue.length > 0) {
+      const { x, y } = queue.shift();
+      for (const [dx, dy] of [
+        [0, -1],
+        [0, 1],
+        [-1, 0],
+        [1, 0],
+      ]) {
+        const nx = x + dx,
+          ny = y + dy;
+        if (nx < 0 || ny < 0 || nx >= width || ny >= height) continue;
+        const key = nx + "," + ny;
+        if (visited.has(key) || grid[ny][nx] === WALL) continue;
+        visited.add(key);
+        queue.push({ x: nx, y: ny });
+      }
+    }
+    return visited;
+  }
   /**
    * Explosion au point d'impact d'une competence-projectile - touche TOUS
    * les ennemis visibles dans def.radius autour de CE POINT (pas autour
@@ -3369,6 +3579,108 @@ export default class MainScene extends Phaser.Scene {
       radius: def.radius,
       alpha: 0,
       duration: 300,
+      onComplete: () => circle.destroy(),
+    });
+  }
+  /**
+   * Determine precisement quelles cases appartiennent a la salle du boss
+   * scellee - sans connaitre ses dimensions exactes, en comparant
+   * l'atteignable AVEC la porte fermee (etat reel) contre l'atteignable SI
+   * elle etait ouverte (simulation ponctuelle sur fogGrid, restauree
+   * immediatement, jamais de mutation persistante). La difference entre
+   * les deux EST la salle du boss.
+   */
+  computeBossRoomTiles() {
+    if (!this.bossDoorTile || this.bossRoomOpen) return new Set();
+
+    const centerTileX = Math.floor(this.hero.x / TILE_SIZE);
+    const centerTileY = Math.floor(this.hero.y / TILE_SIZE);
+
+    const reachableNow = this.computeReachableFloorTiles(
+      centerTileX,
+      centerTileY,
+    );
+
+    const { x: dx, y: dy } = this.bossDoorTile;
+    const original = this.fogGrid[dy][dx];
+    this.fogGrid[dy][dx] = 0; // simule la porte ouverte, temporairement
+    const reachableIfOpen = this.computeReachableFloorTiles(
+      centerTileX,
+      centerTileY,
+    );
+    this.fogGrid[dy][dx] = original; // restaure immediatement
+
+    const bossRoomTiles = new Set();
+    for (const key of reachableIfOpen) {
+      if (!reachableNow.has(key)) bossRoomTiles.add(key);
+    }
+    return bossRoomTiles;
+  }
+
+  /**
+   * Revele temporairement le brouillard sur un grand rayon (ligne de vue
+   * respectee, jamais a travers les murs - reutilise EXACTEMENT le meme
+   * calcul que la vision normale, computeVisibleTiles). Ne fait QUE
+   * forcer state=2 sur les cases concernees et redessiner - aucune
+   * logique de "redescente" a ecrire : au prochain deplacement du
+   * joueur, fogState.update() recalculera sa PROPRE visibilite (son
+   * vrai playerVisionRadius, plus petit) et redescendra naturellement
+   * ces cases a 1 (deja vu, hors de vue) exactement comme il le fait
+   * deja pour n'importe quelle case quittee normalement. Les ennemis/
+   * coffres dans cette zone deviennent donc visibles pendant le pulse,
+   * puis se remasquent tout seuls des le prochain pas - isEnemyVisible
+   * relit l'etat chaque frame, jamais mis en cache.
+   */
+  performFogPulseAbility(def) {
+    const centerTileX = Math.floor(this.hero.x / TILE_SIZE);
+    const centerTileY = Math.floor(this.hero.y / TILE_SIZE);
+
+    let revealed;
+    if (def.ignoresWalls) {
+      const bossRoomTiles = this.computeBossRoomTiles();
+      revealed = new Set();
+      const height = this.fogGrid.length;
+      const width = this.fogGrid[0].length;
+      const minX = Math.max(0, centerTileX - def.radius);
+      const maxX = Math.min(width - 1, centerTileX + def.radius);
+      const minY = Math.max(0, centerTileY - def.radius);
+      const maxY = Math.min(height - 1, centerTileY + def.radius);
+      for (let y = minY; y <= maxY; y++) {
+        for (let x = minX; x <= maxX; x++) {
+          const key = x + "," + y;
+          if (Math.hypot(x - centerTileX, y - centerTileY) > def.radius)
+            continue;
+          if (bossRoomTiles.has(key)) continue; // exclut SEULEMENT la salle du boss
+          revealed.add(key);
+        }
+      }
+    } else {
+      revealed = computeVisibleTiles(
+        this.fogGrid,
+        centerTileX,
+        centerTileY,
+        def.radius,
+      );
+    }
+
+    const changes = [];
+    for (const key of revealed) {
+      const [x, y] = key.split(",").map(Number);
+      if (this.fogState.state[y][x] < 2) {
+        this.fogState.state[y][x] = 2;
+        changes.push({ x, y });
+      }
+    }
+    this.applyFogChanges(changes);
+
+    const circle = this.add.circle(this.hero.x, this.hero.y, 10, 0x66ddff, 0);
+    circle.setStrokeStyle(3, 0x66ddff, 0.8);
+    circle.setDepth(6);
+    this.tweens.add({
+      targets: circle,
+      radius: def.radius * TILE_SIZE,
+      alpha: 0,
+      duration: 600,
       onComplete: () => circle.destroy(),
     });
   }
@@ -3894,36 +4206,24 @@ export default class MainScene extends Phaser.Scene {
       }
 
       let anyQuestUpdated = false;
-      let justCompletedReward = null;
       for (const questKey of Object.keys(this.quests)) {
         const qs = this.quests[questKey];
         if (!qs.accepted || qs.completed) continue;
         if (qs.targetEnemyType && qs.targetEnemyType !== enemy.archetype)
           continue;
         qs.killCount++;
-        if (qs.killCount >= qs.target) {
-          qs.completed = true;
-          this.xp += qs.xpReward;
-          this.events.emit("xp-changed", { xp: this.xp });
-          if (qs.itemReward) {
-            this.addItemToInventory(
-              qs.itemReward.itemId,
-              qs.itemReward.quantity,
-            );
-            if (!justCompletedReward) justCompletedReward = qs.itemReward;
-          }
+        // ne complete PLUS automatiquement ici - juste la progression,
+        // exactement comme les autres types de quete desormais. La
+        // recompense (XP + objet) n'est accordee qu'au retour au PNJ,
+        // cf. turnInQuest.
+        if (qs.killCount === qs.target) {
+          this.showLootToast("Quête prête : reviens voir le PNJ !");
         }
         anyQuestUpdated = true;
       }
       if (anyQuestUpdated) {
         this.events.emit("quests-updated", { ...this.quests });
         this.persistProgress();
-      }
-      if (justCompletedReward) {
-        const itemDef = resolveItemDef(justCompletedReward.itemId);
-        this.showLootToast(
-          `Quête terminée ! Reçu : ${itemDef.name} x${justCompletedReward.quantity}`,
-        );
       }
 
       enemy.sprite.destroy();

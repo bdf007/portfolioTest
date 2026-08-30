@@ -156,7 +156,7 @@ async function getLevel(req, res) {
     let allowedTiles = null;
 
     if (hasBoss) {
-      const carved = carveBossRoom(grid, playerSpawn, 5);
+      const carved = carveBossRoom(grid, playerSpawn, biome.bossRoomSize || 5);
       grid = carved.grid;
       bossDoorTile = carved.doorTile;
       exitTile = carved.exitTile;

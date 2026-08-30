@@ -18,7 +18,14 @@ const WALL = 1;
  * Convention des bits de voisinage (dans l'ordre horaire depuis le nord) :
  *   N=1, NE=2, E=4, SE=8, S=16, SW=32, W=64, NW=128
  */
-const N = 1, NE = 2, E = 4, SE = 8, S = 16, SW = 32, W = 64, NW = 128;
+const N = 1,
+  NE = 2,
+  E = 4,
+  SE = 8,
+  S = 16,
+  SW = 32,
+  W = 64,
+  NW = 128;
 
 /**
  * Bitmask brut (8 bits, 256 valeurs possibles) : quels voisins d'une case
@@ -57,10 +64,10 @@ function computeRawBitmask(grid, x, y) {
  */
 function reduceToVisualMask(rawMask) {
   let mask = rawMask;
-  if (!((mask & N) && (mask & E))) mask &= ~NE;
-  if (!((mask & E) && (mask & S))) mask &= ~SE;
-  if (!((mask & S) && (mask & W))) mask &= ~SW;
-  if (!((mask & W) && (mask & N))) mask &= ~NW;
+  if (!(mask & N && mask & E)) mask &= ~NE;
+  if (!(mask & E && mask & S)) mask &= ~SE;
+  if (!(mask & S && mask & W)) mask &= ~SW;
+  if (!(mask & W && mask & N)) mask &= ~NW;
   return mask;
 }
 
@@ -122,7 +129,9 @@ function getWallBlob47Index(grid, x, y) {
 function buildAutotileRenderGrid(grid, floorFrame, wallBlobIndexToFrame) {
   const height = grid.length;
   const width = grid[0].length;
-  const renderGrid = Array.from({ length: height }, () => new Array(width).fill(floorFrame));
+  const renderGrid = Array.from({ length: height }, () =>
+    new Array(width).fill(floorFrame),
+  );
 
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
@@ -136,11 +145,65 @@ function buildAutotileRenderGrid(grid, floorFrame, wallBlobIndexToFrame) {
   return renderGrid;
 }
 
+/**
+ * Bitmask de coin (4 bits : NE/SE/SW/NW) - different du blob47 (8
+ * directions, coins conditionnes par les bords adjacents) : ici chaque
+ * coin depend UNIQUEMENT du voisin diagonal correspondant, directement.
+ * C'est le format "corner" de Tiled (le plus simple des 3 types Wang),
+ * celui utilise par ce pack - contrairement au format "Mixed" (8
+ * points) vise par blob47 plus haut dans ce fichier.
+ */
+function computeWallCornerIndex(grid, x, y) {
+  const height = grid.length;
+  const width = grid[0].length;
+  function isWall(nx, ny) {
+    if (nx < 0 || ny < 0 || nx >= width || ny >= height) return true;
+    return grid[ny][nx] === 1;
+  }
+  // chaque coin ne compte comme "mur" que si les 4 cases du bloc 2x2
+  // qui le partagent (la case elle-meme + les 2 cardinales adjacentes +
+  // la diagonale) sont TOUTES des murs - jamais juste la diagonale
+  // seule, sinon un couloir de mur d'une seule case d'epaisseur
+  // (cardinales = sol de part et d'autre) est mal categorise
+  let mask = 0;
+  if (isWall(x, y - 1) && isWall(x + 1, y) && isWall(x + 1, y - 1)) mask |= 1; // NE
+  if (isWall(x + 1, y) && isWall(x, y + 1) && isWall(x + 1, y + 1)) mask |= 2; // SE
+  if (isWall(x, y + 1) && isWall(x - 1, y) && isWall(x - 1, y + 1)) mask |= 4; // SW
+  if (isWall(x - 1, y) && isWall(x, y - 1) && isWall(x - 1, y - 1)) mask |= 8; // NW
+  return mask;
+}
+
+function buildCornerAutotileRenderGrid(grid, floorFrame, cornerIndexToFrame) {
+  const height = grid.length;
+  const width = grid[0].length;
+  const renderGrid = Array.from({ length: height }, () =>
+    new Array(width).fill(floorFrame),
+  );
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      if (grid[y][x] === 1) {
+        const idx = computeWallCornerIndex(grid, x, y);
+        renderGrid[y][x] = cornerIndexToFrame[idx] ?? floorFrame;
+      }
+    }
+  }
+  return renderGrid;
+}
+
 module.exports = {
   getWallBlob47Index,
   buildAutotileRenderGrid,
   computeRawBitmask,
   reduceToVisualMask,
   BLOB47_TABLE,
-  N, NE, E, SE, S, SW, W, NW,
+  N,
+  NE,
+  E,
+  SE,
+  S,
+  SW,
+  W,
+  NW,
+  computeWallCornerIndex,
+  buildCornerAutotileRenderGrid,
 };

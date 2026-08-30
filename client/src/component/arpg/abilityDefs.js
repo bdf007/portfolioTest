@@ -141,6 +141,20 @@ export const ABILITY_DEFS = {
     },
     unlockLevel: 1,
   },
+  scoutPulse: {
+    id: "scoutPulse",
+    name: "Pulsation d'exploration",
+    archetypes: [],
+    description:
+      "Révèle une large zone du brouillard de guerre autour de toi. 1 stamina.",
+    staminaCost: 1,
+    cooldownMs: 8000,
+    effectType: "fogPulse",
+    radius: 40, // en CASES (coordonnees de tuiles), pas en pixels - different des autres competences
+    ignoresWalls: true,
+    disabledBiomes: ["maze1", "maze2"], // ids de biomeConfig.js - absent/vide = utilisable partout
+    unlockLevel: null,
+  },
 };
 
 /**
