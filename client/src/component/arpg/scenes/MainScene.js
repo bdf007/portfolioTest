@@ -35,7 +35,7 @@ import { resolveAbilityDef, ABILITY_DEFS } from "../abilityDefs";
 import { resolveFuryDef } from "../furyDefs";
 import { computeWallCornerIndex } from "../autotile";
 import {
-  DUNGEON_AUTOTILE_SPRITESHEET,
+  // DUNGEON_AUTOTILE_SPRITESHEET,
   DESERT_AUTOTILE_SPRITESHEET,
 } from "../spriteRegistry";
 
@@ -147,11 +147,13 @@ const WALL_CORNER_INDEX_TO_FRAME = [
 // hypothese a tester : la planche convertie suit deja l'ordre standard
 // blob47 (le convertisseur en ligne produit generalement cet ordre) -
 // donc frame n = index blob47 n, sans peinture manuelle dans Tiled
-const AUTOTILE_ROW = 0; // laquelle des 9 rangees utiliser (0-8) - a ajuster selon la teinte voulue, cf. les bandes de couleur visibles sur la planche
-const IDENTITY_WALL_BLOB_INDEX_TO_FRAME = Array.from(
-  { length: 47 },
-  (_, i) => AUTOTILE_ROW * 47 + i,
-);
+// const AUTOTILE_ROW = 0; // laquelle des 9 rangees utiliser (0-8) - a ajuster selon la teinte voulue, cf. les bandes de couleur visibles sur la planche
+// const IDENTITY_WALL_BLOB_INDEX_TO_FRAME = Array.from(
+//   { length: 47 },
+//   (_, i) => AUTOTILE_ROW * 47 + i,
+// );
+
+const ATTACK_ANIM_DURATION_MS = 400; // 4 frames a frameRate 10 = 400ms - a ajuster si tu changes frameRate
 
 /**
  * Scène de jeu principale. Contrairement à la démo de prototypage (un
@@ -235,6 +237,40 @@ export default class MainScene extends Phaser.Scene {
       frames: [{ key: textureKey, frame: f.idleUp }],
       frameRate: 1,
     });
+    if (f.attackDown) {
+      this.anims.create({
+        key: prefix + "attack-down",
+        frames: this.anims.generateFrameNumbers(textureKey, {
+          frames: f.attackDown,
+        }),
+        frameRate: 10,
+        repeat: 0,
+      });
+      this.anims.create({
+        key: prefix + "attack-left",
+        frames: this.anims.generateFrameNumbers(textureKey, {
+          frames: f.attackLeft,
+        }),
+        frameRate: 10,
+        repeat: 0,
+      });
+      this.anims.create({
+        key: prefix + "attack-right",
+        frames: this.anims.generateFrameNumbers(textureKey, {
+          frames: f.attackRight,
+        }),
+        frameRate: 10,
+        repeat: 0,
+      });
+      this.anims.create({
+        key: prefix + "attack-up",
+        frames: this.anims.generateFrameNumbers(textureKey, {
+          frames: f.attackUp,
+        }),
+        frameRate: 10,
+        repeat: 0,
+      });
+    }
   }
 
   create() {
@@ -2246,7 +2282,9 @@ export default class MainScene extends Phaser.Scene {
             : "up";
     }
 
-    if (moving) {
+    if (this.time.now < this.attackAnimUntil) {
+      // animation d'attaque en cours - ne pas l'interrompre avec idle/marche
+    } else if (moving) {
       this.hero.anims.play(this.heroSpriteKey + "-walk-" + dir, true);
       this.lastDir = dir;
     } else {
@@ -2869,6 +2907,16 @@ export default class MainScene extends Phaser.Scene {
     const imbue = this.pendingWeaponImbue;
     this.pendingWeaponImbue = null;
     let anyHit = false;
+    const hasAttackAnim = this.anims.exists(
+      this.heroSpriteKey + "-attack-" + this.lastDir,
+    );
+    if (hasAttackAnim) {
+      this.hero.anims.play(
+        this.heroSpriteKey + "-attack-" + this.lastDir,
+        true,
+      );
+      this.attackAnimUntil = this.time.now + ATTACK_ANIM_DURATION_MS;
+    }
 
     for (const enemy of this.enemies) {
       const dx = enemy.sprite.x - this.hero.x;
@@ -3006,6 +3054,16 @@ export default class MainScene extends Phaser.Scene {
     }
 
     this.rangedCooldown.trigger(now);
+    const hasAttackAnim = this.anims.exists(
+      this.heroSpriteKey + "-attack-" + this.lastDir,
+    );
+    if (hasAttackAnim) {
+      this.hero.anims.play(
+        this.heroSpriteKey + "-attack-" + this.lastDir,
+        true,
+      );
+      this.attackAnimUntil = now + ATTACK_ANIM_DURATION_MS;
+    }
 
     let v = this.lastAimVector;
     let nearestDist = Infinity;

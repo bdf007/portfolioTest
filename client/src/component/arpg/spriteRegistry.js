@@ -4,6 +4,8 @@
 // import hero3Spritesheet from "../../assets/hero3_walk.png";
 // import hero4Spritesheet from "../../assets/hero4_walk.png";
 import minisHeroesSpritesheet from "../../assets/minis_heroes.png";
+import archerMaleSpritesheet from "../../assets/male_archer.png";
+import knightMaleSpritesheet from "../../assets/male_knight.png";
 // import enemy
 import enemy1Spritesheet from "../../assets/enemy1_walk.png";
 import enemy2Spritesheet from "../../assets/enemy2_walk.png";
@@ -273,6 +275,21 @@ export const STANDARD_ANIMATION_FRAMES_3X4_MULTI_8 = {
   idleUp: 94,
 };
 
+export const ARCHER_MALE_ANIMATION_FRAMES = {
+  walkDown: [4, 5, 6, 7],
+  walkUp: [20, 21, 22, 23],
+  walkLeft: [36, 37, 38, 39],
+  walkRight: [52, 53, 54, 55],
+  idleDown: 0,
+  idleUp: 16,
+  idleLeft: 32,
+  idleRight: 48,
+  attackDown: [8, 9, 10, 11],
+  attackUp: [24, 25, 26, 27],
+  attackLeft: [40, 41, 42, 43],
+  attackRight: [56, 57, 58, 59],
+};
+
 // const HERO_FRAME_W = 26;
 // const HERO_FRAME_H = 36;
 // const HERO_SCALE = 1.2;
@@ -281,17 +298,26 @@ const HERO_FRAME_W = 48;
 const HERO_FRAME_H = 48;
 const HERO_SCALE = 0.8;
 
-function makeHeroEntry(key, path, animations) {
+function makeHeroEntry(
+  key,
+  path,
+  animations,
+  scale = HERO_SCALE,
+  sheetCols = 12,
+  sheetRows = 8,
+) {
   return {
     key,
     path,
     frameWidth: HERO_FRAME_W,
     frameHeight: HERO_FRAME_H,
-    scale: HERO_SCALE,
+    scale,
     // animations: STANDARD_ANIMATION_FRAMES,
     animations,
+    sheetCols,
+    sheetRows,
 
-    hitbox: computeSafeHitbox(HERO_FRAME_W, HERO_FRAME_H, HERO_SCALE),
+    hitbox: computeSafeHitbox(HERO_FRAME_W, HERO_FRAME_H, scale),
   };
 }
 
@@ -335,6 +361,22 @@ export const SPRITE_REGISTRY = {
     "hero8",
     minisHeroesSpritesheet,
     STANDARD_ANIMATION_FRAMES_3X4_MULTI_8,
+  ),
+  hero9: makeHeroEntry(
+    "archerMale",
+    archerMaleSpritesheet,
+    ARCHER_MALE_ANIMATION_FRAMES,
+    1,
+    4,
+    16,
+  ),
+  hero10: makeHeroEntry(
+    "knightMale",
+    knightMaleSpritesheet,
+    ARCHER_MALE_ANIMATION_FRAMES,
+    1,
+    4,
+    16,
   ),
 
   enemyDefault: {
@@ -2364,6 +2406,58 @@ const HERO_STATS_PROFILES = {
     startingAmmo: null,
     startingAbilities: ["fireball"],
   },
+  superArcher: {
+    archetype: "archer",
+    base: {
+      maxHp: 90,
+      meleeDamage: 4,
+      rangedDamage: 10,
+      defense: 1,
+      mana: 0,
+      stamina: 15,
+    },
+    growth: {
+      maxHp: 16,
+      meleeDamage: 1,
+      rangedDamage: 2.6,
+      defense: 0.8,
+      mana: 0,
+      stamina: 1,
+    },
+    moveSpeed: 160,
+    visionRadius: 8,
+    meleeRange: 42,
+    rangedRange: 440,
+    startingEquipment: ["woodenBow"],
+    startingAmmo: { itemId: "woodenArrow", quantity: 20 },
+    startingAbilities: ["piercingArrow"],
+  },
+  knightMale: {
+    archetype: "guerrier",
+    base: {
+      maxHp: 100,
+      meleeDamage: 12,
+      rangedDamage: 2,
+      defense: 2,
+      mana: 0,
+      stamina: 20,
+    },
+    growth: {
+      maxHp: 20,
+      meleeDamage: 3,
+      rangedDamage: 0.5,
+      defense: 1,
+      mana: 0,
+      stamina: 2,
+    },
+    moveSpeed: 150,
+    visionRadius: 7,
+    meleeRange: 48,
+    rangedRange: 300,
+    startingEquipment: ["woodenMace"],
+    startingAmmo: null,
+    startingAbilities: [],
+  },
 };
 
 export const HERO_ROSTER = [
@@ -2390,6 +2484,16 @@ export const HERO_ROSTER = [
     id: "hero8",
     label: "Magicienne",
     statsOverride: HERO_STATS_PROFILES.magicienne,
+  },
+  {
+    id: "hero9",
+    label: "Super Archer",
+    statsOverride: HERO_STATS_PROFILES.superArcher,
+  },
+  {
+    id: "hero10",
+    label: "Chevalier",
+    statsOverride: HERO_STATS_PROFILES.knightMale,
   },
 ];
 

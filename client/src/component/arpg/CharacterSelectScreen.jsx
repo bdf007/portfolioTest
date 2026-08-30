@@ -4,8 +4,8 @@ import { HERO_ROSTER, SPRITE_REGISTRY } from "./spriteRegistry";
 const PREVIEW_SCALE = 3;
 
 // Spritesheet complète : 12 colonnes × 8 lignes
-const SHEET_COLS = 12;
-const SHEET_ROWS = 8;
+// const SHEET_COLS = 12;
+// const SHEET_ROWS = 8;
 
 const CONTROLS = [
   ["Déplacement", "ZQSD ou WASD (basculable en jeu) / flèches"],
@@ -97,17 +97,14 @@ export default function CharacterSelectScreen({ onSelect, isMobile }) {
         {HERO_ROSTER.map((hero) => {
           const entry = SPRITE_REGISTRY[hero.id] || SPRITE_REGISTRY.hero1;
 
-          // idleDown est déjà l'index GLOBAL
-          // dans la spritesheet 12 × 8.
+          const sheetCols = entry.sheetCols || 12;
+          const sheetRows = entry.sheetRows || 8;
+
           const idleFrameIndex = entry.animations.idleDown;
-
-          // Position de la frame dans la spritesheet complète
-          const col = idleFrameIndex % SHEET_COLS;
-          const row = Math.floor(idleFrameIndex / SHEET_COLS);
-
-          // Taille de la spritesheet complète
-          const sheetW = entry.frameWidth * SHEET_COLS;
-          const sheetH = entry.frameHeight * SHEET_ROWS;
+          const col = idleFrameIndex % sheetCols;
+          const row = Math.floor(idleFrameIndex / sheetCols);
+          const sheetW = entry.frameWidth * sheetCols;
+          const sheetH = entry.frameHeight * sheetRows;
 
           return (
             <button
