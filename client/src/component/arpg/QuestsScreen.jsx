@@ -149,7 +149,11 @@ export default function QuestsScreen({ quests, onClose }) {
             }}
           >
             <div style={{ fontSize: 13 }}>Étage {questKey.split("-")[0]}</div>
-            <div style={{ fontSize: 12, color: "#7fae8f", marginTop: 4 }}>
+            <div style={{ fontSize: 12, color: "#aaa", marginTop: 4 }}>
+              {describeAction(q)}
+              {describeProgress(q)}
+            </div>
+            <div style={{ fontSize: 11, color: "#7fae8f", marginTop: 4 }}>
               Terminée
             </div>
           </div>

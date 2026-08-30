@@ -5,6 +5,10 @@ import {
   CHEST_SPRITESHEET,
   ICON_SPRITESHEET,
 } from "../spriteRegistry";
+import {
+  DUNGEON_AUTOTILE_SPRITESHEET,
+  DESERT_AUTOTILE_SPRITESHEET,
+} from "../spriteRegistry";
 
 /**
  * Précharge tous les sprites listés dans spriteRegistry.js avant de
@@ -42,6 +46,22 @@ export default class BootScene extends Phaser.Scene {
       frameWidth: CHEST_SPRITESHEET.frameWidth,
       frameHeight: CHEST_SPRITESHEET.frameHeight,
     });
+    this.load.spritesheet(
+      DUNGEON_AUTOTILE_SPRITESHEET.key,
+      DUNGEON_AUTOTILE_SPRITESHEET.path,
+      {
+        frameWidth: DUNGEON_AUTOTILE_SPRITESHEET.frameWidth,
+        frameHeight: DUNGEON_AUTOTILE_SPRITESHEET.frameHeight,
+      },
+    );
+    this.load.spritesheet(
+      DESERT_AUTOTILE_SPRITESHEET.key,
+      DESERT_AUTOTILE_SPRITESHEET.path,
+      {
+        frameWidth: DESERT_AUTOTILE_SPRITESHEET.frameWidth,
+        frameHeight: DESERT_AUTOTILE_SPRITESHEET.frameHeight,
+      },
+    );
     this.load.spritesheet(ICON_SPRITESHEET.key, ICON_SPRITESHEET.path, {
       frameWidth: ICON_SPRITESHEET.frameWidth,
       frameHeight: ICON_SPRITESHEET.frameHeight,

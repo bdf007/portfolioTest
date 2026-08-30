@@ -85,6 +85,7 @@ import stairdownSprite from "../../assets/stair_down.png";
 import stairupSprite from "../../assets/stair_up.png";
 import wallTreeSprite from "../../assets/wall_tree.png";
 import floorTreeSprite from "../../assets/floor_tree.png";
+import desertAutotileImg from "../../assets/Set_A_Desert1.png";
 // import objects
 import chestsSpritesheet from "../../assets/Chests.png";
 import iconSheet1 from "../../assets/icon_sheet1.png";
@@ -124,10 +125,25 @@ import town3NPCm2Spritesheet from "../../assets/town3_M2_walk.png";
 import town3NPCm3Spritesheet from "../../assets/town3_M3_walk.png";
 import town3NPCm4Spritesheet from "../../assets/town3_M4_walk.png";
 import town3NPCm5Spritesheet from "../../assets/town3_M5_walk.png";
+import dungeonAutotileImg from "../../assets/Set_A2_Dungeons2.png"; // ajuste ce chemin relatif si spriteRegistry.js n'est pas directement dans client/src/arpg/
 
 const SAFE_WORLD_WIDTH = 18;
 const SAFE_WORLD_HEIGHT = 24;
 const FEET_MARGIN = 2;
+
+export const DUNGEON_AUTOTILE_SPRITESHEET = {
+  key: "dungeonAutotile",
+  path: dungeonAutotileImg,
+  frameWidth: 32,
+  frameHeight: 32,
+};
+
+export const DESERT_AUTOTILE_SPRITESHEET = {
+  key: "desertAutotile",
+  path: desertAutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
 
 export function computeSafeHitbox(frameWidth, frameHeight, scale) {
   let width = SAFE_WORLD_WIDTH / scale;
@@ -2164,7 +2180,7 @@ const HERO_STATS_PROFILES = {
     // d'une partie NEUVE (jamais a une reprise, cf. MainScene.giveStartingKit)
     startingEquipment: ["woodenSword", "woodenShield"],
     startingAmmo: null,
-    startingAbilities: ["whirlwind", "haste", "flameWeapon"],
+    startingAbilities: ["whirlwind", "haste", "flameWeapon", "scoutPulse"],
   },
   archer: {
     archetype: "archer",
