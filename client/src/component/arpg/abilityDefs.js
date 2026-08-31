@@ -181,6 +181,31 @@ taunt: {
   radius: 150, // en pixels, comme les autres AoE
   unlockLevel: null,
 },
+  repel: {
+  id: 'repel',
+  name: 'Répulsion',
+  archetypes: [],
+  description: 'Repousse tous les ennemis proches. 15 mana.',
+  manaCost: 15,
+  cooldownMs: 8000,
+  effectType: 'repel',
+  radius: 100,
+  knockbackDistance: 80,
+  damage: 0, // optionnel - laisse a 0 si tu veux un pur effet de recul, sans degats
+  unlockLevel: null,
+},
+  stun: {
+  id: 'stun',
+  name: 'Étourdissement',
+  archetypes: [],
+  description: "Étourdit tous les ennemis proches, les empêchant d'agir un court moment. 20 mana.",
+  manaCost: 20,
+  cooldownMs: 10000,
+  effectType: 'aoeStun',
+  radius: 90,
+  durationMs: 2500,
+  unlockLevel: null,
+},
 };
 
 /**
