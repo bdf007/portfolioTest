@@ -236,6 +236,7 @@ const ENEMY_TYPES = {
     speedMax: 140,
     speedGrowthPerDepth: 2,
     defenseGrowthEveryNDepths: 3,
+    lootTable: "angryBrownMushroomDrop",
   },
   redMushroom: {
     base: { hp: 14, damage: 5, xpReward: 11 },
@@ -612,12 +613,14 @@ const ENEMY_TYPES = {
     defenseGrowthEveryNDepths: 5,
   },
   deer1: {
-    base: { hp: 8, damage: 2, xpReward: 7 },
+    base: { hp: 30, damage: 2, xpReward: 7 },
     growthRate: { hp: 1.13, damage: 1.1, xpReward: 1.08 },
     speedBase: 120,
     speedMax: 180,
     speedGrowthPerDepth: 4,
     defenseGrowthEveryNDepths: 5,
+    resistances: { fire: 1, cold: -0.5, lightning: 0 },
+    lootTable: "deer1Drop",
   },
   deer2: {
     base: { hp: 8, damage: 2, xpReward: 7 },
@@ -977,6 +980,9 @@ function getEnemyStatsForDepth(depth, typeKey = "enemyDefault") {
     attackType: type.attackType || "melee",
     questLoot: type.questLoot || null,
     inflictsEffect: type.inflictsEffect || null,
+    damageType: type.damageType || "physical",
+    lootTable: type.lootTable || null,
+    resistances: type.resistances || {},
   };
 }
 

@@ -3,8 +3,10 @@ import {
   SPRITE_REGISTRY,
   ICON_SPRITESHEET,
   ICON_SPRITESHEET_2,
+  MONSTER_LOOTS_SPRITESHEET,
   ICON_SHEET_1_FRAMES,
   ICON_SHEET_2_FRAMES,
+  MONSTER_LOOTS_FRAMES,
 } from "./spriteRegistry";
 
 const SLOT_LABELS = {
@@ -68,6 +70,9 @@ export function ItemIcon({ itemId, scale = 2 }) {
   } else if (ICON_SHEET_2_FRAMES[itemId] !== undefined) {
     frameIndex = ICON_SHEET_2_FRAMES[itemId];
     spriteSheet = ICON_SPRITESHEET_2;
+  } else if (MONSTER_LOOTS_FRAMES[itemId] !== undefined) {
+    frameIndex = MONSTER_LOOTS_FRAMES[itemId];
+    spriteSheet = MONSTER_LOOTS_SPRITESHEET;
   } else {
     return null;
   }
@@ -436,7 +441,8 @@ export default function InventoryScreen({
                   </button>
                 )}
                 {(def.category === "consumable" ||
-                  def.category === "abilityScroll") && (
+                  def.category === "abilityScroll" ||
+                  def.category === "recipeScroll") && (
                   <button
                     onClick={() => onUse(group.firstIndex)}
                     style={{

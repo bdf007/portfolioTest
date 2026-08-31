@@ -18,6 +18,8 @@ import {
   createCooldown,
   rollCritical,
   CRIT_MULTIPLIER,
+  applyDiceVariance,
+  applyElementalResistance,
 } from "../combat";
 import { computeLevelFromXp, getPlayerStatsForLevel } from "../leveling";
 import {
@@ -30,8 +32,12 @@ import {
   CHEST_VARIANTS,
 } from "../spriteRegistry";
 import { resolveItemDef } from "../itemDefs";
-import { computeEquipmentBonuses } from "../equipment";
+import {
+  computeEquipmentBonuses,
+  computeEquipmentResistances,
+} from "../equipment";
 import { resolveAbilityDef, ABILITY_DEFS } from "../abilityDefs";
+import { resolveCraftingRecipe, CRAFTING_RECIPES } from "../craftingRecipes";
 import { resolveFuryDef } from "../furyDefs";
 import { computeWallCornerIndex } from "../autotile";
 import {
@@ -96,12 +102,14 @@ const CONSUMABLE_COOLDOWN_MS = 2000; // ajustable - meme delai pour toutes les p
 // de deduplication. Repli sur le rouge (bleed/generique) si un type
 // inconnu de cette table apparait un jour.
 const FURY_KILLS_REQUIRED = 10; // ajustable
+const MAX_SUMMONS = 3;
 const STATUS_EFFECT_COLORS = {
   burn: 0xff8800, // orange
   bleed: 0xcc0000, // rouge
   slow: 0x4488ff, // bleu - coherent avec l'explosion de performAoeDebuffAbility
   haste: 0x44ff88, // vert clair - pour un futur flash sur soi-meme si besoin
   acid: 0x88ff00, // vert
+  stun: 0xffff00, // jaune
 };
 // combat ennemi
 const ENEMY_ATTACK_COOLDOWN = 900;
@@ -170,6 +178,10 @@ const ATTACK_ANIM_DURATION_MS = 400; // 4 frames a frameRate 10 = 400ms - a ajus
  * React (casse l'encapsulation, ne survit pas à un remount du composant).
  */
 export default class MainScene extends Phaser.Scene {
+  // ==============================================================
+  // INITIALISATION
+  // ==============================================================
+
   constructor() {
     super("MainScene");
   }
@@ -320,6 +332,16 @@ export default class MainScene extends Phaser.Scene {
     this.projectiles = [];
     this.enemyProjectiles = [];
     this.abilityProjectiles = []; // projectiles de competences (ex: boule de feu) - distinct de this.projectiles (attaque a distance normale) car l'impact declenche une explosion en zone, pas des degats mono-cible
+    this.zones = []; // nuages toxiques, mares de feu - zones persistantes
+    this.traps = []; // pieges poses au sol
+    this.boomerangs = []; // projectiles qui reviennent
+    this.stealthUntil = 0;
+    this.riposteUntil = 0;
+    this.riposteReflectPercent = 0;
+    this.parryUntil = 0;
+    this.parryDamageReduction = 0;
+    this.visionBonusUntil = 0;
+    this.visionBonusAmount = 0;
 
     this.xp = 0;
     this.playerLevel = 1;
@@ -351,6 +373,10 @@ export default class MainScene extends Phaser.Scene {
 
     this.enemyGroup = this.physics.add.group();
     this.physics.add.collider(this.enemyGroup, this.enemyGroup);
+    this.summonGroup = this.physics.add.group();
+    this.physics.add.collider(this.summonGroup, this.summonGroup); // les invocations se repoussent entre elles, ne se superposent plus
+    this.physics.add.collider(this.summonGroup, this.enemyGroup);
+    this.physics.add.collider(this.summonGroup, this.hero);
     this.levelColliders = [];
 
     const fogTilesetKey = "fog-tiles";
@@ -381,8 +407,11 @@ export default class MainScene extends Phaser.Scene {
     this.currentFloorOpenedChests = [];
     this.quests = {};
     this.unlockedAbilities = []; // ids de competences debloquees (kit de depart + niveau + loot/achat)
+    this.unlockedRecipes = [];
     this.furyKillCount = 0;
     this.pendingWeaponImbue = null; // enchantement du prochain coup en attente - consomme au premier coup qui TOUCHE, restitue si le coup rate
+    this.dashState = null;
+    this.summons = [];
     this.touchFuryRequested = false;
     this.hotbarSlots = new Array(9).fill(null); // {type:'ability', id} | {type:'item', itemId} | null, par emplacement 1..9
     this.abilityCooldowns = {}; // {abilityId: timestamp du prochain tir autorise} - meme esprit que meleeCooldown/rangedCooldown mais par competence, pas un seul cooldown global
@@ -460,6 +489,7 @@ export default class MainScene extends Phaser.Scene {
     this.inventory = ps.inventory || [];
     this.hotbarSlots = ps.hotbarSlots || new Array(9).fill(null);
     this.unlockedAbilities = ps.unlockedAbilities || [];
+    this.unlockedRecipes = ps.unlockedRecipes || [];
     this.furyKillCount = ps.furyKillCount || 0;
     this.equipped = {
       mainHand: null,
@@ -501,7 +531,31 @@ export default class MainScene extends Phaser.Scene {
       null, // savedFogState explicite retire - this.floorFogCache (deja restaure ci-dessus) le fournit desormais via le repli automatique de loadLevel
       ps.playerPosition || null,
     );
-
+    for (const savedSummon of ps.summons || []) {
+      const sprite = this.spawnSummonSprite(
+        savedSummon.spriteKey,
+        this.hero.x + (Math.random() - 0.5) * 40,
+        this.hero.y + (Math.random() - 0.5) * 40,
+      );
+      this.summons.push({
+        sprite,
+        spriteKey: savedSummon.spriteKey,
+        sourceAbilityId: savedSummon.sourceAbilityId,
+        hp: savedSummon.hp,
+        maxHp: savedSummon.maxHp,
+        damage: savedSummon.damage,
+        defense: savedSummon.defense,
+        damageType: savedSummon.damageType,
+        resistances: savedSummon.resistances,
+        persistent: savedSummon.persistent,
+        attackCooldown: createCooldown(ENEMY_ATTACK_COOLDOWN),
+        expiresAt:
+          savedSummon.remainingMs != null
+            ? this.time.now + savedSummon.remainingMs
+            : null,
+        lastDir: "down",
+      });
+    }
     this.events.emit("xp-changed", { xp: this.xp });
     this.events.emit("player-mana-changed", {
       mana: this.playerMana,
@@ -516,6 +570,10 @@ export default class MainScene extends Phaser.Scene {
       Math.floor((Date.now() - this.sessionStartedAt) / 1000)
     );
   }
+
+  // ==============================================================
+  // INVENTAIRE ET EQUIPEMENT
+  // ==============================================================
 
   addItemToInventory(itemId, quantity = 1) {
     if (!itemId || quantity <= 0) return;
@@ -538,6 +596,10 @@ export default class MainScene extends Phaser.Scene {
   showLootToast(text) {
     this.events.emit("loot-toast", text);
   }
+
+  // ==============================================================
+  // ENTREES TACTILES ET CLAVIER
+  // ==============================================================
 
   setTouchMoveVector(x, y) {
     this.touchMoveVector = { x, y };
@@ -574,6 +636,7 @@ export default class MainScene extends Phaser.Scene {
     this.playerMeleeDamage = base.meleeDamage + bonus.meleeDamage;
     this.playerRangedDamage = base.rangedDamage + bonus.rangedDamage;
     this.playerDefense = base.defense + bonus.defense;
+    this.playerResistances = computeEquipmentResistances(this.equipped);
 
     this.playerMaxMana = base.mana + bonus.mana;
     this.playerMaxStamina = base.stamina + (bonus.stamina ?? 0);
@@ -771,6 +834,26 @@ export default class MainScene extends Phaser.Scene {
       return;
     }
 
+    if (def.category === "recipeScroll") {
+      const recipe = resolveCraftingRecipe(def.grantsRecipe);
+      if (!recipe) return;
+      if (this.unlockedRecipes.includes(recipe.id)) {
+        this.showLootToast(`Tu connais déjà la recette : ${recipe.name}`);
+        return;
+      }
+
+      this.unlockedRecipes.push(recipe.id);
+      this.events.emit("recipes-updated", [...this.unlockedRecipes]);
+      this.showLootToast(`Recette apprise : ${recipe.name} !`);
+
+      item.quantity -= 1;
+      if (item.quantity <= 0) this.inventory.splice(index, 1);
+
+      this.events.emit("inventory-updated", [...this.inventory]);
+      this.persistProgress();
+      return;
+    }
+
     if (def.category !== "consumable" || !def.effect) return;
     if (def.unlockLevel && this.playerLevel < def.unlockLevel) {
       this.showLootToast(`Nécessite le niveau ${def.unlockLevel}`);
@@ -800,6 +883,7 @@ export default class MainScene extends Phaser.Scene {
         hp: this.playerHp,
         maxHp: this.playerMaxHp,
       });
+      this.showDamageNumber(this.hero, def.effect.heal, "#44ff44", "+");
     }
 
     if (def.effect.mana) {
@@ -819,6 +903,10 @@ export default class MainScene extends Phaser.Scene {
     this.events.emit("inventory-updated", [...this.inventory]);
     this.persistProgress();
   }
+
+  // ==============================================================
+  // SAUVEGARDE
+  // ==============================================================
 
   /**
    * Coeur de la sauvegarde, en version async attendable.
@@ -869,6 +957,23 @@ export default class MainScene extends Phaser.Scene {
           quests: this.quests,
           inventory: this.inventory,
           hotbarSlots: this.hotbarSlots,
+          unlockedRecipes: this.unlockedRecipes,
+          summons: this.summons.map((s) => ({
+            spriteKey: s.spriteKey,
+            hp: s.hp,
+            maxHp: s.maxHp,
+            damage: s.damage,
+            defense: s.defense,
+            damageType: s.damageType,
+            resistances: s.resistances,
+            persistent: s.persistent,
+            sourceAbilityId: s.sourceAbilityId,
+            // duree RESTANTE, jamais un timestamp absolu (this.time.now sera
+            // completement different au rechargement)
+            remainingMs: s.expiresAt
+              ? Math.max(0, s.expiresAt - this.time.now)
+              : null,
+          })),
           furyKillCount: this.furyKillCount,
           unlockedAbilities: this.unlockedAbilities,
           equipped: this.equipped,
@@ -899,6 +1004,10 @@ export default class MainScene extends Phaser.Scene {
     await this.persistProgressAsync();
     this.events.emit("quit-to-menu");
   }
+
+  // ==============================================================
+  // CHARGEMENT DE NIVEAU
+  // ==============================================================
 
   /**
    * Charge un étage via l'API (GET /api/arpg/level) et reconstruit
@@ -1065,8 +1174,28 @@ export default class MainScene extends Phaser.Scene {
     this.enemyProjectiles = [];
     this.abilityProjectiles.forEach((p) => p.sprite.destroy());
     this.abilityProjectiles = [];
+    if (this.summonGroup) this.summonGroup.clear(false, false);
+    // les invocations PERSISTANTES (familier) survivent au changement
+    // d'etage - seule leur SPRITE est recreee (l'ancienne appartenait a la
+    // scene precedente, deja detruite par summonGroup.clear ci-dessus),
+    // leurs donnees (hp, degats...) restent intactes
+    const persistentSummons = this.summons.filter((s) => s.persistent);
+    this.summons.forEach((s) => {
+      if (!s.persistent) s.sprite.destroy();
+    });
+    this.summons = [];
     this.playerStatusEffects = []; // remis a zero a chaque changement d'etage, comme les projectiles
     this.pendingWeaponImbue = null; // transitoire, remis a zero a chaque changement d'etage comme les autres etats de combat
+    this.zones.forEach((z) => z.sprite.destroy());
+    this.zones = [];
+    this.traps.forEach((t) => t.sprite.destroy());
+    this.traps = [];
+    this.boomerangs.forEach((b) => b.sprite.destroy());
+    this.boomerangs = [];
+    this.stealthUntil = 0;
+    this.riposteUntil = 0;
+    this.parryUntil = 0;
+    this.visionBonusUntil = 0;
 
     this.playerHp =
       typeof hpOverride === "number"
@@ -1270,6 +1399,14 @@ export default class MainScene extends Phaser.Scene {
       x: startPosition.x,
       y: startPosition.y,
     };
+    for (const ps of persistentSummons) {
+      ps.sprite = this.spawnSummonSprite(
+        ps.spriteKey,
+        playerSpawn.x * TILE_SIZE + TILE_SIZE / 2,
+        playerSpawn.y * TILE_SIZE + TILE_SIZE / 2,
+      );
+      this.summons.push(ps);
+    }
     this.hero.setScale(heroSprite.scale);
     this.hero.setCollideWorldBounds(true);
     const hb = heroSprite.hitbox;
@@ -1425,6 +1562,8 @@ export default class MainScene extends Phaser.Scene {
         attackType: enemyData.attackType || "melee",
         questLoot: enemyData.questLoot || null, // objet garanti si une quete obtainItem le cible precisement - cf. damageEnemy
         inflictsEffect: enemyData.inflictsEffect || null, // saignement/brulure eventuel inflige au joueur - cf. rollStatusEffect/updateEnemyAttacks
+        resistances: enemyData.resistances || {},
+        damageType: enemyData.damageType || "physical",
         statusEffects: [], // saignement/brulure actifs SUR cet ennemi (infliges par le joueur) - cf. updateStatusEffects
         drops: enemyData.drops || [],
         attackCooldown: createCooldown(ENEMY_ATTACK_COOLDOWN),
@@ -1542,6 +1681,7 @@ export default class MainScene extends Phaser.Scene {
     this.events.emit("inventory-updated", [...this.inventory]);
     this.events.emit("equipment-updated", { ...this.equipped });
     this.events.emit("hotbar-updated", [...this.hotbarSlots]);
+    this.events.emit("recipes-updated", [...this.unlockedRecipes]);
     this.events.emit("fury-progress", {
       count: this.furyKillCount,
       required: FURY_KILLS_REQUIRED,
@@ -1549,6 +1689,10 @@ export default class MainScene extends Phaser.Scene {
     this.events.emit("abilities-updated", [...this.unlockedAbilities]);
     this.persistProgress();
   }
+
+  // ==============================================================
+  // NAVIGATION ENTRE ETAGES ET VOYAGE RAPIDE
+  // ==============================================================
 
   retryLevel() {
     this.playerHp = this.playerMaxHp;
@@ -1582,6 +1726,10 @@ export default class MainScene extends Phaser.Scene {
     this.unpauseGame("travelHub");
     this.events.emit("travel-hub", null);
   }
+
+  // ==============================================================
+  // BOUTIQUE
+  // ==============================================================
 
   openShop() {
     this.pauseGame("shop");
@@ -1621,6 +1769,10 @@ export default class MainScene extends Phaser.Scene {
     this.unpauseGame("shop");
     this.events.emit("shop", null);
   }
+
+  // ==============================================================
+  // BOSS
+  // ==============================================================
 
   openBossDoor() {
     this.bossRoomOpen = true;
@@ -1688,6 +1840,10 @@ export default class MainScene extends Phaser.Scene {
     this.events.emit("boss-room-opened");
   }
 
+  // ==============================================================
+  // PAUSE DU JEU
+  // ==============================================================
+
   pauseGame(reason) {
     const wasAlreadyPaused = this.gamePaused;
     this.pauseReasons.add(reason);
@@ -1746,6 +1902,10 @@ export default class MainScene extends Phaser.Scene {
     this.gamePaused = stillPaused;
   }
 
+  // ==============================================================
+  // PROMPTS ESCALIER ET SORTIE
+  // ==============================================================
+
   showUpstairsPrompt() {
     if (this.pauseReasons.has("upstairs")) return;
     this.pauseGame("upstairs");
@@ -1779,6 +1939,10 @@ export default class MainScene extends Phaser.Scene {
     this.unpauseGame("exit");
     this.events.emit("exit-prompt", null);
   }
+
+  // ==============================================================
+  // PNJ ET QUETES
+  // ==============================================================
 
   createQuestNpcs(npcDataArray) {
     const npcSpritePool = Object.keys(SPRITE_REGISTRY).filter((key) =>
@@ -2231,71 +2395,82 @@ export default class MainScene extends Phaser.Scene {
     this.events.emit("npc-dialog", null);
   }
 
+  // ==============================================================
+  // BOUCLE PRINCIPALE
+  // ==============================================================
+
   update(time, delta) {
     if (!this.hero || this.isDead) return;
     if (this.gamePaused) return;
     this.updateRegen(delta);
 
-    const speed = this.getEffectivePlayerMoveSpeed();
-    let vx = 0,
-      vy = 0;
-    const azertyLayout = this.keyboardLayout !== "qwerty";
-    const left =
-      this.cursors.left.isDown ||
-      (azertyLayout
-        ? this.keys.leftAzerty.isDown
-        : this.keys.leftQwerty.isDown);
-    const right = this.cursors.right.isDown || this.keys.right.isDown;
-    const up =
-      this.cursors.up.isDown ||
-      (azertyLayout ? this.keys.upAzerty.isDown : this.keys.upQwerty.isDown);
-    const down = this.cursors.down.isDown || this.keys.down.isDown;
-
-    if (left) vx -= 1;
-    if (right) vx += 1;
-    if (up) vy -= 1;
-    if (down) vy += 1;
-
-    vx += this.touchMoveVector.x;
-    vy += this.touchMoveVector.y;
-
-    const mag = Math.hypot(vx, vy);
-    if (mag > 1) {
-      vx /= mag;
-      vy /= mag;
-    }
-    vx *= speed;
-    vy *= speed;
-
-    this.hero.setVelocity(vx, vy);
-
-    let dir = this.lastDir;
-    const moving = vx !== 0 || vy !== 0;
-    if (moving) {
-      dir =
-        Math.abs(vx) > Math.abs(vy)
-          ? vx > 0
-            ? "right"
-            : "left"
-          : vy > 0
-            ? "down"
-            : "up";
-    }
-
-    if (this.time.now < this.attackAnimUntil) {
-      // animation d'attaque en cours - ne pas l'interrompre avec idle/marche
-    } else if (moving) {
-      this.hero.anims.play(this.heroSpriteKey + "-walk-" + dir, true);
-      this.lastDir = dir;
+    if (this.dashState) {
+      this.updateShieldBash();
     } else {
-      this.hero.anims.play(this.heroSpriteKey + "-idle-" + this.lastDir, true);
-    }
+      const speed = this.getEffectivePlayerMoveSpeed();
+      let vx = 0,
+        vy = 0;
+      vy = 0;
+      const azertyLayout = this.keyboardLayout !== "qwerty";
+      const left =
+        this.cursors.left.isDown ||
+        (azertyLayout
+          ? this.keys.leftAzerty.isDown
+          : this.keys.leftQwerty.isDown);
+      const right = this.cursors.right.isDown || this.keys.right.isDown;
+      const up =
+        this.cursors.up.isDown ||
+        (azertyLayout ? this.keys.upAzerty.isDown : this.keys.upQwerty.isDown);
+      const down = this.cursors.down.isDown || this.keys.down.isDown;
 
-    if (moving) {
-      const len = Math.hypot(vx, vy);
-      this.lastAimVector = { x: vx / len, y: vy / len };
-    }
+      if (left) vx -= 1;
+      if (right) vx += 1;
+      if (up) vy -= 1;
+      if (down) vy += 1;
 
+      vx += this.touchMoveVector.x;
+      vy += this.touchMoveVector.y;
+
+      const mag = Math.hypot(vx, vy);
+      if (mag > 1) {
+        vx /= mag;
+        vy /= mag;
+      }
+      vx *= speed;
+      vy *= speed;
+
+      this.hero.setVelocity(vx, vy);
+
+      let dir = this.lastDir;
+      const moving = vx !== 0 || vy !== 0;
+      if (moving) {
+        dir =
+          Math.abs(vx) > Math.abs(vy)
+            ? vx > 0
+              ? "right"
+              : "left"
+            : vy > 0
+              ? "down"
+              : "up";
+      }
+
+      if (this.time.now < this.attackAnimUntil) {
+        // animation d'attaque en cours - ne pas l'interrompre avec idle/marche
+      } else if (moving) {
+        this.hero.anims.play(this.heroSpriteKey + "-walk-" + dir, true);
+        this.lastDir = dir;
+      } else {
+        this.hero.anims.play(
+          this.heroSpriteKey + "-idle-" + this.lastDir,
+          true,
+        );
+      }
+
+      if (moving) {
+        const len = Math.hypot(vx, vy);
+        this.lastAimVector = { x: vx / len, y: vy / len };
+      }
+    }
     const tileX = Math.floor(this.hero.x / TILE_SIZE);
     const tileY = Math.floor(this.hero.y / TILE_SIZE);
     if (
@@ -2308,7 +2483,7 @@ export default class MainScene extends Phaser.Scene {
         const changes = this.fogState.update(
           tileX,
           tileY,
-          this.playerVisionRadius,
+          this.getEffectivePlayerVisionRadius(),
         );
         this.applyFogChanges(changes);
       }
@@ -2394,6 +2569,10 @@ export default class MainScene extends Phaser.Scene {
     this.updateStatusEffects(now);
     this.updateNpcMovement(this.questNpcs);
     this.updateNpcMovement(this.ambientNpcs);
+    this.updateSummons(this.time.now);
+    this.updateZones(this.time.now);
+    this.updateTraps(this.time.now);
+    this.updateBoomerangs();
     this.drawHpBars();
 
     if (this.playerHp <= 0 && !this.isDead) {
@@ -2404,6 +2583,10 @@ export default class MainScene extends Phaser.Scene {
       this.persistProgress();
     }
   }
+
+  // ==============================================================
+  // BROUILLARD DE GUERRE ET MINIMAP
+  // ==============================================================
 
   getQuestNpcMinimapData() {
     if (!this.questNpcs || !this.fogState?.state) return [];
@@ -2449,6 +2632,13 @@ export default class MainScene extends Phaser.Scene {
       }));
   }
 
+  getSummonMinimapData() {
+    return this.summons.map((s) => ({
+      x: Math.floor(s.sprite.x / TILE_SIZE),
+      y: Math.floor(s.sprite.y / TILE_SIZE),
+    }));
+  }
+
   applyFogChanges(changes) {
     for (const { x, y } of changes) {
       const s = this.fogState.state[y][x];
@@ -2483,6 +2673,7 @@ export default class MainScene extends Phaser.Scene {
     }
 
     const questNpcs = this.getQuestNpcMinimapData();
+    const summons = this.getSummonMinimapData();
 
     this.events.emit("fog-changed", {
       grid: this.fogGrid,
@@ -2491,8 +2682,13 @@ export default class MainScene extends Phaser.Scene {
       exitTile: this.exitTile,
       upstairsTile: this.upstairsTile,
       questNpcs,
+      summons,
     });
   }
+
+  // ==============================================================
+  // IA ENNEMIE
+  // ==============================================================
 
   isPlayerBehindEnemy(enemy, ex, ey, playerTileX, playerTileY) {
     const facing = ENEMY_DIR_VECTORS[enemy.lastDir] || ENEMY_DIR_VECTORS.down;
@@ -2508,8 +2704,10 @@ export default class MainScene extends Phaser.Scene {
     const grid = this.fogGrid;
     const width = grid[0].length,
       height = grid.length;
+    const isStealthed = this.time.now < this.stealthUntil;
 
     for (const enemy of this.enemies) {
+      if (isStealthed && enemy.state !== "chase") continue; // furtivite active - aucune detection possible tant que pas deja engage
       const ex = Math.floor(enemy.sprite.x / TILE_SIZE);
       const ey = Math.floor(enemy.sprite.y / TILE_SIZE);
       const distanceToPlayer = Math.hypot(ex - playerTileX, ey - playerTileY);
@@ -2570,6 +2768,15 @@ export default class MainScene extends Phaser.Scene {
     for (const enemy of this.enemies) {
       enemy.visible = this.isEnemyVisible(enemy);
       enemy.sprite.setVisible(enemy.visible);
+
+      if (this.isEnemyStunned(enemy) || this.isEnemyRooted(enemy)) {
+        enemy.sprite.setVelocity(0, 0);
+        enemy.sprite.anims.play(
+          enemy.spriteKey + "-idle-" + enemy.lastDir,
+          true,
+        );
+        continue;
+      }
 
       if (enemy.state === "chase" || enemy.state === "returning") {
         const distToHero = Math.hypot(
@@ -2665,6 +2872,13 @@ export default class MainScene extends Phaser.Scene {
       return false;
     return state[ey][ex] === 2;
   }
+  isEnemyStunned(enemy) {
+    return enemy.statusEffects.some((e) => e.type === "stun");
+  }
+
+  isEnemyRooted(enemy) {
+    return enemy.statusEffects.some((e) => e.type === "root");
+  }
 
   moveEnemyToward(enemy, waypointTile, speed, onArrive) {
     const targetX = waypointTile.x * TILE_SIZE + TILE_SIZE / 2;
@@ -2709,6 +2923,11 @@ export default class MainScene extends Phaser.Scene {
     enemy.sprite.anims.play(enemy.spriteKey + "-walk-" + edir, true);
     enemy.lastDir = edir;
   }
+
+  /**
+  // ==============================================================
+  // REGENERATION PASSIVE
+  // ==============================================================
 
   /**
    * Regeneration PASSIVE de PV/mana/stamina - tres lente par design, et
@@ -2759,6 +2978,10 @@ export default class MainScene extends Phaser.Scene {
     }
   }
 
+  // ==============================================================
+  // PNJ - MOUVEMENT
+  // ==============================================================
+
   updateNpcMovement(npcList) {
     if (!npcList) return;
     const state = this.fogState.state;
@@ -2798,6 +3021,10 @@ export default class MainScene extends Phaser.Scene {
       npc.sprite.anims.play(`${npc.spriteKey}-idle-${npc.lastDir}`, true);
     }
   }
+
+  // ==============================================================
+  // COMBAT JOUEUR - MELEE ET DISTANCE
+  // ==============================================================
 
   performInteraction() {
     if (!this.dialogOpen) {
@@ -2900,6 +3127,8 @@ export default class MainScene extends Phaser.Scene {
     if (!this.meleeCooldown.isReady(now)) return;
     this.meleeCooldown.trigger(now);
 
+    // arme en main principale UNIQUEMENT (jamais offHand, meme en double
+    // armement) - simplifie le declenchement de l'effet de statut
     const meleeWeaponDef = this.equipped.mainHand
       ? resolveItemDef(this.equipped.mainHand)
       : null;
@@ -2907,16 +3136,6 @@ export default class MainScene extends Phaser.Scene {
     const imbue = this.pendingWeaponImbue;
     this.pendingWeaponImbue = null;
     let anyHit = false;
-    const hasAttackAnim = this.anims.exists(
-      this.heroSpriteKey + "-attack-" + this.lastDir,
-    );
-    if (hasAttackAnim) {
-      this.hero.anims.play(
-        this.heroSpriteKey + "-attack-" + this.lastDir,
-        true,
-      );
-      this.attackAnimUntil = this.time.now + ATTACK_ANIM_DURATION_MS;
-    }
 
     for (const enemy of this.enemies) {
       const dx = enemy.sprite.x - this.hero.x;
@@ -2934,20 +3153,51 @@ export default class MainScene extends Phaser.Scene {
       const isCrit = rollCritical(enemy.state !== "chase");
       let rawDamage =
         this.getEffectivePlayerMeleeDamage() * (isCrit ? CRIT_MULTIPLIER : 1);
+
+      if (meleeWeaponDef?.varianceDice) {
+        rawDamage = applyDiceVariance(rawDamage, meleeWeaponDef.varianceDice);
+      }
+      rawDamage = applyElementalResistance(
+        rawDamage,
+        meleeWeaponDef?.damageType,
+        enemy.resistances,
+      );
+      if (
+        imbue?.executeThreshold &&
+        enemy.hp / enemy.maxHp <= imbue.executeThreshold
+      ) {
+        rawDamage *= imbue.executeBonusMultiplier;
+      }
       if (imbue) rawDamage += imbue.bonusDamage;
-      this.damageEnemy(enemy, computeDamage(rawDamage, enemy.defense));
+
+      const dealt = computeDamage(rawDamage, enemy.defense);
+      this.damageEnemy(enemy, dealt);
       anyHit = true;
 
+      if (imbue?.healPercent) {
+        this.playerHp = Math.min(
+          this.playerMaxHp,
+          this.playerHp + dealt * imbue.healPercent,
+        );
+        this.events.emit("player-hp-changed", {
+          hp: this.playerHp,
+          maxHp: this.playerMaxHp,
+        });
+      }
+
+      // effet de statut eventuel de l'arme (saignement/brulure/etc) - chance
+      // aleatoire par coup touche
       if (enemy.hp > 0) {
         this.applyStatusEffect(
           enemy.statusEffects,
           this.rollStatusEffect(meleeWeaponDef),
         );
-        if (imbue)
+        if (imbue) {
           this.applyStatusEffect(
             enemy.statusEffects,
             this.rollStatusEffect(imbue),
           );
+        }
       }
     }
 
@@ -3150,8 +3400,15 @@ export default class MainScene extends Phaser.Scene {
           let rawDamage =
             this.getEffectivePlayerRangedDamage() *
             (isCrit ? CRIT_MULTIPLIER : 1);
-          if (proj.imbue) rawDamage += proj.imbue.bonusDamage;
+
+          rawDamage = applyElementalResistance(
+            rawDamage,
+            proj.weaponDef?.damageType,
+            enemy.resistances,
+          );
+
           this.damageEnemy(enemy, computeDamage(rawDamage, enemy.defense));
+
           if (enemy.hp > 0) {
             this.applyStatusEffect(
               enemy.statusEffects,
@@ -3212,6 +3469,11 @@ export default class MainScene extends Phaser.Scene {
     });
     this.nextLootChestId++;
   }
+
+  /**
+  // ==============================================================
+  // BARRE DE RACCOURCIS
+  // ==============================================================
 
   /**
    * Active l'emplacement `slotIndex` (0-8, correspond aux touches 1-9) de
@@ -3339,21 +3601,42 @@ export default class MainScene extends Phaser.Scene {
   }
 
   /**
+  // ==============================================================
+  // COMPETENCES
+  // ==============================================================
+
+  /**
    * Execute une competence par son id - verifie cooldown INDIVIDUEL (par
    * competence, pas un seul cooldown global comme pour melee/ranged) et
-   * stamina, puis dispatche selon effectType. Seul 'aoe' est implemente
-   * pour l'instant - 'pierce'/'debuff'/'buff' a construire sur le meme
-   * schema, cf. abilityDefs.js.
+   * stamina, puis dispatche selon effectType.
    */
   performAbility(abilityId) {
     if (!this.unlockedAbilities.includes(abilityId)) return;
 
     const def = resolveAbilityDef(abilityId);
     if (
+      def.hpThresholdPercent != null &&
+      this.playerHp / this.playerMaxHp > def.hpThresholdPercent
+    ) {
+      this.showLootToast(
+        `Nécessite d'être sous ${Math.round(def.hpThresholdPercent * 100)}% PV`,
+      );
+      return;
+    }
+    if (
       def.disabledBiomes &&
       def.disabledBiomes.includes(this.currentBiomeId)
     ) {
       this.showLootToast(`${def.name} est désactivée sur ce type de niveau`);
+      return;
+    }
+    if (
+      def.hpThresholdPercent != null &&
+      this.playerHp / this.playerMaxHp > def.hpThresholdPercent
+    ) {
+      this.showLootToast(
+        `Nécessite d'être sous ${Math.round(def.hpThresholdPercent * 100)}% PV`,
+      );
       return;
     }
     const now = this.time.now;
@@ -3390,6 +3673,48 @@ export default class MainScene extends Phaser.Scene {
       this.performWeaponImbueAbility(def);
     } else if (def.effectType === "fogPulse") {
       this.performFogPulseAbility(def);
+    } else if (def.effectType === "shieldBash") {
+      this.performShieldBashAbility(def);
+    } else if (def.effectType === "taunt") {
+      this.performTauntAbility(def);
+    } else if (def.effectType === "repel") {
+      this.performRepelAbility(def);
+    } else if (def.effectType === "aoeStun") {
+      this.performAoeStunAbility(def);
+    } else if (def.effectType === "summon") {
+      this.performSummonAbility(def);
+    } else if (def.effectType === "teleportDash") {
+      this.performTeleportDashAbility(def);
+    } else if (def.effectType === "randomTeleport") {
+      this.performRandomTeleportAbility(def);
+    } else if (def.effectType === "stealth") {
+      this.performStealthAbility(def);
+    } else if (def.effectType === "chainLightning") {
+      this.performChainLightningAbility(def);
+    } else if (def.effectType === "zone") {
+      this.performZoneAbility(def);
+    } else if (def.effectType === "aoeCurse") {
+      this.performAoeCurseAbility(def);
+    } else if (def.effectType === "riposte") {
+      this.performRiposteAbility(def);
+    } else if (def.effectType === "parry") {
+      this.performParryAbility(def);
+    } else if (def.effectType === "trap") {
+      this.performTrapAbility(def);
+    } else if (def.effectType === "cone") {
+      this.performConeAbility(def);
+    } else if (def.effectType === "aoeRoot") {
+      this.performAoeRootAbility(def);
+    } else if (def.effectType === "boomerang") {
+      this.performBoomerangAbility(def);
+    } else if (def.effectType === "vortex") {
+      this.performVortexAbility(def);
+    } else if (def.effectType === "visionBuff") {
+      this.performVisionBuffAbility(def);
+    } else if (def.effectType === "bloodPact") {
+      this.performBloodPactAbility(def);
+    } else if (def.effectType === "conditionalBuff") {
+      this.performConditionalBuffAbility(def);
     } else {
       this.showLootToast(`${def.name} : effet pas encore implémenté`);
       return;
@@ -3411,11 +3736,379 @@ export default class MainScene extends Phaser.Scene {
     }
 
     this.abilityCooldowns[abilityId] = now + def.cooldownMs;
-    this.abilityCooldowns[abilityId] = now + def.cooldownMs;
     this.events.emit("hotbar-cooldown-started", {
       key: `ability:${abilityId}`,
       cooldownMs: def.cooldownMs,
       startedAt: Date.now(),
+    });
+  }
+
+  performAoeStunAbility(def) {
+    for (const enemy of this.enemies) {
+      if (!this.isEnemyVisible(enemy)) continue;
+      const dist = Math.hypot(
+        enemy.sprite.x - this.hero.x,
+        enemy.sprite.y - this.hero.y,
+      );
+      if (dist > def.radius) continue;
+      this.applyStatusEffect(enemy.statusEffects, {
+        type: "stun",
+        kind: "modifier",
+        statModifiers: {},
+        durationMs: def.durationMs,
+      });
+    }
+
+    const circle = this.add.circle(this.hero.x, this.hero.y, 10, 0xffff00, 0.4);
+    circle.setDepth(14);
+    this.tweens.add({
+      targets: circle,
+      radius: def.radius,
+      alpha: 0,
+      duration: 400,
+      onComplete: () => circle.destroy(),
+    });
+  }
+
+  performRepelAbility(def) {
+    for (const enemy of this.enemies) {
+      if (!this.isEnemyVisible(enemy)) continue;
+      const dx = enemy.sprite.x - this.hero.x;
+      const dy = enemy.sprite.y - this.hero.y;
+      const dist = Math.hypot(dx, dy);
+      if (dist > def.radius) continue;
+
+      if (def.damage) {
+        this.damageEnemy(enemy, computeDamage(def.damage, enemy.defense));
+      }
+
+      const mag = dist || 1;
+      this.knockbackEnemyIfClear(
+        enemy,
+        (dx / mag) * def.knockbackDistance,
+        (dy / mag) * def.knockbackDistance,
+      );
+    }
+
+    const circle = this.add.circle(this.hero.x, this.hero.y, 10, 0xaaaaff, 0.4);
+    circle.setDepth(14);
+    this.tweens.add({
+      targets: circle,
+      radius: def.radius,
+      alpha: 0,
+      duration: 400,
+      onComplete: () => circle.destroy(),
+    });
+  }
+
+  /**
+   * Cree et configure un sprite d'invocation a une position donnee -
+   * factorise car reutilise a 3 endroits : creation initiale
+   * (performSummonAbility), reapparition d'un familier persistant a
+   * chaque etage (loadLevel), et restauration a la reprise d'une
+   * sauvegarde (resumeFromSave).
+   */
+  spawnSummonSprite(spriteKey, x, y) {
+    const summonSpriteInfo =
+      SPRITE_REGISTRY[spriteKey] || SPRITE_REGISTRY.enemyDefault;
+    const sprite = this.summonGroup.create(
+      x,
+      y,
+      summonSpriteInfo.key,
+      summonSpriteInfo.animations.idleDown,
+    );
+    sprite.setScale(summonSpriteInfo.scale);
+    const hb = summonSpriteInfo.hitbox;
+    sprite.body.setSize(hb.width, hb.height).setOffset(hb.offsetX, hb.offsetY);
+    sprite.setDepth(8);
+    sprite.anims.play(spriteKey + "-idle-down");
+    this.levelColliders.push(this.physics.add.collider(sprite, this.layer));
+    this.levelColliders.push(
+      this.physics.add.collider(sprite, this.enemyGroup),
+    );
+    return sprite;
+  }
+
+  /**
+   * Cree une invocation temporaire - une seule active a la fois (une
+   * nouvelle remplace l'ancienne). Expire par duree (def.durationMs) OU
+   * par mort (hp <= 0, cf. updateSummons et le ciblage ajoute dans
+   * updateEnemyAttacks).
+   */
+  performSummonAbility(def) {
+    // un familier PERSISTANT ne peut exister qu'en un seul exemplaire a
+    // la fois - identifie par l'id de la competence d'origine
+    // (sourceAbilityId), pas juste le sprite (deux familiers differents
+    // pourraient partager le meme visuel)
+    if (def.persistent) {
+      const alreadyHasThis = this.summons.some(
+        (s) => s.persistent && s.sourceAbilityId === def.id,
+      );
+      if (alreadyHasThis) {
+        this.showLootToast(`Tu as déjà invoqué ${def.name}`);
+        return;
+      }
+    }
+
+    if (this.summons.length >= MAX_SUMMONS) {
+      const oldestIndex = this.summons.findIndex((s) => !s.persistent);
+      if (oldestIndex === -1) {
+        this.showLootToast("Toutes tes invocations sont déjà occupées");
+        return;
+      }
+      const oldest = this.summons.splice(oldestIndex, 1)[0];
+      oldest.sprite.destroy();
+    }
+
+    const spawnX = this.hero.x + (Math.random() - 0.5) * 40;
+    const spawnY = this.hero.y + (Math.random() - 0.5) * 40;
+    const sprite = this.spawnSummonSprite(def.summonType, spawnX, spawnY);
+
+    this.summons.push({
+      sprite,
+      spriteKey: def.summonType,
+      sourceAbilityId: def.id, //
+      hp: def.hp,
+      maxHp: def.hp,
+      damage: def.damage,
+      defense: def.defense,
+      damageType: def.damageType || "physical",
+      resistances: def.resistances || {},
+      persistent: def.persistent || false,
+      attackCooldown: createCooldown(ENEMY_ATTACK_COOLDOWN),
+      expiresAt: def.durationMs ? this.time.now + def.durationMs : null,
+      lastDir: "down",
+    });
+
+    this.showLootToast(`${def.name} invoquée !`);
+  }
+
+  /**
+   * IA simplifiee de l'invocation : suit le heros si aucun ennemi
+   * proche, sinon fonce sur l'ennemi visible le plus proche et
+   * l'attaque a portee. Appelee chaque frame depuis update().
+   */
+  updateSummons(now) {
+    const remaining = [];
+    for (const summon of this.summons) {
+      if (summon.expiresAt && now >= summon.expiresAt) {
+        summon.sprite.destroy();
+        this.showLootToast("L'invocation s'est dissipée");
+        continue;
+      }
+      if (summon.hp <= 0) {
+        summon.sprite.destroy();
+        this.showLootToast("L'invocation a été vaincue");
+        continue;
+      }
+
+      let nearestEnemy = null;
+      let nearestDist = Infinity;
+      for (const enemy of this.enemies) {
+        if (!this.isEnemyVisible(enemy)) continue;
+        const dist = Math.hypot(
+          enemy.sprite.x - summon.sprite.x,
+          enemy.sprite.y - summon.sprite.y,
+        );
+        if (dist < nearestDist) {
+          nearestDist = dist;
+          nearestEnemy = enemy;
+        }
+      }
+
+      if (nearestEnemy && nearestDist < 250) {
+        const dx = nearestEnemy.sprite.x - summon.sprite.x;
+        const dy = nearestEnemy.sprite.y - summon.sprite.y;
+        const dist = Math.hypot(dx, dy);
+        if (dist > 34) {
+          const nx = dx / dist,
+            ny = dy / dist;
+          summon.sprite.setVelocity(nx * 100, ny * 100);
+          summon.lastDir =
+            Math.abs(nx) > Math.abs(ny)
+              ? nx > 0
+                ? "right"
+                : "left"
+              : ny > 0
+                ? "down"
+                : "up";
+          summon.sprite.anims.play(
+            summon.spriteKey + "-walk-" + summon.lastDir,
+            true,
+          );
+        } else {
+          summon.sprite.setVelocity(0, 0);
+          summon.sprite.anims.play(
+            summon.spriteKey + "-idle-" + summon.lastDir,
+            true,
+          );
+          if (summon.attackCooldown.isReady(now)) {
+            summon.attackCooldown.trigger(now);
+            const rawDamage = applyElementalResistance(
+              summon.damage,
+              summon.damageType,
+              nearestEnemy.resistances,
+            );
+            this.damageEnemy(
+              nearestEnemy,
+              computeDamage(rawDamage, nearestEnemy.defense),
+            );
+          }
+        }
+      } else {
+        const dx = this.hero.x - summon.sprite.x;
+        const dy = this.hero.y - summon.sprite.y;
+        const dist = Math.hypot(dx, dy);
+        if (dist > 60) {
+          const nx = dx / dist,
+            ny = dy / dist;
+          summon.sprite.setVelocity(nx * 120, ny * 120);
+          summon.lastDir =
+            Math.abs(nx) > Math.abs(ny)
+              ? nx > 0
+                ? "right"
+                : "left"
+              : ny > 0
+                ? "down"
+                : "up";
+          summon.sprite.anims.play(
+            summon.spriteKey + "-walk-" + summon.lastDir,
+            true,
+          );
+        } else {
+          summon.sprite.setVelocity(0, 0);
+          summon.sprite.anims.play(
+            summon.spriteKey + "-idle-" + summon.lastDir,
+            true,
+          );
+        }
+      }
+
+      remaining.push(summon);
+    }
+    this.summons = remaining;
+  }
+
+  performShieldBashAbility(def) {
+    const shieldDef = this.equipped.offHand
+      ? resolveItemDef(this.equipped.offHand)
+      : null;
+    if (def.requiresShield && (!shieldDef || !shieldDef.isShield)) {
+      this.showLootToast("Nécessite un bouclier équipé");
+      return;
+    }
+
+    const dir = this.lastAimVector;
+    this.dashState = {
+      def,
+      dirX: dir.x,
+      dirY: dir.y,
+      hitEnemyIds: new Set(),
+      startX: this.hero.x,
+      startY: this.hero.y,
+    };
+    this.hero.setVelocity(dir.x * def.dashSpeed, dir.y * def.dashSpeed);
+  }
+  /**
+   * Deplace un sprite ennemi d'un delta donne, SEULEMENT si la case
+   * d'arrivee n'est pas un mur - sinon le recul est simplement annule
+   * (l'ennemi reste sur place plutot que d'etre pousse dans/a travers une
+   * paroi solide). Reutilise par repel ET shieldBash.
+   */
+  knockbackEnemyIfClear(enemy, dx, dy) {
+    const newX = enemy.sprite.x + dx;
+    const newY = enemy.sprite.y + dy;
+    const tileX = Math.floor(newX / TILE_SIZE);
+    const tileY = Math.floor(newY / TILE_SIZE);
+    const grid = this.fogGrid;
+    if (
+      tileY < 0 ||
+      tileX < 0 ||
+      tileY >= grid.length ||
+      tileX >= grid[0].length
+    )
+      return;
+    if (grid[tileY][tileX] === WALL) return;
+    enemy.sprite.x = newX;
+    enemy.sprite.y = newY;
+  }
+  /**
+   * Fait avancer le dash en cours - appelee CHAQUE frame depuis update()
+   * A LA PLACE du mouvement normal (input clavier ignore pendant le dash).
+   * S'arrete des que la distance prevue est parcourue OU que le heros a
+   * physiquement percute un mur (vitesse annulee par le collider deja en
+   * place avec this.layer).
+   */
+  updateShieldBash() {
+    const ds = this.dashState;
+    const traveled = Math.hypot(
+      this.hero.x - ds.startX,
+      this.hero.y - ds.startY,
+    );
+
+    for (const enemy of this.enemies) {
+      if (ds.hitEnemyIds.has(enemy)) continue;
+      const dist = Math.hypot(
+        enemy.sprite.x - this.hero.x,
+        enemy.sprite.y - this.hero.y,
+      );
+      if (dist <= 24) {
+        this.damageEnemy(enemy, computeDamage(ds.def.damage, enemy.defense));
+        ds.hitEnemyIds.add(enemy);
+        this.knockbackEnemyIfClear(
+          enemy,
+          ds.dirX * ds.def.knockbackDistance,
+          ds.dirY * ds.def.knockbackDistance,
+        );
+      }
+    }
+
+    const stoppedByWall =
+      this.hero.body.velocity.x === 0 && this.hero.body.velocity.y === 0;
+    if (traveled >= ds.def.dashDistance || stoppedByWall) {
+      this.hero.setVelocity(0, 0);
+      this.dashState = null;
+    }
+  }
+
+  /**
+   * Force tous les ennemis proches (visibles) en 'chase', peu importe
+   * leur etat actuel - meme mecanisme que damageEnemy (cf. le correctif
+   * anti-farming de critiques dans le dos), juste declenche a distance
+   * plutot que par un coup physique.
+   */
+  performTauntAbility(def) {
+    for (const enemy of this.enemies) {
+      if (!this.isEnemyVisible(enemy)) continue;
+      const dist = Math.hypot(
+        enemy.sprite.x - this.hero.x,
+        enemy.sprite.y - this.hero.y,
+      );
+      if (dist > def.radius) continue;
+      if (enemy.state !== "chase") {
+        enemy.state = "chase";
+        const ex = Math.floor(enemy.sprite.x / TILE_SIZE);
+        const ey = Math.floor(enemy.sprite.y / TILE_SIZE);
+        const playerTileX = Math.floor(this.hero.x / TILE_SIZE);
+        const playerTileY = Math.floor(this.hero.y / TILE_SIZE);
+        const path = findPath(
+          this.fogGrid,
+          { x: ex, y: ey },
+          { x: playerTileX, y: playerTileY },
+        );
+        enemy.path = path;
+        enemy.pathIndex = path ? 1 : 0;
+      }
+    }
+
+    const circle = this.add.circle(this.hero.x, this.hero.y, 10, 0xffcc00, 0.4);
+    circle.setDepth(14);
+    this.tweens.add({
+      targets: circle,
+      radius: def.radius,
+      alpha: 0,
+      duration: 400,
+      onComplete: () => circle.destroy(),
     });
   }
 
@@ -3434,7 +4127,12 @@ export default class MainScene extends Phaser.Scene {
         enemy.sprite.y - this.hero.y,
       );
       if (dist > def.radius) continue;
-      this.damageEnemy(enemy, computeDamage(def.damage, enemy.defense));
+      const rawDamage = applyElementalResistance(
+        def.damage,
+        def.damageType,
+        enemy.resistances,
+      );
+      this.damageEnemy(enemy, computeDamage(rawDamage, enemy.defense));
       if (enemy.hp > 0) {
         this.applyStatusEffect(enemy.statusEffects, this.rollStatusEffect(def));
       }
@@ -3624,7 +4322,12 @@ export default class MainScene extends Phaser.Scene {
       if (!this.isEnemyVisible(enemy)) continue;
       const dist = Math.hypot(enemy.sprite.x - x, enemy.sprite.y - y);
       if (dist > def.radius) continue;
-      this.damageEnemy(enemy, computeDamage(def.damage, enemy.defense));
+      const rawDamage = applyElementalResistance(
+        def.damage,
+        def.damageType,
+        enemy.resistances,
+      );
+      this.damageEnemy(enemy, computeDamage(rawDamage, enemy.defense));
       if (enemy.hp > 0) {
         this.applyStatusEffect(enemy.statusEffects, this.rollStatusEffect(def));
       }
@@ -3787,10 +4490,12 @@ export default class MainScene extends Phaser.Scene {
             enemy.sprite.y - proj.sprite.y,
           );
           if (dist <= 14 && this.isEnemyVisible(enemy)) {
-            this.damageEnemy(
-              enemy,
-              computeDamage(proj.def.damage, enemy.defense),
+            const rawDamage = applyElementalResistance(
+              proj.def.damage,
+              proj.def.damageType,
+              enemy.resistances,
             );
+            this.damageEnemy(enemy, computeDamage(rawDamage, enemy.defense));
             if (enemy.hp > 0) {
               this.applyStatusEffect(
                 enemy.statusEffects,
@@ -3834,6 +4539,434 @@ export default class MainScene extends Phaser.Scene {
 
     this.abilityProjectiles = remaining;
   }
+
+  performTeleportDashAbility(def) {
+    const dir = this.lastAimVector;
+    const targetX = this.hero.x + dir.x * def.distance;
+    const targetY = this.hero.y + dir.y * def.distance;
+    const tileX = Math.floor(targetX / TILE_SIZE);
+    const tileY = Math.floor(targetY / TILE_SIZE);
+    const grid = this.fogGrid;
+    if (
+      tileY < 0 ||
+      tileX < 0 ||
+      tileY >= grid.length ||
+      tileX >= grid[0].length ||
+      grid[tileY][tileX] === WALL
+    ) {
+      this.showLootToast("Pas assez de place pour se téléporter");
+      return;
+    }
+    this.hero.x = targetX;
+    this.hero.y = targetY;
+
+    for (const summon of this.summons) {
+      summon.sprite.x = targetX + (Math.random() - 0.5) * 40;
+      summon.sprite.y = targetY + (Math.random() - 0.5) * 40;
+    }
+  }
+
+  performRandomTeleportAbility(def) {
+    const grid = this.fogGrid;
+    const floorTiles = [];
+    for (let y = 0; y < grid.length; y++) {
+      for (let x = 0; x < grid[0].length; x++) {
+        if (grid[y][x] !== WALL) floorTiles.push({ x, y });
+      }
+    }
+    if (floorTiles.length === 0) return;
+    const target = floorTiles[Math.floor(Math.random() * floorTiles.length)];
+    const targetX = target.x * TILE_SIZE + TILE_SIZE / 2;
+    const targetY = target.y * TILE_SIZE + TILE_SIZE / 2;
+
+    this.hero.x = targetX;
+    this.hero.y = targetY;
+
+    // les invocations actives teleportent AVEC le heros - sinon elles
+    // restent bloquees a l'ancien endroit (IA sans vrai pathfinding,
+    // juste une ligne droite - un familier laisse derriere peut rester
+    // coince contre un mur indefiniment)
+    for (const summon of this.summons) {
+      summon.sprite.x = targetX + (Math.random() - 0.5) * 40;
+      summon.sprite.y = targetY + (Math.random() - 0.5) * 40;
+    }
+
+    this.showLootToast("Téléportation !");
+  }
+
+  performStealthAbility(def) {
+    this.stealthUntil = this.time.now + def.durationMs;
+    this.showLootToast(`${def.name} activée !`);
+  }
+
+  // Reutilisation : etendue dans updateEnemyDecisions (cf. plus bas) - un
+  // ennemi PAS DEJA en 'chase' ne peut initier aucune detection tant que
+  // this.stealthUntil est dans le futur
+
+  performChainLightningAbility(def) {
+    let currentX = this.hero.x;
+    let currentY = this.hero.y;
+    const hit = new Set();
+    let jumps = 0;
+
+    while (jumps < def.maxJumps) {
+      let nearest = null;
+      let nearestDist = Infinity;
+      for (const enemy of this.enemies) {
+        if (hit.has(enemy) || !this.isEnemyVisible(enemy)) continue;
+        const dist = Math.hypot(
+          enemy.sprite.x - currentX,
+          enemy.sprite.y - currentY,
+        );
+        if (dist <= def.jumpRange && dist < nearestDist) {
+          nearestDist = dist;
+          nearest = enemy;
+        }
+      }
+      if (!nearest) break;
+
+      const rawDamage = applyElementalResistance(
+        def.damage,
+        def.damageType,
+        nearest.resistances,
+      );
+      this.damageEnemy(nearest, computeDamage(rawDamage, nearest.defense));
+
+      hit.add(nearest);
+      const line = this.add
+        .line(
+          0,
+          0,
+          currentX,
+          currentY,
+          nearest.sprite.x,
+          nearest.sprite.y,
+          0x66ddff,
+        )
+        .setLineWidth(2)
+        .setDepth(15);
+      this.time.delayedCall(200, () => line.destroy());
+      currentX = nearest.sprite.x;
+      currentY = nearest.sprite.y;
+      jumps++;
+    }
+  }
+
+  performZoneAbility(def) {
+    const circle = this.add.circle(
+      this.hero.x,
+      this.hero.y,
+      def.radius,
+      def.color,
+      0.3,
+    );
+    circle.setDepth(6);
+    this.zones.push({
+      sprite: circle,
+      x: this.hero.x,
+      y: this.hero.y,
+      radius: def.radius,
+      damagePerTick: def.damagePerTick,
+      tickIntervalMs: def.tickIntervalMs,
+      nextTickAt: this.time.now,
+      expiresAt: this.time.now + def.durationMs,
+    });
+  }
+
+  performAoeCurseAbility(def) {
+    for (const enemy of this.enemies) {
+      if (!this.isEnemyVisible(enemy)) continue;
+      const dist = Math.hypot(
+        enemy.sprite.x - this.hero.x,
+        enemy.sprite.y - this.hero.y,
+      );
+      if (dist > def.radius) continue;
+      this.applyStatusEffect(enemy.statusEffects, {
+        type: "curse",
+        kind: "modifier",
+        statModifiers: { damagePercent: def.damagePercent },
+        durationMs: def.durationMs,
+      });
+    }
+    const circle = this.add.circle(this.hero.x, this.hero.y, 10, 0x882299, 0.4);
+    circle.setDepth(14);
+    this.tweens.add({
+      targets: circle,
+      radius: def.radius,
+      alpha: 0,
+      duration: 400,
+      onComplete: () => circle.destroy(),
+    });
+  }
+
+  performRiposteAbility(def) {
+    this.riposteUntil = this.time.now + def.durationMs;
+    this.riposteReflectPercent = def.reflectPercent;
+    this.showLootToast(`${def.name} activée !`);
+  }
+
+  performParryAbility(def) {
+    this.parryUntil = this.time.now + def.durationMs;
+    this.parryDamageReduction = def.damageReduction;
+    this.showLootToast(`${def.name} activée !`);
+  }
+
+  performTrapAbility(def) {
+    const sprite = this.add.circle(this.hero.x, this.hero.y, 6, 0x884400, 0.8);
+    sprite.setDepth(6);
+    this.traps.push({
+      sprite,
+      x: this.hero.x,
+      y: this.hero.y,
+      triggerRadius: def.triggerRadius,
+      inflictsEffect: def.inflictsEffect,
+      expiresAt: this.time.now + def.expiresAfterMs,
+    });
+  }
+
+  performConeAbility(def) {
+    const dir = this.lastAimVector;
+    const angleRad = (def.angleDegrees * Math.PI) / 180;
+    const baseAngle = Math.atan2(dir.y, dir.x);
+
+    for (const enemy of this.enemies) {
+      if (!this.isEnemyVisible(enemy)) continue;
+      const dx = enemy.sprite.x - this.hero.x;
+      const dy = enemy.sprite.y - this.hero.y;
+      const dist = Math.hypot(dx, dy);
+      if (dist > def.distance) continue;
+      const angleToEnemy = Math.atan2(dy, dx);
+      let angleDiff = Math.abs(angleToEnemy - baseAngle);
+      if (angleDiff > Math.PI) angleDiff = 2 * Math.PI - angleDiff;
+      if (angleDiff > angleRad / 2) continue;
+
+      const rawDamage = applyElementalResistance(
+        def.damage,
+        def.damageType,
+        enemy.resistances,
+      );
+      this.damageEnemy(enemy, computeDamage(rawDamage, enemy.defense));
+
+      if (enemy.hp > 0) {
+        this.applyStatusEffect(enemy.statusEffects, this.rollStatusEffect(def));
+      }
+    }
+  }
+
+  performAoeRootAbility(def) {
+    for (const enemy of this.enemies) {
+      if (!this.isEnemyVisible(enemy)) continue;
+      const dist = Math.hypot(
+        enemy.sprite.x - this.hero.x,
+        enemy.sprite.y - this.hero.y,
+      );
+      if (dist > def.radius) continue;
+      this.applyStatusEffect(enemy.statusEffects, {
+        type: "root",
+        kind: "modifier",
+        statModifiers: {},
+        durationMs: def.durationMs,
+      });
+    }
+  }
+
+  performBoomerangAbility(def) {
+    const dir = this.lastAimVector;
+    const sprite = this.add.circle(this.hero.x, this.hero.y, 7, 0x996633);
+    this.physics.add.existing(sprite);
+    sprite.body.setVelocity(
+      dir.x * def.projectileSpeed,
+      dir.y * def.projectileSpeed,
+    );
+    this.boomerangs.push({
+      sprite,
+      def,
+      startX: this.hero.x,
+      startY: this.hero.y,
+      returning: false,
+      hitEnemyIds: new Set(),
+    });
+  }
+
+  performVortexAbility(def) {
+    for (const enemy of this.enemies) {
+      if (!this.isEnemyVisible(enemy)) continue;
+      const dx = this.hero.x - enemy.sprite.x;
+      const dy = this.hero.y - enemy.sprite.y;
+      const dist = Math.hypot(dx, dy);
+      if (dist > def.radius || dist < 1) continue;
+      this.knockbackEnemyIfClear(
+        enemy,
+        (dx / dist) * def.pullDistance,
+        (dy / dist) * def.pullDistance,
+      );
+    }
+    const circle = this.add.circle(
+      this.hero.x,
+      this.hero.y,
+      def.radius,
+      0x8844ff,
+      0.2,
+    );
+    circle.setDepth(6);
+    this.tweens.add({
+      targets: circle,
+      alpha: 0,
+      duration: 500,
+      onComplete: () => circle.destroy(),
+    });
+  }
+
+  performVisionBuffAbility(def) {
+    this.visionBonusUntil = this.time.now + def.durationMs;
+    this.visionBonusAmount = def.visionBonus;
+  }
+
+  performBloodPactAbility(def) {
+    if (this.playerHp <= def.hpCost) {
+      this.showLootToast("Pas assez de PV pour ce pacte");
+      return;
+    }
+    this.playerHp -= def.hpCost;
+    this.events.emit("player-hp-changed", {
+      hp: this.playerHp,
+      maxHp: this.playerMaxHp,
+    });
+    if (def.resourceType === "mana") {
+      this.playerMana = Math.min(
+        this.playerMaxMana,
+        this.playerMana + def.resourceGain,
+      );
+      this.events.emit("player-mana-changed", {
+        mana: this.playerMana,
+        maxMana: this.playerMaxMana,
+      });
+    } else {
+      this.playerStamina = Math.min(
+        this.playerMaxStamina,
+        this.playerStamina + def.resourceGain,
+      );
+      this.events.emit("player-stamina-changed", {
+        stamina: this.playerStamina,
+        maxStamina: this.playerMaxStamina,
+      });
+    }
+  }
+
+  performConditionalBuffAbility(def) {
+    // le seuil de PV est deja verifie EN AMONT dans performAbility (cf.
+    // le garde hpThresholdPercent ajoute avant le dispatch) - ici on ne
+    // fait qu'appliquer le buff, coherent avec le reste des methodes
+    // perform* qui supposent deja tout valide
+    this.applyStatusEffect(this.playerStatusEffects, {
+      type: def.id,
+      kind: "modifier",
+      statModifiers: def.buffStatModifiers,
+      durationMs: def.durationMs,
+    });
+    this.showLootToast(`${def.name} activée !`);
+  }
+
+  updateZones(now) {
+    const remaining = [];
+    for (const zone of this.zones) {
+      if (now >= zone.expiresAt) {
+        zone.sprite.destroy();
+        continue;
+      }
+      if (now >= zone.nextTickAt) {
+        zone.nextTickAt = now + zone.tickIntervalMs;
+        for (const enemy of this.enemies) {
+          const dist = Math.hypot(
+            enemy.sprite.x - zone.x,
+            enemy.sprite.y - zone.y,
+          );
+          if (dist <= zone.radius) {
+            const dmg = applyElementalResistance(
+              zone.damagePerTick,
+              zone.damageType,
+              enemy.resistances,
+            );
+            this.damageEnemy(enemy, dmg);
+          }
+        }
+      }
+      remaining.push(zone);
+    }
+    this.zones = remaining;
+  }
+
+  updateTraps(now) {
+    const remaining = [];
+    for (const trap of this.traps) {
+      if (now >= trap.expiresAt) {
+        trap.sprite.destroy();
+        continue;
+      }
+      let triggered = false;
+      for (const enemy of this.enemies) {
+        const dist = Math.hypot(
+          enemy.sprite.x - trap.x,
+          enemy.sprite.y - trap.y,
+        );
+        if (dist <= trap.triggerRadius) {
+          this.applyStatusEffect(
+            enemy.statusEffects,
+            this.rollStatusEffect({ inflictsEffect: trap.inflictsEffect }),
+          );
+          trap.sprite.destroy();
+          triggered = true;
+          break;
+        }
+      }
+      if (!triggered) remaining.push(trap);
+    }
+    this.traps = remaining;
+  }
+
+  updateBoomerangs() {
+    const remaining = [];
+    for (const b of this.boomerangs) {
+      if (!b.returning) {
+        const traveled = Math.hypot(
+          b.sprite.x - b.startX,
+          b.sprite.y - b.startY,
+        );
+        if (traveled >= b.def.maxDistance) b.returning = true;
+      } else {
+        const dx = this.hero.x - b.sprite.x;
+        const dy = this.hero.y - b.sprite.y;
+        const dist = Math.hypot(dx, dy);
+        if (dist < 20) {
+          b.sprite.destroy();
+          continue;
+        }
+        const mag = dist || 1;
+        b.sprite.body.setVelocity(
+          (dx / mag) * b.def.projectileSpeed,
+          (dy / mag) * b.def.projectileSpeed,
+        );
+      }
+      for (const enemy of this.enemies) {
+        if (b.hitEnemyIds.has(enemy)) continue;
+        const dist = Math.hypot(
+          enemy.sprite.x - b.sprite.x,
+          enemy.sprite.y - b.sprite.y,
+        );
+        if (dist <= 14 && this.isEnemyVisible(enemy)) {
+          const rawDamage = applyElementalResistance(
+            b.def.damage,
+            b.def.damageType,
+            enemy.resistances,
+          );
+          this.damageEnemy(enemy, computeDamage(rawDamage, enemy.defense));
+          b.hitEnemyIds.add(enemy);
+        }
+      }
+      remaining.push(b);
+    }
+    this.boomerangs = remaining;
+  }
   /**
    * Assigne une competence OU un objet (potion) a un emplacement de la
    * barre de raccourcis (0-8). Si ce MEME pouvoir/objet est deja assigne
@@ -3869,6 +5002,10 @@ export default class MainScene extends Phaser.Scene {
     this.hotbarSlots[slotIndex] = payload;
     this.events.emit("hotbar-updated", [...this.hotbarSlots]);
   }
+
+  // ==============================================================
+  // EFFETS DE STATUT
+  // ==============================================================
 
   /**
    * Tire (aleatoire simple, Math.random - meme esprit que rollCritical
@@ -3978,6 +5115,7 @@ export default class MainScene extends Phaser.Scene {
         }
         if (now >= effect.nextTickAt) {
           this.playerHp = Math.max(0, this.playerHp - effect.damagePerTick);
+          this.showDamageNumber(this.hero, effect.damagePerTick, "#ff4444");
           this.events.emit("player-hp-changed", {
             hp: this.playerHp,
             maxHp: this.playerMaxHp,
@@ -4001,6 +5139,11 @@ export default class MainScene extends Phaser.Scene {
    * de la vitesse de base - un ennemi ralenti reste toujours un minimum
    * mobile, jamais totalement fige.
    */
+
+  // ==============================================================
+  // STATS EFFECTIVES (BUFFS/DEBUFFS)
+  // ==============================================================
+
   getEffectiveEnemySpeed(enemy) {
     let multiplier = 1;
     for (const effect of enemy.statusEffects) {
@@ -4009,6 +5152,15 @@ export default class MainScene extends Phaser.Scene {
       }
     }
     return Math.max(ENEMY_SPEED * 0.2, ENEMY_SPEED * multiplier);
+  }
+
+  getEffectiveEnemyDamage(enemy) {
+    let multiplier = 1;
+    for (const effect of enemy.statusEffects) {
+      if (effect.statModifiers?.damagePercent)
+        multiplier += effect.statModifiers.damagePercent;
+    }
+    return Math.max(0, enemy.damage * multiplier);
   }
 
   /**
@@ -4055,6 +5207,16 @@ export default class MainScene extends Phaser.Scene {
     }
     return this.playerDefense * multiplier;
   }
+
+  getEffectivePlayerVisionRadius() {
+    const bonus =
+      this.time.now < this.visionBonusUntil ? this.visionBonusAmount : 0;
+    return this.playerVisionRadius + bonus;
+  }
+  // ==============================================================
+  // FURIE
+  // ==============================================================
+
   /**
    * Declenche la furie de l'archetype actuel - disponible uniquement une
    * fois this.furyKillCount >= FURY_KILLS_REQUIRED. Contrairement aux
@@ -4151,6 +5313,11 @@ export default class MainScene extends Phaser.Scene {
 
     this.showLootToast(`${fury.name} déclenchée !`);
   }
+
+  // ==============================================================
+  // DEGATS ET PROGRESSION
+  // ==============================================================
+
   damageEnemy(enemy, amount) {
     // se faire TOUCHER physiquement est TOUJOURS une detection, quelle
     // que soit la position (dos ou face) - contrairement a
@@ -4175,7 +5342,7 @@ export default class MainScene extends Phaser.Scene {
       enemy.path = path;
       enemy.pathIndex = path ? 1 : 0;
     }
-
+    this.showDamageNumber(enemy.sprite, amount, "#ffffff");
     const result = applyDamage(enemy, amount);
     enemy.hp = result.hp;
 
@@ -4342,6 +5509,16 @@ export default class MainScene extends Phaser.Scene {
     }
     if (anyAbilityUnlocked)
       this.events.emit("abilities-updated", [...this.unlockedAbilities]);
+    let anyRecipeUnlocked = false;
+    for (const recipe of Object.values(CRAFTING_RECIPES)) {
+      if (recipe.unlockLevel == null || recipe.unlockLevel > level) continue;
+      if (this.unlockedRecipes.includes(recipe.id)) continue;
+      this.unlockedRecipes.push(recipe.id);
+      anyRecipeUnlocked = true;
+      this.showLootToast(`Nouvelle recette débloquée : ${recipe.name} !`);
+    }
+    if (anyRecipeUnlocked)
+      this.events.emit("recipes-updated", [...this.unlockedRecipes]);
 
     this.events.emit("player-hp-changed", {
       hp: this.playerHp,
@@ -4359,9 +5536,14 @@ export default class MainScene extends Phaser.Scene {
     this.persistProgress();
   }
 
+  // ==============================================================
+  // COMBAT ENNEMI
+  // ==============================================================
+
   updateEnemyAttacks(now) {
     for (const enemy of this.enemies) {
       if (enemy.state !== "chase") continue;
+      if (this.isEnemyStunned(enemy)) continue; // etourdi - ne peut pas attaquer
       if (!enemy.attackCooldown.isReady(now)) continue;
 
       if (enemy.attackType === "ranged") {
@@ -4391,13 +5573,14 @@ export default class MainScene extends Phaser.Scene {
           vy * ENEMY_PROJECTILE_SPEED,
         );
 
-        // damage ET inflictsEffect captures ICI (etat de l'ennemi au
-        // moment du tir), jamais relus plus tard
+        // damage/damageType/inflictsEffect captures ICI (etat de l'ennemi
+        // au moment du tir), jamais relus plus tard
         this.enemyProjectiles.push({
           sprite,
           startX: enemy.sprite.x,
           startY: enemy.sprite.y,
-          damage: enemy.damage,
+          damage: this.getEffectiveEnemyDamage(enemy),
+          damageType: enemy.damageType,
           inflictsEffect: enemy.inflictsEffect,
         });
         continue;
@@ -4407,29 +5590,76 @@ export default class MainScene extends Phaser.Scene {
         enemy.sprite.x - this.hero.x,
         enemy.sprite.y - this.hero.y,
       );
-      if (dist > ENEMY_ATTACK_RANGE) continue;
+
+      // cible la CIBLE LA PLUS PROCHE entre le heros et une invocation
+      // active, au moment precis de frapper - pas un vrai pathing "vers
+      // l'allie", juste une riposte coherente si l'invocation se trouve
+      // sur le chemin (cf. performSummonAbility/updateSummons)
+      let target = {
+        isSummon: false,
+        defense: this.playerDefense,
+      };
+      for (const summon of this.summons) {
+        const summonDist = Math.hypot(
+          enemy.sprite.x - summon.sprite.x,
+          enemy.sprite.y - summon.sprite.y,
+        );
+        if (summonDist <= ENEMY_ATTACK_RANGE && summonDist < dist) {
+          target = { isSummon: true, summon, defense: summon.defense };
+        }
+      }
+
+      if (!target.isSummon && dist > ENEMY_ATTACK_RANGE) continue;
 
       enemy.attackCooldown.trigger(now);
-      const dmg = computeDamage(enemy.damage, this.playerDefense);
-      this.playerHp = Math.max(0, this.playerHp - dmg);
-      this.events.emit("player-hp-changed", {
-        hp: this.playerHp,
-        maxHp: this.playerMaxHp,
-      });
 
-      // effet de statut eventuel de cet ennemi (saignement/brulure)
-      this.applyStatusEffect(
-        this.playerStatusEffects,
-        this.rollStatusEffect(enemy),
-      );
-
-      this.hero.setTint(0xff8888).setTintMode(Phaser.TintModes.FILL);
-      this.time.delayedCall(100, () => {
-        if (this.hero) {
-          this.hero.clearTint();
-          this.hero.setTintMode(Phaser.TintModes.MULTIPLY);
+      if (target.isSummon) {
+        const dmg = computeDamage(
+          applyElementalResistance(
+            this.getEffectiveEnemyDamage(enemy),
+            enemy.damageType,
+            target.summon.resistances,
+          ),
+          target.defense,
+        );
+        target.summon.hp = Math.max(0, target.summon.hp - dmg);
+      } else {
+        let dmg = computeDamage(
+          applyElementalResistance(
+            this.getEffectiveEnemyDamage(enemy),
+            enemy.damageType,
+            this.playerResistances,
+          ),
+          target.defense,
+        );
+        if (this.time.now < this.parryUntil) {
+          dmg = Math.round(dmg * (1 - this.parryDamageReduction));
         }
-      });
+        this.playerHp = Math.max(0, this.playerHp - dmg);
+        this.showDamageNumber(this.hero, dmg, "#ff4444");
+        this.events.emit("player-hp-changed", {
+          hp: this.playerHp,
+          maxHp: this.playerMaxHp,
+        });
+
+        if (this.time.now < this.riposteUntil) {
+          this.damageEnemy(enemy, dmg * this.riposteReflectPercent);
+        }
+
+        // effet de statut eventuel de cet ennemi (saignement/brulure)
+        this.applyStatusEffect(
+          this.playerStatusEffects,
+          this.rollStatusEffect(enemy),
+        );
+
+        this.hero.setTint(0xff8888).setTintMode(Phaser.TintModes.FILL);
+        this.time.delayedCall(100, () => {
+          if (this.hero) {
+            this.hero.clearTint();
+            this.hero.setTintMode(Phaser.TintModes.MULTIPLY);
+          }
+        });
+      }
     }
   }
 
@@ -4465,8 +5695,19 @@ export default class MainScene extends Phaser.Scene {
         this.hero.y - proj.sprite.y,
       );
       if (distToHero <= PROJECTILE_RADIUS + 14) {
-        const dmg = computeDamage(proj.damage, this.playerDefense);
+        let dmg = computeDamage(
+          applyElementalResistance(
+            proj.damage,
+            proj.damageType,
+            this.playerResistances,
+          ),
+          this.playerDefense,
+        );
+        if (this.time.now < this.parryUntil) {
+          dmg = Math.round(dmg * (1 - this.parryDamageReduction));
+        }
         this.playerHp = Math.max(0, this.playerHp - dmg);
+        this.showDamageNumber(this.hero, dmg, "#ff4444");
         this.events.emit("player-hp-changed", {
           hp: this.playerHp,
           maxHp: this.playerMaxHp,
@@ -4497,6 +5738,47 @@ export default class MainScene extends Phaser.Scene {
     this.enemyProjectiles = remaining;
   }
 
+  // ==============================================================
+  // CRAFTING
+  // ==============================================================
+
+  craftItem(recipeId) {
+    if (!this.unlockedRecipes.includes(recipeId)) return;
+    const recipe = resolveCraftingRecipe(recipeId);
+    if (!recipe) return;
+
+    for (const ing of recipe.ingredients) {
+      const have = this.inventory
+        .filter((i) => i.itemId === ing.itemId)
+        .reduce((sum, i) => sum + i.quantity, 0);
+      if (have < ing.quantity) {
+        this.showLootToast(`Il manque des ingrédients pour ${recipe.name}`);
+        return;
+      }
+    }
+
+    for (const ing of recipe.ingredients) {
+      let remaining = ing.quantity;
+      for (let i = this.inventory.length - 1; i >= 0 && remaining > 0; i--) {
+        const entry = this.inventory[i];
+        if (entry.itemId !== ing.itemId) continue;
+        const take = Math.min(entry.quantity, remaining);
+        entry.quantity -= take;
+        remaining -= take;
+        if (entry.quantity <= 0) this.inventory.splice(i, 1);
+      }
+    }
+
+    this.addItemToInventory(recipe.resultItemId, recipe.resultQuantity);
+    this.showLootToast(`${recipe.name} fabriquée !`);
+    // addItemToInventory emet deja inventory-updated et persiste - pas
+    // besoin de le refaire ici
+  }
+
+  // ==============================================================
+  // AFFICHAGE
+  // ==============================================================
+
   drawHpBars() {
     const g = this.hpBarGraphics;
     g.clear();
@@ -4526,5 +5808,31 @@ export default class MainScene extends Phaser.Scene {
       g.fillStyle(0x3498db, 1);
       g.fillRect(bx, by, barW * ratio, barH);
     }
+  }
+
+  showDamageNumber(sprite, amount, color = "#ffffff", prefix = "-") {
+    const text = this.add.text(
+      sprite.x,
+      sprite.y - 20,
+      `${prefix}${Math.round(amount)}`,
+      {
+        fontSize: "16px",
+        fontFamily: "monospace",
+        color,
+        stroke: "#000000",
+        strokeThickness: 3,
+      },
+    );
+    text.setOrigin(0.5, 0.5);
+    text.setDepth(16);
+
+    this.tweens.add({
+      targets: text,
+      y: text.y - 30,
+      alpha: 0,
+      duration: 800,
+      ease: "Cubic.easeOut",
+      onComplete: () => text.destroy(),
+    });
   }
 }

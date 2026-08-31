@@ -510,6 +510,8 @@ async function getLevel(req, res) {
         speed: stats.speed,
         xpReward: stats.xpReward,
         attackType: stats.attackType,
+        damageType: stats.damageType || "physical",
+        resistances: stats.resistances || {},
         // PLURIEL desormais (drops, pas drop) - plusieurs tirages
         // independants (2) au lieu d'un seul, pour permettre un coffre
         // de butin avec plusieurs objets a la fois (cf. MainScene.js,
@@ -521,7 +523,12 @@ async function getLevel(req, res) {
         // perimetre de cette demande.
         questLoot: stats.questLoot || null,
         inflictsEffect: stats.inflictsEffect || null,
-        drops: rollMultipleLoot("enemyDrop", enemyLootRng, 2, depth),
+        drops: rollMultipleLoot(
+          stats.lootTable || "enemyDrop",
+          enemyLootRng,
+          2,
+          depth,
+        ),
       };
     });
 

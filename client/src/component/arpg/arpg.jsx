@@ -18,6 +18,7 @@ import { resolveAbilityDef } from "./abilityDefs";
 import { resolveItemDef } from "./itemDefs";
 import HotbarScreen from "./HotbarScreen";
 import { ItemIcon, hasIconFrame } from "./InventoryScreen";
+import CraftingScreen from "./CraftingScreen";
 
 /**
  * Overlay sombre qui se dissout progressivement au-dessus d'un
@@ -128,6 +129,8 @@ export default function Arpg() {
   const [shopStock, setShopStock] = useState(null);
   const [questsOpen, setQuestsOpen] = useState(false);
   const [hotbarScreenOpen, setHotbarScreenOpen] = useState(false);
+  const [craftingScreenOpen, setCraftingScreenOpen] = useState(false);
+  const [unlockedRecipes, setUnlockedRecipes] = useState([]);
   const [lootToast, setLootToast] = useState(null);
   const [minimapVisible, setMinimapVisible] = useState(true);
   const [keyboardLayout, setKeyboardLayoutState] = useState("azerty");
@@ -207,6 +210,9 @@ export default function Arpg() {
       );
       scene.events.on("abilities-updated", (abilities) =>
         setUnlockedAbilities(abilities),
+      );
+      scene.events.on("recipes-updated", (recipes) =>
+        setUnlockedRecipes(recipes),
       );
       scene.events.on("xp-changed", ({ xp }) => setXp(xp));
       scene.events.on("level-up", ({ level }) => setLevel(level));
@@ -348,6 +354,23 @@ export default function Arpg() {
     if (scene) scene.unpauseGame("hotbar");
   };
 
+  const handleOpenCraftingScreen = () => {
+    setCraftingScreenOpen(true);
+    const scene = gameRef.current?.scene.getScene("MainScene");
+    if (scene) scene.pauseGame("crafting");
+  };
+
+  const handleCloseCraftingScreen = () => {
+    setCraftingScreenOpen(false);
+    const scene = gameRef.current?.scene.getScene("MainScene");
+    if (scene) scene.unpauseGame("crafting");
+  };
+
+  const handleCraftItem = (recipeId) => {
+    const scene = gameRef.current?.scene.getScene("MainScene");
+    if (scene) scene.craftItem(recipeId);
+  };
+
   const handleAssignHotbarSlot = (index, payload) => {
     const scene = gameRef.current?.scene.getScene("MainScene");
     if (scene) scene.assignHotbarSlot(index, payload);
@@ -459,6 +482,7 @@ export default function Arpg() {
     });
     setHotbarSlots(new Array(9).fill(null));
     setUnlockedAbilities([]);
+    setUnlockedRecipes([]);
     setFuryProgress({ count: 0, required: 10 });
     setInventoryOpen(false);
     setTravelDestinations(null);
@@ -680,6 +704,22 @@ export default function Arpg() {
           {isMobile ? "⚡" : "⚡"}
         </button>
         <button
+          onClick={handleOpenCraftingScreen}
+          style={{
+            padding: isMobile ? "4px 7px" : "4px 12px",
+            fontSize: isMobile ? 14 : 13,
+            borderRadius: 6,
+            border: "1px solid #555",
+            background: "#2a2a35",
+            color: "#eee",
+            cursor: "pointer",
+            flexShrink: 0,
+          }}
+          title="Craft"
+        >
+          {isMobile ? "🔨" : "🔨 Craft"}
+        </button>
+        <button
           onClick={handleSaveAndQuit}
           style={{
             padding: isMobile ? "4px 7px" : "4px 12px",
@@ -878,6 +918,7 @@ export default function Arpg() {
               exitTile={minimapData.exitTile}
               upstairsTile={minimapData.upstairsTile}
               questNpcs={minimapData.questNpcs || []}
+              summons={minimapData.summons || []}
               isMobile={isMobile}
             />
           </div>
@@ -1123,6 +1164,14 @@ export default function Arpg() {
             playerLevel={level}
             onAssign={handleAssignHotbarSlot}
             onClose={handleCloseHotbarScreen}
+          />
+        )}
+        {craftingScreenOpen && (
+          <CraftingScreen
+            unlockedRecipes={unlockedRecipes}
+            inventory={inventory}
+            onCraft={handleCraftItem}
+            onClose={handleCloseCraftingScreen}
           />
         )}
         {questsOpen && (

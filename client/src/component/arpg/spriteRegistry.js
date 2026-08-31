@@ -6,6 +6,9 @@
 import minisHeroesSpritesheet from "../../assets/minis_heroes.png";
 import archerMaleSpritesheet from "../../assets/male_archer.png";
 import knightMaleSpritesheet from "../../assets/male_knight.png";
+import thiefMaleSpritesheet from "../../assets/male_thief.png";
+import warriorMaleSpritesheet from "../../assets/male_warrior.png";
+import wizardMaleSpritesheet from "../../assets/male_wizard.png";
 // import enemy
 import enemy1Spritesheet from "../../assets/enemy1_walk.png";
 import enemy2Spritesheet from "../../assets/enemy2_walk.png";
@@ -94,6 +97,7 @@ import iconSheet1 from "../../assets/icon_sheet1.png";
 import iconSheet2 from "../../assets/icon_sheet2.png";
 import iconskill1Spritesheet from "../../assets/icon_skill_1.png";
 import items1Spritesheet from "../../assets/items1.png";
+import monster_lootsSpritesheet from "../../assets/monster_loots.png";
 // import animation effects
 import meleeSlashSpritesheet from "../../assets/melee_slash_effect.png";
 // import town PNJ spritesheets here when available
@@ -275,7 +279,7 @@ export const STANDARD_ANIMATION_FRAMES_3X4_MULTI_8 = {
   idleUp: 94,
 };
 
-export const ARCHER_MALE_ANIMATION_FRAMES = {
+export const FULL_ANIMATION_FRAMES = {
   walkDown: [4, 5, 6, 7],
   walkUp: [20, 21, 22, 23],
   walkLeft: [36, 37, 38, 39],
@@ -363,17 +367,41 @@ export const SPRITE_REGISTRY = {
     STANDARD_ANIMATION_FRAMES_3X4_MULTI_8,
   ),
   hero9: makeHeroEntry(
-    "archerMale",
+    "hero9",
     archerMaleSpritesheet,
-    ARCHER_MALE_ANIMATION_FRAMES,
+    FULL_ANIMATION_FRAMES,
     1,
     4,
     16,
   ),
   hero10: makeHeroEntry(
-    "knightMale",
+    "hero10",
     knightMaleSpritesheet,
-    ARCHER_MALE_ANIMATION_FRAMES,
+    FULL_ANIMATION_FRAMES,
+    1,
+    4,
+    16,
+  ),
+  hero11: makeHeroEntry(
+    "hero11",
+    thiefMaleSpritesheet,
+    FULL_ANIMATION_FRAMES,
+    1,
+    4,
+    16,
+  ),
+  hero12: makeHeroEntry(
+    "hero12",
+    warriorMaleSpritesheet,
+    FULL_ANIMATION_FRAMES,
+    1,
+    4,
+    16,
+  ),
+  hero13: makeHeroEntry(
+    "hero13",
+    wizardMaleSpritesheet,
+    FULL_ANIMATION_FRAMES,
     1,
     4,
     16,
@@ -768,6 +796,7 @@ export const SPRITE_REGISTRY = {
     scale: 0.5,
     animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_2,
     hitbox: computeSafeHitbox(48, 48, 0.5),
+    lootTable: "angryBrownMushroomDrop",
   },
   redMushroom: {
     key: "redMushroom",
@@ -2432,7 +2461,7 @@ const HERO_STATS_PROFILES = {
     startingAmmo: { itemId: "woodenArrow", quantity: 20 },
     startingAbilities: ["piercingArrow"],
   },
-  knightMale: {
+  knight: {
     archetype: "guerrier",
     base: {
       maxHp: 100,
@@ -2457,6 +2486,103 @@ const HERO_STATS_PROFILES = {
     startingEquipment: ["woodenMace"],
     startingAmmo: null,
     startingAbilities: [],
+  },
+  thief: {
+    archetype: "voleur",
+    base: {
+      maxHp: 80,
+      meleeDamage: 6,
+      rangedDamage: 4,
+      defense: 1,
+      mana: 0,
+      stamina: 15,
+    },
+    growth: {
+      maxHp: 14,
+      meleeDamage: 1.5,
+      rangedDamage: 1,
+      defense: 0.6,
+      mana: 0,
+      stamina: 1.5,
+    },
+    moveSpeed: 170,
+    visionRadius: 7,
+    meleeRange: 40,
+    rangedRange: 400,
+    startingEquipment: ["woodenDagger"],
+    startingAmmo: null,
+    startingAbilities: ["piercingArrow"],
+  },
+  warrior: {
+    archetype: "guerrier",
+    base: {
+      maxHp: 120,
+      meleeDamage: 15,
+      rangedDamage: 3,
+      defense: 3,
+      mana: 0,
+      stamina: 25,
+    },
+    growth: {
+      maxHp: 25,
+      meleeDamage: 4,
+      rangedDamage: 0.7,
+      defense: 1.2,
+      mana: 0,
+      stamina: 3,
+    },
+    moveSpeed: 155,
+    visionRadius: 7,
+    meleeRange: 50,
+    rangedRange: 320,
+    startingEquipment: ["woodenSword", "woodenShield"],
+    startingAmmo: null,
+    startingAbilities: [],
+  },
+  wizard: {
+    archetype: "mage",
+    base: {
+      maxHp: 70,
+      meleeDamage: 3,
+      rangedDamage: 10,
+      defense: 1,
+      mana: 30,
+      stamina: 10,
+    },
+    growth: {
+      maxHp: 12,
+      meleeDamage: 0.5,
+      rangedDamage: 2,
+      defense: 0.5,
+      mana: 5,
+      stamina: 1,
+    },
+    moveSpeed: 150,
+    visionRadius: 7,
+    meleeRange: 35,
+    rangedRange: 450,
+    startingEquipment: ["woodenStaff"],
+    startingAmmo: null,
+    startingAbilities: [
+      "fireball",
+      "summonAlly",
+      "summonAlly2",
+      "summonFamiliar",
+      "fireWall",
+      "randomTeleport",
+      "chainLightning",
+      "toxicCloud",
+      "firePool",
+      "curse",
+      "freeze",
+      "frozenWall",
+      "root",
+      "vortex",
+      "extendedVision",
+      "bloodPact",
+    ],
+    damageType: "fire",
+    resistances: { fire: 1 },
   },
 };
 
@@ -2493,7 +2619,22 @@ export const HERO_ROSTER = [
   {
     id: "hero10",
     label: "Chevalier",
-    statsOverride: HERO_STATS_PROFILES.knightMale,
+    statsOverride: HERO_STATS_PROFILES.knight,
+  },
+  {
+    id: "hero11",
+    label: "Voleur masqué",
+    statsOverride: HERO_STATS_PROFILES.thief,
+  },
+  {
+    id: "hero12",
+    label: "Super Guerrier",
+    statsOverride: HERO_STATS_PROFILES.warrior,
+  },
+  {
+    id: "hero13",
+    label: "Magicien",
+    statsOverride: HERO_STATS_PROFILES.wizard,
   },
 ];
 
@@ -2643,6 +2784,15 @@ export const ITEMS_1_SPRITESHEET = {
   frameHeight: 32,
   columns: 20,
   rows: 18,
+};
+
+export const MONSTER_LOOTS_SPRITESHEET = {
+  key: "monster_loots",
+  path: monster_lootsSpritesheet,
+  frameWidth: 32,
+  frameHeight: 32,
+  columns: 10,
+  rows: 9,
 };
 
 // icon sheet 1 : 10 colonnes x 22 lignes, frames indexees ligne par ligne
@@ -2872,6 +3022,99 @@ export const ICON_SHEET_1_FRAMES = {
 
 export const ICON_SHEET_2_FRAMES = {
   greenApple: 61,
+};
+
+export const MONSTER_LOOTS_FRAMES = {
+  insectWings: 0,
+  batWings: 1,
+  seaMonsterPaw: 2,
+  frogLeg: 3,
+  monsterFin: 4,
+  crabClaw: 5,
+  seaStar: 6,
+  monsterTentacle: 7,
+  bigSeaShell: 8,
+  seaAlgae: 9,
+  redMeat: 10,
+  whiteMeat: 11,
+  canineTooth: 12,
+  snakeFang: 13,
+  slimeBlob: 14,
+  ghostEctoplasm: 15,
+  dragonScale: 16,
+  birdFeather: 17,
+  crowFeather: 18,
+  humanEye: 19,
+  monsterEye: 20,
+  monsterHeart: 21,
+  monsterLiver: 22,
+  monsterCore: 23,
+  monsterHorn: 24,
+  monsterBone: 25,
+  monsterSpine: 26,
+  deerAntler: 27,
+  humanSkull: 28,
+  goblinNose: 29,
+  birdNest: 30,
+  beeStinger: 31,
+  honeycomb: 32,
+  spiderLeg: 33,
+  insectEgg: 34,
+  greyMonsterScale: 35,
+  deerHoof: 36,
+  bearPaw: 37,
+  furTuft: 38,
+  bearPelt: 39,
+  blackBearPelt: 40,
+  coal: 41,
+  whetstone: 42,
+  foolsGold: 43,
+  moonStone: 44,
+  diamond: 45,
+  smokyQuartz: 46,
+  ruby: 47,
+  aquaMarine: 48,
+  peridot: 49,
+  lapisLazuli: 50,
+  thunderTopaz: 51,
+  blueBerries: 52,
+  goldenGinger: 53,
+  waterLily: 54,
+  cherries: 55,
+  clover: 56,
+  redApple: 57,
+  rareMonsterFungus: 58,
+  cheese: 59,
+  redSmallCultivationPill: 60,
+  redBigCultivationPill: 61,
+  redHugeCultivationPill: 62,
+  blueLowerGradeCultivationPill: 63,
+  blueAverageGradeCultivationPill: 64,
+  blueHigherGradeCultivationPill: 65,
+  nuts: 66,
+  pepper: 67,
+  gingerRoot: 68,
+  cookies: 69,
+  fortuneCookie: 70,
+  candy: 71,
+  seaShell: 72,
+  redSeaShell: 73,
+  fishTail: 74,
+  greenMonsterScale: 75,
+  turtleShell: 76,
+  strippedMonsterEgg: 77,
+  greenBlueDottedMonsterEgg: 78,
+  yellowRedStripedMonsterEgg: 79,
+  monsterTeeth: 80,
+  monsterClaw: 81,
+  monsterTail: 82,
+  monsterEar: 83,
+  monsterRib: 84,
+  antitode: 85,
+  craftedManaPotion: 86,
+  craftedHealthPotion: 87,
+  poison: 88,
+  mushroom: 89,
 };
 
 export const ICON_SKILL_1_FRAMES = {

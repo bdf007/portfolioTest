@@ -69,6 +69,59 @@ function createCooldown(durationMs) {
   };
 }
 
+/**
+ * Tire un ou plusieurs des, notation classique "XdY" (ex: "2d6" = 2
+ * des a 6 faces, somme). Fonction pure et independante - un simple
+ * utilitaire, rien d'existant n'en depend.
+ */
+function rollDice(notation) {
+  const match = /^(\d+)d(\d+)$/.exec(notation);
+  if (!match) return 0;
+  const count = parseInt(match[1], 10);
+  const sides = parseInt(match[2], 10);
+  let total = 0;
+  for (let i = 0; i < count; i++) {
+    total += 1 + Math.floor(Math.random() * sides);
+  }
+  return total;
+}
+
+/**
+ * Applique une variance aleatoire CENTREE autour d'une valeur de base -
+ * la moyenne du lancer (count*(sides+1)/2) est soustraite du resultat,
+ * donc la moyenne GLOBALE des degats reste inchangee, seule la
+ * variance change. `varianceDice` absent/invalide = renvoie baseDamage
+ * tel quel, comportement STRICTEMENT identique a avant - c'est ce qui
+ * rend cette fonctionnalite entierement optionnelle, partout.
+ */
+function applyDiceVariance(baseDamage, varianceDice) {
+  if (!varianceDice) return baseDamage;
+  const match = /^(\d+)d(\d+)$/.exec(varianceDice);
+  if (!match) return baseDamage;
+  const count = parseInt(match[1], 10);
+  const sides = parseInt(match[2], 10);
+  const roll = rollDice(varianceDice);
+  const average = (count * (sides + 1)) / 2;
+  return Math.max(1, Math.round(baseDamage + (roll - average)));
+}
+
+/**
+ * Applique la resistance/faiblesse elementaire d'une cible a des degats
+ * d'un TYPE donne, AVANT le calcul de defense classique (computeDamage) -
+ * les deux systemes restent independants : la resistance module le
+ * montant BRUT selon le type d'attaque, la defense reduit ensuite ce
+ * montant de facon generique, peu importe le type. resistancePercent
+ * positif = moins de degats (resistance), negatif = plus de degats
+ * (faiblesse). Absence de damageType/resistances = aucun changement,
+ * retrocompatible partout ou ce n'est pas branche.
+ */
+function applyElementalResistance(rawDamage, damageType, resistances) {
+  if (!damageType || damageType === "physical" || !resistances)
+    return rawDamage;
+  const resistPercent = resistances[damageType] || 0;
+  return Math.max(0, rawDamage * (1 - resistPercent));
+}
+
 export {
   computeDamage,
   applyDamage,
@@ -76,4 +129,7 @@ export {
   rollCritical,
   CRIT_CHANCE,
   CRIT_MULTIPLIER,
+  rollDice,
+  applyDiceVariance,
+  applyElementalResistance,
 };
