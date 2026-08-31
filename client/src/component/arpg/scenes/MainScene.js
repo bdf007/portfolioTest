@@ -383,6 +383,7 @@ export default class MainScene extends Phaser.Scene {
     this.unlockedAbilities = []; // ids de competences debloquees (kit de depart + niveau + loot/achat)
     this.furyKillCount = 0;
     this.pendingWeaponImbue = null; // enchantement du prochain coup en attente - consomme au premier coup qui TOUCHE, restitue si le coup rate
+    this.dashState = null;
     this.touchFuryRequested = false;
     this.hotbarSlots = new Array(9).fill(null); // {type:'ability', id} | {type:'item', itemId} | null, par emplacement 1..9
     this.abilityCooldowns = {}; // {abilityId: timestamp du prochain tir autorise} - meme esprit que meleeCooldown/rangedCooldown mais par competence, pas un seul cooldown global
@@ -2236,43 +2237,46 @@ export default class MainScene extends Phaser.Scene {
     if (this.gamePaused) return;
     this.updateRegen(delta);
 
-    const speed = this.getEffectivePlayerMoveSpeed();
-    let vx = 0,
+    if (this.dashState) {
+      this.updateShieldBash();
+    } else {
+      const speed = this.getEffectivePlayerMoveSpeed();
+      let vx = 0, vy = 0;
       vy = 0;
-    const azertyLayout = this.keyboardLayout !== "qwerty";
-    const left =
-      this.cursors.left.isDown ||
-      (azertyLayout
-        ? this.keys.leftAzerty.isDown
-        : this.keys.leftQwerty.isDown);
-    const right = this.cursors.right.isDown || this.keys.right.isDown;
-    const up =
-      this.cursors.up.isDown ||
-      (azertyLayout ? this.keys.upAzerty.isDown : this.keys.upQwerty.isDown);
-    const down = this.cursors.down.isDown || this.keys.down.isDown;
+      const azertyLayout = this.keyboardLayout !== "qwerty";
+      const left =
+        this.cursors.left.isDown ||
+        (azertyLayout
+          ? this.keys.leftAzerty.isDown
+          : this.keys.leftQwerty.isDown);
+      const right = this.cursors.right.isDown || this.keys.right.isDown;
+      const up =
+        this.cursors.up.isDown ||
+        (azertyLayout ? this.keys.upAzerty.isDown : this.keys.upQwerty.isDown);
+        const down = this.cursors.down.isDown || this.keys.down.isDown;
 
-    if (left) vx -= 1;
-    if (right) vx += 1;
-    if (up) vy -= 1;
-    if (down) vy += 1;
+      if (left) vx -= 1;
+      if (right) vx += 1;
+      if (up) vy -= 1;
+      if (down) vy += 1;
 
-    vx += this.touchMoveVector.x;
-    vy += this.touchMoveVector.y;
+      vx += this.touchMoveVector.x;
+      vy += this.touchMoveVector.y;
 
-    const mag = Math.hypot(vx, vy);
-    if (mag > 1) {
-      vx /= mag;
-      vy /= mag;
-    }
-    vx *= speed;
-    vy *= speed;
+      const mag = Math.hypot(vx, vy);
+      if (mag > 1) {
+        vx /= mag;
+        vy /= mag;
+      }
+      vx *= speed;
+      vy *= speed;
 
-    this.hero.setVelocity(vx, vy);
+      this.hero.setVelocity(vx, vy);
 
-    let dir = this.lastDir;
-    const moving = vx !== 0 || vy !== 0;
-    if (moving) {
-      dir =
+      let dir = this.lastDir;
+      const moving = vx !== 0 || vy !== 0;
+      if (moving) {
+        dir =
         Math.abs(vx) > Math.abs(vy)
           ? vx > 0
             ? "right"
@@ -2295,7 +2299,7 @@ export default class MainScene extends Phaser.Scene {
       const len = Math.hypot(vx, vy);
       this.lastAimVector = { x: vx / len, y: vy / len };
     }
-
+    }
     const tileX = Math.floor(this.hero.x / TILE_SIZE);
     const tileY = Math.floor(this.hero.y / TILE_SIZE);
     if (
@@ -3390,6 +3394,10 @@ export default class MainScene extends Phaser.Scene {
       this.performWeaponImbueAbility(def);
     } else if (def.effectType === "fogPulse") {
       this.performFogPulseAbility(def);
+    } else if (def.effectType === 'shieldBash') {
+      this.performShieldBashAbility(def);
+    } else if (def.effectType === 'taunt') {
+      this.performTauntAbility(def);
     } else {
       this.showLootToast(`${def.name} : effet pas encore implémenté`);
       return;
@@ -3418,6 +3426,82 @@ export default class MainScene extends Phaser.Scene {
       startedAt: Date.now(),
     });
   }
+
+  performShieldBashAbility(def) {
+    const shieldDef = this.equipped.offHand ? resolveItemDef(this.equipped.offHand) : null;
+    if (def.requiresShield && (!shieldDef || !shieldDef.isShield)) {
+      this.showLootToast('Nécessite un bouclier équipé');
+      return;
+    }
+
+    const dir = this.lastAimVector;
+    this.dashState = {
+      def,
+      dirX: dir.x,
+      dirY: dir.y,
+      hitEnemyIds: new Set(),
+      startX: this.hero.x,
+      startY: this.hero.y,
+    };
+    this.hero.setVelocity(dir.x * def.dashSpeed, dir.y * def.dashSpeed);
+  }
+
+/**
+ * Fait avancer le dash en cours - appelee CHAQUE frame depuis update()
+ * A LA PLACE du mouvement normal (input clavier ignore pendant le dash).
+ * S'arrete des que la distance prevue est parcourue OU que le heros a
+ * physiquement percute un mur (vitesse annulee par le collider deja en
+ * place avec this.layer).
+ */
+  updateShieldBash() {
+    const ds = this.dashState;
+    const traveled = Math.hypot(this.hero.x - ds.startX, this.hero.y - ds.startY);
+
+    for (const enemy of this.enemies) {
+      if (ds.hitEnemyIds.has(enemy)) continue;
+      const dist = Math.hypot(enemy.sprite.x - this.hero.x, enemy.sprite.y - this.hero.y);
+      if (dist <= 24) {
+        this.damageEnemy(enemy, computeDamage(ds.def.damage, enemy.defense));
+        ds.hitEnemyIds.add(enemy);
+        enemy.sprite.x += ds.dirX * ds.def.knockbackDistance;
+        enemy.sprite.y += ds.dirY * ds.def.knockbackDistance;
+      }
+    }
+
+    const stoppedByWall = this.hero.body.velocity.x === 0 && this.hero.body.velocity.y === 0;
+    if (traveled >= ds.def.dashDistance || stoppedByWall) {
+      this.hero.setVelocity(0, 0);
+      this.dashState = null;
+    }
+  }
+
+/**
+ * Force tous les ennemis proches (visibles) en 'chase', peu importe
+ * leur etat actuel - meme mecanisme que damageEnemy (cf. le correctif
+ * anti-farming de critiques dans le dos), juste declenche a distance
+ * plutot que par un coup physique.
+ */
+  performTauntAbility(def) {
+    for (const enemy of this.enemies) {
+      if (!this.isEnemyVisible(enemy)) continue;
+        const dist = Math.hypot(enemy.sprite.x - this.hero.x, enemy.sprite.y - this.hero.y);
+        if (dist > def.radius) continue;
+        if (enemy.state !== 'chase') {
+          enemy.state = 'chase';
+          const ex = Math.floor(enemy.sprite.x / TILE_SIZE);
+          const ey = Math.floor(enemy.sprite.y / TILE_SIZE);
+          const playerTileX = Math.floor(this.hero.x / TILE_SIZE);
+          const playerTileY = Math.floor(this.hero.y / TILE_SIZE);
+          const path = findPath(this.fogGrid, { x: ex, y: ey }, { x: playerTileX, y: playerTileY });
+          enemy.path = path;
+          enemy.pathIndex = path ? 1 : 0;
+        }
+      }
+
+      const circle = this.add.circle(this.hero.x, this.hero.y, 10, 0xffcc00, 0.4);
+      circle.setDepth(14);
+      this.tweens.add({ targets: circle, radius: def.radius, alpha: 0, duration: 400, onComplete: () => circle.destroy() });
+    }
 
   /**
    * Degats en zone autour du heros (rayon def.radius) - touche TOUS les
