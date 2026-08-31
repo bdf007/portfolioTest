@@ -67,8 +67,9 @@ function createCooldown(durationMs) {
       return Math.max(0, readyAt - now);
     },
   };
+}
 
-  /**
+/**
  * Tire un ou plusieurs des, notation classique "XdY" (ex: "2d6" = 2
  * des a 6 faces, somme). Fonction pure et independante - un simple
  * utilitaire, rien d'existant n'en depend.
@@ -103,6 +104,22 @@ function applyDiceVariance(baseDamage, varianceDice) {
   const average = (count * (sides + 1)) / 2;
   return Math.max(1, Math.round(baseDamage + (roll - average)));
 }
+
+/**
+ * Applique la resistance/faiblesse elementaire d'une cible a des degats
+ * d'un TYPE donne, AVANT le calcul de defense classique (computeDamage) -
+ * les deux systemes restent independants : la resistance module le
+ * montant BRUT selon le type d'attaque, la defense reduit ensuite ce
+ * montant de facon generique, peu importe le type. resistancePercent
+ * positif = moins de degats (resistance), negatif = plus de degats
+ * (faiblesse). Absence de damageType/resistances = aucun changement,
+ * retrocompatible partout ou ce n'est pas branche.
+ */
+function applyElementalResistance(rawDamage, damageType, resistances) {
+  if (!damageType || damageType === "physical" || !resistances)
+    return rawDamage;
+  const resistPercent = resistances[damageType] || 0;
+  return Math.max(0, rawDamage * (1 - resistPercent));
 }
 
 export {
@@ -112,6 +129,7 @@ export {
   rollCritical,
   CRIT_CHANCE,
   CRIT_MULTIPLIER,
-  rollDice, 
+  rollDice,
   applyDiceVariance,
+  applyElementalResistance,
 };

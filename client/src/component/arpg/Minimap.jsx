@@ -39,6 +39,7 @@ export default function Minimap({
   exitTile,
   upstairsTile,
   questNpcs = [],
+  summons = [],
   isMobile,
 }) {
   const canvasRef = useRef(null);
@@ -172,6 +173,19 @@ export default function Minimap({
     }
 
     // ------------------------------------------------------------
+    // Invocations (familier compris)
+    // ------------------------------------------------------------
+    //
+    // Position toujours affichee, pas de verification de brouillard -
+    // contrairement aux PNJ, ce sont TES propres invocations, leur
+    // position t'est toujours connue.
+
+    for (const s of summons) {
+      if (!s) continue;
+      drawLandmark({ x: s.x, y: s.y }, "#ff9900", false);
+    }
+
+    // ------------------------------------------------------------
     // Joueur
     // ------------------------------------------------------------
     //
@@ -189,7 +203,7 @@ export default function Minimap({
         CELL_SIZE + 2,
       );
     }
-  }, [grid, fogState, playerTile, exitTile, upstairsTile, questNpcs]);
+  }, [grid, fogState, playerTile, exitTile, upstairsTile, questNpcs, summons]);
 
   return (
     <canvas

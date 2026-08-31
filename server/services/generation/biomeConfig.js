@@ -29,7 +29,7 @@ const BIOMES = [
     generator: "bsp",
     tileset: "cave",
     enemyBaseCount: 40,
-    enemyTypes: ["angryBrownMushroom"],
+    enemyTypes: ["deer1", "angryBrownMushroom"],
     chestCount: [1, 3],
     generatorParams: {
       width: 80,

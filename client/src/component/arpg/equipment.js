@@ -34,3 +34,22 @@ export function computeEquipmentBonuses(equipped) {
 
   return bonuses;
 }
+
+/**
+ * Additionne les resistances elementaires de TOUT l'equipement porte -
+ * meme principe que computeEquipmentBonuses, mais pour un objet
+ * {fire: X, cold: Y, ...} plutot que des stats plates. Un objet sans
+ * `resistances` du tout n'apporte rien (repli implicite sur 0 partout).
+ */
+export function computeEquipmentResistances(equipped) {
+  const total = {};
+  for (const itemId of Object.values(equipped)) {
+    if (!itemId) continue;
+    const def = resolveItemDef(itemId);
+    if (!def.resistances) continue;
+    for (const [type, value] of Object.entries(def.resistances)) {
+      total[type] = (total[type] || 0) + value;
+    }
+  }
+  return total;
+}

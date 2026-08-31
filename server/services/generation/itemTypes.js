@@ -50,7 +50,29 @@ const ITEM_TYPES = {
     statBonus: { meleeDamage: 1 },
     stackable: false,
     archetypes: ["guerrier"],
+    damageType: "cold",
     price: 2,
+    inflictsEffect: {
+      type: "bleed",
+      chance: 0.9,
+      damagePerTick: 1,
+      tickIntervalMs: 1000,
+      ticks: 3,
+    },
+  },
+
+  reinforcedSword: {
+    id: "reinforcedSword",
+    category: "equipment",
+    slot: "mainHand",
+    twoHanded: false,
+    grantsRanged: false,
+    name: "Épée renforcée",
+    description: "+2 dégât au corps à corps. Arme d'entraînement avancée.",
+    statBonus: { meleeDamage: 2 },
+    stackable: false,
+    archetypes: ["guerrier"],
+    price: 5,
     inflictsEffect: {
       type: "bleed",
       chance: 0.9,
@@ -805,6 +827,26 @@ const ITEM_TYPES = {
     price: 100,
   },
 
+  // recipes
+  reinforcedSwordRecipe: {
+    id: "reinforcedSwordRecipe",
+    category: "recipeScroll",
+    name: "Plan : Épée renforcée",
+    description: "Apprend la recette de l'épée renforcée.",
+    grantsRecipe: "reinforcedSword",
+    stackable: true,
+    price: 60,
+  },
+  healthPotionRecipe: {
+    id: "healthPotionRecipe",
+    category: "recipeScroll",
+    name: "Plan : Potion de soin",
+    description: "Apprend la recette de la potion de soin.",
+    grantsRecipe: "healthPotion",
+    stackable: true,
+    price: 50,
+  },
+
   // exemple d'objet de quete - existe dans le monde, mais aucune quete
   // de type "en rapporter N" ne sait encore l'exploiter (cf. commentaire
   // en tete de fichier)
@@ -891,6 +933,16 @@ const LOOT_TABLES = {
     { itemId: "ironHammer", weight: 4, minDepth: 6 },
     { itemId: "ironSickle", weight: 4, minDepth: 6 },
     { itemId: "leatherArmor", weight: 2, minDepth: 6 },
+  ],
+  deer1Drop: [
+    { itemId: "gold", weight: 50, quantityRange: [1, 3] },
+    { itemId: "reinforcedSwordRecipe", weight: 20 },
+    { itemId: "deerAntler", weight: 20 },
+  ],
+  angryBrownMushroomDrop: [
+    { itemId: "gold", weight: 50, quantityRange: [1, 3] },
+    { itemId: "mushroom", weight: 20 },
+    { itemId: "healthPotionRecipe", weight: 20 },
   ],
 
   bossDrop: [
