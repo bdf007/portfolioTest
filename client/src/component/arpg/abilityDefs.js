@@ -206,6 +206,21 @@ taunt: {
   durationMs: 2500,
   unlockLevel: null,
 },
+  summonAlly: {
+  id: 'summonAlly',
+  name: 'Invocation',
+  archetypes: ['mage'],
+  description: "Invoque un allié temporaire qui combat à tes côtés, jusqu'à sa mort ou expiration. 30 mana.",
+  manaCost: 30,
+  cooldownMs: 15000,
+  effectType: 'summon',
+  summonType: 'enemyDefault', // cle SPRITE_REGISTRY a utiliser pour le visuel - a remplacer par un sprite plus adapte si tu en as un
+  durationMs: 20000, // null = dure jusqu'a la mort uniquement, jamais d'expiration
+  hp: 40,
+  damage: 8,
+  defense: 1,
+  unlockLevel: null,
+},
 };
 
 /**
