@@ -178,6 +178,7 @@ export const ITEM_DEFS = {
     id: "woodenShield",
     category: "equipment",
     slot: "offHand",
+    isShield: true,
     twoHanded: false,
     grantsRanged: false,
     name: "Bouclier en bois",
