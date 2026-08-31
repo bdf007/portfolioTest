@@ -155,6 +155,32 @@ export const ABILITY_DEFS = {
     disabledBiomes: ["maze1", "maze2"], // ids de biomeConfig.js - absent/vide = utilisable partout
     unlockLevel: null,
   },
+  shieldBash: {
+  id: 'shieldBash',
+  name: 'Coup de bouclier',
+  archetypes: ['guerrier'],
+  description: "Fonce en ligne droite, percute et repousse les ennemis sur le passage. Nécessite un bouclier équipé. 20 stamina.",
+  staminaCost: 20,
+  cooldownMs: 6000,
+  effectType: 'shieldBash',
+  requiresShield: true,
+  damage: 16,
+  dashDistance: 150, // en pixels
+  dashSpeed: 500,
+  knockbackDistance: 40,
+  unlockLevel: null,
+},
+taunt: {
+  id: 'taunt',
+  name: 'Cri de défi',
+  archetypes: ['guerrier'],
+  description: "Attire l'attention de tous les ennemis proches. 15 stamina.",
+  staminaCost: 15,
+  cooldownMs: 10000,
+  effectType: 'taunt',
+  radius: 150, // en pixels, comme les autres AoE
+  unlockLevel: null,
+},
 };
 
 /**
