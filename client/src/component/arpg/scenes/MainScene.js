@@ -102,6 +102,7 @@ const STATUS_EFFECT_COLORS = {
   slow: 0x4488ff, // bleu - coherent avec l'explosion de performAoeDebuffAbility
   haste: 0x44ff88, // vert clair - pour un futur flash sur soi-meme si besoin
   acid: 0x88ff00, // vert
+  stun: 0xffff00, // jaune
 };
 // combat ennemi
 const ENEMY_ATTACK_COOLDOWN = 900;
@@ -2575,6 +2576,12 @@ export default class MainScene extends Phaser.Scene {
       enemy.visible = this.isEnemyVisible(enemy);
       enemy.sprite.setVisible(enemy.visible);
 
+      if (this.isEnemyStunned(enemy)) {
+        enemy.sprite.setVelocity(0, 0);
+        enemy.sprite.anims.play(enemy.spriteKey + "-idle-" + enemy.lastDir, true);
+        continue;
+      }
+
       if (enemy.state === "chase" || enemy.state === "returning") {
         const distToHero = Math.hypot(
           this.hero.x - enemy.sprite.x,
@@ -2668,6 +2675,9 @@ export default class MainScene extends Phaser.Scene {
     if (ey < 0 || ex < 0 || ey >= state.length || ex >= state[0].length)
       return false;
     return state[ey][ex] === 2;
+  }
+  isEnemyStunned(enemy) {
+    return enemy.statusEffects.some((e) => e.type === 'stun');
   }
 
   moveEnemyToward(enemy, waypointTile, speed, onArrive) {
@@ -3398,6 +3408,10 @@ export default class MainScene extends Phaser.Scene {
       this.performShieldBashAbility(def);
     } else if (def.effectType === 'taunt') {
       this.performTauntAbility(def);
+    } else if (def.effectType === 'repel') {
+      this.performRepelAbility(def);
+    } else if (def.effectType === 'aoeStun') {
+      this.performAoeStunAbility(def);
     } else {
       this.showLootToast(`${def.name} : effet pas encore implémenté`);
       return;
@@ -3427,6 +3441,49 @@ export default class MainScene extends Phaser.Scene {
     });
   }
 
+  performAoeStunAbility(def) {
+  for (const enemy of this.enemies) {
+    if (!this.isEnemyVisible(enemy)) continue;
+    const dist = Math.hypot(enemy.sprite.x - this.hero.x, enemy.sprite.y - this.hero.y);
+    if (dist > def.radius) continue;
+    this.applyStatusEffect(enemy.statusEffects, {
+      type: 'stun',
+      kind: 'modifier',
+      statModifiers: {},
+      durationMs: def.durationMs,
+    });
+  }
+
+  const circle = this.add.circle(this.hero.x, this.hero.y, 10, 0xffff00, 0.4);
+  circle.setDepth(14);
+  this.tweens.add({ targets: circle, radius: def.radius, alpha: 0, duration: 400, onComplete: () => circle.destroy() });
+}
+
+performRepelAbility(def) {
+  for (const enemy of this.enemies) {
+    if (!this.isEnemyVisible(enemy)) continue;
+    const dx = enemy.sprite.x - this.hero.x;
+    const dy = enemy.sprite.y - this.hero.y;
+    const dist = Math.hypot(dx, dy);
+    if (dist > def.radius) continue;
+
+    if (def.damage) {
+      this.damageEnemy(enemy, computeDamage(def.damage, enemy.defense));
+    }
+
+    const mag = dist || 1;
+    this.knockbackEnemyIfClear(
+      enemy,
+      (dx / mag) * def.knockbackDistance,
+      (dy / mag) * def.knockbackDistance,
+    );
+  }
+
+  const circle = this.add.circle(this.hero.x, this.hero.y, 10, 0xaaaaff, 0.4);
+  circle.setDepth(14);
+  this.tweens.add({ targets: circle, radius: def.radius, alpha: 0, duration: 400, onComplete: () => circle.destroy() });
+}
+  
   performShieldBashAbility(def) {
     const shieldDef = this.equipped.offHand ? resolveItemDef(this.equipped.offHand) : null;
     if (def.requiresShield && (!shieldDef || !shieldDef.isShield)) {
@@ -3445,7 +3502,23 @@ export default class MainScene extends Phaser.Scene {
     };
     this.hero.setVelocity(dir.x * def.dashSpeed, dir.y * def.dashSpeed);
   }
-
+/**
+ * Deplace un sprite ennemi d'un delta donne, SEULEMENT si la case
+ * d'arrivee n'est pas un mur - sinon le recul est simplement annule
+ * (l'ennemi reste sur place plutot que d'etre pousse dans/a travers une
+ * paroi solide). Reutilise par repel ET shieldBash.
+ */
+knockbackEnemyIfClear(enemy, dx, dy) {
+  const newX = enemy.sprite.x + dx;
+  const newY = enemy.sprite.y + dy;
+  const tileX = Math.floor(newX / TILE_SIZE);
+  const tileY = Math.floor(newY / TILE_SIZE);
+  const grid = this.fogGrid;
+  if (tileY < 0 || tileX < 0 || tileY >= grid.length || tileX >= grid[0].length) return;
+  if (grid[tileY][tileX] === WALL) return;
+  enemy.sprite.x = newX;
+  enemy.sprite.y = newY;
+}
 /**
  * Fait avancer le dash en cours - appelee CHAQUE frame depuis update()
  * A LA PLACE du mouvement normal (input clavier ignore pendant le dash).
@@ -3463,8 +3536,7 @@ export default class MainScene extends Phaser.Scene {
       if (dist <= 24) {
         this.damageEnemy(enemy, computeDamage(ds.def.damage, enemy.defense));
         ds.hitEnemyIds.add(enemy);
-        enemy.sprite.x += ds.dirX * ds.def.knockbackDistance;
-        enemy.sprite.y += ds.dirY * ds.def.knockbackDistance;
+        this.knockbackEnemyIfClear(enemy, ds.dirX * ds.def.knockbackDistance, ds.dirY * ds.def.knockbackDistance);
       }
     }
 
@@ -4446,6 +4518,7 @@ export default class MainScene extends Phaser.Scene {
   updateEnemyAttacks(now) {
     for (const enemy of this.enemies) {
       if (enemy.state !== "chase") continue;
+      if (this.isEnemyStunned(enemy)) continue;
       if (!enemy.attackCooldown.isReady(now)) continue;
 
       if (enemy.attackType === "ranged") {
