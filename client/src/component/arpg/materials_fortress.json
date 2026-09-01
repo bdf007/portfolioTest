@@ -1,0 +1,303 @@
+{
+  "source_file": "Set_A5_Fortress1spliter.png",
+  "tile_size": 32,
+  "columns_per_material": 47,
+  "rows_total": 49,
+  "column_order_note": "Meme moteur que dungeon1 (blob47.js). A calibrer une fois via DebugTilesetScene comme pour dungeon1 avant integration finale, meme si le test sur l eau de dungeon1 laisse penser que l ordre canonique (tri par nombre de voisins) est deja le bon.",
+  "materials": [
+    {
+      "row_index": 0,
+      "name": "vide / transparent",
+      "pixel_y": 0,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 1,
+      "name": "bordure decorative claire (partielle)",
+      "pixel_y": 32,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 2,
+      "name": "mur pierre claire quadrillee",
+      "pixel_y": 64,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 3,
+      "name": "bordure decorative claire (variante)",
+      "pixel_y": 96,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 4,
+      "name": "vitre / fenetre bleu clair",
+      "pixel_y": 128,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 5,
+      "name": "bordure decorative claire (variante 2)",
+      "pixel_y": 160,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 6,
+      "name": "mur pierre/brique claire (A)",
+      "pixel_y": 192,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 7,
+      "name": "toit brique avec chevron",
+      "pixel_y": 224,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 8,
+      "name": "mur pierre/brique claire (B)",
+      "pixel_y": 256,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 9,
+      "name": "toit brique avec chevron (variante)",
+      "pixel_y": 288,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 10,
+      "name": "mur pierre/brique brune (A) - proche teinte Dungeon1",
+      "pixel_y": 320,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 11,
+      "name": "mur brique avec diagonale marquee (pignon toit ?)",
+      "pixel_y": 352,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 12,
+      "name": "mur pierre/brique brune (B)",
+      "pixel_y": 384,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 13,
+      "name": "eau bleue profonde (bord vague)",
+      "pixel_y": 416,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 14,
+      "name": "eau bleue profonde (pleine)",
+      "pixel_y": 448,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 15,
+      "name": "eau bleue profonde (bord vague, variante)",
+      "pixel_y": 480,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 16,
+      "name": "eau bleue profonde (pleine, variante)",
+      "pixel_y": 512,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 17,
+      "name": "eau bleue avec ligne sombre",
+      "pixel_y": 544,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 18,
+      "name": "colonnes / grille blanche (fenetre a barreaux ?)",
+      "pixel_y": 576,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 19,
+      "name": "mur brique avec liseret bleu-gris haut",
+      "pixel_y": 608,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 20,
+      "name": "mur brique avec base bleu-gris (A)",
+      "pixel_y": 640,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 21,
+      "name": "mur brique avec base bleu-gris (B)",
+      "pixel_y": 672,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 22,
+      "name": "mur pierre bleu-gris avec liseret",
+      "pixel_y": 704,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 23,
+      "name": "mur brique avec bordure cyan",
+      "pixel_y": 736,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 24,
+      "name": "mur brique avec arche/fenetre sombre (A)",
+      "pixel_y": 768,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 25,
+      "name": "mur brique avec bordure cyan (variante)",
+      "pixel_y": 800,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 26,
+      "name": "mur pierre bleu-gris avec liseret cyan",
+      "pixel_y": 832,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 27,
+      "name": "mur brique avec liseret bleu-gris (variante)",
+      "pixel_y": 864,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 28,
+      "name": "mur pierre bleu-gris avec liseret (variante)",
+      "pixel_y": 896,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 29,
+      "name": "mur brique/bleu-gris transition",
+      "pixel_y": 928,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 30,
+      "name": "mur brique avec arche/fenetre sombre (B)",
+      "pixel_y": 960,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 31,
+      "name": "mur pierre bleu-gris (variante)",
+      "pixel_y": 992,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 32,
+      "name": "mur pierre bleu-gris plein (A)",
+      "pixel_y": 1024,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 33,
+      "name": "mur pierre bleu-gris plein (B)",
+      "pixel_y": 1056,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 34,
+      "name": "mur pierre bleu-gris plein (C)",
+      "pixel_y": 1088,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 35,
+      "name": "echelle blanche (icone)",
+      "pixel_y": 1120,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 36,
+      "name": "echelle orange/blanche (icone variante)",
+      "pixel_y": 1152,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 37,
+      "name": "toit brique texture",
+      "pixel_y": 1184,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 38,
+      "name": "ombre tres sombre (A)",
+      "pixel_y": 1216,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 39,
+      "name": "mur brique avec bord sombre",
+      "pixel_y": 1248,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 40,
+      "name": "ombre tres sombre (B)",
+      "pixel_y": 1280,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 41,
+      "name": "echelle blanche (icone variante 2)",
+      "pixel_y": 1312,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 42,
+      "name": "echelle orange/blanche (icone variante 3)",
+      "pixel_y": 1344,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 43,
+      "name": "mur brique sombre (ombre)",
+      "pixel_y": 1376,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 44,
+      "name": "ombre tres sombre (C)",
+      "pixel_y": 1408,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 45,
+      "name": "mur brique sombre (ombre, variante)",
+      "pixel_y": 1440,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 46,
+      "name": "ombre tres sombre (D)",
+      "pixel_y": 1472,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 47,
+      "name": "echafaudage bleu-gris (A)",
+      "pixel_y": 1504,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 48,
+      "name": "echafaudage bleu-gris (B, teinte bleutee)",
+      "pixel_y": 1536,
+      "confidence": "a verifier"
+    }
+  ]
+}

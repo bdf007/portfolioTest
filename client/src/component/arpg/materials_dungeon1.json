@@ -1,0 +1,447 @@
+{
+  "source_file": "Set_A2_Dungeons1_splitiler_output.png",
+  "tile_size": 32,
+  "columns_per_material": 47,
+  "rows_total": 73,
+  "column_order_note": "SpliTiler exporte dans l ordre du template blob-47 de GameMaker Studio 2 (confirme par le devlog de l outil). L ordre exact colonne-par-colonne n a PAS ete verifie pixel par pixel ici : a calibrer une fois dans le moteur (voir README).",
+  "materials": [
+    {
+      "row_index": 0,
+      "name": "vide / transparent",
+      "pixel_y": 0,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 1,
+      "name": "mur brique brune (variante A)",
+      "pixel_y": 32,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 2,
+      "name": "mur brique brune (variante B)",
+      "pixel_y": 64,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 3,
+      "name": "mur pierre bleu-gris (bordure claire)",
+      "pixel_y": 96,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 4,
+      "name": "mur sombre / ombre haute",
+      "pixel_y": 128,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 5,
+      "name": "trou noir / fosse",
+      "pixel_y": 160,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 6,
+      "name": "mur pierre bleu-gris (rivets)",
+      "pixel_y": 192,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 7,
+      "name": "mur pierre mauve clair (A)",
+      "pixel_y": 224,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 8,
+      "name": "mur pierre mauve clair (B)",
+      "pixel_y": 256,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 9,
+      "name": "mur pierre mauve clair (rivets)",
+      "pixel_y": 288,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 10,
+      "name": "mur industriel vert pointillé (A)",
+      "pixel_y": 320,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 11,
+      "name": "mur industriel vert pointillé (B)",
+      "pixel_y": 352,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 12,
+      "name": "mur pierre bleu-gris (rivets, variante)",
+      "pixel_y": 384,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 13,
+      "name": "mur brique brune (variante C)",
+      "pixel_y": 416,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 14,
+      "name": "mur brique brune (variante D)",
+      "pixel_y": 448,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 15,
+      "name": "mur brique brune (sombre)",
+      "pixel_y": 480,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 16,
+      "name": "bordure sombre / ombre verticale",
+      "pixel_y": 512,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 17,
+      "name": "bordure sombre (bleu)",
+      "pixel_y": 544,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 18,
+      "name": "mur mauve (bord haut)",
+      "pixel_y": 576,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 19,
+      "name": "mur mauve clair (variante)",
+      "pixel_y": 608,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 20,
+      "name": "mur mauve (rivets, sombre)",
+      "pixel_y": 640,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 21,
+      "name": "mur vert pointillé (variante)",
+      "pixel_y": 672,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 22,
+      "name": "mur vert pointillé (variante)",
+      "pixel_y": 704,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 23,
+      "name": "mur vert pointillé (variante)",
+      "pixel_y": 736,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 24,
+      "name": "mur bleu-gris plein",
+      "pixel_y": 768,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 25,
+      "name": "sol carrelage orange/sable (A)",
+      "pixel_y": 800,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 26,
+      "name": "sol carrelage orange/sable (B)",
+      "pixel_y": 832,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 27,
+      "name": "sol carrelage orange/sable (C)",
+      "pixel_y": 864,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 28,
+      "name": "sol carrelage orange/sable (D)",
+      "pixel_y": 896,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 29,
+      "name": "sol carrelage orange/sable (rose)",
+      "pixel_y": 928,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 30,
+      "name": "sol dallage bleu-gris (A)",
+      "pixel_y": 960,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 31,
+      "name": "sol dallage bleu-gris (B)",
+      "pixel_y": 992,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 32,
+      "name": "sol dallage bleu-gris (C)",
+      "pixel_y": 1024,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 33,
+      "name": "texture sombre (gravats?)",
+      "pixel_y": 1056,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 34,
+      "name": "eau bleue (A)",
+      "pixel_y": 1088,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 35,
+      "name": "eau bleue (B)",
+      "pixel_y": 1120,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 36,
+      "name": "eau bleue (C)",
+      "pixel_y": 1152,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 37,
+      "name": "sol dallage teal/vert (A)",
+      "pixel_y": 1184,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 38,
+      "name": "sol dallage teal/vert (B)",
+      "pixel_y": 1216,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 39,
+      "name": "sol dallage teal/vert (coin)",
+      "pixel_y": 1248,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 40,
+      "name": "sol dallage teal/vert (D)",
+      "pixel_y": 1280,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 41,
+      "name": "sol dallage teal/vert (E)",
+      "pixel_y": 1312,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 42,
+      "name": "sol transition teal/orange",
+      "pixel_y": 1344,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 43,
+      "name": "sol dallage teal/vert (F)",
+      "pixel_y": 1376,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 44,
+      "name": "sol dallage teal/vert (G)",
+      "pixel_y": 1408,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 45,
+      "name": "sol teal avec mousse/herbe",
+      "pixel_y": 1440,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 46,
+      "name": "bord d'eau (vague sombre)",
+      "pixel_y": 1472,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 47,
+      "name": "eau profonde bleue (A)",
+      "pixel_y": 1504,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 48,
+      "name": "eau profonde bleue (rive claire)",
+      "pixel_y": 1536,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 49,
+      "name": "sol teal (variante)",
+      "pixel_y": 1568,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 50,
+      "name": "sol teal (bordure verticale)",
+      "pixel_y": 1600,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 51,
+      "name": "sol orange/sable (bordure verticale)",
+      "pixel_y": 1632,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 52,
+      "name": "sol orange/sable (variante)",
+      "pixel_y": 1664,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 53,
+      "name": "sol teal (variante)",
+      "pixel_y": 1696,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 54,
+      "name": "sol orange/sable (variante)",
+      "pixel_y": 1728,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 55,
+      "name": "sol teal plein",
+      "pixel_y": 1760,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 56,
+      "name": "ombre sombre (A)",
+      "pixel_y": 1792,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 57,
+      "name": "ombre sombre (B)",
+      "pixel_y": 1824,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 58,
+      "name": "eau bleu foncé (A)",
+      "pixel_y": 1856,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 59,
+      "name": "eau bleu foncé (B)",
+      "pixel_y": 1888,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 60,
+      "name": "eau profonde pleine (sans vague)",
+      "pixel_y": 1920,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 61,
+      "name": "sol pierre bleu-gris clair (A)",
+      "pixel_y": 1952,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 62,
+      "name": "sol pierre bleu-gris clair (B)",
+      "pixel_y": 1984,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 63,
+      "name": "sol pave rond bleu-gris (A)",
+      "pixel_y": 2016,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 64,
+      "name": "sol pave rond bleu-gris (B)",
+      "pixel_y": 2048,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 65,
+      "name": "sol pave rond bleu-gris (C)",
+      "pixel_y": 2080,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 66,
+      "name": "ombre sombre (bord)",
+      "pixel_y": 2112,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 67,
+      "name": "marqueur / trou rond (fond blanc, A)",
+      "pixel_y": 2144,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 68,
+      "name": "marqueur / trou rond (fond blanc, B)",
+      "pixel_y": 2176,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 69,
+      "name": "bord d'eau sombre (vague)",
+      "pixel_y": 2208,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 70,
+      "name": "forme irreguliere bleu-gris/blanc (A)",
+      "pixel_y": 2240,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 71,
+      "name": "forme irreguliere bleu-gris/blanc (B)",
+      "pixel_y": 2272,
+      "confidence": "a verifier"
+    },
+    {
+      "row_index": 72,
+      "name": "sol clair avec ligne d'onde",
+      "pixel_y": 2304,
+      "confidence": "a verifier"
+    }
+  ]
+}

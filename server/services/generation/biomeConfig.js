@@ -27,7 +27,7 @@ const BIOMES = [
     minDepth: 1,
     maxDepth: 1,
     generator: "bsp",
-    tileset: "cave",
+    tileset: "desert",
     enemyBaseCount: 40,
     enemyTypes: ["deer1", "angryBrownMushroom"],
     chestCount: [1, 3],
