@@ -3,12 +3,12 @@
 // import hero2Spritesheet from "../../assets/hero2_walk.png";
 // import hero3Spritesheet from "../../assets/hero3_walk.png";
 // import hero4Spritesheet from "../../assets/hero4_walk.png";
-import minisHeroesSpritesheet from "../../assets/minis_heroes.png";
-import archerMaleSpritesheet from "../../assets/male_archer.png";
-import knightMaleSpritesheet from "../../assets/male_knight.png";
-import thiefMaleSpritesheet from "../../assets/male_thief.png";
-import warriorMaleSpritesheet from "../../assets/male_warrior.png";
-import wizardMaleSpritesheet from "../../assets/male_wizard.png";
+import minisHeroesSpritesheet from "../../assets/heros/minis_heroes.png";
+import archerMaleSpritesheet from "../../assets/heros/male_archer.png";
+import knightMaleSpritesheet from "../../assets/heros/male_knight.png";
+import thiefMaleSpritesheet from "../../assets/heros/male_thief.png";
+import warriorMaleSpritesheet from "../../assets/heros/male_warrior.png";
+import wizardMaleSpritesheet from "../../assets/heros/male_wizard.png";
 //import familiar
 import wolfSpriteSheet from "../../assets/wolf.png";
 
@@ -134,8 +134,8 @@ import town3NPCm2Spritesheet from "../../assets/town3_M2_walk.png";
 import town3NPCm3Spritesheet from "../../assets/town3_M3_walk.png";
 import town3NPCm4Spritesheet from "../../assets/town3_M4_walk.png";
 import town3NPCm5Spritesheet from "../../assets/town3_M5_walk.png";
-import dungeonAutotileImg from "../../assets/Set_A2_Dungeons2.png"; // ajuste ce chemin relatif si spriteRegistry.js n'est pas directement dans client/src/arpg/
-
+import dungeonAutotileImg from "../../assets/tilesets/dungeon1_splittiler.png"; // ajuste ce chemin relatif si spriteRegistry.js n'est pas directement dans client/src/arpg/
+import fortressAutotileImg from "../../assets/tilesets/fortress1_splitiler.png"; // ajuste ce chemin relatif si spriteRegistry.js n'est pas directement dans client/src/arpg/
 const SAFE_WORLD_WIDTH = 18;
 const SAFE_WORLD_HEIGHT = 24;
 const FEET_MARGIN = 2;
@@ -143,6 +143,13 @@ const FEET_MARGIN = 2;
 export const DUNGEON_AUTOTILE_SPRITESHEET = {
   key: "dungeonAutotile",
   path: dungeonAutotileImg,
+  frameWidth: 32,
+  frameHeight: 32,
+};
+
+export const FORTRESS_AUTOTILE_SPRITESHEET = {
+  key: "fortressAutotile",
+  path: fortressAutotileImg,
   frameWidth: 32,
   frameHeight: 32,
 };

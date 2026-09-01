@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import Phaser from "phaser";
 import BootScene from "./scenes/BootScene";
 import MainScene from "./scenes/MainScene";
+// import DebugTilesetScene from "./scenes/DebugTilesetScene";
 import Minimap from "./Minimap";
 import CharacterSelectScreen from "./CharacterSelectScreen";
 import GameListScreen from "./GameListScreen";
@@ -170,7 +171,11 @@ export default function Arpg() {
         default: "arcade",
         arcade: { gravity: { y: 0 }, debug: false },
       },
-      scene: [BootScene, MainScene],
+      scene: [
+        BootScene,
+        MainScene,
+        // DebugTilesetScene
+      ],
     };
 
     let destroyed = false;

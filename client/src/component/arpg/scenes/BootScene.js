@@ -8,6 +8,7 @@ import {
 import {
   DUNGEON_AUTOTILE_SPRITESHEET,
   DESERT_AUTOTILE_SPRITESHEET,
+  FORTRESS_AUTOTILE_SPRITESHEET,
 } from "../spriteRegistry";
 
 /**
@@ -42,16 +43,20 @@ export default class BootScene extends Phaser.Scene {
     for (const { key, path } of getTileImagesToLoad()) {
       this.load.image(key, path);
     }
-    this.load.spritesheet(CHEST_SPRITESHEET.key, CHEST_SPRITESHEET.path, {
-      frameWidth: CHEST_SPRITESHEET.frameWidth,
-      frameHeight: CHEST_SPRITESHEET.frameHeight,
-    });
     this.load.spritesheet(
       DUNGEON_AUTOTILE_SPRITESHEET.key,
       DUNGEON_AUTOTILE_SPRITESHEET.path,
       {
         frameWidth: DUNGEON_AUTOTILE_SPRITESHEET.frameWidth,
         frameHeight: DUNGEON_AUTOTILE_SPRITESHEET.frameHeight,
+      },
+    );
+    this.load.spritesheet(
+      FORTRESS_AUTOTILE_SPRITESHEET.key,
+      FORTRESS_AUTOTILE_SPRITESHEET.path,
+      {
+        frameWidth: FORTRESS_AUTOTILE_SPRITESHEET.frameWidth,
+        frameHeight: FORTRESS_AUTOTILE_SPRITESHEET.frameHeight,
       },
     );
     this.load.spritesheet(
@@ -62,6 +67,10 @@ export default class BootScene extends Phaser.Scene {
         frameHeight: DESERT_AUTOTILE_SPRITESHEET.frameHeight,
       },
     );
+    this.load.spritesheet(CHEST_SPRITESHEET.key, CHEST_SPRITESHEET.path, {
+      frameWidth: CHEST_SPRITESHEET.frameWidth,
+      frameHeight: CHEST_SPRITESHEET.frameHeight,
+    });
     this.load.spritesheet(ICON_SPRITESHEET.key, ICON_SPRITESHEET.path, {
       frameWidth: ICON_SPRITESHEET.frameWidth,
       frameHeight: ICON_SPRITESHEET.frameHeight,

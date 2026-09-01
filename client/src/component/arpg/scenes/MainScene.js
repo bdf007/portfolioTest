@@ -40,9 +40,23 @@ import { resolveAbilityDef, ABILITY_DEFS } from "../abilityDefs";
 import { resolveCraftingRecipe, CRAFTING_RECIPES } from "../craftingRecipes";
 import { resolveFuryDef } from "../furyDefs";
 import { computeWallCornerIndex } from "../autotile";
+import { computeMask } from "../blob47";
 import {
-  // DUNGEON_AUTOTILE_SPRITESHEET,
+  DUNGEON1_TILESET,
+  floorFrame,
+  autotileFrame,
+} from "../tilesets/dungeon1";
+import {
+  FORTRESS1_TILESET,
+  COLUMNS_PER_ROW,
+  floorFrame as fortressFloorFrame,
+  autotileFrame as fortressAutotileFrame,
+} from "../tilesets/fortress1";
+
+import {
+  DUNGEON_AUTOTILE_SPRITESHEET,
   DESERT_AUTOTILE_SPRITESHEET,
+  FORTRESS_AUTOTILE_SPRITESHEET,
 } from "../spriteRegistry";
 
 const TILE_SIZE = 32;
@@ -289,7 +303,9 @@ export default class MainScene extends Phaser.Scene {
     for (const [entryKey, entry] of Object.entries(SPRITE_REGISTRY)) {
       this.createAnimationsForEntry(entryKey, entry);
     }
-
+    // // TEMPORAIRE — debug calibration blob47
+    // this.scene.start("DebugTilesetScene", { row: 6 });
+    // return; // n'exécute pas le reste de create() de MainScene le temps du test
     this.heroSpriteKey = this.registry.get("heroId") || "hero1";
 
     const heroProfile = resolveHeroStatsOverride(this.heroSpriteKey);
@@ -1222,11 +1238,43 @@ export default class MainScene extends Phaser.Scene {
     // mesure que d'autres tilesets sont convertis. Les autres biomes
     // gardent l'ancien systeme procedural (2 couleurs/images), inchange.
     const useRealAutotile = tileset === "desert";
+    const useDungeon1Autotile = tileset === "dungeon1"; // <-- à confirmer/corriger
+    const useFortress1Autotile = tileset === "fortress1";
 
     let phaserTilesetKey;
     let renderGrid;
+    let dungeon1FloorFrameValue; // déclaré ici pour rester accessible plus bas (exclusion de collision)
+    let fortressFloorFrameValue;
 
-    if (useRealAutotile) {
+    if (useFortress1Autotile) {
+      phaserTilesetKey = FORTRESS_AUTOTILE_SPRITESHEET.key;
+
+      renderGrid = Array.from({ length: grid.length }, (_, y) =>
+        new Array(grid[0].length).fill(0).map((_, x) => {
+          const isWall = grid[y][x] === WALL;
+          if (isWall) {
+            const mask = computeMask(x, y, (nx, ny) => grid[ny]?.[nx] === WALL);
+            return fortressAutotileFrame(FORTRESS1_TILESET.roles.wall, mask);
+          }
+          const mask = computeMask(x, y, (nx, ny) => grid[ny]?.[nx] !== WALL);
+          return fortressAutotileFrame(FORTRESS1_TILESET.roles.floor, mask);
+        }),
+      );
+    } else if (useDungeon1Autotile) {
+      phaserTilesetKey = DUNGEON_AUTOTILE_SPRITESHEET.key;
+      dungeon1FloorFrameValue = floorFrame(DUNGEON1_TILESET.roles.floor);
+
+      renderGrid = Array.from({ length: grid.length }, () =>
+        new Array(grid[0].length).fill(dungeon1FloorFrameValue),
+      );
+      for (let y = 0; y < grid.length; y++) {
+        for (let x = 0; x < grid[0].length; x++) {
+          if (grid[y][x] === WALL) {
+            renderGrid[y][x] = floorFrame(DUNGEON1_TILESET.roles.wall);
+          }
+        }
+      }
+    } else if (useRealAutotile) {
       phaserTilesetKey = "desert-autotile-composed";
       if (this.textures.exists(phaserTilesetKey))
         this.textures.remove(phaserTilesetKey);
@@ -1378,6 +1426,16 @@ export default class MainScene extends Phaser.Scene {
     this.layer = this.map.createLayer(0, phaserTileset, 0, 0);
 
     if (useRealAutotile) {
+      this.layer.setCollisionByExclusion([0]);
+    } else {
+      this.layer.setCollision(WALL);
+    }
+    if (useFortress1Autotile) {
+      const wallRowStart = FORTRESS1_TILESET.roles.wall * COLUMNS_PER_ROW;
+      this.layer.setCollisionBetween(wallRowStart, wallRowStart + 46, true);
+    } else if (useDungeon1Autotile) {
+      this.layer.setCollisionByExclusion([dungeon1FloorFrameValue]);
+    } else if (useRealAutotile) {
       this.layer.setCollisionByExclusion([0]);
     } else {
       this.layer.setCollision(WALL);
@@ -2700,145 +2758,107 @@ export default class MainScene extends Phaser.Scene {
     return dot < DETECTION_BEHIND_DOT_THRESHOLD;
   }
 
- updateEnemyDecisions(playerTileX, playerTileY) {
-  const grid = this.fogGrid;
-  const width = grid[0].length, height = grid.length;
-  const isStealthed = this.time.now < this.stealthUntil;
+  updateEnemyDecisions(playerTileX, playerTileY) {
+    const grid = this.fogGrid;
+    const width = grid[0].length,
+      height = grid.length;
+    const isStealthed = this.time.now < this.stealthUntil;
 
-  for (const enemy of this.enemies) {
-    if (isStealthed && enemy.state !== "chase") continue;
+    for (const enemy of this.enemies) {
+      if (isStealthed && enemy.state !== "chase") continue;
 
-    const ex = Math.floor(enemy.sprite.x / TILE_SIZE);
-    const ey = Math.floor(enemy.sprite.y / TILE_SIZE);
+      const ex = Math.floor(enemy.sprite.x / TILE_SIZE);
+      const ey = Math.floor(enemy.sprite.y / TILE_SIZE);
 
-    // cible la plus proche entre le joueur et n'importe quelle
-    // invocation active - stocke le choix sur l'ennemi pour que
-    // updateEnemyMovement/updateEnemyAttacks restent coherents avec
-    // cette meme decision
-    let targetTileX = playerTileX;
-    let targetTileY = playerTileY;
-    let targetType = "player";
-    let targetRef = null;
-    let bestDist = Math.hypot(ex - playerTileX, ey - playerTileY);
+      // cible la plus proche entre le joueur et n'importe quelle
+      // invocation active - stocke le choix sur l'ennemi pour que
+      // updateEnemyMovement/updateEnemyAttacks restent coherents avec
+      // cette meme decision
+      let targetTileX = playerTileX;
+      let targetTileY = playerTileY;
+      let targetType = "player";
+      let targetRef = null;
+      let bestDist = Math.hypot(ex - playerTileX, ey - playerTileY);
 
-    for (const summon of this.summons) {
-      const sx = Math.floor(summon.sprite.x / TILE_SIZE);
-      const sy = Math.floor(summon.sprite.y / TILE_SIZE);
-      const d = Math.hypot(ex - sx, ey - sy);
-      if (d < bestDist) {
-        bestDist = d;
-        targetTileX = sx;
-        targetTileY = sy;
-        targetType = "summon";
-        targetRef = summon;
+      for (const summon of this.summons) {
+        const sx = Math.floor(summon.sprite.x / TILE_SIZE);
+        const sy = Math.floor(summon.sprite.y / TILE_SIZE);
+        const d = Math.hypot(ex - sx, ey - sy);
+        if (d < bestDist) {
+          bestDist = d;
+          targetTileX = sx;
+          targetTileY = sy;
+          targetType = "summon";
+          targetRef = summon;
+        }
       }
-    }
 
-    enemy.chaseTargetType = targetType;
-    enemy.chaseTargetRef = targetRef;
+      enemy.chaseTargetType = targetType;
+      enemy.chaseTargetRef = targetRef;
 
-    const distanceToPlayer = bestDist; // nom attendu par decideNextState, represente desormais la distance a la cible CHOISIE
-    const losClear = hasClearLineOfSight(grid, width, height, ex, ey, targetTileX, targetTileY);
-    const arrivedAtHome = Math.hypot(ex - enemy.home.x, ey - enemy.home.y) < 1;
-    // l'angle mort/la furtivite ne concernent que le joueur - jamais
-    // les invocations, qui n'ont pas cette mecanique
-    const isPlayerBehind = targetType === "player"
-      ? this.isPlayerBehindEnemy(enemy, ex, ey, playerTileX, playerTileY)
-      : false;
+      const distanceToPlayer = bestDist; // nom attendu par decideNextState, represente desormais la distance a la cible CHOISIE
+      const losClear = hasClearLineOfSight(
+        grid,
+        width,
+        height,
+        ex,
+        ey,
+        targetTileX,
+        targetTileY,
+      );
+      const arrivedAtHome =
+        Math.hypot(ex - enemy.home.x, ey - enemy.home.y) < 1;
+      // l'angle mort/la furtivite ne concernent que le joueur - jamais
+      // les invocations, qui n'ont pas cette mecanique
+      const isPlayerBehind =
+        targetType === "player"
+          ? this.isPlayerBehindEnemy(enemy, ex, ey, playerTileX, playerTileY)
+          : false;
 
-    const nextState = decideNextState(enemy.state, {
-      distanceToPlayer,
-      losClear,
-      aggroRadius: enemy.aggroRadius,
-      arrivedAtHome,
-      isPlayerBehind,
-    });
+      const nextState = decideNextState(enemy.state, {
+        distanceToPlayer,
+        losClear,
+        aggroRadius: enemy.aggroRadius,
+        arrivedAtHome,
+        isPlayerBehind,
+      });
 
-    if (nextState === "home") {
-      enemy.state = enemy.type;
-      enemy.patrolIndex = 0;
-      enemy.patrolDirection = 1;
-      enemy.path = null;
-      continue;
-    }
-
-    enemy.state = nextState;
-
-    if (nextState === "chase") {
-      const path = findPath(grid, { x: ex, y: ey }, { x: targetTileX, y: targetTileY });
-      enemy.path = path;
-      enemy.pathIndex = path ? 1 : 0;
-    } else if (nextState === "returning") {
-      const path = findPath(grid, { x: ex, y: ey }, enemy.home);
-      enemy.path = path;
-      enemy.pathIndex = path ? 1 : 0;
-    }
-  }
-}
-
-updateEnemyMovement() {
-  for (const enemy of this.enemies) {
-    enemy.visible = this.isEnemyVisible(enemy);
-    enemy.sprite.setVisible(enemy.visible);
-
-    if (this.time.now < (enemy.attackAnimUntil || 0)) {
-      continue; // animation d'attaque en cours - ne pas l'ecraser avec idle/marche
-    }
-
-    if (this.isEnemyStunned(enemy) || this.isEnemyRooted(enemy)) {
-      enemy.sprite.setVelocity(0, 0);
-      enemy.sprite.anims.play(enemy.spriteKey + "-idle-" + enemy.lastDir, true);
-      continue;
-    }
-
-    if (enemy.state === "chase" || enemy.state === "returning") {
-      // securite : si la cible choisie etait une invocation entre-temps
-      // detruite/expiree, retombe sur le joueur plutot que de planter
-      let targetType = enemy.chaseTargetType;
-      let targetRef = enemy.chaseTargetRef;
-      if (targetType === "summon" && (!targetRef || !this.summons.includes(targetRef))) {
-        targetType = "player";
-        targetRef = null;
-      }
-      const targetX = targetType === "summon" ? targetRef.sprite.x : this.hero.x;
-      const targetY = targetType === "summon" ? targetRef.sprite.y : this.hero.y;
-
-      const distToTarget = Math.hypot(targetX - enemy.sprite.x, targetY - enemy.sprite.y);
-      const isRanged = enemy.attackType === "ranged";
-      const stopDistance = isRanged
-        ? ENEMY_RANGED_STOP_DISTANCE
-        : ENEMY_STOP_DISTANCE;
-      const stopForMelee = enemy.state === "chase" && distToTarget < stopDistance;
-
-      if (
-        enemy.state === "chase" &&
-        isRanged &&
-        distToTarget < ENEMY_RANGED_RETREAT_DISTANCE
-      ) {
-        const dx = enemy.sprite.x - targetX;
-        const dy = enemy.sprite.y - targetY;
-        const mag = Math.hypot(dx, dy) || 1;
-        const vx = (dx / mag) * ENEMY_SPEED;
-        const vy = (dy / mag) * ENEMY_SPEED;
-        enemy.sprite.setVelocity(vx, vy);
-        const edir =
-          Math.abs(vx) > Math.abs(vy)
-            ? vx > 0
-              ? "right"
-              : "left"
-            : vy > 0
-              ? "down"
-              : "up";
-        enemy.sprite.anims.play(enemy.spriteKey + "-walk-" + edir, true);
-        enemy.lastDir = edir;
+      if (nextState === "home") {
+        enemy.state = enemy.type;
+        enemy.patrolIndex = 0;
+        enemy.patrolDirection = 1;
+        enemy.path = null;
         continue;
       }
 
-      if (
-        !enemy.path ||
-        enemy.pathIndex >= enemy.path.length ||
-        stopForMelee
-      ) {
+      enemy.state = nextState;
+
+      if (nextState === "chase") {
+        const path = findPath(
+          grid,
+          { x: ex, y: ey },
+          { x: targetTileX, y: targetTileY },
+        );
+        enemy.path = path;
+        enemy.pathIndex = path ? 1 : 0;
+      } else if (nextState === "returning") {
+        const path = findPath(grid, { x: ex, y: ey }, enemy.home);
+        enemy.path = path;
+        enemy.pathIndex = path ? 1 : 0;
+      }
+    }
+  }
+
+  updateEnemyMovement() {
+    for (const enemy of this.enemies) {
+      enemy.visible = this.isEnemyVisible(enemy);
+      enemy.sprite.setVisible(enemy.visible);
+
+      if (this.time.now < (enemy.attackAnimUntil || 0)) {
+        continue; // animation d'attaque en cours - ne pas l'ecraser avec idle/marche
+      }
+
+      if (this.isEnemyStunned(enemy) || this.isEnemyRooted(enemy)) {
         enemy.sprite.setVelocity(0, 0);
         enemy.sprite.anims.play(
           enemy.spriteKey + "-idle-" + enemy.lastDir,
@@ -2846,37 +2866,102 @@ updateEnemyMovement() {
         );
         continue;
       }
-      this.moveEnemyToward(
-        enemy,
-        enemy.path[enemy.pathIndex],
-        ENEMY_SPEED,
-        () => enemy.pathIndex++,
-      );
-      continue;
-    }
 
-    if (
-      enemy.state === "patrol" &&
-      enemy.patrolPath &&
-      enemy.patrolPath.length > 1
-    ) {
-      const waypoint = enemy.patrolPath[enemy.patrolIndex];
-      this.moveEnemyToward(enemy, waypoint, ENEMY_SPEED * 0.6, () => {
+      if (enemy.state === "chase" || enemy.state === "returning") {
+        // securite : si la cible choisie etait une invocation entre-temps
+        // detruite/expiree, retombe sur le joueur plutot que de planter
+        let targetType = enemy.chaseTargetType;
+        let targetRef = enemy.chaseTargetRef;
         if (
-          enemy.patrolIndex + enemy.patrolDirection < 0 ||
-          enemy.patrolIndex + enemy.patrolDirection >= enemy.patrolPath.length
+          targetType === "summon" &&
+          (!targetRef || !this.summons.includes(targetRef))
         ) {
-          enemy.patrolDirection *= -1;
+          targetType = "player";
+          targetRef = null;
         }
-        enemy.patrolIndex += enemy.patrolDirection;
-      });
-      continue;
-    }
+        const targetX =
+          targetType === "summon" ? targetRef.sprite.x : this.hero.x;
+        const targetY =
+          targetType === "summon" ? targetRef.sprite.y : this.hero.y;
 
-    enemy.sprite.setVelocity(0, 0);
-    enemy.sprite.anims.play(enemy.spriteKey + "-idle-" + enemy.lastDir, true);
+        const distToTarget = Math.hypot(
+          targetX - enemy.sprite.x,
+          targetY - enemy.sprite.y,
+        );
+        const isRanged = enemy.attackType === "ranged";
+        const stopDistance = isRanged
+          ? ENEMY_RANGED_STOP_DISTANCE
+          : ENEMY_STOP_DISTANCE;
+        const stopForMelee =
+          enemy.state === "chase" && distToTarget < stopDistance;
+
+        if (
+          enemy.state === "chase" &&
+          isRanged &&
+          distToTarget < ENEMY_RANGED_RETREAT_DISTANCE
+        ) {
+          const dx = enemy.sprite.x - targetX;
+          const dy = enemy.sprite.y - targetY;
+          const mag = Math.hypot(dx, dy) || 1;
+          const vx = (dx / mag) * ENEMY_SPEED;
+          const vy = (dy / mag) * ENEMY_SPEED;
+          enemy.sprite.setVelocity(vx, vy);
+          const edir =
+            Math.abs(vx) > Math.abs(vy)
+              ? vx > 0
+                ? "right"
+                : "left"
+              : vy > 0
+                ? "down"
+                : "up";
+          enemy.sprite.anims.play(enemy.spriteKey + "-walk-" + edir, true);
+          enemy.lastDir = edir;
+          continue;
+        }
+
+        if (
+          !enemy.path ||
+          enemy.pathIndex >= enemy.path.length ||
+          stopForMelee
+        ) {
+          enemy.sprite.setVelocity(0, 0);
+          enemy.sprite.anims.play(
+            enemy.spriteKey + "-idle-" + enemy.lastDir,
+            true,
+          );
+          continue;
+        }
+        this.moveEnemyToward(
+          enemy,
+          enemy.path[enemy.pathIndex],
+          ENEMY_SPEED,
+          () => enemy.pathIndex++,
+        );
+        continue;
+      }
+
+      if (
+        enemy.state === "patrol" &&
+        enemy.patrolPath &&
+        enemy.patrolPath.length > 1
+      ) {
+        const waypoint = enemy.patrolPath[enemy.patrolIndex];
+        this.moveEnemyToward(enemy, waypoint, ENEMY_SPEED * 0.6, () => {
+          if (
+            enemy.patrolIndex + enemy.patrolDirection < 0 ||
+            enemy.patrolIndex + enemy.patrolDirection >= enemy.patrolPath.length
+          ) {
+            enemy.patrolDirection *= -1;
+          }
+          enemy.patrolIndex += enemy.patrolDirection;
+        });
+        continue;
+      }
+
+      enemy.sprite.setVelocity(0, 0);
+      enemy.sprite.anims.play(enemy.spriteKey + "-idle-" + enemy.lastDir, true);
+    }
   }
-}
 
   isEnemyVisible(enemy) {
     const ex = Math.floor(enemy.sprite.x / TILE_SIZE);
@@ -3147,6 +3232,20 @@ updateEnemyMovement() {
       ? resolveItemDef(this.equipped.mainHand)
       : null;
 
+    // animation d'attaque du heros, si son sprite en definit une pour
+    // cette direction - optionnel, ne fait rien pour les heros qui n'ont
+    // pas ces frames (cf. createAnimationsForEntry)
+    const hasAttackAnim = this.anims.exists(
+      this.heroSpriteKey + "-attack-" + this.lastDir,
+    );
+    if (hasAttackAnim) {
+      this.hero.anims.play(
+        this.heroSpriteKey + "-attack-" + this.lastDir,
+        true,
+      );
+      this.attackAnimUntil = now + ATTACK_ANIM_DURATION_MS;
+    }
+
     const imbue = this.pendingWeaponImbue;
     this.pendingWeaponImbue = null;
     let anyHit = false;
@@ -3199,8 +3298,6 @@ updateEnemyMovement() {
         });
       }
 
-      // effet de statut eventuel de l'arme (saignement/brulure/etc) - chance
-      // aleatoire par coup touche
       if (enemy.hp > 0) {
         this.applyStatusEffect(
           enemy.statusEffects,
