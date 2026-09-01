@@ -9,6 +9,9 @@ import knightMaleSpritesheet from "../../assets/male_knight.png";
 import thiefMaleSpritesheet from "../../assets/male_thief.png";
 import warriorMaleSpritesheet from "../../assets/male_warrior.png";
 import wizardMaleSpritesheet from "../../assets/male_wizard.png";
+//import familiar
+import wolfSpriteSheet from "../../assets/wolf.png";
+
 // import enemy
 import enemy1Spritesheet from "../../assets/enemy1_walk.png";
 import enemy2Spritesheet from "../../assets/enemy2_walk.png";
@@ -417,6 +420,17 @@ export const SPRITE_REGISTRY = {
     animations: STANDARD_ANIMATION_FRAMES,
     hitbox: computeSafeHitbox(HERO_FRAME_W, HERO_FRAME_H, 1),
   },
+  wolfFamiliar: {
+    key: "wolfFamiliar",
+    displayName: "wolfFamiliar",
+    path: wolfSpriteSheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 1,
+    animations: FULL_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(48, 48, 1),
+  },
+
   monks1: {
     key: "monks1",
     displayName: "monks1",
