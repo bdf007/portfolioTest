@@ -288,7 +288,7 @@ export const ABILITY_DEFS = {
     manaCost: 1,
     cooldownMs: 30000,
     effectType: "summon",
-    summonType: "plantMonster1",
+    summonType: "wolfFamiliar",
     durationMs: null, // jamais d'expiration par duree - uniquement la mort le fait disparaitre
     hp: 50,
     damage: 5,

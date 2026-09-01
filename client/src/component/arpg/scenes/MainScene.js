@@ -2769,6 +2769,9 @@ export default class MainScene extends Phaser.Scene {
       enemy.visible = this.isEnemyVisible(enemy);
       enemy.sprite.setVisible(enemy.visible);
 
+      if (this.time.now < (enemy.attackAnimUntil || 0)) {
+        continue; // animation d'attaque en cours - ne pas l'ecraser avec idle/marche
+      }
       if (this.isEnemyStunned(enemy) || this.isEnemyRooted(enemy)) {
         enemy.sprite.setVelocity(0, 0);
         enemy.sprite.anims.play(
@@ -3902,6 +3905,13 @@ export default class MainScene extends Phaser.Scene {
         continue;
       }
 
+      // animation d'attaque en cours - ne pas l'interrompre avec le
+      // reste de la logique de mouvement/ciblage de cette frame
+      if (now < (summon.attackAnimUntil || 0)) {
+        remaining.push(summon);
+        continue;
+      }
+
       let nearestEnemy = null;
       let nearestDist = Infinity;
       for (const enemy of this.enemies) {
@@ -3944,6 +3954,18 @@ export default class MainScene extends Phaser.Scene {
           );
           if (summon.attackCooldown.isReady(now)) {
             summon.attackCooldown.trigger(now);
+
+            const hasAttackAnim = this.anims.exists(
+              summon.spriteKey + "-attack-" + summon.lastDir,
+            );
+            if (hasAttackAnim) {
+              summon.sprite.anims.play(
+                summon.spriteKey + "-attack-" + summon.lastDir,
+                true,
+              );
+              summon.attackAnimUntil = now + ATTACK_ANIM_DURATION_MS;
+            }
+
             const rawDamage = applyElementalResistance(
               summon.damage,
               summon.damageType,
@@ -5543,7 +5565,7 @@ export default class MainScene extends Phaser.Scene {
   updateEnemyAttacks(now) {
     for (const enemy of this.enemies) {
       if (enemy.state !== "chase") continue;
-      if (this.isEnemyStunned(enemy)) continue; // etourdi - ne peut pas attaquer
+      if (this.isEnemyStunned(enemy)) continue;
       if (!enemy.attackCooldown.isReady(now)) continue;
 
       if (enemy.attackType === "ranged") {
@@ -5553,6 +5575,17 @@ export default class MainScene extends Phaser.Scene {
         );
         if (dist > ENEMY_RANGED_ATTACK_RANGE) continue;
         enemy.attackCooldown.trigger(now);
+
+        const hasRangedAttackAnim = this.anims.exists(
+          enemy.spriteKey + "-attack-" + enemy.lastDir,
+        );
+        if (hasRangedAttackAnim) {
+          enemy.sprite.anims.play(
+            enemy.spriteKey + "-attack-" + enemy.lastDir,
+            true,
+          );
+          enemy.attackAnimUntil = now + ATTACK_ANIM_DURATION_MS;
+        }
 
         const dx = this.hero.x - enemy.sprite.x;
         const dy = this.hero.y - enemy.sprite.y;
@@ -5573,8 +5606,6 @@ export default class MainScene extends Phaser.Scene {
           vy * ENEMY_PROJECTILE_SPEED,
         );
 
-        // damage/damageType/inflictsEffect captures ICI (etat de l'ennemi
-        // au moment du tir), jamais relus plus tard
         this.enemyProjectiles.push({
           sprite,
           startX: enemy.sprite.x,
@@ -5591,10 +5622,6 @@ export default class MainScene extends Phaser.Scene {
         enemy.sprite.y - this.hero.y,
       );
 
-      // cible la CIBLE LA PLUS PROCHE entre le heros et une invocation
-      // active, au moment precis de frapper - pas un vrai pathing "vers
-      // l'allie", juste une riposte coherente si l'invocation se trouve
-      // sur le chemin (cf. performSummonAbility/updateSummons)
       let target = {
         isSummon: false,
         defense: this.playerDefense,
@@ -5613,13 +5640,20 @@ export default class MainScene extends Phaser.Scene {
 
       enemy.attackCooldown.trigger(now);
 
+      const hasAttackAnim = this.anims.exists(
+        enemy.spriteKey + "-attack-" + enemy.lastDir,
+      );
+      if (hasAttackAnim) {
+        enemy.sprite.anims.play(
+          enemy.spriteKey + "-attack-" + enemy.lastDir,
+          true,
+        );
+        enemy.attackAnimUntil = now + ATTACK_ANIM_DURATION_MS;
+      }
+
       if (target.isSummon) {
         const dmg = computeDamage(
-          applyElementalResistance(
-            this.getEffectiveEnemyDamage(enemy),
-            enemy.damageType,
-            target.summon.resistances,
-          ),
+          this.getEffectiveEnemyDamage(enemy),
           target.defense,
         );
         target.summon.hp = Math.max(0, target.summon.hp - dmg);
@@ -5646,7 +5680,6 @@ export default class MainScene extends Phaser.Scene {
           this.damageEnemy(enemy, dmg * this.riposteReflectPercent);
         }
 
-        // effet de statut eventuel de cet ennemi (saignement/brulure)
         this.applyStatusEffect(
           this.playerStatusEffects,
           this.rollStatusEffect(enemy),
@@ -5816,7 +5849,7 @@ export default class MainScene extends Phaser.Scene {
       sprite.y - 20,
       `${prefix}${Math.round(amount)}`,
       {
-        fontSize: "16px",
+        fontSize: "25px",
         fontFamily: "monospace",
         color,
         stroke: "#000000",
