@@ -2700,79 +2700,145 @@ export default class MainScene extends Phaser.Scene {
     return dot < DETECTION_BEHIND_DOT_THRESHOLD;
   }
 
-  updateEnemyDecisions(playerTileX, playerTileY) {
-    const grid = this.fogGrid;
-    const width = grid[0].length,
-      height = grid.length;
-    const isStealthed = this.time.now < this.stealthUntil;
+ updateEnemyDecisions(playerTileX, playerTileY) {
+  const grid = this.fogGrid;
+  const width = grid[0].length, height = grid.length;
+  const isStealthed = this.time.now < this.stealthUntil;
 
-    for (const enemy of this.enemies) {
-      if (isStealthed && enemy.state !== "chase") continue; // furtivite active - aucune detection possible tant que pas deja engage
-      const ex = Math.floor(enemy.sprite.x / TILE_SIZE);
-      const ey = Math.floor(enemy.sprite.y / TILE_SIZE);
-      const distanceToPlayer = Math.hypot(ex - playerTileX, ey - playerTileY);
-      const losClear = hasClearLineOfSight(
-        grid,
-        width,
-        height,
-        ex,
-        ey,
-        playerTileX,
-        playerTileY,
-      );
-      const arrivedAtHome =
-        Math.hypot(ex - enemy.home.x, ey - enemy.home.y) < 1;
-      const isPlayerBehind = this.isPlayerBehindEnemy(
-        enemy,
-        ex,
-        ey,
-        playerTileX,
-        playerTileY,
-      );
+  for (const enemy of this.enemies) {
+    if (isStealthed && enemy.state !== "chase") continue;
 
-      const nextState = decideNextState(enemy.state, {
-        distanceToPlayer,
-        losClear,
-        aggroRadius: enemy.aggroRadius,
-        arrivedAtHome,
-        isPlayerBehind,
-      });
+    const ex = Math.floor(enemy.sprite.x / TILE_SIZE);
+    const ey = Math.floor(enemy.sprite.y / TILE_SIZE);
 
-      if (nextState === "home") {
-        enemy.state = enemy.type;
-        enemy.patrolIndex = 0;
-        enemy.patrolDirection = 1;
-        enemy.path = null;
+    // cible la plus proche entre le joueur et n'importe quelle
+    // invocation active - stocke le choix sur l'ennemi pour que
+    // updateEnemyMovement/updateEnemyAttacks restent coherents avec
+    // cette meme decision
+    let targetTileX = playerTileX;
+    let targetTileY = playerTileY;
+    let targetType = "player";
+    let targetRef = null;
+    let bestDist = Math.hypot(ex - playerTileX, ey - playerTileY);
+
+    for (const summon of this.summons) {
+      const sx = Math.floor(summon.sprite.x / TILE_SIZE);
+      const sy = Math.floor(summon.sprite.y / TILE_SIZE);
+      const d = Math.hypot(ex - sx, ey - sy);
+      if (d < bestDist) {
+        bestDist = d;
+        targetTileX = sx;
+        targetTileY = sy;
+        targetType = "summon";
+        targetRef = summon;
+      }
+    }
+
+    enemy.chaseTargetType = targetType;
+    enemy.chaseTargetRef = targetRef;
+
+    const distanceToPlayer = bestDist; // nom attendu par decideNextState, represente desormais la distance a la cible CHOISIE
+    const losClear = hasClearLineOfSight(grid, width, height, ex, ey, targetTileX, targetTileY);
+    const arrivedAtHome = Math.hypot(ex - enemy.home.x, ey - enemy.home.y) < 1;
+    // l'angle mort/la furtivite ne concernent que le joueur - jamais
+    // les invocations, qui n'ont pas cette mecanique
+    const isPlayerBehind = targetType === "player"
+      ? this.isPlayerBehindEnemy(enemy, ex, ey, playerTileX, playerTileY)
+      : false;
+
+    const nextState = decideNextState(enemy.state, {
+      distanceToPlayer,
+      losClear,
+      aggroRadius: enemy.aggroRadius,
+      arrivedAtHome,
+      isPlayerBehind,
+    });
+
+    if (nextState === "home") {
+      enemy.state = enemy.type;
+      enemy.patrolIndex = 0;
+      enemy.patrolDirection = 1;
+      enemy.path = null;
+      continue;
+    }
+
+    enemy.state = nextState;
+
+    if (nextState === "chase") {
+      const path = findPath(grid, { x: ex, y: ey }, { x: targetTileX, y: targetTileY });
+      enemy.path = path;
+      enemy.pathIndex = path ? 1 : 0;
+    } else if (nextState === "returning") {
+      const path = findPath(grid, { x: ex, y: ey }, enemy.home);
+      enemy.path = path;
+      enemy.pathIndex = path ? 1 : 0;
+    }
+  }
+}
+
+updateEnemyMovement() {
+  for (const enemy of this.enemies) {
+    enemy.visible = this.isEnemyVisible(enemy);
+    enemy.sprite.setVisible(enemy.visible);
+
+    if (this.time.now < (enemy.attackAnimUntil || 0)) {
+      continue; // animation d'attaque en cours - ne pas l'ecraser avec idle/marche
+    }
+
+    if (this.isEnemyStunned(enemy) || this.isEnemyRooted(enemy)) {
+      enemy.sprite.setVelocity(0, 0);
+      enemy.sprite.anims.play(enemy.spriteKey + "-idle-" + enemy.lastDir, true);
+      continue;
+    }
+
+    if (enemy.state === "chase" || enemy.state === "returning") {
+      // securite : si la cible choisie etait une invocation entre-temps
+      // detruite/expiree, retombe sur le joueur plutot que de planter
+      let targetType = enemy.chaseTargetType;
+      let targetRef = enemy.chaseTargetRef;
+      if (targetType === "summon" && (!targetRef || !this.summons.includes(targetRef))) {
+        targetType = "player";
+        targetRef = null;
+      }
+      const targetX = targetType === "summon" ? targetRef.sprite.x : this.hero.x;
+      const targetY = targetType === "summon" ? targetRef.sprite.y : this.hero.y;
+
+      const distToTarget = Math.hypot(targetX - enemy.sprite.x, targetY - enemy.sprite.y);
+      const isRanged = enemy.attackType === "ranged";
+      const stopDistance = isRanged
+        ? ENEMY_RANGED_STOP_DISTANCE
+        : ENEMY_STOP_DISTANCE;
+      const stopForMelee = enemy.state === "chase" && distToTarget < stopDistance;
+
+      if (
+        enemy.state === "chase" &&
+        isRanged &&
+        distToTarget < ENEMY_RANGED_RETREAT_DISTANCE
+      ) {
+        const dx = enemy.sprite.x - targetX;
+        const dy = enemy.sprite.y - targetY;
+        const mag = Math.hypot(dx, dy) || 1;
+        const vx = (dx / mag) * ENEMY_SPEED;
+        const vy = (dy / mag) * ENEMY_SPEED;
+        enemy.sprite.setVelocity(vx, vy);
+        const edir =
+          Math.abs(vx) > Math.abs(vy)
+            ? vx > 0
+              ? "right"
+              : "left"
+            : vy > 0
+              ? "down"
+              : "up";
+        enemy.sprite.anims.play(enemy.spriteKey + "-walk-" + edir, true);
+        enemy.lastDir = edir;
         continue;
       }
 
-      enemy.state = nextState;
-
-      if (nextState === "chase") {
-        const path = findPath(
-          grid,
-          { x: ex, y: ey },
-          { x: playerTileX, y: playerTileY },
-        );
-        enemy.path = path;
-        enemy.pathIndex = path ? 1 : 0;
-      } else if (nextState === "returning") {
-        const path = findPath(grid, { x: ex, y: ey }, enemy.home);
-        enemy.path = path;
-        enemy.pathIndex = path ? 1 : 0;
-      }
-    }
-  }
-
-  updateEnemyMovement() {
-    for (const enemy of this.enemies) {
-      enemy.visible = this.isEnemyVisible(enemy);
-      enemy.sprite.setVisible(enemy.visible);
-
-      if (this.time.now < (enemy.attackAnimUntil || 0)) {
-        continue; // animation d'attaque en cours - ne pas l'ecraser avec idle/marche
-      }
-      if (this.isEnemyStunned(enemy) || this.isEnemyRooted(enemy)) {
+      if (
+        !enemy.path ||
+        enemy.pathIndex >= enemy.path.length ||
+        stopForMelee
+      ) {
         enemy.sprite.setVelocity(0, 0);
         enemy.sprite.anims.play(
           enemy.spriteKey + "-idle-" + enemy.lastDir,
@@ -2780,92 +2846,37 @@ export default class MainScene extends Phaser.Scene {
         );
         continue;
       }
-
-      if (enemy.state === "chase" || enemy.state === "returning") {
-        const distToHero = Math.hypot(
-          this.hero.x - enemy.sprite.x,
-          this.hero.y - enemy.sprite.y,
-        );
-        const isRanged = enemy.attackType === "ranged";
-        const stopDistance = isRanged
-          ? ENEMY_RANGED_STOP_DISTANCE
-          : ENEMY_STOP_DISTANCE;
-        const stopForMelee =
-          enemy.state === "chase" && distToHero < stopDistance;
-
-        if (
-          enemy.state === "chase" &&
-          isRanged &&
-          distToHero < ENEMY_RANGED_RETREAT_DISTANCE
-        ) {
-          const dx = enemy.sprite.x - this.hero.x;
-          const dy = enemy.sprite.y - this.hero.y;
-          const mag = Math.hypot(dx, dy) || 1;
-          const vx = (dx / mag) * this.getEffectiveEnemySpeed(enemy);
-          const vy = (dy / mag) * this.getEffectiveEnemySpeed(enemy);
-          enemy.sprite.setVelocity(vx, vy);
-          const edir =
-            Math.abs(vx) > Math.abs(vy)
-              ? vx > 0
-                ? "right"
-                : "left"
-              : vy > 0
-                ? "down"
-                : "up";
-          enemy.sprite.anims.play(enemy.spriteKey + "-walk-" + edir, true);
-          enemy.lastDir = edir;
-          continue;
-        }
-
-        if (
-          !enemy.path ||
-          enemy.pathIndex >= enemy.path.length ||
-          stopForMelee
-        ) {
-          enemy.sprite.setVelocity(0, 0);
-          enemy.sprite.anims.play(
-            enemy.spriteKey + "-idle-" + enemy.lastDir,
-            true,
-          );
-          continue;
-        }
-        this.moveEnemyToward(
-          enemy,
-          enemy.path[enemy.pathIndex],
-          this.getEffectiveEnemySpeed(enemy),
-          () => enemy.pathIndex++,
-        );
-        continue;
-      }
-
-      if (
-        enemy.state === "patrol" &&
-        enemy.patrolPath &&
-        enemy.patrolPath.length > 1
-      ) {
-        const waypoint = enemy.patrolPath[enemy.patrolIndex];
-        this.moveEnemyToward(
-          enemy,
-          waypoint,
-          this.getEffectiveEnemySpeed(enemy) * 0.6,
-          () => {
-            if (
-              enemy.patrolIndex + enemy.patrolDirection < 0 ||
-              enemy.patrolIndex + enemy.patrolDirection >=
-                enemy.patrolPath.length
-            ) {
-              enemy.patrolDirection *= -1;
-            }
-            enemy.patrolIndex += enemy.patrolDirection;
-          },
-        );
-        continue;
-      }
-
-      enemy.sprite.setVelocity(0, 0);
-      enemy.sprite.anims.play(enemy.spriteKey + "-idle-" + enemy.lastDir, true);
+      this.moveEnemyToward(
+        enemy,
+        enemy.path[enemy.pathIndex],
+        ENEMY_SPEED,
+        () => enemy.pathIndex++,
+      );
+      continue;
     }
+
+    if (
+      enemy.state === "patrol" &&
+      enemy.patrolPath &&
+      enemy.patrolPath.length > 1
+    ) {
+      const waypoint = enemy.patrolPath[enemy.patrolIndex];
+      this.moveEnemyToward(enemy, waypoint, ENEMY_SPEED * 0.6, () => {
+        if (
+          enemy.patrolIndex + enemy.patrolDirection < 0 ||
+          enemy.patrolIndex + enemy.patrolDirection >= enemy.patrolPath.length
+        ) {
+          enemy.patrolDirection *= -1;
+        }
+        enemy.patrolIndex += enemy.patrolDirection;
+      });
+      continue;
+    }
+
+    enemy.sprite.setVelocity(0, 0);
+    enemy.sprite.anims.play(enemy.spriteKey + "-idle-" + enemy.lastDir, true);
   }
+}
 
   isEnemyVisible(enemy) {
     const ex = Math.floor(enemy.sprite.x / TILE_SIZE);
