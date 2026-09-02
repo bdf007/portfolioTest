@@ -5,10 +5,23 @@
 // import hero4Spritesheet from "../../assets/hero4_walk.png";
 import minisHeroesSpritesheet from "../../assets/heros/minis_heroes.png";
 import archerMaleSpritesheet from "../../assets/heros/male_archer.png";
+import archerFemaleSpritesheet from "../../assets/heros/female-archer.png;
 import knightMaleSpritesheet from "../../assets/heros/male_knight.png";
+import knightFemaleSpritesheet from "../../assets/heros/female_knight.png";
 import thiefMaleSpritesheet from "../../assets/heros/male_thief.png";
+import thiefFemaleSpritesheet from "../../assets/heros/female_thief.png";
 import warriorMaleSpritesheet from "../../assets/heros/male_warrior.png";
+import warriorFemaleSpritesheet from "../../assets/heros/female_warrior.png";
 import wizardMaleSpritesheet from "../../assets/heros/male_wizard.png";
+import wizardFemaleSpritesheet from "../../assets/heros/female_wizard.png";
+//import barbarianMaleSpritesheet from "../../assets/heros/male_barbarian.png";
+import barbarianFemaleSpritesheet from "../../assets/heros/female_barbarian.png";
+import druideMaleSpritesheet from "../../assets/heros/male_druide.png";
+import druideFemaleSpritesheet from "../../assets/heros/female_druide.png";
+import mageMaleSpritesheet from "../../assets/heros/male_mage.png";
+import mageFemaleSpritesheet from "../../assets/heros/female_mage.png";
+import monkMaleSpritesheet from "../../assets/heros/male_monk.png";
+import monkFemaleSpritesheet from "../../assets/heros/female_monk.png";
 //import familiar
 import wolfSpriteSheet from "../../assets/wolf.png";
 
@@ -411,6 +424,14 @@ export const SPRITE_REGISTRY = {
   hero13: makeHeroEntry(
     "hero13",
     wizardMaleSpritesheet,
+    FULL_ANIMATION_FRAMES,
+    1,
+    4,
+    16,
+  ),
+  hero14: makeHeroEntry(
+    "hero14",
+    archerFemaleSpritesheet,
     FULL_ANIMATION_FRAMES,
     1,
     4,
