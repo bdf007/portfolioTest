@@ -3952,48 +3952,54 @@ export default class MainScene extends Phaser.Scene {
     // (sourceAbilityId), pas juste le sprite (deux familiers differents
     // pourraient partager le meme visuel)
     if (def.persistent) {
-      const alreadyHasThis = this.summons.some(
-        (s) => s.persistent && s.sourceAbilityId === def.id,
-      );
-      if (alreadyHasThis) {
-        this.showLootToast(`Tu as déjà invoqué ${def.name}`);
-        return;
-      }
+    const alreadyHasThis = this.summons.some(
+      (s) => s.persistent && s.sourceAbilityId === def.id,
+    );
+    if (alreadyHasThis) {
+      this.showLootToast(`Tu as déjà invoqué ${def.name}`);
+      return;
     }
-
-    if (this.summons.length >= MAX_SUMMONS) {
-      const oldestIndex = this.summons.findIndex((s) => !s.persistent);
-      if (oldestIndex === -1) {
-        this.showLootToast("Toutes tes invocations sont déjà occupées");
-        return;
-      }
-      const oldest = this.summons.splice(oldestIndex, 1)[0];
-      oldest.sprite.destroy();
-    }
-
-    const spawnX = this.hero.x + (Math.random() - 0.5) * 40;
-    const spawnY = this.hero.y + (Math.random() - 0.5) * 40;
-    const sprite = this.spawnSummonSprite(def.summonType, spawnX, spawnY);
-
-    this.summons.push({
-      sprite,
-      spriteKey: def.summonType,
-      sourceAbilityId: def.id, //
-      hp: def.hp,
-      maxHp: def.hp,
-      damage: def.damage,
-      defense: def.defense,
-      damageType: def.damageType || "physical",
-      resistances: def.resistances || {},
-      persistent: def.persistent || false,
-      attackCooldown: createCooldown(ENEMY_ATTACK_COOLDOWN),
-      expiresAt: def.durationMs ? this.time.now + def.durationMs : null,
-      lastDir: "down",
-    });
-
-    this.showLootToast(`${def.name} invoquée !`);
   }
 
+  if (this.summons.length >= MAX_SUMMONS) {
+    const oldestIndex = this.summons.findIndex((s) => !s.persistent);
+    if (oldestIndex === -1) {
+      this.showLootToast('Toutes tes invocations sont déjà occupées');
+      return;
+    }
+    const oldest = this.summons.splice(oldestIndex, 1)[0];
+    oldest.sprite.destroy();
+  }
+
+  // stats fixes en priorite si definies, sinon calculees a partir des
+  // stats ACTUELLES du heros au moment de l'invocation (instantane -
+  // pas un lien permanent qui se recalculerait plus tard)
+  const summonHp = def.hp ?? Math.round(this.playerMaxHp * (def.hpScale || 0));
+  const summonDamage = def.damage ?? Math.round(this.getEffectivePlayerMeleeDamage() * (def.damageScale || 0));
+  const summonDefense = def.defense ?? Math.round(this.playerDefense * (def.defenseScale || 0));
+
+  const spawnX = this.hero.x + (Math.random() - 0.5) * 40;
+  const spawnY = this.hero.y + (Math.random() - 0.5) * 40;
+  const sprite = this.spawnSummonSprite(def.summonType, spawnX, spawnY);
+
+  this.summons.push({
+    sprite,
+    spriteKey: def.summonType,
+    sourceAbilityId: def.id,
+    hp: summonHp,
+    maxHp: summonHp,
+    damage: summonDamage,
+    defense: summonDefense,
+    damageType: def.damageType || 'physical',
+    resistances: def.resistances || {},
+    persistent: def.persistent || false,
+    attackCooldown: createCooldown(ENEMY_ATTACK_COOLDOWN),
+    expiresAt: def.durationMs ? this.time.now + def.durationMs : null,
+    lastDir: 'down',
+  });
+
+  this.showLootToast(`${def.name} invoquée !`);
+}
   /**
    * IA simplifiee de l'invocation : suit le heros si aucun ennemi
    * proche, sinon fonce sur l'ennemi visible le plus proche et
