@@ -2,10 +2,8 @@ import { useState } from "react";
 import { HERO_ROSTER, SPRITE_REGISTRY } from "./spriteRegistry";
 
 const PREVIEW_SCALE = 3;
-
-// Spritesheet complète : 12 colonnes × 8 lignes
-// const SHEET_COLS = 12;
-// const SHEET_ROWS = 8;
+const SHEET_COLS = 12;
+const SHEET_ROWS = 8;
 
 const CONTROLS = [
   ["Déplacement", "ZQSD ou WASD (basculable en jeu) / flèches"],
@@ -17,17 +15,22 @@ const CONTROLS = [
   ["Carte", "V"],
 ];
 
-/**
- * Écran de sélection du héros au démarrage.
- *
- * La spritesheet contient les 8 héros sur une seule image
- * de 12 colonnes × 8 lignes.
- *
- * Chaque héros possède déjà dans SPRITE_REGISTRY les indices
- * globaux de ses animations.
- */
 export default function CharacterSelectScreen({ onSelect, isMobile }) {
   const [controlsOpen, setControlsOpen] = useState(false);
+  const [genderFilter, setGenderFilter] = useState("male");
+  const [selectedHeroId, setSelectedHeroId] = useState(null);
+
+  const filteredRoster = HERO_ROSTER.filter((h) => h.gender === genderFilter);
+
+  const handleToggleGender = (gender) => {
+    setGenderFilter(gender);
+    setSelectedHeroId(null); // la selection precedente n'est plus visible dans ce filtre
+  };
+
+  const handleConfirm = () => {
+    if (!selectedHeroId) return;
+    onSelect(selectedHeroId);
+  };
 
   return (
     <div
@@ -35,7 +38,7 @@ export default function CharacterSelectScreen({ onSelect, isMobile }) {
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        gap: 24,
+        gap: 20,
         padding: isMobile ? 20 : 40,
         color: "#eee",
         background: "#12131a",
@@ -45,7 +48,6 @@ export default function CharacterSelectScreen({ onSelect, isMobile }) {
         boxSizing: "border-box",
       }}
     >
-      {/* uniquement desktop */}
       {!isMobile && (
         <button
           onClick={() => setControlsOpen(true)}
@@ -66,68 +68,83 @@ export default function CharacterSelectScreen({ onSelect, isMobile }) {
         </button>
       )}
 
-      <h2
-        style={{
-          margin: 0,
-          textAlign: "center",
-        }}
-      >
-        Choisis ton héros
-      </h2>
+      <h2 style={{ margin: 0, textAlign: "center" }}>Choisis ton héros</h2>
 
-      {/* Grille des héros */}
+      <div style={{ display: "flex", gap: 8 }}>
+        <button
+          onClick={() => handleToggleGender("male")}
+          style={{
+            padding: "8px 24px",
+            fontSize: 14,
+            borderRadius: 6,
+            border:
+              genderFilter === "male" ? "2px solid #8a7050" : "1px solid #444",
+            background: genderFilter === "male" ? "#3a2f20" : "#1e2029",
+            color: "#eee",
+            cursor: "pointer",
+          }}
+        >
+          Homme
+        </button>
+        <button
+          onClick={() => handleToggleGender("female")}
+          style={{
+            padding: "8px 24px",
+            fontSize: 14,
+            borderRadius: 6,
+            border:
+              genderFilter === "female"
+                ? "2px solid #8a7050"
+                : "1px solid #444",
+            background: genderFilter === "female" ? "#3a2f20" : "#1e2029",
+            color: "#eee",
+            cursor: "pointer",
+          }}
+        >
+          Femme
+        </button>
+      </div>
+
       <div
         style={{
           display: "grid",
-
-          // 4 héros par ligne sur desktop,
-          // 2 héros par ligne sur mobile.
           gridTemplateColumns: isMobile
             ? "repeat(2, minmax(0, 1fr))"
             : "repeat(4, minmax(0, 1fr))",
-
           gap: isMobile ? 12 : 20,
-
           width: "100%",
           maxWidth: isMobile ? 360 : 1000,
-
           boxSizing: "border-box",
         }}
       >
-        {HERO_ROSTER.map((hero) => {
+        {filteredRoster.map((hero) => {
           const entry = SPRITE_REGISTRY[hero.id] || SPRITE_REGISTRY.hero1;
-
-          const sheetCols = entry.sheetCols || 12;
-          const sheetRows = entry.sheetRows || 8;
-
+          const sheetCols = entry.sheetCols || SHEET_COLS;
+          const sheetRows = entry.sheetRows || SHEET_ROWS;
           const idleFrameIndex = entry.animations.idleDown;
           const col = idleFrameIndex % sheetCols;
           const row = Math.floor(idleFrameIndex / sheetCols);
           const sheetW = entry.frameWidth * sheetCols;
           const sheetH = entry.frameHeight * sheetRows;
+          const isSelected = hero.id === selectedHeroId;
 
           return (
             <button
               key={hero.id}
-              onClick={() => onSelect(hero.id)}
+              onClick={() => setSelectedHeroId(hero.id)}
               style={{
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
                 justifyContent: "center",
-
                 gap: 8,
-
                 padding: isMobile ? 10 : 16,
-
                 width: "100%",
                 minWidth: 0,
                 boxSizing: "border-box",
-
-                background: "#1e2029",
-                border: "1px solid #444",
+                background: isSelected ? "#3a2f20" : "#1e2029",
+                border: isSelected ? "2px solid #8a7050" : "1px solid #444",
                 borderRadius: 8,
-
                 cursor: "pointer",
                 color: "#eee",
               }}
@@ -136,27 +153,20 @@ export default function CharacterSelectScreen({ onSelect, isMobile }) {
                 style={{
                   width: entry.frameWidth * PREVIEW_SCALE,
                   height: entry.frameHeight * PREVIEW_SCALE,
-
                   backgroundImage: `url(${entry.path})`,
-
                   backgroundPosition: `
                     -${col * entry.frameWidth * PREVIEW_SCALE}px
                     -${row * entry.frameHeight * PREVIEW_SCALE}px
                   `,
-
                   backgroundSize: `
                     ${sheetW * PREVIEW_SCALE}px
                     ${sheetH * PREVIEW_SCALE}px
                   `,
-
                   backgroundRepeat: "no-repeat",
-
                   imageRendering: "pixelated",
-
                   flexShrink: 0,
                 }}
               />
-
               <span
                 style={{
                   textAlign: "center",
@@ -173,7 +183,22 @@ export default function CharacterSelectScreen({ onSelect, isMobile }) {
         })}
       </div>
 
-      {/* Fenêtre des contrôles */}
+      <button
+        disabled={!selectedHeroId}
+        onClick={handleConfirm}
+        style={{
+          padding: "10px 32px",
+          fontSize: 16,
+          borderRadius: 8,
+          border: "1px solid #8a7050",
+          background: selectedHeroId ? "#3a2f20" : "#2a2a35",
+          color: selectedHeroId ? "#f0e6d0" : "#777",
+          cursor: selectedHeroId ? "pointer" : "not-allowed",
+        }}
+      >
+        Confirmer
+      </button>
+
       {controlsOpen && (
         <div
           onClick={() => setControlsOpen(false)}
@@ -211,7 +236,6 @@ export default function CharacterSelectScreen({ onSelect, isMobile }) {
               }}
             >
               <h3 style={{ margin: 0 }}>Contrôles</h3>
-
               <button
                 onClick={() => setControlsOpen(false)}
                 style={{
@@ -227,14 +251,7 @@ export default function CharacterSelectScreen({ onSelect, isMobile }) {
                 Fermer
               </button>
             </div>
-
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: 8,
-              }}
-            >
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {CONTROLS.map(([label, key]) => (
                 <div
                   key={label}
@@ -246,13 +263,7 @@ export default function CharacterSelectScreen({ onSelect, isMobile }) {
                   }}
                 >
                   <span style={{ color: "#ccc" }}>{label}</span>
-
-                  <span
-                    style={{
-                      color: "#8a7050",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
+                  <span style={{ color: "#8a7050", whiteSpace: "nowrap" }}>
                     {key}
                   </span>
                 </div>

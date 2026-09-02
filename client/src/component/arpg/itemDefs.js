@@ -51,26 +51,6 @@ export const ITEM_DEFS = {
     },
   },
 
-  reinforcedSword: {
-    id: "reinforcedSword",
-    category: "equipment",
-    slot: "mainHand",
-    twoHanded: false,
-    grantsRanged: false,
-    name: "Épée renforcée",
-    description: "+2 dégât au corps à corps. Arme d'entraînement avancée.",
-    statBonus: { meleeDamage: 2 },
-    stackable: false,
-    archetypes: ["guerrier"],
-    price: 5,
-    inflictsEffect: {
-      type: "bleed",
-      chance: 0.9,
-      damagePerTick: 1,
-      tickIntervalMs: 1000,
-      ticks: 3,
-    },
-  },
   woodenBow: {
     id: "woodenBow",
     category: "equipment",
@@ -754,6 +734,49 @@ export const ITEM_DEFS = {
     stackable: true,
   },
 
+  //enchanted weapons with scroll
+
+  reinforcedSword: {
+    id: "reinforcedSword",
+    category: "equipment",
+    slot: "mainHand",
+    twoHanded: false,
+    grantsRanged: false,
+    name: "Épée renforcée",
+    description: "+2 dégât au corps à corps. Arme d'entraînement avancée.",
+    statBonus: { meleeDamage: 2 },
+    stackable: false,
+    archetypes: ["guerrier"],
+    price: 5,
+    inflictsEffect: {
+      type: "bleed",
+      chance: 0.9,
+      damagePerTick: 1,
+      tickIntervalMs: 1000,
+      ticks: 3,
+    },
+  },
+  flamingSword: {
+    id: "flamingSword",
+    category: "equipment",
+    slot: "mainHand",
+    name: "Épée enflammée",
+    description: "Une épée forgée dans les flammes.",
+    statBonus: { meleeDamage: 5 }, // bonus de stat classique, deja utilise partout
+    damageType: "fire", // type de degats (resistances elementaires)
+    varianceDice: "1d6", // variance aleatoire sur les degats
+    inflictsEffect: {
+      // chance d'infliger un effet par coup - PAS de cooldown ici
+      type: "burn",
+      kind: "dot",
+      chance: 0.3,
+      damagePerTick: 3,
+      tickIntervalMs: 1000,
+      ticks: 3,
+    },
+    stackable: false,
+  },
+
   //scroll
   fireballScroll: {
     id: "fireballScroll",
@@ -827,6 +850,15 @@ export const ITEM_DEFS = {
     grantsRecipe: "reinforcedSword",
     stackable: true,
     price: 60,
+  },
+  flamingSwordRecipe: {
+    id: "flamingSwordRecipe",
+    category: "recipeScroll",
+    name: "Plan : Épée enflammée",
+    description: "Apprend la recette de l'épée enflammée.",
+    grantsRecipe: "flamingSword",
+    stackable: true,
+    price: 70,
   },
   healthPotionRecipe: {
     id: "healthPotionRecipe",

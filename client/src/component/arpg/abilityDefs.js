@@ -21,6 +21,7 @@
  * plus des degats par tic.
  */
 export const ABILITY_DEFS = {
+  // base abilities
   fireball: {
     id: "fireball",
     name: "Boule de feu",
@@ -127,7 +128,7 @@ export const ABILITY_DEFS = {
     archetypes: ["mage"],
     description:
       "Crée un mur de flammes qui inflige des dégâts sur la durée aux ennemis qui le traversent (20 dégâts). 20 mana.",
-    manaCost: 1,
+    manaCost: 20,
     cooldownMs: 8000,
     effectType: "aoe",
     damage: 20,
@@ -149,10 +150,10 @@ export const ABILITY_DEFS = {
     archetypes: [],
     description:
       "Révèle une large zone du brouillard de guerre autour de toi. 1 stamina.",
-    staminaCost: 1,
+    staminaCost: 15,
     cooldownMs: 8000,
     effectType: "fogPulse",
-    radius: 40, // en CASES (coordonnees de tuiles), pas en pixels - different des autres competences
+    radius: 10, // en CASES (coordonnees de tuiles), pas en pixels - different des autres competences
     ignoresWalls: true,
     disabledBiomes: ["maze1", "maze2"], // ids de biomeConfig.js - absent/vide = utilisable partout
     unlockLevel: null,
@@ -290,9 +291,9 @@ export const ABILITY_DEFS = {
     effectType: "summon",
     summonType: "wolfFamiliar",
     durationMs: null, // jamais d'expiration par duree - uniquement la mort le fait disparaitre
-    hp: 50,
-    damage: 5,
-    defense: 2,
+    hpScale: 0.5,
+    damageScale: 0.6,
+    defenseScale: 0.5,
     damageType: "physical",
     persistent: true,
   },
@@ -319,9 +320,9 @@ export const ABILITY_DEFS = {
     id: "stealth",
     name: "Furtivité",
     archetypes: ["voleur"],
-    description: "Devient indétectable un court moment. 20 stamina.",
-    staminaCost: 20,
-    cooldownMs: 20000,
+    description: "Devient indétectable un court moment. 5 stamina.",
+    staminaCost: 5,
+    cooldownMs: 8000,
     effectType: "stealth",
     durationMs: 5000,
   },
