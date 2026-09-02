@@ -290,9 +290,9 @@ export const ABILITY_DEFS = {
     effectType: "summon",
     summonType: "wolfFamiliar",
     durationMs: null, // jamais d'expiration par duree - uniquement la mort le fait disparaitre
-    hp: 50,
-    damage: 5,
-    defense: 2,
+    hpScale: 0.5,
+    damageScale: 0.6,
+    defenseScale: 0.5,
     damageType: "physical",
     persistent: true,
   },
