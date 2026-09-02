@@ -44,12 +44,12 @@ import { computeMask } from "../blob47";
 import {
   DUNGEON1_TILESET,
   floorFrame,
-  autotileFrame,
+  // autotileFrame,
 } from "../tilesets/dungeon1";
 import {
   FORTRESS1_TILESET,
   COLUMNS_PER_ROW,
-  floorFrame as fortressFloorFrame,
+  // floorFrame as fortressFloorFrame,
   autotileFrame as fortressAutotileFrame,
 } from "../tilesets/fortress1";
 
@@ -351,6 +351,7 @@ export default class MainScene extends Phaser.Scene {
     this.zones = []; // nuages toxiques, mares de feu - zones persistantes
     this.traps = []; // pieges poses au sol
     this.boomerangs = []; // projectiles qui reviennent
+    this.wasStealthed = false;
     this.stealthUntil = 0;
     this.riposteUntil = 0;
     this.riposteReflectPercent = 0;
@@ -388,6 +389,8 @@ export default class MainScene extends Phaser.Scene {
     this.hpBarGraphics.setDepth(20);
 
     this.enemyGroup = this.physics.add.group();
+    this.pendingResummonDef = null;
+    this.pendingResummonTarget = null;
     this.physics.add.collider(this.enemyGroup, this.enemyGroup);
     this.summonGroup = this.physics.add.group();
     this.physics.add.collider(this.summonGroup, this.summonGroup); // les invocations se repoussent entre elles, ne se superposent plus
@@ -1244,7 +1247,7 @@ export default class MainScene extends Phaser.Scene {
     let phaserTilesetKey;
     let renderGrid;
     let dungeon1FloorFrameValue; // déclaré ici pour rester accessible plus bas (exclusion de collision)
-    let fortressFloorFrameValue;
+    // let fortressFloorFrameValue;
 
     if (useFortress1Autotile) {
       phaserTilesetKey = FORTRESS_AUTOTILE_SPRITESHEET.key;
@@ -2628,6 +2631,15 @@ export default class MainScene extends Phaser.Scene {
     this.updateNpcMovement(this.questNpcs);
     this.updateNpcMovement(this.ambientNpcs);
     this.updateSummons(this.time.now);
+    if (this.wasStealthed && this.time.now >= this.stealthUntil) {
+      this.tweens.add({
+        targets: this.hero,
+        alpha: 1,
+        duration: 250,
+        ease: "Cubic.easeIn",
+      });
+    }
+    this.wasStealthed = this.time.now < this.stealthUntil;
     this.updateZones(this.time.now);
     this.updateTraps(this.time.now);
     this.updateBoomerangs();
@@ -3741,15 +3753,24 @@ export default class MainScene extends Phaser.Scene {
       this.showLootToast(`${def.name} est désactivée sur ce type de niveau`);
       return;
     }
-    if (
-      def.hpThresholdPercent != null &&
-      this.playerHp / this.playerMaxHp > def.hpThresholdPercent
-    ) {
-      this.showLootToast(
-        `Nécessite d'être sous ${Math.round(def.hpThresholdPercent * 100)}% PV`,
+
+    // le garde anti-doublon manquait completement - c'est ce qui laissait
+    // invoquer plusieurs fois le meme familier. Rien n'est consomme ici -
+    // le cout/cooldown ne s'appliquent que si le joueur confirme le
+    // renouvellement (cf. confirmResummon)
+    if (def.effectType === "summon" && def.persistent) {
+      const existing = this.summons.find(
+        (s) => s.persistent && s.sourceAbilityId === def.id,
       );
-      return;
+      if (existing) {
+        this.pendingResummonDef = def;
+        this.pendingResummonTarget = existing;
+        this.pauseGame("resummon");
+        this.events.emit("resummon-prompt", { name: def.name });
+        return;
+      }
     }
+
     const now = this.time.now;
     const readyAt = this.abilityCooldowns[abilityId] || 0;
     if (now < readyAt) {
@@ -3947,59 +3968,115 @@ export default class MainScene extends Phaser.Scene {
    * updateEnemyAttacks).
    */
   performSummonAbility(def) {
-    // un familier PERSISTANT ne peut exister qu'en un seul exemplaire a
-    // la fois - identifie par l'id de la competence d'origine
-    // (sourceAbilityId), pas juste le sprite (deux familiers differents
-    // pourraient partager le meme visuel)
-    if (def.persistent) {
-    const alreadyHasThis = this.summons.some(
-      (s) => s.persistent && s.sourceAbilityId === def.id,
-    );
-    if (alreadyHasThis) {
-      this.showLootToast(`Tu as déjà invoqué ${def.name}`);
-      return;
+    if (this.summons.length >= MAX_SUMMONS) {
+      const oldestIndex = this.summons.findIndex((s) => !s.persistent);
+      if (oldestIndex === -1) {
+        this.showLootToast("Toutes tes invocations sont déjà occupées");
+        return;
+      }
+      const oldest = this.summons.splice(oldestIndex, 1)[0];
+      oldest.sprite.destroy();
     }
+
+    const summonHp =
+      def.hp ?? Math.round(this.playerMaxHp * (def.hpScale || 0));
+    const summonDamage =
+      def.damage ??
+      Math.round(this.getEffectivePlayerMeleeDamage() * (def.damageScale || 0));
+    const summonDefense =
+      def.defense ?? Math.round(this.playerDefense * (def.defenseScale || 0));
+
+    const spawnX = this.hero.x + (Math.random() - 0.5) * 40;
+    const spawnY = this.hero.y + (Math.random() - 0.5) * 40;
+    const sprite = this.spawnSummonSprite(def.summonType, spawnX, spawnY);
+
+    this.summons.push({
+      sprite,
+      spriteKey: def.summonType,
+      sourceAbilityId: def.id,
+      hp: summonHp,
+      maxHp: summonHp,
+      damage: summonDamage,
+      defense: summonDefense,
+      damageType: def.damageType || "physical",
+      resistances: def.resistances || {},
+      persistent: def.persistent || false,
+      attackCooldown: createCooldown(ENEMY_ATTACK_COOLDOWN),
+      expiresAt: def.durationMs ? this.time.now + def.durationMs : null,
+      lastDir: "down",
+    });
+
+    this.showLootToast(`${def.name} invoquée !`);
   }
 
-  if (this.summons.length >= MAX_SUMMONS) {
-    const oldestIndex = this.summons.findIndex((s) => !s.persistent);
-    if (oldestIndex === -1) {
-      this.showLootToast('Toutes tes invocations sont déjà occupées');
+  confirmResummon() {
+    this.unpauseGame("resummon");
+    this.events.emit("resummon-prompt", null);
+
+    const def = this.pendingResummonDef;
+    const existing = this.pendingResummonTarget;
+    this.pendingResummonDef = null;
+    this.pendingResummonTarget = null;
+    if (!def || !existing) return;
+
+    // memes verifications de ressource que performAbility aurait faites -
+    // le renouvellement n'est pas gratuit, juste differe jusqu'a
+    // confirmation
+    if (def.staminaCost && this.playerStamina < def.staminaCost) {
+      this.showLootToast("Pas assez de stamina !");
       return;
     }
-    const oldest = this.summons.splice(oldestIndex, 1)[0];
-    oldest.sprite.destroy();
+    if (def.manaCost && this.playerMana < def.manaCost) {
+      this.showLootToast("Pas assez de mana !");
+      return;
+    }
+
+    const summonHp =
+      def.hp ?? Math.round(this.playerMaxHp * (def.hpScale || 0));
+    const summonDamage =
+      def.damage ??
+      Math.round(this.getEffectivePlayerMeleeDamage() * (def.damageScale || 0));
+    const summonDefense =
+      def.defense ?? Math.round(this.playerDefense * (def.defenseScale || 0));
+
+    existing.hp = summonHp;
+    existing.maxHp = summonHp;
+    existing.damage = summonDamage;
+    existing.defense = summonDefense;
+    existing.damageType = def.damageType || "physical";
+    existing.resistances = def.resistances || {};
+
+    if (def.staminaCost) {
+      this.playerStamina -= def.staminaCost;
+      this.events.emit("player-stamina-changed", {
+        stamina: this.playerStamina,
+        maxStamina: this.playerMaxStamina,
+      });
+    }
+    if (def.manaCost) {
+      this.playerMana -= def.manaCost;
+      this.events.emit("player-mana-changed", {
+        mana: this.playerMana,
+        maxMana: this.playerMaxMana,
+      });
+    }
+    const now = this.time.now;
+    this.abilityCooldowns[def.id] = now + def.cooldownMs;
+    this.events.emit("hotbar-cooldown-started", {
+      key: `ability:${def.id}`,
+      cooldownMs: def.cooldownMs,
+      startedAt: Date.now(),
+    });
+
+    this.showLootToast(`${def.name} renouvelée !`);
   }
 
-  // stats fixes en priorite si definies, sinon calculees a partir des
-  // stats ACTUELLES du heros au moment de l'invocation (instantane -
-  // pas un lien permanent qui se recalculerait plus tard)
-  const summonHp = def.hp ?? Math.round(this.playerMaxHp * (def.hpScale || 0));
-  const summonDamage = def.damage ?? Math.round(this.getEffectivePlayerMeleeDamage() * (def.damageScale || 0));
-  const summonDefense = def.defense ?? Math.round(this.playerDefense * (def.defenseScale || 0));
-
-  const spawnX = this.hero.x + (Math.random() - 0.5) * 40;
-  const spawnY = this.hero.y + (Math.random() - 0.5) * 40;
-  const sprite = this.spawnSummonSprite(def.summonType, spawnX, spawnY);
-
-  this.summons.push({
-    sprite,
-    spriteKey: def.summonType,
-    sourceAbilityId: def.id,
-    hp: summonHp,
-    maxHp: summonHp,
-    damage: summonDamage,
-    defense: summonDefense,
-    damageType: def.damageType || 'physical',
-    resistances: def.resistances || {},
-    persistent: def.persistent || false,
-    attackCooldown: createCooldown(ENEMY_ATTACK_COOLDOWN),
-    expiresAt: def.durationMs ? this.time.now + def.durationMs : null,
-    lastDir: 'down',
-  });
-
-  this.showLootToast(`${def.name} invoquée !`);
-}
+  cancelResummon() {
+    this.unpauseGame("resummon");
+    this.events.emit("resummon-prompt", null);
+    this.pendingResummonDef = null;
+    this.pendingResummonTarget = null;
+  }
   /**
    * IA simplifiee de l'invocation : suit le heros si aucun ennemi
    * proche, sinon fonce sur l'ennemi visible le plus proche et
@@ -4732,6 +4809,14 @@ export default class MainScene extends Phaser.Scene {
 
   performStealthAbility(def) {
     this.stealthUntil = this.time.now + def.durationMs;
+
+    this.tweens.add({
+      targets: this.hero,
+      alpha: 0.4,
+      duration: 250,
+      ease: "Cubic.easeOut",
+    });
+
     this.showLootToast(`${def.name} activée !`);
   }
 
@@ -5516,6 +5601,11 @@ export default class MainScene extends Phaser.Scene {
           if (qs.questId !== "obtainItem" || !qs.accepted || qs.completed)
             continue;
           if (qs.targetItemId !== enemy.questLoot) continue;
+          const haveQty = this.inventory
+            .filter((i) => i.itemId === enemy.questLoot)
+            .reduce((sum, i) => sum + i.quantity, 0);
+          if (haveQty >= (qs.targetQuantity || 1)) continue; // deja assez - n'en redonne plus
+
           this.addItemToInventory(enemy.questLoot, 1);
           const lootDef = resolveItemDef(enemy.questLoot);
           this.showLootToast(`${lootDef.name} obtenu !`);
@@ -5572,15 +5662,13 @@ export default class MainScene extends Phaser.Scene {
         if (!qs.accepted || qs.completed) continue;
         if (qs.targetEnemyType && qs.targetEnemyType !== enemy.archetype)
           continue;
-        qs.killCount++;
-        // ne complete PLUS automatiquement ici - juste la progression,
-        // exactement comme les autres types de quete desormais. La
-        // recompense (XP + objet) n'est accordee qu'au retour au PNJ,
-        // cf. turnInQuest.
-        if (qs.killCount === qs.target) {
-          this.showLootToast("Quête prête : reviens voir le PNJ !");
+        if (qs.killCount < qs.target) {
+          qs.killCount++;
+          if (qs.killCount === qs.target) {
+            this.showLootToast("Quête prête : reviens voir le PNJ !");
+          }
+          anyQuestUpdated = true;
         }
-        anyQuestUpdated = true;
       }
       if (anyQuestUpdated) {
         this.events.emit("quests-updated", { ...this.quests });
@@ -5771,6 +5859,7 @@ export default class MainScene extends Phaser.Scene {
           target.defense,
         );
         target.summon.hp = Math.max(0, target.summon.hp - dmg);
+        this.showDamageNumber(target.summon.sprite, dmg, "#ff44c7");
       } else {
         let dmg = computeDamage(
           applyElementalResistance(
@@ -5953,6 +6042,22 @@ export default class MainScene extends Phaser.Scene {
       g.fillStyle(0x000000, 0.5);
       g.fillRect(bx, by, barW, barH);
       g.fillStyle(0x3498db, 1);
+      g.fillRect(bx, by, barW * ratio, barH);
+    }
+
+    // invocations temporaires uniquement - le familier (persistent:true)
+    // est volontairement exclu de l'affichage
+    for (const summon of this.summons) {
+      // if (summon.persistent) continue;
+      const ratio = summon.hp / summon.maxHp;
+      const bx = summon.sprite.x - barW / 2;
+      const by = summon.sprite.y - 26;
+      g.fillStyle(0x000000, 0.5);
+      g.fillRect(bx, by, barW, barH);
+      g.fillStyle(
+        ratio > 0.5 ? 0x2ecc71 : ratio > 0.25 ? 0xf39c12 : 0xe74c3c,
+        1,
+      );
       g.fillRect(bx, by, barW * ratio, barH);
     }
   }

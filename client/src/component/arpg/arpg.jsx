@@ -2,33 +2,32 @@ import { useEffect, useRef, useState } from "react";
 import Phaser from "phaser";
 import BootScene from "./scenes/BootScene";
 import MainScene from "./scenes/MainScene";
-// import DebugTilesetScene from "./scenes/DebugTilesetScene";
 import Minimap from "./Minimap";
 import CharacterSelectScreen from "./CharacterSelectScreen";
 import GameListScreen from "./GameListScreen";
-import InventoryScreen from "./InventoryScreen";
+import InventoryScreen, { ItemIcon, hasIconFrame } from "./InventoryScreen";
 import QuestsScreen from "./QuestsScreen";
 import TravelHubScreen from "./TravelHubScreen";
 import ShopScreen from "./ShopScreen";
+import HotbarScreen from "./HotbarScreen";
+import CraftingScreen from "./CraftingScreen";
 import TouchControls from "./TouchControls";
 import { computeLevelFromXp, getPlayerStatsForLevel } from "./leveling";
 import { resolveHeroStatsOverride } from "./spriteRegistry";
 import { computeEquipmentBonuses } from "./equipment";
-import { fetchMyGames, abandonGame, deleteGame } from "../../api/arpgClient";
 import { resolveAbilityDef } from "./abilityDefs";
 import { resolveItemDef } from "./itemDefs";
-import HotbarScreen from "./HotbarScreen";
-import { ItemIcon, hasIconFrame } from "./InventoryScreen";
-import CraftingScreen from "./CraftingScreen";
+import { fetchMyGames, abandonGame, deleteGame } from "../../api/arpgClient";
 
 /**
  * Overlay sombre qui se dissout progressivement au-dessus d'un
- * emplacement en recharge - transition CSS pilotee UNE SEULE fois (pas
- * de boucle JS qui recalcule a chaque frame). `key={startedAt}` sur le
- * parent (cf. plus bas) force un vrai remontage a chaque nouvelle
- * recharge, meme pour la MEME competence/objet - sinon une recharge
- * declenchee en plein milieu d'une precedente ne redemarrerait jamais
- * proprement l'animation depuis opacite 1.
+ * emplacement de la barre en recharge - transition CSS pilotee UNE
+ * SEULE fois (pas de boucle JS qui recalcule a chaque frame).
+ * `key={startedAt}` sur le parent (cf. plus bas) force un vrai
+ * remontage a chaque nouvelle recharge, meme pour la MEME competence/
+ * objet - sinon une recharge declenchee en plein milieu d'une
+ * precedente ne redemarrerait jamais proprement l'animation depuis
+ * opacite 1.
  */
 function HotbarCooldownOverlay({ startedAt, cooldownMs }) {
   const [opacity, setOpacity] = useState(1);
@@ -90,6 +89,7 @@ export default function Arpg() {
   const [games, setGames] = useState([]);
   const [heroId, setHeroId] = useState(null);
   const [resumeSave, setResumeSave] = useState(null);
+  const [levelReady, setLevelReady] = useState(false);
 
   const [playerHp, setPlayerHp] = useState({ hp: 100, maxHp: 100 });
   const [playerMana, setPlayerMana] = useState({ mana: 0, maxMana: 0 });
@@ -97,10 +97,6 @@ export default function Arpg() {
     stamina: 0,
     maxStamina: 0,
   });
-  const [hotbarSlots, setHotbarSlots] = useState(new Array(9).fill(null));
-  const [furyProgress, setFuryProgress] = useState({ count: 0, required: 10 });
-  const [cooldownEvents, setCooldownEvents] = useState({});
-  const [unlockedAbilities, setUnlockedAbilities] = useState([]);
   const [xp, setXp] = useState(0);
   const [level, setLevel] = useState(1);
   const [depth, setDepth] = useState(1);
@@ -111,6 +107,7 @@ export default function Arpg() {
   const [quests, setQuests] = useState({});
   const [upstairsPrompt, setUpstairsPrompt] = useState(false);
   const [exitPrompt, setExitPrompt] = useState(false);
+  const [resummonPrompt, setResummonPrompt] = useState(null);
   const [inventory, setInventory] = useState([]);
   const [equipped, setEquipped] = useState({
     mainHand: null,
@@ -129,13 +126,20 @@ export default function Arpg() {
   const [travelDestinations, setTravelDestinations] = useState(null);
   const [shopStock, setShopStock] = useState(null);
   const [questsOpen, setQuestsOpen] = useState(false);
-  const [hotbarScreenOpen, setHotbarScreenOpen] = useState(false);
-  const [craftingScreenOpen, setCraftingScreenOpen] = useState(false);
-  const [unlockedRecipes, setUnlockedRecipes] = useState([]);
   const [lootToast, setLootToast] = useState(null);
   const [minimapVisible, setMinimapVisible] = useState(true);
   const [keyboardLayout, setKeyboardLayoutState] = useState("azerty");
   const [username, setUsername] = useState(null);
+
+  const [hotbarSlots, setHotbarSlots] = useState(new Array(9).fill(null));
+  const [cooldownEvents, setCooldownEvents] = useState({});
+  const [unlockedAbilities, setUnlockedAbilities] = useState([]);
+  const [hotbarScreenOpen, setHotbarScreenOpen] = useState(false);
+
+  const [furyProgress, setFuryProgress] = useState({ count: 0, required: 10 });
+
+  const [unlockedRecipes, setUnlockedRecipes] = useState([]);
+  const [craftingScreenOpen, setCraftingScreenOpen] = useState(false);
 
   const loadGamesList = () => {
     fetchMyGames()
@@ -171,11 +175,7 @@ export default function Arpg() {
         default: "arcade",
         arcade: { gravity: { y: 0 }, debug: false },
       },
-      scene: [
-        BootScene,
-        MainScene,
-        // DebugTilesetScene
-      ],
+      scene: [BootScene, MainScene],
     };
 
     let destroyed = false;
@@ -201,24 +201,6 @@ export default function Arpg() {
       scene.events.on("player-stamina-changed", ({ stamina, maxStamina }) =>
         setPlayerStamina({ stamina, maxStamina }),
       );
-      scene.events.on("hotbar-updated", (slots) => setHotbarSlots(slots));
-      scene.events.on(
-        "hotbar-cooldown-started",
-        ({ key, cooldownMs, startedAt }) =>
-          setCooldownEvents((prev) => ({
-            ...prev,
-            [key]: { cooldownMs, startedAt },
-          })),
-      );
-      scene.events.on("fury-progress", ({ count, required }) =>
-        setFuryProgress({ count, required }),
-      );
-      scene.events.on("abilities-updated", (abilities) =>
-        setUnlockedAbilities(abilities),
-      );
-      scene.events.on("recipes-updated", (recipes) =>
-        setUnlockedRecipes(recipes),
-      );
       scene.events.on("xp-changed", ({ xp }) => setXp(xp));
       scene.events.on("level-up", ({ level }) => setLevel(level));
       scene.events.on("game-over", ({ xp, depth }) =>
@@ -226,6 +208,13 @@ export default function Arpg() {
       );
       scene.events.on("level-loading", () => setLoadError(null));
       scene.events.on("level-load-error", ({ error }) => setLoadError(error));
+
+      const handleFirstLevelLoaded = () => {
+        setLevelReady(true);
+        scene.events.off("level-loaded", handleFirstLevelLoaded); // ne s'ecoute qu'une seule fois - pas a chaque changement d'etage ensuite
+      };
+      scene.events.on("level-loaded", handleFirstLevelLoaded);
+
       scene.events.on("level-loaded", ({ depth }) => {
         setGameOver(null);
         setDepth(depth);
@@ -240,20 +229,35 @@ export default function Arpg() {
       });
       scene.events.on("upstairs-prompt", (show) => setUpstairsPrompt(!!show));
       scene.events.on("exit-prompt", (show) => setExitPrompt(!!show));
+      scene.events.on("resummon-prompt", (data) => setResummonPrompt(data));
       scene.events.on("inventory-updated", (inv) => setInventory(inv));
       scene.events.on("travel-hub", (destinations) =>
         setTravelDestinations(destinations),
       );
       scene.events.on("shop", (stock) => setShopStock(stock));
       scene.events.on("equipment-updated", (eq) => setEquipped(eq));
+      scene.events.on("hotbar-updated", (slots) => setHotbarSlots(slots));
+      scene.events.on(
+        "hotbar-cooldown-started",
+        ({ key, cooldownMs, startedAt }) =>
+          setCooldownEvents((prev) => ({
+            ...prev,
+            [key]: { cooldownMs, startedAt },
+          })),
+      );
+      scene.events.on("abilities-updated", (abilities) =>
+        setUnlockedAbilities(abilities),
+      );
+      scene.events.on("fury-progress", ({ count, required }) =>
+        setFuryProgress({ count, required }),
+      );
+      scene.events.on("recipes-updated", (recipes) =>
+        setUnlockedRecipes(recipes),
+      );
       scene.events.on("quit-to-menu", () => {
         setPhase("picker");
         loadGamesList();
       });
-      // note : plus de listener sur 'quest-npcs-updated' - jamais emis
-      // par MainScene.js, la liste des PNJ decouverts vient deja via
-      // 'fog-changed' -> minimapData.questNpcs (cf. applyFogChanges/
-      // getQuestNpcMinimapData cote scene)
     });
 
     return () => {
@@ -308,6 +312,16 @@ export default function Arpg() {
     if (scene) scene.cancelDescend();
   };
 
+  const handleConfirmResummon = () => {
+    const scene = gameRef.current?.scene.getScene("MainScene");
+    if (scene) scene.confirmResummon();
+  };
+
+  const handleCancelResummon = () => {
+    const scene = gameRef.current?.scene.getScene("MainScene");
+    if (scene) scene.cancelResummon();
+  };
+
   const handleEquip = (index) => {
     const scene = gameRef.current?.scene.getScene("MainScene");
     if (scene) scene.equipItem(index);
@@ -359,6 +373,11 @@ export default function Arpg() {
     if (scene) scene.unpauseGame("hotbar");
   };
 
+  const handleAssignHotbarSlot = (index, payload) => {
+    const scene = gameRef.current?.scene.getScene("MainScene");
+    if (scene) scene.assignHotbarSlot(index, payload);
+  };
+
   const handleOpenCraftingScreen = () => {
     setCraftingScreenOpen(true);
     const scene = gameRef.current?.scene.getScene("MainScene");
@@ -374,11 +393,6 @@ export default function Arpg() {
   const handleCraftItem = (recipeId) => {
     const scene = gameRef.current?.scene.getScene("MainScene");
     if (scene) scene.craftItem(recipeId);
-  };
-
-  const handleAssignHotbarSlot = (index, payload) => {
-    const scene = gameRef.current?.scene.getScene("MainScene");
-    if (scene) scene.assignHotbarSlot(index, payload);
   };
 
   const handleToggleKeyboardLayout = () => {
@@ -437,6 +451,7 @@ export default function Arpg() {
   const handleResumeGame = (game) => {
     setHeroId((game.playerState && game.playerState.heroId) || "hero1");
     setResumeSave(game);
+    setLevelReady(false);
     setPhase("playing");
   };
 
@@ -471,6 +486,7 @@ export default function Arpg() {
     setQuests({});
     setUpstairsPrompt(false);
     setExitPrompt(false);
+    setResummonPrompt(null);
     setInventory([]);
     setEquipped({
       mainHand: null,
@@ -485,16 +501,20 @@ export default function Arpg() {
       necklace: null,
       quiver: null,
     });
-    setHotbarSlots(new Array(9).fill(null));
-    setUnlockedAbilities([]);
-    setUnlockedRecipes([]);
-    setFuryProgress({ count: 0, required: 10 });
     setInventoryOpen(false);
     setTravelDestinations(null);
     setShopStock(null);
     setQuestsOpen(false);
     setLootToast(null);
     setMinimapVisible(true);
+    setHotbarSlots(new Array(9).fill(null));
+    setCooldownEvents({});
+    setUnlockedAbilities([]);
+    setHotbarScreenOpen(false);
+    setFuryProgress({ count: 0, required: 10 });
+    setUnlockedRecipes([]);
+    setCraftingScreenOpen(false);
+    setLevelReady(false);
 
     setPhase("playing");
   };
@@ -611,14 +631,14 @@ export default function Arpg() {
           </span>
         )}
 
+        <span>
+          XP : {xpProgress.xpIntoLevel}/{xpProgress.xpForNextLevel}
+        </span>
+
         <span
           title={`Furie : ${furyProgress.count}/${furyProgress.required} ennemis`}
         >
           🔥 {furyProgress.count}/{furyProgress.required}
-        </span>
-
-        <span>
-          XP : {xpProgress.xpIntoLevel}/{xpProgress.xpForNextLevel}
         </span>
 
         <button
@@ -692,6 +712,7 @@ export default function Arpg() {
         >
           {isMobile ? "🎒" : "🎒"}
         </button>
+
         <button
           onClick={handleOpenHotbarScreen}
           style={{
@@ -708,6 +729,7 @@ export default function Arpg() {
         >
           {isMobile ? "⚡" : "⚡"}
         </button>
+
         <button
           onClick={handleOpenCraftingScreen}
           style={{
@@ -722,8 +744,9 @@ export default function Arpg() {
           }}
           title="Craft"
         >
-          {isMobile ? "🔨" : "🔨 Craft"}
+          {isMobile ? "🔨" : "🔨"}
         </button>
+
         <button
           onClick={handleSaveAndQuit}
           style={{
@@ -745,11 +768,11 @@ export default function Arpg() {
       {lootToast && (
         <div
           style={{
-            position: "fixed", // <-- etait "absolute" - ancre au VIEWPORT reel, immunise contre tout defilement (page ou conteneur interne)
+            position: "fixed",
             top: isMobile ? 60 : 44,
             left: "50%",
             transform: "translateX(-50%)",
-            zIndex: 999, // <-- etait 20 - au-dessus de TOUS les ecrans superposes (inventaire=22, dialogue=20, etc.)
+            zIndex: 999,
             padding: isMobile ? "5px 10px" : "6px 16px",
             fontSize: isMobile ? 11 : 13,
             borderRadius: 6,
@@ -801,16 +824,67 @@ export default function Arpg() {
           />
         )}
 
+        {!levelReady && (
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              zIndex: 30,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              background: "#12131a",
+              color: "#eee",
+              gap: 16,
+            }}
+          >
+            <div
+              style={{
+                width: 40,
+                height: 40,
+                border: "4px solid #333",
+                borderTopColor: "#8a7050",
+                borderRadius: "50%",
+                animation: "arpg-spin 0.8s linear infinite",
+              }}
+            />
+            <div style={{ fontSize: 14, color: "#999" }}>
+              Chargement de l'étage...
+            </div>
+            <style>{`
+              @keyframes arpg-spin {
+                to { transform: rotate(360deg); }
+              }
+            `}</style>
+          </div>
+        )}
+
+        {minimapVisible && minimapData && (
+          <div className="arpg-minimap">
+            <Minimap
+              grid={minimapData.grid}
+              fogState={minimapData.fogState}
+              playerTile={minimapData.playerTile}
+              exitTile={minimapData.exitTile}
+              upstairsTile={minimapData.upstairsTile}
+              questNpcs={minimapData.questNpcs || []}
+              summons={minimapData.summons || []}
+              isMobile={isMobile}
+            />
+          </div>
+        )}
+
         <div
           style={{
             position: "absolute",
-            bottom: isMobile ? 10 : 12,
+            bottom: isMobile ? 50 : 12,
             left: "50%",
             transform: "translateX(-50%)",
             zIndex: 15,
             display: "flex",
             gap: 6,
-            pointerEvents: "auto", // purement informatif - l'activation reste au clavier (1-9), pas de clic
+            pointerEvents: "auto",
           }}
         >
           {hotbarSlots.map((slot, index) => {
@@ -865,7 +939,7 @@ export default function Arpg() {
                   boxSizing: "border-box",
                   position: "relative",
                   overflow: "hidden",
-                  cursor: slot ? "pointer" : "default", // <-- indication visuelle sur desktop
+                  cursor: slot ? "pointer" : "default",
                 }}
                 title={label || "Vide"}
               >
@@ -913,21 +987,6 @@ export default function Arpg() {
             );
           })}
         </div>
-
-        {minimapVisible && minimapData && (
-          <div className="arpg-minimap">
-            <Minimap
-              grid={minimapData.grid}
-              fogState={minimapData.fogState}
-              playerTile={minimapData.playerTile}
-              exitTile={minimapData.exitTile}
-              upstairsTile={minimapData.upstairsTile}
-              questNpcs={minimapData.questNpcs || []}
-              summons={minimapData.summons || []}
-              isMobile={isMobile}
-            />
-          </div>
-        )}
 
         {loadError && (
           <div
@@ -1149,6 +1208,57 @@ export default function Arpg() {
             </div>
           </div>
         )}
+        {resummonPrompt && (
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              zIndex: 10,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              background: "rgba(0,0,0,0.75)",
+              color: "#fff",
+              fontSize: 18,
+              gap: 16,
+            }}
+          >
+            <div>
+              {resummonPrompt.name} est déjà invoquée. Renouveler ses stats ?
+            </div>
+            <div style={{ display: "flex", gap: 12 }}>
+              <button
+                onClick={handleConfirmResummon}
+                style={{
+                  padding: "8px 20px",
+                  fontSize: 14,
+                  borderRadius: 6,
+                  border: "1px solid #ffd700",
+                  background: "#3a3320",
+                  color: "#f0e8c0",
+                  cursor: "pointer",
+                }}
+              >
+                Oui
+              </button>
+              <button
+                onClick={handleCancelResummon}
+                style={{
+                  padding: "8px 20px",
+                  fontSize: 14,
+                  borderRadius: 6,
+                  border: "1px solid #555",
+                  background: "#2a2a35",
+                  color: "#eee",
+                  cursor: "pointer",
+                }}
+              >
+                Non
+              </button>
+            </div>
+          </div>
+        )}
         {inventoryOpen && (
           <InventoryScreen
             inventory={inventory}
@@ -1160,6 +1270,9 @@ export default function Arpg() {
             onUse={handleUseConsumable}
             onClose={handleCloseInventory}
           />
+        )}
+        {questsOpen && (
+          <QuestsScreen quests={quests} onClose={handleCloseQuests} />
         )}
         {hotbarScreenOpen && (
           <HotbarScreen
@@ -1178,9 +1291,6 @@ export default function Arpg() {
             onCraft={handleCraftItem}
             onClose={handleCloseCraftingScreen}
           />
-        )}
-        {questsOpen && (
-          <QuestsScreen quests={quests} onClose={handleCloseQuests} />
         )}
         {travelDestinations && (
           <TravelHubScreen
