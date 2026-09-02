@@ -437,6 +437,38 @@ export const SPRITE_REGISTRY = {
     4,
     16,
   ),
+  hero15: makeHeroEntry(
+    "hero15",
+    knightFemaleSpritesheet,
+    FULL_ANIMATION_FRAMES,
+    1,
+    4,
+    16,
+  ),
+  hero16: makeHeroEntry(
+    "hero16",
+    thiefFemaleSpritesheet,
+    FULL_ANIMATION_FRAMES,
+    1,
+    4,
+    16,
+  ),
+  hero17: makeHeroEntry(
+    "hero17",
+    warriorFemaleSpritesheet,
+    FULL_ANIMATION_FRAMES,
+    1,
+    4,
+    16,
+  ),
+  hero18: makeHeroEntry(
+    "hero18",
+    wizardFemaleSpritesheet,
+    FULL_ANIMATION_FRAMES,
+    1,
+    4,
+    16,
+  ),
 
   enemyDefault: {
     key: "hero1",
