@@ -2915,8 +2915,9 @@ export default class MainScene extends Phaser.Scene {
           const dx = enemy.sprite.x - targetX;
           const dy = enemy.sprite.y - targetY;
           const mag = Math.hypot(dx, dy) || 1;
-          const vx = (dx / mag) * ENEMY_SPEED;
-          const vy = (dy / mag) * ENEMY_SPEED;
+          const speed = this.getEffectiveEnemySpeed(enemy); 
+          const vx = (dx / mag) * speed;
+          const vy = (dy / mag) * speed;
           enemy.sprite.setVelocity(vx, vy);
           const edir =
             Math.abs(vx) > Math.abs(vy)
@@ -2946,7 +2947,7 @@ export default class MainScene extends Phaser.Scene {
         this.moveEnemyToward(
           enemy,
           enemy.path[enemy.pathIndex],
-          ENEMY_SPEED,
+          this.getEffectiveEnemySpeed(enemy), 
           () => enemy.pathIndex++,
         );
         continue;
@@ -2958,7 +2959,7 @@ export default class MainScene extends Phaser.Scene {
         enemy.patrolPath.length > 1
       ) {
         const waypoint = enemy.patrolPath[enemy.patrolIndex];
-        this.moveEnemyToward(enemy, waypoint, ENEMY_SPEED * 0.6, () => {
+        this.moveEnemyToward(enemy, waypoint, this.getEffectiveEnemySpeed(enemy) * 0.6, () => {
           if (
             enemy.patrolIndex + enemy.patrolDirection < 0 ||
             enemy.patrolIndex + enemy.patrolDirection >= enemy.patrolPath.length
@@ -3734,49 +3735,45 @@ export default class MainScene extends Phaser.Scene {
    * stamina, puis dispatche selon effectType.
    */
   performAbility(abilityId) {
-    if (!this.unlockedAbilities.includes(abilityId)) return;
+  if (!this.unlockedAbilities.includes(abilityId)) return;
 
-    const def = resolveAbilityDef(abilityId);
-    if (
-      def.hpThresholdPercent != null &&
-      this.playerHp / this.playerMaxHp > def.hpThresholdPercent
-    ) {
-      this.showLootToast(
-        `Nécessite d'être sous ${Math.round(def.hpThresholdPercent * 100)}% PV`,
-      );
+  const def = resolveAbilityDef(abilityId);
+  if (
+    def.hpThresholdPercent != null &&
+    this.playerHp / this.playerMaxHp > def.hpThresholdPercent
+  ) {
+    this.showLootToast(
+      `Nécessite d'être sous ${Math.round(def.hpThresholdPercent * 100)}% PV`,
+    );
+    return;
+  }
+  if (def.disabledBiomes && def.disabledBiomes.includes(this.currentBiomeId)) {
+    this.showLootToast(`${def.name} est désactivée sur ce type de niveau`);
+    return;
+  }
+
+  const now = this.time.now;
+  const readyAt = this.abilityCooldowns[abilityId] || 0;
+  if (now < readyAt) {
+    this.showLootToast("Compétence en recharge");
+    return;
+  }
+
+  // garde anti-doublon MAINTENANT APRES le controle de cooldown - le
+  // prompt de renouvellement ne peut plus jamais se declencher tant que
+  // le sort est encore en recharge
+  if (def.effectType === "summon" && def.persistent) {
+    const existing = this.summons.find(
+      (s) => s.persistent && s.sourceAbilityId === def.id,
+    );
+    if (existing) {
+      this.pendingResummonDef = def;
+      this.pendingResummonTarget = existing;
+      this.pauseGame("resummon");
+      this.events.emit("resummon-prompt", { name: def.name });
       return;
     }
-    if (
-      def.disabledBiomes &&
-      def.disabledBiomes.includes(this.currentBiomeId)
-    ) {
-      this.showLootToast(`${def.name} est désactivée sur ce type de niveau`);
-      return;
-    }
-
-    // le garde anti-doublon manquait completement - c'est ce qui laissait
-    // invoquer plusieurs fois le meme familier. Rien n'est consomme ici -
-    // le cout/cooldown ne s'appliquent que si le joueur confirme le
-    // renouvellement (cf. confirmResummon)
-    if (def.effectType === "summon" && def.persistent) {
-      const existing = this.summons.find(
-        (s) => s.persistent && s.sourceAbilityId === def.id,
-      );
-      if (existing) {
-        this.pendingResummonDef = def;
-        this.pendingResummonTarget = existing;
-        this.pauseGame("resummon");
-        this.events.emit("resummon-prompt", { name: def.name });
-        return;
-      }
-    }
-
-    const now = this.time.now;
-    const readyAt = this.abilityCooldowns[abilityId] || 0;
-    if (now < readyAt) {
-      this.showLootToast("Compétence en recharge");
-      return;
-    }
+  }
 
     // ressource consommee : stamina OU mana, jamais les deux - chaque
     // competence declare UN SEUL des deux couts (cf. abilityDefs.js) selon
@@ -4888,6 +4885,7 @@ export default class MainScene extends Phaser.Scene {
       y: this.hero.y,
       radius: def.radius,
       damagePerTick: def.damagePerTick,
+      damageType: def.damageType || 'physical',
       tickIntervalMs: def.tickIntervalMs,
       nextTickAt: this.time.now,
       expiresAt: this.time.now + def.durationMs,
@@ -5854,11 +5852,16 @@ export default class MainScene extends Phaser.Scene {
       }
 
       if (target.isSummon) {
-        const dmg = computeDamage(
-          this.getEffectiveEnemyDamage(enemy),
-          target.defense,
-        );
-        target.summon.hp = Math.max(0, target.summon.hp - dmg);
+  const dmg = computeDamage(
+    applyElementalResistance(
+      this.getEffectiveEnemyDamage(enemy),
+      enemy.damageType,
+      target.summon.resistances,
+    ),
+    target.defense,
+  );
+  target.summon.hp = Math.max(0, target.summon.hp - dmg);
+
         this.showDamageNumber(target.summon.sprite, dmg, "#ff44c7");
       } else {
         let dmg = computeDamage(
