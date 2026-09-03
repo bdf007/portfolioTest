@@ -870,6 +870,24 @@ export const ITEM_DEFS = {
     price: 50,
   },
 
+  // craft material
+  deerAntler: {
+    id: 'deerAntler',
+    category: 'craftingMaterial',
+    name: 'Bois de cerf',
+    description: 'Un bois de cerf robuste, utilisé en artisanat.',
+    stackable: true,
+    price: 8,
+  },
+  mushroom: {
+    id: 'mushroom',
+    category: 'craftingMaterial',
+    name: 'Champignon',
+    description: 'Un champignon commun, utilisé en artisanat.',
+    stackable: true,
+    price: 5,
+  },
+
   // exemple d'objet de quete - existe dans le monde, mais aucune quete
   // de type "en rapporter N" ne sait encore l'exploiter (cf. commentaire
   // en tete de fichier)
