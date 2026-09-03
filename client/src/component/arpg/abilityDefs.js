@@ -112,6 +112,7 @@ export const ABILITY_DEFS = {
     cooldownMs: 5000,
     effectType: "weaponImbue",
     bonusDamage: 10,
+    damageType: "fire",
     inflictsEffect: {
       type: "burn",
       kind: "dot",
@@ -132,6 +133,7 @@ export const ABILITY_DEFS = {
     cooldownMs: 8000,
     effectType: "aoe",
     damage: 20,
+    damageType: "fire",
     radius: 80,
     durationMs: 5000,
     inflictsEffect: {
@@ -336,6 +338,7 @@ export const ABILITY_DEFS = {
     cooldownMs: 7000,
     effectType: "chainLightning",
     damage: 14,
+    damageType: "electricity",
     maxJumps: 4,
     jumpRange: 150,
   },
@@ -351,6 +354,7 @@ export const ABILITY_DEFS = {
     durationMs: 6000,
     tickIntervalMs: 1000,
     damagePerTick: 4,
+    damageType: "poison",
     color: 0x66cc44,
   },
   firePool: {
@@ -365,6 +369,7 @@ export const ABILITY_DEFS = {
     durationMs: 6000,
     tickIntervalMs: 800,
     damagePerTick: 5,
+    dmageType: "fire",
     color: 0xff6600,
   },
   curse: {
@@ -422,6 +427,7 @@ export const ABILITY_DEFS = {
     staminaCost: 15,
     cooldownMs: 8000,
     effectType: "trap",
+    damageType: "poison",
     inflictsEffect: {
       type: "acid",
       kind: "dot",
@@ -441,6 +447,7 @@ export const ABILITY_DEFS = {
     staminaCost: 15,
     cooldownMs: 8000,
     effectType: "trap",
+    damageType: "fire",
     inflictsEffect: {
       type: "burn",
       kind: "dot",
@@ -480,6 +487,7 @@ export const ABILITY_DEFS = {
     cooldownMs: 10, //5000
     effectType: "projectileAoe",
     damage: 10,
+    damageType: "cold",
     radius: 60,
     projectileSpeed: 260,
     maxDistance: 400,
@@ -503,6 +511,7 @@ export const ABILITY_DEFS = {
     distance: 180,
     angleDegrees: 60,
     damage: 8,
+    damageType: "cold",
     inflictsEffect: {
       type: "slow",
       kind: "modifier",
