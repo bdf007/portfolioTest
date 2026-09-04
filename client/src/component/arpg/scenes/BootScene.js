@@ -8,7 +8,12 @@ import {
 import {
   DUNGEON_AUTOTILE_SPRITESHEET,
   DESERT_AUTOTILE_SPRITESHEET,
+  HILLS_AUTOTILE_SPRITESHEET,
+  SNOW_AUTOTILE_SPRITESHEET,
+  DARKWOODS_AUTOTILE_SPRITESHEET,
+  DARKWOODS2_AUTOTILE_SPRITESHEET,
   FORTRESS_AUTOTILE_SPRITESHEET,
+  STANDARD_FIELDS2_AUTOTILE_SPRITESHEET,
 } from "../spriteRegistry";
 
 /**
@@ -60,11 +65,51 @@ export default class BootScene extends Phaser.Scene {
       },
     );
     this.load.spritesheet(
+      SNOW_AUTOTILE_SPRITESHEET.key,
+      SNOW_AUTOTILE_SPRITESHEET.path,
+      {
+        frameWidth: SNOW_AUTOTILE_SPRITESHEET.frameWidth,
+        frameHeight: SNOW_AUTOTILE_SPRITESHEET.frameHeight,
+      },
+    );
+    this.load.spritesheet(
+      DARKWOODS_AUTOTILE_SPRITESHEET.key,
+      DARKWOODS_AUTOTILE_SPRITESHEET.path,
+      {
+        frameWidth: DARKWOODS_AUTOTILE_SPRITESHEET.frameWidth,
+        frameHeight: DARKWOODS_AUTOTILE_SPRITESHEET.frameHeight,
+      },
+    );
+    this.load.spritesheet(
       DESERT_AUTOTILE_SPRITESHEET.key,
       DESERT_AUTOTILE_SPRITESHEET.path,
       {
         frameWidth: DESERT_AUTOTILE_SPRITESHEET.frameWidth,
         frameHeight: DESERT_AUTOTILE_SPRITESHEET.frameHeight,
+      },
+    );
+    this.load.spritesheet(
+      HILLS_AUTOTILE_SPRITESHEET.key,
+      HILLS_AUTOTILE_SPRITESHEET.path,
+      {
+        frameWidth: HILLS_AUTOTILE_SPRITESHEET.frameWidth,
+        frameHeight: HILLS_AUTOTILE_SPRITESHEET.frameHeight,
+      },
+    );
+    this.load.spritesheet(
+      STANDARD_FIELDS2_AUTOTILE_SPRITESHEET.key,
+      STANDARD_FIELDS2_AUTOTILE_SPRITESHEET.path,
+      {
+        frameWidth: STANDARD_FIELDS2_AUTOTILE_SPRITESHEET.frameWidth,
+        frameHeight: STANDARD_FIELDS2_AUTOTILE_SPRITESHEET.frameHeight,
+      },
+    );
+    this.load.spritesheet(
+      DARKWOODS2_AUTOTILE_SPRITESHEET.key,
+      DARKWOODS2_AUTOTILE_SPRITESHEET.path,
+      {
+        frameWidth: DARKWOODS2_AUTOTILE_SPRITESHEET.frameWidth,
+        frameHeight: DARKWOODS2_AUTOTILE_SPRITESHEET.frameHeight,
       },
     );
     this.load.spritesheet(CHEST_SPRITESHEET.key, CHEST_SPRITESHEET.path, {

@@ -26,14 +26,15 @@ const BIOMES = [
     id: "cave1",
     minDepth: 1,
     maxDepth: 1,
-    generator: "bsp",
-    tileset: "desert",
+    generator: "noise",
+    tileset: "desert2",
     enemyBaseCount: 40,
     enemyTypes: ["deer1", "angryBrownMushroom"],
     chestCount: [1, 3],
     generatorParams: {
       width: 80,
       height: 80,
+      noiseScale: 10,
     },
   },
   {

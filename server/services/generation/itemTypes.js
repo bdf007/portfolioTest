@@ -214,13 +214,13 @@ const ITEM_TYPES = {
     statBonus: { rangedDamage: 1 },
     stackable: false,
     archetypes: ["mage"],
-    inflictsEffect: {
-      type: "slow",
-      kind: "modifier", // <-- le champ qui manquait, decide TOUT le comportement
-      chance: 1,
-      statModifiers: { moveSpeedPercent: -0.4 }, // -40% de vitesse
-      durationMs: 2500, // duree en ms, PAS ticks/tickIntervalMs/damagePerTick (ca c'est la forme DOT)
-    },
+    // inflictsEffect: {
+    //   type: "slow",
+    //   kind: "modifier", // <-- le champ qui manquait, decide TOUT le comportement
+    //   chance: 1,
+    //   statModifiers: { moveSpeedPercent: -0.4 }, // -40% de vitesse
+    //   durationMs: 2500, // duree en ms, PAS ticks/tickIntervalMs/damagePerTick (ca c'est la forme DOT)
+    // },
     price: 2,
   },
   ironDagger: {
@@ -880,18 +880,18 @@ const ITEM_TYPES = {
 
   // craft material
   deerAntler: {
-    id: 'deerAntler',
-    category: 'craftingMaterial',
-    name: 'Bois de cerf',
-    description: 'Un bois de cerf robuste, utilisé en artisanat.',
+    id: "deerAntler",
+    category: "craftingMaterial",
+    name: "Bois de cerf",
+    description: "Un bois de cerf robuste, utilisé en artisanat.",
     stackable: true,
     price: 8,
   },
   mushroom: {
-    id: 'mushroom',
-    category: 'craftingMaterial',
-    name: 'Champignon',
-    description: 'Un champignon commun, utilisé en artisanat.',
+    id: "mushroom",
+    category: "craftingMaterial",
+    name: "Champignon",
+    description: "Un champignon commun, utilisé en artisanat.",
     stackable: true,
     price: 5,
   },
@@ -926,6 +926,14 @@ const ITEM_TYPES = {
     name: "Colis scellé",
     description: "À livrer à son destinataire, sans l'ouvrir.",
     stackable: false,
+  },
+  orangeMushroom: {
+    id: "orangeMushroom",
+    category: "questItem",
+    name: "Champignon orange",
+    description: "Un champignon rare.",
+    stackable: true,
+    price: 5,
   },
 };
 
@@ -985,13 +993,15 @@ const LOOT_TABLES = {
   ],
   deer1Drop: [
     { itemId: "gold", weight: 50, quantityRange: [1, 3] },
+    { itemId: "fireballScroll", weight: 30 },
     { itemId: "reinforcedSwordRecipe", weight: 20 },
-    { itemId: "deerAntler", weight: 20 },
+    { itemId: "deerAntler", weight: 2 },
   ],
   angryBrownMushroomDrop: [
     { itemId: "gold", weight: 50, quantityRange: [1, 3] },
+    { itemId: "fireballScroll", weight: 30 },
     { itemId: "mushroom", weight: 20 },
-    { itemId: "healthPotionRecipe", weight: 20 },
+    { itemId: "healthPotionRecipe", weight: 2 },
   ],
 
   bossDrop: [
