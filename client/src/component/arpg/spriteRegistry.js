@@ -113,20 +113,36 @@ import hills3AutotileImg from "../../assets/Set_A_Hills3.png";
 import snowAutotileImg from "../../assets/Set_A_Snow1.png";
 import darkwoodsAutotileImg from "../../assets/Set_A_Darkwoods1.png";
 import darkwoods2AutotileImg from "../../assets/Set_A_Darkwoods2.png";
-import standardFields2AutotileImg from "../../assets/Set_A5_GreyCoast1.png";
-import cityWalls1AutotfileImg from "../../assets/Set_A_CityWalls1.png",
-import cityWalls2AutotfileImg from "../../assets/Set_A_CityWalls2.png",
-import cityWalls3AutotfileImg from "../../assets/Set_A_CityWalls3.png",
-import fortress1AutotfileImg from "../../assets/Set_A_Fortress1.png",
-import fortress2AutotfileImg from "../../assets/Set_A_Fortress2.png",
-import fortress3AutotfileImg from "../../assets/Set_A_Fortress3.png",
+import cityWalls1AutotfileImg from "../../assets/Set_A_CityWalls1.png";
+import cityWalls2AutotfileImg from "../../assets/Set_A_CityWalls2.png";
+import cityWalls3AutotfileImg from "../../assets/Set_A_CityWalls3.png";
+import cityWallsE2AutotfileImg from "../../assets/Set_E_CityWalls2.png";
+import cityWallsE3AutotfileImg from "../../assets/Set_E_CityWalls3.png";
+import fortress1AutotfileImg from "../../assets/Set_A_Fortress1.png";
+import fortress2AutotfileImg from "../../assets/Set_A_Fortress2.png";
+import fortress3AutotfileImg from "../../assets/Set_A_Fortress3.png";
+import fortressE1AutotfileImg from "../../assets/Set_E_Fortress1.png";
+import fortressE2AutotfileImg from "../../assets/Set_E_Fortress2.png";
+import fortressE3AutotfileImg from "../../assets/Set_E_Fortress3.png";
 import mines1AutotileImg from "../../assets/Set_A_Mines1.png";
 import mines2AutotileImg from "../../assets/Set_A_Mines2.png";
-import techFortress1AutotfileImg from "../../assets/Set_A_TechFortress1.png",
-import techFortress2AutotfileImg from "../../assets/Set_A_TechFortress2.png",
-import tower1AutotfileImg from "../../assets/Set_A_Towers1.png",
-import tower2AutotfileImg from "../../assets/Set_A_Tower2.png",
-import tower3AutotfileImg from "../../assets/Set_A_Tower3.png",
+import techFortress1AutotfileImg from "../../assets/Set_A_TechFortress1.png";
+import techFortress2AutotfileImg from "../../assets/Set_A_TechFortress2.png";
+import techFortressE1AutotfileImg from "../../assets/Set_E_TechFortress1.png";
+import techFortressE2AutotfileImg from "../../assets/Set_E_TechFortress2.png";
+import tower1AutotfileImg from "../../assets/Set_A_Tower1.png";
+import tower2AutotfileImg from "../../assets/Set_A_Tower2.png";
+import tower3AutotfileImg from "../../assets/Set_A_Tower3.png";
+import towerE1AutotfileImg from "../../assets/Set_E_Tower1.png";
+import towerE2AutotfileImg from "../../assets/Set_E_Tower2.png";
+import towerE3AutotfileImg from "../../assets/Set_E_Tower3.png";
+import desertTownE1AutotfileImg from "../../assets/Set_E_Desert_Town1.png";
+import desertTownE2AutotfileImg from "../../assets/Set_E_Desert_Town2.png";
+import rooftopsFAutotfileImg from "../../assets/Set_F_Rooftops.png";
+import dungeonsA21AutofileImg.png from "../../assets/Set_A2_Dungeons1.png;
+import dungeonsA22AutofileImg.png from "../../assets/Set_A2_Dungeons2.png;
+import standardFields2AutotileImg from "../../assets/Set_A_StandardFields2.png";
+import greyCoastA51AutotileImg from "../../assets/Set_A5_GreyCoast1.png";
 // import objects
 import chestsSpritesheet from "../../assets/Chests.png";
 import iconSheet1 from "../../assets/icon_sheet1.png";
@@ -194,9 +210,21 @@ export const DESERT_AUTOTILE_SPRITESHEET = {
   frameHeight: 16,
 };
 
-export const HILLS_AUTOTILE_SPRITESHEET = {
+export const HILLS1_AUTOTILE_SPRITESHEET = {
   key: "hillsAutotile",
   path: hillsAutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+export const HILLS2_AUTOTILE_SPRITESHEET = {
+  key: "hills2Autotile",
+  path: hills2AutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+export const HILLS3_AUTOTILE_SPRITESHEET = {
+  key: "hills3Autotile",
+  path: hills3AutotileImg,
   frameWidth: 16,
   frameHeight: 16,
 };
@@ -223,6 +251,150 @@ export const DARKWOODS2_AUTOTILE_SPRITESHEET = {
 export const STANDARD_FIELDS2_AUTOTILE_SPRITESHEET = {
   key: "standardFields2Autotile",
   path: standardFields2AutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+export const CITY_WALLS1_AUTOTILE_SPRITESHEET = {
+  key: "cityWalls1Autotile",
+  path: cityWalls1AutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+export const CITY_WALLS2_AUTOTILE_SPRITESHEET = {
+  key: "cityWalls2Autotile",
+  path: cityWalls2AutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+export const CITY_WALLS3_AUTOTILE_SPRITESHEET = {
+  key: "cityWalls3Autotile",
+  path: cityWalls3AutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+export const CITY_WALLSE2_AUTOTILE_SPRITESHEET = {
+  key: "cityWallsE2Autotile",
+  path: cityWallsE2AutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+export const CITY_WALLSE3_AUTOTILE_SPRITESHEET = {
+  key: "cityWallsE3Autotile",
+  path: cityWallsE3AutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+export const FORTRESS1_AUTOTILE_SPRITESHEET = {
+  key: "fortress1Autotile",
+  path: fortress1AutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+export const FORTRESS2_AUTOTILE_SPRITESHEET = {
+  key: "fortress2Autotile",
+  path: fortress2AutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+export const FORTRESS3_AUTOTILE_SPRITESHEET = {
+  key: "fortress3Autotile",
+  path: fortress3AutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+export const FORTRESSE1_AUTOTILE_SPRITESHEET = {
+  key: "fortressE1Autotile",
+  path: fortressE1AutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+export const FORTRESSE2_AUTOTILE_SPRITESHEET = {
+  key: "fortressE2Autotile",
+  path: fortressE2AutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+export const FORTRESSE3_AUTOTILE_SPRITESHEET = {
+  key: "fortressE3Autotile",
+  path: fortressE3AutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+export const TECH_FORTRESS1_AUTOTILE_SPRITESHEET = {
+  key: "techFortress1Autotile",
+  path: techFortress1AutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+export const TECH_FORTRESS2_AUTOTILE_SPRITESHEET = {
+  key: "techFortress2Autotile",
+  path: techFortress2AutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+export const TECH_FORTRESSE1_AUTOTILE_SPRITESHEET = {
+  key: "techFortressE1Autotile",
+  path: techFortressE1AutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+export const TECH_FORTRESSE2_AUTOTILE_SPRITESHEET = {
+  key: "techFortressE2Autotile",
+  path: techFortressE2AutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+export const TOWER1_AUTOTILE_SPRITESHEET = {
+  key: "towers1Autotile",
+  path: tower1AutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+export const TOWER2_AUTOTILE_SPRITESHEET = {
+  key: "tower2Autotile",
+  path: tower2AutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+export const TOWERE1_AUTOTILE_SPRITESHEET = {
+  key: "towersE1Autotile",
+  path: towerE1AutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+export const TOWERE2_AUTOTILE_SPRITESHEET = {
+  key: "towerE2Autotile",
+  path: towerE2AutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+export const MINES1_AUTOTILE_SPRITESHEET = {
+  key: "mines1Autotile",
+  path: mines1AutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+export const MINES2_AUTOTILE_SPRITESHEET = {
+  key: "mines2Autotile",
+  path: mines2AutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+export const DESERT_TOWNE1_AUTOTILE_SPRITESHEET = {
+  key: "desertTownE1Autotile",
+  path: desertTownE1AutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+export const DESERT_TOWNE2_AUTOTILE_SPRITESHEET = {
+  key: "desertTownE2Autotile",
+  path: desertTownE2AutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+export const ROUFTOPSF_AUTOTILE_SPRITESHEET = {
+  key: "rooftopsFAutotfile",
+  path: rooftopsFAutotfileImg,
   frameWidth: 16,
   frameHeight: 16,
 };
