@@ -108,10 +108,25 @@ import wallTreeSprite from "../../assets/wall_tree.png";
 import floorTreeSprite from "../../assets/floor_tree.png";
 import desertAutotileImg from "../../assets/Set_A_Desert1_numerote.png";
 import hillsAutotileImg from "../../assets/Set_A_Hills1.png";
+import hills2AutotileImg from "../../assets/Set_A_Hills2.png";
+import hills3AutotileImg from "../../assets/Set_A_Hills3.png";
 import snowAutotileImg from "../../assets/Set_A_Snow1.png";
 import darkwoodsAutotileImg from "../../assets/Set_A_Darkwoods1.png";
 import darkwoods2AutotileImg from "../../assets/Set_A_Darkwoods2.png";
 import standardFields2AutotileImg from "../../assets/Set_A5_GreyCoast1.png";
+import cityWalls1AutotfileImg from "../../assets/Set_A_CityWalls1.png",
+import cityWalls2AutotfileImg from "../../assets/Set_A_CityWalls2.png",
+import cityWalls3AutotfileImg from "../../assets/Set_A_CityWalls3.png",
+import fortress1AutotfileImg from "../../assets/Set_A_Fortress1.png",
+import fortress2AutotfileImg from "../../assets/Set_A_Fortress2.png",
+import fortress3AutotfileImg from "../../assets/Set_A_Fortress3.png",
+import mines1AutotileImg from "../../assets/Set_A_Mines1.png";
+import mines2AutotileImg from "../../assets/Set_A_Mines2.png";
+import techFortress1AutotfileImg from "../../assets/Set_A_TechFortress1.png",
+import techFortress2AutotfileImg from "../../assets/Set_A_TechFortress2.png",
+import tower1AutotfileImg from "../../assets/Set_A_Towers1.png",
+import tower2AutotfileImg from "../../assets/Set_A_Tower2.png",
+import tower3AutotfileImg from "../../assets/Set_A_Tower3.png",
 // import objects
 import chestsSpritesheet from "../../assets/Chests.png";
 import iconSheet1 from "../../assets/icon_sheet1.png";
