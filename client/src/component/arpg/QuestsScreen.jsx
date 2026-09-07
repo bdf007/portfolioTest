@@ -10,7 +10,7 @@ import { resolveEnemyDisplayName } from "./spriteRegistry";
  * (avec leur progression) des quetes TERMINEES (cloturees), plutot que
  * de tout mélanger.
  */
-export default function QuestsScreen({ quests, onClose }) {
+export default function QuestsScreen({ quests, inventory, onClose }) {
   // un destinataire de livraison (role 'receiver') existe des la
   // creation de sa ville, AVANT meme que le joueur ait accepte quoi que
   // ce soit du donneur (cf. MainScene.maybeInjectDeliveryQuest, cree les
@@ -38,7 +38,18 @@ export default function QuestsScreen({ quests, onClose }) {
 
   function describeProgress(q) {
     if (q.questId === "obtainItem") {
-      return resolveItemDef(q.targetItemId).name;
+      const itemName = resolveItemDef(q.targetItemId).name;
+      const requiredQty = q.targetQuantity || 1;
+      if (q.completed) {
+        // deja rendue - les objets ont ete retires de l'inventaire au
+        // moment de la remise, jamais de recalcul depuis l'inventaire
+        // actuel ici, sinon ca retombe toujours a 0
+        return `${itemName} (${requiredQty}/${requiredQty})`;
+      }
+      const haveQty = inventory
+        .filter((i) => i.itemId === q.targetItemId)
+        .reduce((sum, i) => sum + i.quantity, 0);
+      return `${itemName} (${Math.min(haveQty, requiredQty)}/${requiredQty})`;
     }
     if (q.questId === "defeatBoss") {
       const bossName = resolveEnemyDisplayName(q.targetBossType);

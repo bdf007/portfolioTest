@@ -54,14 +54,45 @@ import {
 } from "../tilesets/fortress1";
 
 import {
+  FORTRESS_AUTOTILE_SPRITESHEET,
   DUNGEON_AUTOTILE_SPRITESHEET,
   DESERT_AUTOTILE_SPRITESHEET,
-  HILLS_AUTOTILE_SPRITESHEET,
+  HILLS1_AUTOTILE_SPRITESHEET,
+  HILLS2_AUTOTILE_SPRITESHEET,
+  HILLS3_AUTOTILE_SPRITESHEET,
   SNOW_AUTOTILE_SPRITESHEET,
   DARKWOODS_AUTOTILE_SPRITESHEET,
   DARKWOODS2_AUTOTILE_SPRITESHEET,
   STANDARD_FIELDS2_AUTOTILE_SPRITESHEET,
-  FORTRESS_AUTOTILE_SPRITESHEET,
+  CITY_WALLS1_AUTOTILE_SPRITESHEET,
+  CITY_WALLS2_AUTOTILE_SPRITESHEET,
+  CITY_WALLS3_AUTOTILE_SPRITESHEET,
+  CITY_WALLSE2_AUTOTILE_SPRITESHEET,
+  CITY_WALLSE3_AUTOTILE_SPRITESHEET,
+  FORTRESS1_AUTOTILE_SPRITESHEET,
+  FORTRESS2_AUTOTILE_SPRITESHEET,
+  FORTRESS3_AUTOTILE_SPRITESHEET,
+  FORTRESSE1_AUTOTILE_SPRITESHEET,
+  FORTRESSE2_AUTOTILE_SPRITESHEET,
+  FORTRESSE3_AUTOTILE_SPRITESHEET,
+  TECH_FORTRESS1_AUTOTILE_SPRITESHEET,
+  TECH_FORTRESS2_AUTOTILE_SPRITESHEET,
+  TECH_FORTRESSE1_AUTOTILE_SPRITESHEET,
+  TECH_FORTRESSE2_AUTOTILE_SPRITESHEET,
+  TOWER1_AUTOTILE_SPRITESHEET,
+  TOWER2_AUTOTILE_SPRITESHEET,
+  TOWER3_AUTOTILE_SPRITESHEET,
+  TOWERE1_AUTOTILE_SPRITESHEET,
+  TOWERE2_AUTOTILE_SPRITESHEET,
+  TOWERE3_AUTOTILE_SPRITESHEET,
+  MINES1_AUTOTILE_SPRITESHEET,
+  MINES2_AUTOTILE_SPRITESHEET,
+  DESERT_TOWNE1_AUTOTILE_SPRITESHEET,
+  DESERT_TOWNE2_AUTOTILE_SPRITESHEET,
+  ROUFTOPSF_AUTOTILE_SPRITESHEET,
+  DUNGEONS_A21_AUTOTILE_SPRITESHEET,
+  DUNGEONS_A22_AUTOTILE_SPRITESHEET,
+  GREY_COASTA51_AUTOTILE_SPRITESHEET,
 } from "../spriteRegistry";
 
 const TILE_SIZE = 32;
@@ -155,17 +186,89 @@ const TILESET_COLORS = {
   town: { wall: 0x5a4a3a, floor: 0xc8bfa0 },
 };
 
-const WALL_CORNER_INDEX_TO_FRAME = [
-  0, 32, 0, 16, 2, 32, 1, 23, 34, 33, 2, 7, 18, 6, 22, 17,
+const WALL_CORNER_INDEX_TO_FRAME_0_0 = [
+  70,
+  32,
+  0,
+  16,
+  2,
+  [32, 2],
+  1,
+  23,
+  34,
+  33,
+  [34, 0],
+  7,
+  18,
+  6,
+  22,
+  17,
 ];
-const WALL_CORNER_INDEX_TO_FRAME_MOUNTAIN2 = [
-  3, 35, 3, 19, 5, 35, 4, 39, 37, 36, 5, 39, 21, 38, 38, 20,
+const WALL_CORNER_INDEX_TO_FRAME_0_0_TOWER1 = [
+  118,
+  32,
+  0,
+  16,
+  2,
+  [32, 2],
+  1,
+  23,
+  34,
+  33,
+  [34, 0],
+  7,
+  18,
+  6,
+  22,
+  17,
 ];
-const WALL_CORNER_INDEX_TO_FRAME_MOUNTAIN3 = [
+const WALL_CORNER_INDEX_TO_FRAME_0_0_CITY_WALLS1 = [
+  224,
+  32,
+  0,
+  16,
+  2,
+  [32, 2],
+  1,
+  23,
+  34,
+  33,
+  [34, 0],
+  7,
+  18,
+  6,
+  22,
+  17,
+];
+const WALL_CORNER_INDEX_TO_FRAME_0_1 = [
+  70, 35, 3, 19, 5, 35, 4, 20, 37, 36, 5, 39, 21, 38, 20, 20,
+];
+const WALL_CORNER_INDEX_TO_FRAME_0_1_MINES2 = [
+  86,
+  35,
+  3,
+  19,
+  5,
+  [35, 5],
+  4,
+  4,
+  37,
+  36,
+  [37, 3],
+  39,
+  21,
+  38,
+  4,
+  20,
+];
+const WALL_CORNER_INDEX_TO_FRAME_1_0 = [
   48, 80, 48, 64, 50, 80, 49, 68, 82, 81, 50, 52, 66, 51, 67, 65,
 ];
-const WALL_CORNER_INDEX_TO_FRAME_DESERT2 = [
-  96, 128, 96, 112, 98, 128, 97, 100, 130, 129, 98, 115, 114, 116, 100, 113,
+const WALL_CORNER_INDEX_TO_FRAME_MOUNTAIN3B = [
+  48, 80, 48, 64, 50, 80, 49, 51, 82, 81, 50, 67, 66, 68, 52, 65,
+];
+const WALL_CORNER_INDEX_TO_FRAME_2_0 = [
+  96, 128, 96, 112, 98, 128, 97, 99, 130, 129, 98, 115, 114, 116, 100, 113,
 ];
 
 // const WALL_CORNER_INDEX_TO_FRAME_FORTRESS2 = [
@@ -184,6 +287,26 @@ const DEFAULT_ATTRIBUTES = {
   endurance: 0,
   chance: 0,
 };
+
+function createParticleTexture(scene, key, color) {
+  if (scene.textures.exists(key)) return;
+  const g = scene.make.graphics({ x: 0, y: 0, add: false });
+  g.fillStyle(color, 1);
+  g.fillCircle(4, 4, 4);
+  g.generateTexture(key, 8, 8);
+  g.destroy();
+}
+const INFLICTS_TO_VISUAL_EFFECT = {
+  burn: "fire",
+  acid: "gas",
+  slow: "ice",
+};
+
+function resolveVisualEffect(enemyData) {
+  if (enemyData.visualEffect) return enemyData.visualEffect;
+  const inflictsType = enemyData.inflictsEffect?.type;
+  return INFLICTS_TO_VISUAL_EFFECT[inflictsType] || null;
+}
 
 export default class MainScene extends Phaser.Scene {
   constructor() {
@@ -283,6 +406,9 @@ export default class MainScene extends Phaser.Scene {
   }
 
   create() {
+    createParticleTexture(this, "particle-fire", 0xff6600);
+    createParticleTexture(this, "particle-ice", 0x99ddff);
+    createParticleTexture(this, "particle-gas", 0x88cc44);
     for (const [entryKey, entry] of Object.entries(SPRITE_REGISTRY)) {
       this.createAnimationsForEntry(entryKey, entry);
     }
@@ -379,6 +505,8 @@ export default class MainScene extends Phaser.Scene {
     this.physics.add.collider(this.summonGroup, this.enemyGroup);
     this.physics.add.collider(this.summonGroup, this.hero);
     this.levelColliders = [];
+    this.activeChest = null;
+    this.currentFloorChestRemainingLoot = {}; // { chestIndex: [{itemId, quantity}] } - ce qu'il reste a prendre dans un coffre partiellement loote, pour survivre a une sauvegarde+reprise SUR LE MEME etage
 
     const fogTilesetKey = "fog-tiles";
     const fogCanvasTex = this.textures.createCanvas(
@@ -405,15 +533,19 @@ export default class MainScene extends Phaser.Scene {
     this.unlockedAbilities = [];
     this.unlockedRecipes = [];
     this.furyKillCount = 0;
+    this.pendingBossRoomOpen = false;
+    this.pendingBossAlive = null;
     this.pendingWeaponImbue = null;
     this.dashState = null;
     this.summons = [];
+    this.obtainedUniqueItems = [];
     this.touchFuryRequested = false;
     this.hotbarSlots = new Array(9).fill(null);
     this.abilityCooldowns = {};
     this.itemCooldowns = {};
     this.activeDialogQuestKey = null;
     this.activeTalkingNpc = null;
+    this.shopSoldItems = {}; // { depth: [{itemId, quantity}] } - objets vendus a la boutique de CETTE ville precise, rachetables uniquement ici
     this.inventory = [];
     this.gamePaused = false;
     this.pauseReasons = new Set();
@@ -464,6 +596,7 @@ export default class MainScene extends Phaser.Scene {
       }
       this.events.emit("abilities-updated", [...this.unlockedAbilities]);
     }
+    this.unlockAvailableAbilitiesAndRecipes();
   }
 
   async resumeFromSave(save) {
@@ -480,7 +613,11 @@ export default class MainScene extends Phaser.Scene {
     this.hotbarSlots = ps.hotbarSlots || new Array(9).fill(null);
     this.unlockedAbilities = ps.unlockedAbilities || [];
     this.unlockedRecipes = ps.unlockedRecipes || [];
+    this.shopSoldItems = ps.shopSoldItems || {};
+    this.obtainedUniqueItems = ps.obtainedUniqueItems || [];
     this.furyKillCount = ps.furyKillCount || 0;
+    this.pendingBossRoomOpen = ps.bossRoomOpen || false;
+    this.pendingBossAlive = ps.bossAlive ?? null;
     this.equipped = {
       mainHand: null,
       offHand: null,
@@ -515,6 +652,7 @@ export default class MainScene extends Phaser.Scene {
       ps.currentFloorLootSeed || null,
       null,
       ps.playerPosition || null,
+      ps.currentFloorChestRemainingLoot || {},
     );
     for (const savedSummon of ps.summons || []) {
       const sprite = this.spawnSummonSprite(
@@ -563,6 +701,12 @@ export default class MainScene extends Phaser.Scene {
   addItemToInventory(itemId, quantity = 1) {
     if (!itemId || quantity <= 0) return;
     const def = resolveItemDef(itemId);
+
+    if (def.unique) {
+      if (this.obtainedUniqueItems.includes(itemId)) return; // deja obtenu une fois - jamais une deuxieme, meme vendu/perdu depuis
+      this.obtainedUniqueItems.push(itemId);
+      quantity = 1; // un objet unique ne peut jamais etre obtenu en plusieurs exemplaires d'un coup non plus
+    }
 
     if (def.stackable) {
       const existing = this.inventory.find((i) => i.itemId === itemId);
@@ -950,11 +1094,14 @@ export default class MainScene extends Phaser.Scene {
           heroId: this.heroSpriteKey,
           currentFloorKills: this.currentFloorKills,
           currentFloorOpenedChests: this.currentFloorOpenedChests,
+          currentFloorChestRemainingLoot: this.currentFloorChestRemainingLoot,
           currentFloorLootSeed: this.currentFloorLootSeed,
           quests: this.quests,
           inventory: this.inventory,
           hotbarSlots: this.hotbarSlots,
           unlockedRecipes: this.unlockedRecipes,
+          shopSoldItems: this.shopSoldItems,
+          obtainedUniqueItems: this.obtainedUniqueItems,
           summons: this.summons.map((s) => ({
             spriteKey: s.spriteKey,
             hp: s.hp,
@@ -970,6 +1117,8 @@ export default class MainScene extends Phaser.Scene {
               : null,
           })),
           furyKillCount: this.furyKillCount,
+          bossRoomOpen: this.bossRoomOpen,
+          bossAlive: this.bossAlive,
           unlockedAbilities: this.unlockedAbilities,
           equipped: this.equipped,
           discoveredLandmarks: this.discoveredLandmarks,
@@ -996,7 +1145,7 @@ export default class MainScene extends Phaser.Scene {
 
   /**
    * Compose une texture de tileset a 4 coins (identite d'ordre - meme
-   * WALL_CORNER_INDEX_TO_FRAME que Desert) a partir d'une spritesheet
+   * WALL_CORNER_INDEX_TO_FRAME_0_0 que Desert) a partir d'une spritesheet
    * source generique - reutilisable pour tout tileset partageant EXACTEMENT
    * la meme disposition de sprites (juste une teinte differente), comme
    * Hills vis-a-vis de Desert.
@@ -1005,7 +1154,7 @@ export default class MainScene extends Phaser.Scene {
     grid,
     sourceSpritesheet,
     cacheKeySuffix,
-    cornerTable = WALL_CORNER_INDEX_TO_FRAME,
+    cornerTable = WALL_CORNER_INDEX_TO_FRAME_0_0,
     floorTileId = 113,
   ) {
     const phaserTilesetKey = `${cacheKeySuffix}-autotile-composed`;
@@ -1023,9 +1172,7 @@ export default class MainScene extends Phaser.Scene {
     const sourceImg = this.textures.get(sourceSpritesheet.key).getSourceImage();
     const SOURCE_COLS = 16;
 
-    const drawSourceTileAt = (tileid, slotIndex) => {
-      const sx = (tileid % SOURCE_COLS) * 16;
-      const sy = Math.floor(tileid / SOURCE_COLS) * 16;
+    const drawFloorAt = (slotIndex) => {
       const floorSx = (floorTileId % SOURCE_COLS) * 16;
       const floorSy = Math.floor(floorTileId / SOURCE_COLS) * 16;
       cctx.drawImage(
@@ -1039,6 +1186,11 @@ export default class MainScene extends Phaser.Scene {
         TILE_SIZE,
         TILE_SIZE,
       );
+    };
+
+    const drawTileOnly = (tileid, slotIndex) => {
+      const sx = (tileid % SOURCE_COLS) * 16;
+      const sy = Math.floor(tileid / SOURCE_COLS) * 16;
       cctx.drawImage(
         sourceImg,
         sx,
@@ -1052,9 +1204,21 @@ export default class MainScene extends Phaser.Scene {
       );
     };
 
-    drawSourceTileAt(floorTileId, 0);
+    drawFloorAt(0);
+    drawTileOnly(floorTileId, 0);
+
     for (let bitmask = 0; bitmask < 16; bitmask++) {
-      drawSourceTileAt(cornerTable[bitmask], bitmask + 1);
+      const slotIndex = bitmask + 1;
+      drawFloorAt(slotIndex); // <-- le fond, UNE SEULE FOIS par case
+
+      const entry = cornerTable[bitmask];
+      if (Array.isArray(entry)) {
+        for (const tileid of entry) {
+          drawTileOnly(tileid, slotIndex); // <-- jamais de sol entre les couches
+        }
+      } else {
+        drawTileOnly(entry, slotIndex);
+      }
     }
     composedTex.refresh();
 
@@ -1081,7 +1245,10 @@ export default class MainScene extends Phaser.Scene {
     lootSeed = null,
     savedFogState = null,
     savedPlayerPosition = null,
+    savedChestRemainingLoot = {},
   ) {
+    this.currentFloorChestRemainingLoot = savedChestRemainingLoot || {};
+
     if (this.fogState?.state && this.currentDepth != null) {
       const discoveredTiles = [];
       for (let y = 0; y < this.fogState.state.length; y++) {
@@ -1212,10 +1379,14 @@ export default class MainScene extends Phaser.Scene {
     }
     this.chests = [];
     this.nextLootChestId = 0;
+    this.activeChest = null;
     this.dialogOpen = false;
     this.gamePaused = false;
     this.pauseReasons.clear();
-    this.enemies.forEach((e) => e.sprite.destroy());
+    this.enemies.forEach((e) => {
+      if (e.visualEmitter) e.visualEmitter.destroy();
+      e.sprite.destroy();
+    });
     if (this.enemyGroup) this.enemyGroup.clear(false, false);
     this.enemies = [];
     this.projectiles.forEach((p) => p.sprite.destroy());
@@ -1265,7 +1436,7 @@ export default class MainScene extends Phaser.Scene {
     const worldH = grid.length * TILE_SIZE;
 
     const useRealAutotile =
-      tileset === "desert" ||
+      tileset === "desert" || // WALL_CORNER_INDEX_TO_FRAME_0_0
       tileset === "hills" ||
       tileset === "snow" ||
       tileset === "darkwoods" ||
@@ -1273,7 +1444,18 @@ export default class MainScene extends Phaser.Scene {
       tileset === "standardFields2" ||
       tileset === "desertMountain2" ||
       tileset === "desertMountain3" ||
-      tileset === "desert2";
+      tileset === "desert2" ||
+      tileset === "hills1" ||
+      tileset === "hills2" ||
+      tileset === "hills3" ||
+      tileset === "hills4" ||
+      tileset === "hills5" ||
+      tileset === "hills6" ||
+      tileset === "hills7" ||
+      tileset === "hills8" ||
+      tileset === "mines2" || //WALL_CORNER_INDEX_TO_FRAME_0_1_MINES2
+      tileset === "tower1" || // WALL_CORNER_INDEX_TO_FRAME_0_0_TOWER1
+      tileset === "cityWalls1"; // WALL_CORNER_INDEX_TO_FRAME_0_0_CITY_WALLS1
     const useDungeon1Autotile = tileset === "dungeon1";
     const useFortress1Autotile = tileset === "fortress1";
 
@@ -1314,7 +1496,7 @@ export default class MainScene extends Phaser.Scene {
         grid,
         DESERT_AUTOTILE_SPRITESHEET,
         "desert",
-        WALL_CORNER_INDEX_TO_FRAME,
+        WALL_CORNER_INDEX_TO_FRAME_0_0,
         17, // sol assorti a la montagne 1 - explicite maintenant, meme si c'etait deja la valeur par defaut
       );
       phaserTilesetKey = result.phaserTilesetKey;
@@ -1324,7 +1506,7 @@ export default class MainScene extends Phaser.Scene {
         grid,
         DESERT_AUTOTILE_SPRITESHEET,
         "desert-mountain2",
-        WALL_CORNER_INDEX_TO_FRAME_MOUNTAIN2,
+        WALL_CORNER_INDEX_TO_FRAME_0_1,
         20, // <-- a remplacer par le vrai numero de sol assorti a montagne2, une fois identifie
       );
       phaserTilesetKey = result.phaserTilesetKey;
@@ -1334,7 +1516,7 @@ export default class MainScene extends Phaser.Scene {
         grid,
         DESERT_AUTOTILE_SPRITESHEET,
         "desert-mountain3",
-        WALL_CORNER_INDEX_TO_FRAME_MOUNTAIN3,
+        WALL_CORNER_INDEX_TO_FRAME_1_0,
         65, // <-- pareil, a confirmer
       );
       phaserTilesetKey = result.phaserTilesetKey;
@@ -1344,16 +1526,158 @@ export default class MainScene extends Phaser.Scene {
         grid,
         DESERT_AUTOTILE_SPRITESHEET,
         "desert2",
-        WALL_CORNER_INDEX_TO_FRAME_DESERT2,
-        17,
+        WALL_CORNER_INDEX_TO_FRAME_2_0,
+        161,
       );
       phaserTilesetKey = result.phaserTilesetKey;
       renderGrid = result.renderGrid;
-    } else if (tileset === "hills") {
+    } else if (tileset === "hills1") {
       const result = this.composeCornerAutotileTexture(
         grid,
-        HILLS_AUTOTILE_SPRITESHEET,
-        "hills",
+        HILLS1_AUTOTILE_SPRITESHEET,
+        "hills1",
+        WALL_CORNER_INDEX_TO_FRAME_0_0,
+        17, // sol assorti a la montagne 1 - explicite maintenant, meme si c'etait deja la valeur par defaut
+      );
+      phaserTilesetKey = result.phaserTilesetKey;
+      renderGrid = result.renderGrid;
+    } else if (tileset === "cityWalls1") {
+      const result = this.composeCornerAutotileTexture(
+        grid,
+        CITY_WALLS1_AUTOTILE_SPRITESHEET,
+        "city-walls1",
+        WALL_CORNER_INDEX_TO_FRAME_0_0_CITY_WALLS1,
+        113, // sol assorti a la ville - explicite maintenant, meme si c'etait deja la valeur par defaut
+      );
+      phaserTilesetKey = result.phaserTilesetKey;
+      renderGrid = result.renderGrid;
+    } else if (tileset === "tower1") {
+      const result = this.composeCornerAutotileTexture(
+        grid,
+        TOWER1_AUTOTILE_SPRITESHEET,
+        "tower1",
+        WALL_CORNER_INDEX_TO_FRAME_0_0_TOWER1,
+        20, // sol assorti a la montagne 1 - explicite maintenant, meme si c'etait deja la valeur par defaut
+      );
+      phaserTilesetKey = result.phaserTilesetKey;
+      renderGrid = result.renderGrid;
+    } else if (tileset === "hills2") {
+      const result = this.composeCornerAutotileTexture(
+        grid,
+        HILLS1_AUTOTILE_SPRITESHEET,
+        "hills2",
+        WALL_CORNER_INDEX_TO_FRAME_0_1,
+        20, // <-- a remplacer par le vrai numero de sol assorti a montagne2, une fois identifie
+      );
+      phaserTilesetKey = result.phaserTilesetKey;
+      renderGrid = result.renderGrid;
+    } else if (tileset === "mines2") {
+      const result = this.composeCornerAutotileTexture(
+        grid,
+        MINES2_AUTOTILE_SPRITESHEET,
+        "mines2",
+        WALL_CORNER_INDEX_TO_FRAME_0_1_MINES2,
+        17, // <-- a remplacer par le vrai numero de sol assorti a montagne2, une fois identifie
+      );
+      phaserTilesetKey = result.phaserTilesetKey;
+      renderGrid = result.renderGrid;
+    } else if (tileset === "hills3") {
+      const result = this.composeCornerAutotileTexture(
+        grid,
+        HILLS3_AUTOTILE_SPRITESHEET,
+        "hills3",
+        WALL_CORNER_INDEX_TO_FRAME_MOUNTAIN3B,
+        65, // <-- pareil, a confirmer
+      );
+      phaserTilesetKey = result.phaserTilesetKey;
+      renderGrid = result.renderGrid;
+    } else if (tileset === "hills4") {
+      const result = this.composeCornerAutotileTexture(
+        grid,
+        HILLS3_AUTOTILE_SPRITESHEET,
+        "hills4",
+        WALL_CORNER_INDEX_TO_FRAME_0_1,
+        20, // <-- a remplacer par le vrai numero de sol assorti a montagne2, une fois identifie
+      );
+      phaserTilesetKey = result.phaserTilesetKey;
+      renderGrid = result.renderGrid;
+    } else if (tileset === "hills5") {
+      const result = this.composeCornerAutotileTexture(
+        grid,
+        HILLS2_AUTOTILE_SPRITESHEET,
+        "hills5",
+        WALL_CORNER_INDEX_TO_FRAME_0_0,
+        17, // sol assorti a la montagne 1 - explicite maintenant, meme si c'etait deja la valeur par defaut
+      );
+      phaserTilesetKey = result.phaserTilesetKey;
+      renderGrid = result.renderGrid;
+    } else if (tileset === "hills6") {
+      const result = this.composeCornerAutotileTexture(
+        grid,
+        HILLS2_AUTOTILE_SPRITESHEET,
+        "hills6",
+        WALL_CORNER_INDEX_TO_FRAME_0_1,
+        20, // <-- a remplacer par le vrai numero de sol assorti a montagne2, une fois identifie
+      );
+      phaserTilesetKey = result.phaserTilesetKey;
+      renderGrid = result.renderGrid;
+    } else if (tileset === "hills7") {
+      const result = this.composeCornerAutotileTexture(
+        grid,
+        HILLS2_AUTOTILE_SPRITESHEET,
+        "hills7",
+        WALL_CORNER_INDEX_TO_FRAME_1_0,
+        65, // <-- pareil, a confirmer
+      );
+      phaserTilesetKey = result.phaserTilesetKey;
+      renderGrid = result.renderGrid;
+    } else if (tileset === "hills8") {
+      const result = this.composeCornerAutotileTexture(
+        grid,
+        HILLS2_AUTOTILE_SPRITESHEET,
+        "hills8",
+        WALL_CORNER_INDEX_TO_FRAME_0_1,
+        20, // <-- a remplacer par le vrai numero de sol assorti a montagne2, une fois identifie
+      );
+      phaserTilesetKey = result.phaserTilesetKey;
+      renderGrid = result.renderGrid;
+    } else if (tileset === "hills9") {
+      const result = this.composeCornerAutotileTexture(
+        grid,
+        HILLS3_AUTOTILE_SPRITESHEET,
+        "hills9",
+        WALL_CORNER_INDEX_TO_FRAME_0_0,
+        17, // sol assorti a la montagne 1 - explicite maintenant, meme si c'etait deja la valeur par defaut
+      );
+      phaserTilesetKey = result.phaserTilesetKey;
+      renderGrid = result.renderGrid;
+    } else if (tileset === "hills10") {
+      const result = this.composeCornerAutotileTexture(
+        grid,
+        HILLS3_AUTOTILE_SPRITESHEET,
+        "hills10",
+        WALL_CORNER_INDEX_TO_FRAME_0_1,
+        20, // <-- a remplacer par le vrai numero de sol assorti a montagne2, une fois identifie
+      );
+      phaserTilesetKey = result.phaserTilesetKey;
+      renderGrid = result.renderGrid;
+    } else if (tileset === "hills11") {
+      const result = this.composeCornerAutotileTexture(
+        grid,
+        HILLS3_AUTOTILE_SPRITESHEET,
+        "hills11",
+        WALL_CORNER_INDEX_TO_FRAME_1_0,
+        65, // <-- pareil, a confirmer
+      );
+      phaserTilesetKey = result.phaserTilesetKey;
+      renderGrid = result.renderGrid;
+    } else if (tileset === "hills12") {
+      const result = this.composeCornerAutotileTexture(
+        grid,
+        HILLS3_AUTOTILE_SPRITESHEET,
+        "hills12",
+        WALL_CORNER_INDEX_TO_FRAME_0_1,
+        20, // <-- a remplacer par le vrai numero de sol assorti a montagne2, une fois identifie
       );
       phaserTilesetKey = result.phaserTilesetKey;
       renderGrid = result.renderGrid;
@@ -1362,6 +1686,8 @@ export default class MainScene extends Phaser.Scene {
         grid,
         SNOW_AUTOTILE_SPRITESHEET,
         "snow",
+        WALL_CORNER_INDEX_TO_FRAME_0_0,
+        17,
       );
       phaserTilesetKey = result.phaserTilesetKey;
       renderGrid = result.renderGrid;
@@ -1370,6 +1696,8 @@ export default class MainScene extends Phaser.Scene {
         grid,
         DARKWOODS_AUTOTILE_SPRITESHEET,
         "darkwoods",
+        WALL_CORNER_INDEX_TO_FRAME_0_0,
+        17,
       );
       phaserTilesetKey = result.phaserTilesetKey;
       renderGrid = result.renderGrid;
@@ -1557,6 +1885,23 @@ export default class MainScene extends Phaser.Scene {
         repeat: -1,
       });
     }
+    if (this.pendingBossRoomOpen && this.bossDoorTile) {
+      this.bossRoomOpen = true;
+      const { x, y } = this.bossDoorTile;
+      this.layer.putTileAt(0, x, y);
+      this.fogGrid[y][x] = 0;
+      if (this.bossDoorMarker) {
+        this.bossDoorMarker.destroy();
+        this.bossDoorMarker = null;
+      }
+      if (this.pendingBossAlive === false) {
+        this.bossAlive = false; // deja vaincu avant l'interruption - ne jamais le refaire apparaitre
+      }
+      // si pendingBossAlive n'est PAS false, le boss reapparaitra normalement
+      // via le declenchement habituel (this.enemies.length === 0), inchange
+    }
+    this.pendingBossRoomOpen = false;
+    this.pendingBossAlive = null;
 
     if (this.travelHubTile) {
       this.travelHubMarker = this.add.circle(
@@ -1621,7 +1966,10 @@ export default class MainScene extends Phaser.Scene {
         .setOffset(ehb.offsetX, ehb.offsetY);
       sprite.setDepth(8);
       sprite.anims.play(spriteKey + "-idle-down");
-
+      const resolvedEffect = resolveVisualEffect(enemyData);
+      const visualEmitter = resolvedEffect
+        ? this.createEnemyVisualEffect(sprite, resolvedEffect)
+        : null;
       this.enemies.push({
         sprite,
         spriteKey,
@@ -1647,6 +1995,7 @@ export default class MainScene extends Phaser.Scene {
         inflictsEffect: enemyData.inflictsEffect || null,
         resistances: enemyData.resistances || {},
         damageType: enemyData.damageType || "physical",
+        visualEmitter,
         statusEffects: [],
         drops: enemyData.drops || [],
         attackCooldown: createCooldown(ENEMY_ATTACK_COOLDOWN),
@@ -1669,11 +2018,25 @@ export default class MainScene extends Phaser.Scene {
       this.levelColliders.push(this.physics.add.collider(this.hero, sprite));
       if (alreadyOpened) sprite.body.checkCollision.none = true;
 
+      // uniformise TOUJOURS en lootItems (tableau), meme pour un coffre a
+      // objet unique - un seul format a gerer partout ensuite (cf.
+      // performInteraction/openChestScreen). Si deja ouvert, restaure ce
+      // qui restait EXACTEMENT a prendre (registre separe) - absent du
+      // registre = deja entierement loote la derniere fois
+      let lootItems;
+      if (alreadyOpened) {
+        lootItems = this.currentFloorChestRemainingLoot[index]
+          ? this.currentFloorChestRemainingLoot[index].map((i) => ({ ...i }))
+          : [];
+      } else {
+        lootItems = chestData.loot ? [{ ...chestData.loot }] : [];
+      }
+
       this.chests.push({
         sprite,
         index,
         opened: alreadyOpened,
-        loot: chestData.loot,
+        lootItems,
         x: chestData.x,
         y: chestData.y,
         variant,
@@ -1808,38 +2171,90 @@ export default class MainScene extends Phaser.Scene {
     this.events.emit("travel-hub", null);
   }
 
-  openShop() {
-    this.pauseGame("shop");
-    this.events.emit("shop", this.shopData.stock);
+  getMergedShopStock() {
+    const baseStock = this.shopData?.stock || [];
+    const soldHere = this.shopSoldItems[this.currentDepth] || [];
+    const soldEntries = soldHere.map((s) => {
+      const def = resolveItemDef(s.itemId);
+      return {
+        itemId: s.itemId,
+        price: def.price || 0,
+        quantity: s.quantity,
+        soldByPlayer: true,
+      };
+    });
+    return [...baseStock, ...soldEntries];
   }
 
-  buyItem(shopItemIndex) {
-    const shopItem = this.shopData?.stock?.[shopItemIndex];
+  openShop() {
+    this.pauseGame("shop");
+    this.events.emit("shop", this.getMergedShopStock());
+  }
+
+  buyItem(shopItemIndex, quantity = 1) {
+    const merged = this.getMergedShopStock();
+    const shopItem = merged[shopItemIndex];
     if (!shopItem) return;
 
+    const buyQty = Math.max(1, quantity);
+    // objet rachete au joueur - jamais au-dela de ce qu'il en a vendu ici
+    const effectiveQty = shopItem.soldByPlayer
+      ? Math.min(buyQty, shopItem.quantity)
+      : buyQty;
+    if (effectiveQty <= 0) return;
+
+    const totalCost = shopItem.price * effectiveQty;
     const goldEntry = this.inventory.find((i) => i.itemId === "gold");
     const currentGold = goldEntry ? goldEntry.quantity : 0;
-    if (currentGold < shopItem.price) return;
+    if (currentGold < totalCost) return;
 
-    goldEntry.quantity -= shopItem.price;
+    goldEntry.quantity -= totalCost;
     if (goldEntry.quantity <= 0)
       this.inventory = this.inventory.filter((i) => i !== goldEntry);
 
-    this.addItemToInventory(shopItem.itemId, 1);
+    this.addItemToInventory(shopItem.itemId, effectiveQty);
+
+    if (shopItem.soldByPlayer) {
+      const soldHere = this.shopSoldItems[this.currentDepth] || [];
+      const entry = soldHere.find((s) => s.itemId === shopItem.itemId);
+      if (entry) {
+        entry.quantity -= effectiveQty;
+        if (entry.quantity <= 0) {
+          this.shopSoldItems[this.currentDepth] = soldHere.filter(
+            (s) => s !== entry,
+          );
+        }
+      }
+      this.events.emit("shop", this.getMergedShopStock());
+    }
   }
 
-  sellItem(inventoryIndex) {
+  sellItem(inventoryIndex, quantity = 1) {
     const item = this.inventory[inventoryIndex];
     if (!item) return;
     const def = resolveItemDef(item.itemId);
     if (!def.price) return;
 
-    const sellPrice = Math.floor(def.price * SELL_PRICE_RATIO);
+    const sellQty = Math.max(1, Math.min(quantity, item.quantity));
+    const sellPrice = Math.floor(def.price * SELL_PRICE_RATIO) * sellQty;
 
-    item.quantity -= 1;
+    item.quantity -= sellQty;
     if (item.quantity <= 0) this.inventory.splice(inventoryIndex, 1);
 
+    if (!this.shopSoldItems[this.currentDepth])
+      this.shopSoldItems[this.currentDepth] = [];
+    const existingSold = this.shopSoldItems[this.currentDepth].find(
+      (s) => s.itemId === item.itemId,
+    );
+    if (existingSold) existingSold.quantity += sellQty;
+    else
+      this.shopSoldItems[this.currentDepth].push({
+        itemId: item.itemId,
+        quantity: sellQty,
+      });
+
     this.addItemToInventory("gold", sellPrice);
+    this.events.emit("shop", this.getMergedShopStock());
   }
 
   closeShop() {
@@ -1881,7 +2296,10 @@ export default class MainScene extends Phaser.Scene {
       behaviorRng,
       { guard: 1 },
     );
-
+    const resolvedEffect = resolveVisualEffect(this.bossData);
+    const visualEmitter = resolvedEffect
+      ? this.createEnemyVisualEffect(sprite, resolvedEffect)
+      : null;
     this.enemies.push({
       sprite,
       spriteKey,
@@ -1905,6 +2323,7 @@ export default class MainScene extends Phaser.Scene {
       xpReward: this.bossData.xpReward,
       attackType: this.bossData.attackType || "melee",
       inflictsEffect: this.bossData.inflictsEffect || null,
+      visualEmitter,
       statusEffects: [],
       drop: this.bossData.drop || null,
       attackCooldown: createCooldown(ENEMY_ATTACK_COOLDOWN),
@@ -1923,26 +2342,20 @@ export default class MainScene extends Phaser.Scene {
       this.pauseStartedAt = this.time.now;
     }
 
-    for (const enemy of this.enemies) {
-      if (enemy.sprite?.body) enemy.sprite.setVelocity(0, 0);
-    }
-    for (const npc of this.questNpcs || []) {
-      if (npc.sprite?.body) npc.sprite.setVelocity(0, 0);
-    }
-    for (const npc of this.ambientNpcs || []) {
-      if (npc.sprite?.body) npc.sprite.setVelocity(0, 0);
-    }
-    for (const proj of this.projectiles) {
-      if (proj.sprite?.body) proj.sprite.setVelocity(0, 0);
-    }
-    for (const proj of this.enemyProjectiles) {
-      if (proj.sprite?.body) proj.sprite.setVelocity(0, 0);
-    }
-    for (const proj of this.abilityProjectiles || []) {
-      if (proj.sprite?.body) proj.sprite.setVelocity(0, 0);
-    }
-  }
+    const freeze = (obj) => {
+      if (obj?.sprite && typeof obj.sprite.setVelocity === "function") {
+        obj.sprite.setVelocity(0, 0);
+      }
+    };
 
+    for (const enemy of this.enemies) freeze(enemy);
+    for (const npc of this.questNpcs || []) freeze(npc);
+    for (const npc of this.ambientNpcs || []) freeze(npc);
+    for (const proj of this.projectiles) freeze(proj);
+    for (const proj of this.enemyProjectiles) freeze(proj);
+    for (const proj of this.abilityProjectiles || []) freeze(proj);
+    for (const b of this.boomerangs || []) freeze(b); // <-- absent jusqu'ici, meme souci potentiel
+  }
   unpauseGame(reason) {
     this.pauseReasons.delete(reason);
     const stillPaused = this.pauseReasons.size > 0;
@@ -1963,7 +2376,9 @@ export default class MainScene extends Phaser.Scene {
   showUpstairsPrompt() {
     if (this.pauseReasons.has("upstairs")) return;
     this.pauseGame("upstairs");
-    this.events.emit("upstairs-prompt", true);
+    const remainingEnemies = this.enemies.length;
+    const unopenedChests = this.chests.filter((c) => !c.opened).length;
+    this.events.emit("upstairs-prompt", { remainingEnemies, unopenedChests });
   }
 
   confirmGoUpstairs() {
@@ -1980,9 +2395,19 @@ export default class MainScene extends Phaser.Scene {
   showExitPrompt() {
     if (this.pauseReasons.has("exit")) return;
     this.pauseGame("exit");
-    this.events.emit("exit-prompt", true);
+    const remainingEnemies = this.enemies.length;
+    const unopenedChests = this.chests.filter(
+      (c) => !c.opened && c.lootItems.length > 0,
+    ).length;
+    const partiallyLootedChests = this.chests.filter(
+      (c) => c.opened && c.lootItems.length > 0,
+    ).length;
+    this.events.emit("exit-prompt", {
+      remainingEnemies,
+      unopenedChests,
+      partiallyLootedChests,
+    });
   }
-
   confirmDescend() {
     this.unpauseGame("exit");
     this.events.emit("exit-prompt", null);
@@ -2009,6 +2434,17 @@ export default class MainScene extends Phaser.Scene {
       if (!giverQs.accepted || giverQs.completed || giverQs.receiverKey)
         continue;
       if (giverQs.targetDepth !== this.currentDepth) continue;
+
+      // cherche le PROCHAIN pnj de cet etage qui n'a PAS deja de quete
+      // assignee - ne jamais ecraser un pnj existant (cf. le bug ou un pnj
+      // avec deja une quete tuer/looter se retrouvait transforme en
+      // destinataire de colis)
+      while (
+        nextReceiverIndex < npcDataArray.length &&
+        this.quests[`${this.currentDepth}-${nextReceiverIndex}`]
+      ) {
+        nextReceiverIndex++;
+      }
       if (nextReceiverIndex >= npcDataArray.length) continue;
 
       const receiverNpcIndex = nextReceiverIndex++;
@@ -2097,6 +2533,7 @@ export default class MainScene extends Phaser.Scene {
 
   maybeInjectDeliveryQuest(eligibleKeys) {
     if (eligibleKeys.length === 0) return;
+    if (this.currentBiomeId !== "town") return;
 
     const injectRng = createRng(`${this.currentSeed}-delivery-inject`);
     if (injectRng() >= 0.2) return;
@@ -2249,7 +2686,12 @@ export default class MainScene extends Phaser.Scene {
           qs.bossDepth && qs.bossType
             ? ` Le ${resolveEnemyDisplayName(qs.bossType)} de l'étage ${qs.bossDepth} le détient.`
             : "";
-        text = custom.offer || `Peux-tu me rapporter ${qtyLabel} ?${bossHint}`;
+        const enemyHint = qs.targetEnemyType
+          ? ` On en trouve parfois sur les ${resolveEnemyDisplayName(qs.targetEnemyType)}.`
+          : "";
+        text =
+          custom.offer ||
+          `Peux-tu me rapporter ${qtyLabel} ?${bossHint}${enemyHint}`;
         canAccept = true;
       }
     } else if (qs.questId === "defeatBoss") {
@@ -2258,8 +2700,7 @@ export default class MainScene extends Phaser.Scene {
         text = custom.complete || `Merci d'avoir vaincu ${bossName} !`;
       } else if (qs.accepted && qs.bossDefeated) {
         text =
-          custom.progress ||
-          `Tu l'as vaincu ! Reviens me voir pour ta récompense.`;
+          custom.progress || `Tu l'as vaincu ! Tu peux réclamer ta récompense.`;
         canTurnIn = true;
       } else if (qs.accepted) {
         text =
@@ -2308,8 +2749,7 @@ export default class MainScene extends Phaser.Scene {
       const enemyName = resolveEnemyDisplayName(qs.targetEnemyType);
       text = custom.complete || `Merci d'avoir tué ces ${enemyName} pour moi !`;
     } else if (qs.accepted && qs.killCount >= qs.target) {
-      text =
-        custom.progress || `C'est fait ! Reviens me voir pour ta récompense.`;
+      text = custom.progress || `C'est fait ! Tu peux réclamer ta récompense.`;
       canTurnIn = true;
     } else if (qs.accepted) {
       const enemyName = resolveEnemyDisplayName(qs.targetEnemyType);
@@ -2713,6 +3153,8 @@ export default class MainScene extends Phaser.Scene {
       upstairsTile: this.upstairsTile,
       questNpcs,
       summons,
+      bossDoorTile: this.bossDoorTile,
+      bossRoomOpen: this.bossRoomOpen,
     });
   }
 
@@ -2815,7 +3257,10 @@ export default class MainScene extends Phaser.Scene {
     for (const enemy of this.enemies) {
       enemy.visible = this.isEnemyVisible(enemy);
       enemy.sprite.setVisible(enemy.visible);
-
+      if (enemy.visualEmitter) {
+        enemy.visualEmitter.setPosition(enemy.sprite.x, enemy.sprite.y - 30);
+        enemy.visualEmitter.setVisible(enemy.visible);
+      }
       if (this.time.now < (enemy.attackAnimUntil || 0)) {
         continue;
       }
@@ -3142,7 +3587,7 @@ export default class MainScene extends Phaser.Scene {
 
     if (!this.dialogOpen) {
       const chest = this.chests.find((c) => {
-        if (c.opened) return false;
+        if (c.lootItems.length === 0) return false; // deja entierement loote
         const cx = c.x * TILE_SIZE + TILE_SIZE / 2;
         const cy = c.y * TILE_SIZE + TILE_SIZE / 2;
         return (
@@ -3151,30 +3596,80 @@ export default class MainScene extends Phaser.Scene {
         );
       });
       if (chest) {
-        chest.opened = true;
-        chest.sprite.setFrame(chest.variant.openFrame);
-        chest.sprite.body.checkCollision.none = true;
-        if (!chest.ephemeral) this.currentFloorOpenedChests.push(chest.index);
-
-        if (chest.loot) {
-          this.addItemToInventory(chest.loot.itemId, chest.loot.quantity);
-          const itemDef = resolveItemDef(chest.loot.itemId);
-          this.showLootToast(
-            `Trouvé : ${itemDef.name} x${chest.loot.quantity}`,
-          );
-        } else if (chest.lootItems && chest.lootItems.length > 0) {
-          for (const drop of chest.lootItems) {
-            this.addItemToInventory(drop.itemId, drop.quantity);
-          }
-          const summary = chest.lootItems
-            .map(
-              (drop) => `${resolveItemDef(drop.itemId).name} x${drop.quantity}`,
-            )
-            .join(", ");
-          this.showLootToast(`Trouvé : ${summary}`);
-        }
+        this.openChestScreen(chest);
         return;
       }
+    }
+  }
+
+  openChestScreen(chest) {
+    this.activeChest = chest;
+    this.pauseGame("chest");
+
+    if (!chest.opened) {
+      chest.opened = true;
+      chest.sprite.setFrame(chest.variant.openFrame);
+      chest.sprite.body.checkCollision.none = true;
+      if (!chest.ephemeral) this.currentFloorOpenedChests.push(chest.index);
+    }
+
+    this.events.emit("chest-screen", {
+      items: chest.lootItems.map((item, itemIndex) => ({
+        itemIndex,
+        itemId: item.itemId,
+        quantity: item.quantity,
+      })),
+    });
+  }
+
+  takeChestItem(itemIndex) {
+    const chest = this.activeChest;
+    if (!chest) return;
+    const item = chest.lootItems[itemIndex];
+    if (!item) return;
+
+    this.addItemToInventory(item.itemId, item.quantity);
+    chest.lootItems.splice(itemIndex, 1);
+    if (!chest.ephemeral) this.saveChestRemainingLoot(chest);
+
+    if (chest.lootItems.length === 0) {
+      this.closeChestScreen();
+      return;
+    }
+
+    this.events.emit("chest-screen", {
+      items: chest.lootItems.map((it, idx) => ({
+        itemIndex: idx,
+        itemId: it.itemId,
+        quantity: it.quantity,
+      })),
+    });
+  }
+
+  takeAllChestItems() {
+    const chest = this.activeChest;
+    if (!chest) return;
+    for (const item of chest.lootItems) {
+      this.addItemToInventory(item.itemId, item.quantity);
+    }
+    chest.lootItems = [];
+    if (!chest.ephemeral) this.saveChestRemainingLoot(chest);
+    this.closeChestScreen();
+  }
+
+  closeChestScreen() {
+    this.unpauseGame("chest");
+    this.activeChest = null;
+    this.events.emit("chest-screen", null);
+  }
+
+  saveChestRemainingLoot(chest) {
+    if (chest.lootItems.length > 0) {
+      this.currentFloorChestRemainingLoot[chest.index] = chest.lootItems.map(
+        (i) => ({ ...i }),
+      );
+    } else {
+      delete this.currentFloorChestRemainingLoot[chest.index];
     }
   }
 
@@ -5108,6 +5603,58 @@ export default class MainScene extends Phaser.Scene {
     }
   }
 
+  /**
+   * Cree un emetteur de particules purement decoratif, attache et suivant
+   * un sprite d'ennemi - fire/ice/gas selon enemy.visualEffect (optionnel,
+   * cf. ENEMY_TYPES cote serveur). Aucun impact sur le gameplay - pure
+   * decoration, independante de inflictsEffect/damageType.
+   */
+  createEnemyVisualEffect(sprite, effectType) {
+    const configs = {
+      fire: {
+        texture: "particle-fire",
+        speed: { min: 8, max: 20 },
+        scale: { start: 1.5, end: 0 },
+        alpha: { start: 2.0, end: 0 },
+        lifespan: 450,
+        frequency: 120,
+      },
+      ice: {
+        texture: "particle-ice",
+        speed: { min: 5, max: 15 },
+        scale: { start: 0.6, end: 0 },
+        alpha: { start: 0.7, end: 0 },
+        lifespan: 700,
+        frequency: 100,
+      },
+      gas: {
+        texture: "particle-gas",
+        speed: { min: 5, max: 20 },
+        scale: { start: 1, end: 0.3 },
+        alpha: { start: 0.5, end: 0 },
+        lifespan: 900,
+        frequency: 80,
+      },
+    };
+    const config = configs[effectType];
+    if (!config) return null;
+
+    const emitter = this.add.particles(
+      sprite.x,
+      sprite.y - 30,
+      config.texture,
+      {
+        speed: config.speed,
+        scale: config.scale,
+        alpha: config.alpha,
+        lifespan: config.lifespan,
+        frequency: config.frequency,
+        blendMode: "ADD",
+      },
+    );
+    emitter.setDepth(sprite.depth + 1);
+    return emitter;
+  }
   getEffectiveEnemySpeed(enemy) {
     let multiplier = 1;
     for (const effect of enemy.statusEffects) {
@@ -5303,9 +5850,7 @@ export default class MainScene extends Phaser.Scene {
           this.showLootToast("Furie prête !");
         }
       }
-      if (enemy.drops && enemy.drops.length > 0) {
-        this.spawnLootChest(enemy.sprite.x, enemy.sprite.y, enemy.drops);
-      }
+      const lootItems = [...(enemy.drops || [])];
 
       if (!enemy.isBoss && enemy.questLoot) {
         for (const questKey of Object.keys(this.quests)) {
@@ -5318,11 +5863,13 @@ export default class MainScene extends Phaser.Scene {
             .reduce((sum, i) => sum + i.quantity, 0);
           if (haveQty >= (qs.targetQuantity || 1)) continue;
 
-          this.addItemToInventory(enemy.questLoot, 1);
-          const lootDef = resolveItemDef(enemy.questLoot);
-          this.showLootToast(`${lootDef.name} obtenu !`);
+          lootItems.push({ itemId: enemy.questLoot, quantity: 1 });
           break;
         }
+      }
+
+      if (lootItems.length > 0) {
+        this.spawnLootChest(enemy.sprite.x, enemy.sprite.y, lootItems);
       }
 
       if (enemy.isBoss) {
@@ -5331,21 +5878,27 @@ export default class MainScene extends Phaser.Scene {
           const qs = this.quests[questKey];
           if (qs.questId !== "obtainItem" || !qs.accepted || qs.completed)
             continue;
+          if (!qs.isBossItem) continue; // <-- nouveau : jamais un objet issu d'un ennemi normal
           neededCounts[qs.targetItemId] =
             (neededCounts[qs.targetItemId] || 0) + 1;
         }
+        const bossLootItems = [];
         for (const [itemId, neededCount] of Object.entries(neededCounts)) {
           const haveCount = this.inventory
             .filter((i) => i.itemId === itemId)
             .reduce((sum, i) => sum + i.quantity, 0);
           const toGrant = neededCount - haveCount;
-          if (toGrant > 0) {
-            this.addItemToInventory(itemId, toGrant);
-            const itemDef = resolveItemDef(itemId);
-            this.showLootToast(
-              `Le boss laisse tomber : ${itemDef.name} x${toGrant}`,
-            );
-          }
+          if (toGrant > 0) bossLootItems.push({ itemId, quantity: toGrant });
+        }
+        if (enemy.drop) {
+          bossLootItems.push({
+            itemId: enemy.drop.itemId,
+            quantity: enemy.drop.quantity,
+          });
+        }
+        if (bossLootItems.length > 0) {
+          this.spawnLootChest(enemy.sprite.x, enemy.sprite.y, bossLootItems);
+          this.showLootToast("Le boss a laissé tomber un coffre de butin !");
         }
 
         let anyDefeatBossUpdated = false;
@@ -5386,6 +5939,7 @@ export default class MainScene extends Phaser.Scene {
         this.events.emit("quests-updated", { ...this.quests });
         this.persistProgress();
       }
+      if (enemy.visualEmitter) enemy.visualEmitter.destroy();
 
       enemy.sprite.destroy();
       this.enemies = this.enemies.filter((e) => e !== enemy);
@@ -5502,6 +6056,37 @@ export default class MainScene extends Phaser.Scene {
     this.events.emit("level-up", { level });
     this.events.emit("levelup-available", { available: false });
     this.persistProgress();
+  }
+  /**
+   * Debloque tout ce qui a unlockLevel <= niveau actuel - separee
+   * d'applyPendingLevelUp car appelee aussi a la CREATION du personnage
+   * (niveau 1), moment ou aucune vraie "montee de niveau" ne se produit
+   * jamais (on demarre deja a ce niveau, on ne le "franchit" pas).
+   */
+  unlockAvailableAbilitiesAndRecipes() {
+    const heroArchetype = resolveHeroStatsOverride(
+      this.heroSpriteKey,
+    )?.archetype;
+    for (const def of Object.values(ABILITY_DEFS)) {
+      if (
+        def.archetypes &&
+        def.archetypes.length > 0 &&
+        !def.archetypes.includes(heroArchetype)
+      )
+        continue;
+      if (def.unlockLevel == null || def.unlockLevel > this.playerLevel)
+        continue;
+      if (this.unlockedAbilities.includes(def.id)) continue;
+      if (def.staminaCost && this.playerMaxStamina <= 0) continue;
+      if (def.manaCost && this.playerMaxMana <= 0) continue;
+      this.unlockedAbilities.push(def.id);
+    }
+    for (const recipe of Object.values(CRAFTING_RECIPES)) {
+      if (recipe.unlockLevel == null || recipe.unlockLevel > this.playerLevel)
+        continue;
+      if (this.unlockedRecipes.includes(recipe.id)) continue;
+      this.unlockedRecipes.push(recipe.id);
+    }
   }
 
   allocateAttributePoint(attribute) {

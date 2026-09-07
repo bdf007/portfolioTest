@@ -57,7 +57,7 @@ export const ITEM_DEFS = {
     slot: "mainHand",
     twoHanded: true, // occupe les DEUX mains - equiper libere mainHand ET offHand (cf. MainScene.equipItem)
     grantsRanged: true, // sans arme marquee ainsi equipee (ici ou en offHand), l'attaque a distance est indisponible - cf. MainScene.canUseRangedAttack
-    requiresAmmo: ["woodenArrow"], // itemId EXACT requis (pas juste un booleen) - un carreau ne peut pas alimenter un arc, cf. MainScene.performRangedAttack
+    requiresAmmo: ["woodenArrow", "bronzeArrow"], // itemId EXACT requis (pas juste un booleen) - un carreau ne peut pas alimenter un arc, cf. MainScene.performRangedAttack
     name: "Arc en bois",
     description:
       "+1 dégât à distance. Nécessite des flèches. Arme d'entraînement de départ.",
@@ -249,9 +249,10 @@ export const ITEM_DEFS = {
     slot: "mainHand",
     twoHanded: true,
     grantsRanged: true,
-    requiresAmmo: ["woodenArrow", "ironArrow"],
+    requiresAmmo: ["woodenArrow", "ironArrow", "bronzeArrow"],
     name: "Arc de chasse",
     description: "+4 dégâts à distance. +5 de distance d'attaque",
+    unique: true,
     statBonus: { rangedDamage: 4, rangedRange: 5 },
     stackable: false,
     archetypes: ["archer"],
@@ -622,6 +623,15 @@ export const ITEM_DEFS = {
     statBonus: { rangedDamage: 15 },
     stackable: true,
     archetypes: ["archer"],
+    inflictsEffect: {
+      // chance d'infliger un effet par coup - PAS de cooldown ici
+      type: "acid",
+      kind: "dot",
+      chance: 0.3,
+      damagePerTick: 3,
+      tickIntervalMs: 1000,
+      ticks: 3,
+    },
     unlockLevel: 5,
     price: 45,
   },
@@ -868,6 +878,15 @@ export const ITEM_DEFS = {
     grantsRecipe: "healthPotion",
     stackable: true,
     price: 50,
+  },
+  woodenArrowRecipe: {
+    id: "woodenArrowRecipe",
+    category: "recipeScroll",
+    name: "Plan : Flèche en bois",
+    description: "Apprend la recette de la flèche en bois.",
+    grantsRecipe: "woodenArrow",
+    stackable: true,
+    price: 40,
   },
 
   // craft material

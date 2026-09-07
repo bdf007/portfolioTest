@@ -1,13 +1,8 @@
+import { useState, useEffect } from "react";
 import { resolveItemDef } from "./itemDefs";
 
-/**
- * Écran de boutique - overlay superposé au jeu (même modèle que
- * InventoryScreen/TravelHubScreen). Le stock est fixe (généré côté
- * serveur, cf. shopGenerator.js) - ce composant n'a aucune logique
- * propre, juste de l'affichage et des clics. L'or disponible est lu
- * directement dans `inventory` (déjà suivi par ailleurs), pas besoin
- * d'une prop dédiée.
- */
+const SELL_PRICE_RATIO = 0.5; // doit rester synchronise avec MainScene.js
+
 export default function ShopScreen({
   stock,
   inventory,
@@ -15,9 +10,34 @@ export default function ShopScreen({
   onSell,
   onClose,
 }) {
+  const [buyQuantities, setBuyQuantities] = useState({});
+  const [sellQuantities, setSellQuantities] = useState({});
+
+  // reinitialise les selecteurs a chaque changement reel de stock/inventaire
+  // (apres un achat/une vente) - evite tout desalignement d'index si une
+  // ligne disparait (objet rachete integralement, stack vide...)
+  useEffect(() => {
+    setBuyQuantities({});
+    setSellQuantities({});
+  }, [stock, inventory]);
+
   const goldEntry = inventory.find((i) => i.itemId === "gold");
   const currentGold = goldEntry ? goldEntry.quantity : 0;
-  const SELL_PRICE_RATIO = 0.5; // doit rester synchronise avec MainScene.js (SELL_PRICE_RATIO)
+
+  function getQty(store, index, max) {
+    const q = store[index] || 1;
+    return max != null ? Math.min(Math.max(1, q), max) : Math.max(1, q);
+  }
+
+  function adjustQty(setStore, index, delta, max) {
+    setStore((prev) => {
+      const current = prev[index] || 1;
+      let next = current + delta;
+      next = Math.max(1, next);
+      if (max != null) next = Math.min(next, max);
+      return { ...prev, [index]: next };
+    });
+  }
 
   return (
     <div
@@ -75,7 +95,12 @@ export default function ShopScreen({
       >
         {stock.map((shopItem, index) => {
           const def = resolveItemDef(shopItem.itemId);
-          const canAfford = currentGold >= shopItem.price;
+          const maxQty = shopItem.soldByPlayer ? shopItem.quantity : null;
+          const qty = getQty(buyQuantities, index, maxQty);
+          const totalPrice = shopItem.price * qty;
+          const canAfford = currentGold >= totalPrice;
+          const atMax = maxQty != null && qty >= maxQty;
+
           return (
             <div
               key={`${shopItem.itemId}-${index}`}
@@ -91,29 +116,72 @@ export default function ShopScreen({
               }}
             >
               <div>
-                <div style={{ fontSize: 13 }}>{def.name}</div>
+                <div style={{ fontSize: 13 }}>
+                  {def.name}
+                  {shopItem.soldByPlayer ? ` (${shopItem.quantity} dispo)` : ""}
+                </div>
                 <div style={{ fontSize: 11, color: "#8a7050", marginTop: 2 }}>
                   {def.description}
                 </div>
                 <div style={{ fontSize: 12, color: "#d4af37", marginTop: 4 }}>
-                  {shopItem.price} or
+                  {totalPrice} or {qty > 1 ? `(${shopItem.price}/u.)` : ""}
                 </div>
               </div>
-              <button
-                onClick={() => onBuy(index)}
-                disabled={!canAfford}
-                style={{
-                  padding: "6px 12px",
-                  fontSize: 12,
-                  borderRadius: 6,
-                  border: "1px solid " + (canAfford ? "#8a7050" : "#444"),
-                  background: canAfford ? "#3a2f20" : "#2a2a30",
-                  color: canAfford ? "#f0e6d0" : "#666",
-                  cursor: canAfford ? "pointer" : "not-allowed",
-                }}
-              >
-                Acheter
-              </button>
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <button
+                  onClick={() => adjustQty(setBuyQuantities, index, -1, maxQty)}
+                  disabled={qty <= 1}
+                  style={{
+                    width: 24,
+                    height: 24,
+                    borderRadius: 5,
+                    border: "1px solid #555",
+                    background: "#2a2a35",
+                    color: "#eee",
+                    cursor: qty <= 1 ? "not-allowed" : "pointer",
+                    fontSize: 13,
+                  }}
+                >
+                  −
+                </button>
+                <span
+                  style={{ fontSize: 13, minWidth: 18, textAlign: "center" }}
+                >
+                  {qty}
+                </span>
+                <button
+                  onClick={() => adjustQty(setBuyQuantities, index, 1, maxQty)}
+                  disabled={atMax}
+                  style={{
+                    width: 24,
+                    height: 24,
+                    borderRadius: 5,
+                    border: "1px solid #555",
+                    background: "#2a2a35",
+                    color: "#eee",
+                    cursor: atMax ? "not-allowed" : "pointer",
+                    fontSize: 13,
+                  }}
+                >
+                  +
+                </button>
+                <button
+                  onClick={() => onBuy(index, qty)}
+                  disabled={!canAfford}
+                  style={{
+                    padding: "6px 12px",
+                    fontSize: 12,
+                    borderRadius: 6,
+                    border: "1px solid " + (canAfford ? "#8a7050" : "#444"),
+                    background: canAfford ? "#3a2f20" : "#2a2a30",
+                    color: canAfford ? "#f0e6d0" : "#666",
+                    cursor: canAfford ? "pointer" : "not-allowed",
+                    marginLeft: 4,
+                  }}
+                >
+                  Acheter
+                </button>
+              </div>
             </div>
           );
         })}
@@ -128,8 +196,13 @@ export default function ShopScreen({
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
         {inventory.map((item, index) => {
           const def = resolveItemDef(item.itemId);
-          if (!def.price) return null; // objets sans prix (or, objets de quete) jamais vendables
-          const sellPrice = Math.floor(def.price * SELL_PRICE_RATIO);
+          if (!def.price) return null;
+          const maxQty = item.quantity;
+          const qty = getQty(sellQuantities, index, maxQty);
+          const unitPrice = Math.floor(def.price * SELL_PRICE_RATIO);
+          const totalPrice = unitPrice * qty;
+          const atMax = qty >= maxQty;
+
           return (
             <div
               key={`${item.itemId}-${index}`}
@@ -149,23 +222,65 @@ export default function ShopScreen({
                   {item.quantity > 1 ? ` x${item.quantity}` : ""}
                 </div>
                 <div style={{ fontSize: 12, color: "#d4af37", marginTop: 4 }}>
-                  {sellPrice} or
+                  {totalPrice} or {qty > 1 ? `(${unitPrice}/u.)` : ""}
                 </div>
               </div>
-              <button
-                onClick={() => onSell(index)}
-                style={{
-                  padding: "6px 12px",
-                  fontSize: 12,
-                  borderRadius: 6,
-                  border: "1px solid #8a7050",
-                  background: "#3a2f20",
-                  color: "#f0e6d0",
-                  cursor: "pointer",
-                }}
-              >
-                Vendre
-              </button>
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <button
+                  onClick={() =>
+                    adjustQty(setSellQuantities, index, -1, maxQty)
+                  }
+                  disabled={qty <= 1}
+                  style={{
+                    width: 24,
+                    height: 24,
+                    borderRadius: 5,
+                    border: "1px solid #555",
+                    background: "#2a2a35",
+                    color: "#eee",
+                    cursor: qty <= 1 ? "not-allowed" : "pointer",
+                    fontSize: 13,
+                  }}
+                >
+                  −
+                </button>
+                <span
+                  style={{ fontSize: 13, minWidth: 18, textAlign: "center" }}
+                >
+                  {qty}
+                </span>
+                <button
+                  onClick={() => adjustQty(setSellQuantities, index, 1, maxQty)}
+                  disabled={atMax}
+                  style={{
+                    width: 24,
+                    height: 24,
+                    borderRadius: 5,
+                    border: "1px solid #555",
+                    background: "#2a2a35",
+                    color: "#eee",
+                    cursor: atMax ? "not-allowed" : "pointer",
+                    fontSize: 13,
+                  }}
+                >
+                  +
+                </button>
+                <button
+                  onClick={() => onSell(index, qty)}
+                  style={{
+                    padding: "6px 12px",
+                    fontSize: 12,
+                    borderRadius: 6,
+                    border: "1px solid #8a7050",
+                    background: "#3a2f20",
+                    color: "#f0e6d0",
+                    cursor: "pointer",
+                    marginLeft: 4,
+                  }}
+                >
+                  Vendre
+                </button>
+              </div>
             </div>
           );
         })}

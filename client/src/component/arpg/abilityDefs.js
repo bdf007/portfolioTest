@@ -162,12 +162,12 @@ export const ABILITY_DEFS = {
     archetypes: [],
     description:
       "Révèle une large zone du brouillard de guerre autour de toi. 1 stamina.",
-    staminaCost: 15,
-    cooldownMs: 8000,
+    staminaCost: 1,
+    cooldownMs: 10,
     effectType: "fogPulse",
-    radius: 10, // en CASES (coordonnees de tuiles), pas en pixels - different des autres competences
+    radius: 40, // en CASES (coordonnees de tuiles), pas en pixels - different des autres competences
     ignoresWalls: true,
-    disabledBiomes: ["maze1", "maze2"], // ids de biomeConfig.js - absent/vide = utilisable partout
+    // disabledBiomes: ["maze1", "maze2"], // ids de biomeConfig.js - absent/vide = utilisable partout
     unlockLevel: null,
   },
   shieldBash: {

@@ -7,38 +7,44 @@ import {
 } from "../spriteRegistry";
 import {
   DUNGEON_AUTOTILE_SPRITESHEET,
+  FORTRESS_AUTOTILE_SPRITESHEET,
   DESERT_AUTOTILE_SPRITESHEET,
-HILLS1_AUTOTILE_SPRITESHEET,
-HILLS2_AUTOTILE_SPRITESHEET,
-HILLS3_AUTOTILE_SPRITESHEET,
-SNOW_AUTOTILE_SPRITESHEET,
-DARKWOODS_AUTOTILE_SPRITESHEET,
-DARKWOODS2_AUTOTILE_SPRITESHEET,
-STANDARD_FIELDS2_AUTOTILE_SPRITESHEET,
-CITY_WALLS1_AUTOTILE_SPRITESHEET,
-CITY_WALLS2_AUTOTILE_SPRITESHEET,
-CITY_WALLS3_AUTOTILE_SPRITESHEET,
-CITY_WALLSE2_AUTOTILE_SPRITESHEET,
-CITY_WALLSE3_AUTOTILE_SPRITESHEET,
-FORTRESS1_AUTOTILE_SPRITESHEET,
-FORTRESS2_AUTOTILE_SPRITESHEET,
-FORTRESS3_AUTOTILE_SPRITESHEET,
-FORTRESSE1_AUTOTILE_SPRITESHEET,
-FORTRESSE2_AUTOTILE_SPRITESHEET,
-FORTRESSE3_AUTOTILE_SPRITESHEET,
-TECH_FORTRESS1_AUTOTILE_SPRITESHEET,
-TECH_FORTRESS2_AUTOTILE_SPRITESHEET,
-TECH_FORTRESSE1_AUTOTILE_SPRITESHEET,
-TECH_FORTRESSE2_AUTOTILE_SPRITESHEET,
-TOWER1_AUTOTILE_SPRITESHEET,
-TOWER2_AUTOTILE_SPRITESHEET,
-TOWERE1_AUTOTILE_SPRITESHEET,
-TOWERE2_AUTOTILE_SPRITESHEET,
-MINES1_AUTOTILE_SPRITESHEET,
-MINES2_AUTOTILE_SPRITESHEET,
-DESERT_TOWNE1_AUTOTILE_SPRITESHEET,
-DESERT_TOWNE2_AUTOTILE_SPRITESHEET,
-ROUFTOPSF_AUTOTILE_SPRITESHEET,
+  HILLS1_AUTOTILE_SPRITESHEET,
+  HILLS2_AUTOTILE_SPRITESHEET,
+  HILLS3_AUTOTILE_SPRITESHEET,
+  SNOW_AUTOTILE_SPRITESHEET,
+  DARKWOODS_AUTOTILE_SPRITESHEET,
+  DARKWOODS2_AUTOTILE_SPRITESHEET,
+  STANDARD_FIELDS2_AUTOTILE_SPRITESHEET,
+  CITY_WALLS1_AUTOTILE_SPRITESHEET,
+  CITY_WALLS2_AUTOTILE_SPRITESHEET,
+  CITY_WALLS3_AUTOTILE_SPRITESHEET,
+  CITY_WALLSE2_AUTOTILE_SPRITESHEET,
+  CITY_WALLSE3_AUTOTILE_SPRITESHEET,
+  FORTRESS1_AUTOTILE_SPRITESHEET,
+  FORTRESS2_AUTOTILE_SPRITESHEET,
+  FORTRESS3_AUTOTILE_SPRITESHEET,
+  FORTRESSE1_AUTOTILE_SPRITESHEET,
+  FORTRESSE2_AUTOTILE_SPRITESHEET,
+  FORTRESSE3_AUTOTILE_SPRITESHEET,
+  TECH_FORTRESS1_AUTOTILE_SPRITESHEET,
+  TECH_FORTRESS2_AUTOTILE_SPRITESHEET,
+  TECH_FORTRESSE1_AUTOTILE_SPRITESHEET,
+  TECH_FORTRESSE2_AUTOTILE_SPRITESHEET,
+  TOWER1_AUTOTILE_SPRITESHEET,
+  TOWER2_AUTOTILE_SPRITESHEET,
+  TOWER3_AUTOTILE_SPRITESHEET,
+  TOWERE1_AUTOTILE_SPRITESHEET,
+  TOWERE2_AUTOTILE_SPRITESHEET,
+  TOWERE3_AUTOTILE_SPRITESHEET,
+  MINES1_AUTOTILE_SPRITESHEET,
+  MINES2_AUTOTILE_SPRITESHEET,
+  DESERT_TOWNE1_AUTOTILE_SPRITESHEET,
+  DESERT_TOWNE2_AUTOTILE_SPRITESHEET,
+  ROUFTOPSF_AUTOTILE_SPRITESHEET,
+  DUNGEONS_A21_AUTOTILE_SPRITESHEET,
+  DUNGEONS_A22_AUTOTILE_SPRITESHEET,
+  GREY_COASTA51_AUTOTILE_SPRITESHEET,
 } from "../spriteRegistry";
 
 /**
@@ -114,11 +120,27 @@ export default class BootScene extends Phaser.Scene {
       },
     );
     this.load.spritesheet(
-      HILLS_AUTOTILE_SPRITESHEET.key,
-      HILLS_AUTOTILE_SPRITESHEET.path,
+      HILLS1_AUTOTILE_SPRITESHEET.key,
+      HILLS1_AUTOTILE_SPRITESHEET.path,
       {
-        frameWidth: HILLS_AUTOTILE_SPRITESHEET.frameWidth,
-        frameHeight: HILLS_AUTOTILE_SPRITESHEET.frameHeight,
+        frameWidth: HILLS1_AUTOTILE_SPRITESHEET.frameWidth,
+        frameHeight: HILLS1_AUTOTILE_SPRITESHEET.frameHeight,
+      },
+    );
+    this.load.spritesheet(
+      HILLS2_AUTOTILE_SPRITESHEET.key,
+      HILLS2_AUTOTILE_SPRITESHEET.path,
+      {
+        frameWidth: HILLS2_AUTOTILE_SPRITESHEET.frameWidth,
+        frameHeight: HILLS2_AUTOTILE_SPRITESHEET.frameHeight,
+      },
+    );
+    this.load.spritesheet(
+      HILLS3_AUTOTILE_SPRITESHEET.key,
+      HILLS3_AUTOTILE_SPRITESHEET.path,
+      {
+        frameWidth: HILLS3_AUTOTILE_SPRITESHEET.frameWidth,
+        frameHeight: HILLS3_AUTOTILE_SPRITESHEET.frameHeight,
       },
     );
     this.load.spritesheet(
@@ -135,6 +157,238 @@ export default class BootScene extends Phaser.Scene {
       {
         frameWidth: DARKWOODS2_AUTOTILE_SPRITESHEET.frameWidth,
         frameHeight: DARKWOODS2_AUTOTILE_SPRITESHEET.frameHeight,
+      },
+    );
+    this.load.spritesheet(
+      CITY_WALLS1_AUTOTILE_SPRITESHEET.key,
+      CITY_WALLS1_AUTOTILE_SPRITESHEET.path,
+      {
+        frameWidth: CITY_WALLS1_AUTOTILE_SPRITESHEET.frameWidth,
+        frameHeight: CITY_WALLS1_AUTOTILE_SPRITESHEET.frameHeight,
+      },
+    );
+    this.load.spritesheet(
+      CITY_WALLS2_AUTOTILE_SPRITESHEET.key,
+      CITY_WALLS2_AUTOTILE_SPRITESHEET.path,
+      {
+        frameWidth: CITY_WALLS2_AUTOTILE_SPRITESHEET.frameWidth,
+        frameHeight: CITY_WALLS2_AUTOTILE_SPRITESHEET.frameHeight,
+      },
+    );
+    this.load.spritesheet(
+      CITY_WALLS3_AUTOTILE_SPRITESHEET.key,
+      CITY_WALLS3_AUTOTILE_SPRITESHEET.path,
+      {
+        frameWidth: CITY_WALLS3_AUTOTILE_SPRITESHEET.frameWidth,
+        frameHeight: CITY_WALLS3_AUTOTILE_SPRITESHEET.frameHeight,
+      },
+    );
+    this.load.spritesheet(
+      CITY_WALLSE2_AUTOTILE_SPRITESHEET.key,
+      CITY_WALLSE2_AUTOTILE_SPRITESHEET.path,
+      {
+        frameWidth: CITY_WALLSE2_AUTOTILE_SPRITESHEET.frameWidth,
+        frameHeight: CITY_WALLSE2_AUTOTILE_SPRITESHEET.frameHeight,
+      },
+    );
+    this.load.spritesheet(
+      CITY_WALLSE3_AUTOTILE_SPRITESHEET.key,
+      CITY_WALLSE3_AUTOTILE_SPRITESHEET.path,
+      {
+        frameWidth: CITY_WALLSE3_AUTOTILE_SPRITESHEET.frameWidth,
+        frameHeight: CITY_WALLSE3_AUTOTILE_SPRITESHEET.frameHeight,
+      },
+    );
+    this.load.spritesheet(
+      FORTRESS1_AUTOTILE_SPRITESHEET.key,
+      FORTRESS1_AUTOTILE_SPRITESHEET.path,
+      {
+        frameWidth: FORTRESS1_AUTOTILE_SPRITESHEET.frameWidth,
+        frameHeight: FORTRESS1_AUTOTILE_SPRITESHEET.frameHeight,
+      },
+    );
+    this.load.spritesheet(
+      FORTRESS2_AUTOTILE_SPRITESHEET.key,
+      FORTRESS2_AUTOTILE_SPRITESHEET.path,
+      {
+        frameWidth: FORTRESS2_AUTOTILE_SPRITESHEET.frameWidth,
+        frameHeight: FORTRESS2_AUTOTILE_SPRITESHEET.frameHeight,
+      },
+    );
+    this.load.spritesheet(
+      FORTRESS3_AUTOTILE_SPRITESHEET.key,
+      FORTRESS3_AUTOTILE_SPRITESHEET.path,
+      {
+        frameWidth: FORTRESS3_AUTOTILE_SPRITESHEET.frameWidth,
+        frameHeight: FORTRESS3_AUTOTILE_SPRITESHEET.frameHeight,
+      },
+    );
+    this.load.spritesheet(
+      FORTRESSE1_AUTOTILE_SPRITESHEET.key,
+      FORTRESSE1_AUTOTILE_SPRITESHEET.path,
+      {
+        frameWidth: FORTRESSE1_AUTOTILE_SPRITESHEET.frameWidth,
+        frameHeight: FORTRESSE1_AUTOTILE_SPRITESHEET.frameHeight,
+      },
+    );
+    this.load.spritesheet(
+      FORTRESSE2_AUTOTILE_SPRITESHEET.key,
+      FORTRESSE2_AUTOTILE_SPRITESHEET.path,
+      {
+        frameWidth: FORTRESSE2_AUTOTILE_SPRITESHEET.frameWidth,
+        frameHeight: FORTRESSE2_AUTOTILE_SPRITESHEET.frameHeight,
+      },
+    );
+    this.load.spritesheet(
+      FORTRESSE3_AUTOTILE_SPRITESHEET.key,
+      FORTRESSE3_AUTOTILE_SPRITESHEET.path,
+      {
+        frameWidth: FORTRESSE3_AUTOTILE_SPRITESHEET.frameWidth,
+        frameHeight: FORTRESSE3_AUTOTILE_SPRITESHEET.frameHeight,
+      },
+    );
+    this.load.spritesheet(
+      TECH_FORTRESS1_AUTOTILE_SPRITESHEET.key,
+      TECH_FORTRESS1_AUTOTILE_SPRITESHEET.path,
+      {
+        frameWidth: TECH_FORTRESS1_AUTOTILE_SPRITESHEET.frameWidth,
+        frameHeight: TECH_FORTRESS1_AUTOTILE_SPRITESHEET.frameHeight,
+      },
+    );
+    this.load.spritesheet(
+      TECH_FORTRESS2_AUTOTILE_SPRITESHEET.key,
+      TECH_FORTRESS2_AUTOTILE_SPRITESHEET.path,
+      {
+        frameWidth: TECH_FORTRESS2_AUTOTILE_SPRITESHEET.frameWidth,
+        frameHeight: TECH_FORTRESS2_AUTOTILE_SPRITESHEET.frameHeight,
+      },
+    );
+    this.load.spritesheet(
+      TECH_FORTRESSE1_AUTOTILE_SPRITESHEET.key,
+      TECH_FORTRESSE1_AUTOTILE_SPRITESHEET.path,
+      {
+        frameWidth: TECH_FORTRESSE1_AUTOTILE_SPRITESHEET.frameWidth,
+        frameHeight: TECH_FORTRESSE1_AUTOTILE_SPRITESHEET.frameHeight,
+      },
+    );
+    this.load.spritesheet(
+      TECH_FORTRESSE2_AUTOTILE_SPRITESHEET.key,
+      TECH_FORTRESSE2_AUTOTILE_SPRITESHEET.path,
+      {
+        frameWidth: TECH_FORTRESSE2_AUTOTILE_SPRITESHEET.frameWidth,
+        frameHeight: TECH_FORTRESSE2_AUTOTILE_SPRITESHEET.frameHeight,
+      },
+    );
+    this.load.spritesheet(
+      TOWER1_AUTOTILE_SPRITESHEET.key,
+      TOWER1_AUTOTILE_SPRITESHEET.path,
+      {
+        frameWidth: TOWER1_AUTOTILE_SPRITESHEET.frameWidth,
+        frameHeight: TOWER1_AUTOTILE_SPRITESHEET.frameHeight,
+      },
+    );
+    this.load.spritesheet(
+      TOWER2_AUTOTILE_SPRITESHEET.key,
+      TOWER2_AUTOTILE_SPRITESHEET.path,
+      {
+        frameWidth: TOWER2_AUTOTILE_SPRITESHEET.frameWidth,
+        frameHeight: TOWER2_AUTOTILE_SPRITESHEET.frameHeight,
+      },
+    );
+    this.load.spritesheet(
+      TOWER3_AUTOTILE_SPRITESHEET.key,
+      TOWER3_AUTOTILE_SPRITESHEET.path,
+      {
+        frameWidth: TOWER3_AUTOTILE_SPRITESHEET.frameWidth,
+        frameHeight: TOWER3_AUTOTILE_SPRITESHEET.frameHeight,
+      },
+    );
+    this.load.spritesheet(
+      TOWERE1_AUTOTILE_SPRITESHEET.key,
+      TOWERE1_AUTOTILE_SPRITESHEET.path,
+      {
+        frameWidth: TOWERE1_AUTOTILE_SPRITESHEET.frameWidth,
+        frameHeight: TOWERE1_AUTOTILE_SPRITESHEET.frameHeight,
+      },
+    );
+    this.load.spritesheet(
+      TOWERE2_AUTOTILE_SPRITESHEET.key,
+      TOWERE2_AUTOTILE_SPRITESHEET.path,
+      {
+        frameWidth: TOWERE2_AUTOTILE_SPRITESHEET.frameWidth,
+        frameHeight: TOWERE2_AUTOTILE_SPRITESHEET.frameHeight,
+      },
+    );
+    this.load.spritesheet(
+      MINES1_AUTOTILE_SPRITESHEET.key,
+      MINES1_AUTOTILE_SPRITESHEET.path,
+      {
+        frameWidth: MINES1_AUTOTILE_SPRITESHEET.frameWidth,
+        frameHeight: MINES1_AUTOTILE_SPRITESHEET.frameHeight,
+      },
+    );
+    this.load.spritesheet(
+      TOWERE3_AUTOTILE_SPRITESHEET.key,
+      TOWERE3_AUTOTILE_SPRITESHEET.path,
+      {
+        frameWidth: TOWERE3_AUTOTILE_SPRITESHEET.frameWidth,
+        frameHeight: TOWERE3_AUTOTILE_SPRITESHEET.frameHeight,
+      },
+    );
+    this.load.spritesheet(
+      MINES2_AUTOTILE_SPRITESHEET.key,
+      MINES2_AUTOTILE_SPRITESHEET.path,
+      {
+        frameWidth: MINES2_AUTOTILE_SPRITESHEET.frameWidth,
+        frameHeight: MINES2_AUTOTILE_SPRITESHEET.frameHeight,
+      },
+    );
+    this.load.spritesheet(
+      DESERT_TOWNE1_AUTOTILE_SPRITESHEET.key,
+      DESERT_TOWNE1_AUTOTILE_SPRITESHEET.path,
+      {
+        frameWidth: DESERT_TOWNE1_AUTOTILE_SPRITESHEET.frameWidth,
+        frameHeight: DESERT_TOWNE1_AUTOTILE_SPRITESHEET.frameHeight,
+      },
+    );
+    this.load.spritesheet(
+      DESERT_TOWNE2_AUTOTILE_SPRITESHEET.key,
+      DESERT_TOWNE2_AUTOTILE_SPRITESHEET.path,
+      {
+        frameWidth: DESERT_TOWNE2_AUTOTILE_SPRITESHEET.frameWidth,
+        frameHeight: DESERT_TOWNE2_AUTOTILE_SPRITESHEET.frameHeight,
+      },
+    );
+    this.load.spritesheet(
+      ROUFTOPSF_AUTOTILE_SPRITESHEET.key,
+      ROUFTOPSF_AUTOTILE_SPRITESHEET.path,
+      {
+        frameWidth: ROUFTOPSF_AUTOTILE_SPRITESHEET.frameWidth,
+        frameHeight: ROUFTOPSF_AUTOTILE_SPRITESHEET.frameHeight,
+      },
+    );
+    this.load.spritesheet(
+      GREY_COASTA51_AUTOTILE_SPRITESHEET.key,
+      GREY_COASTA51_AUTOTILE_SPRITESHEET.path,
+      {
+        frameWidth: GREY_COASTA51_AUTOTILE_SPRITESHEET.frameWidth,
+        frameHeight: GREY_COASTA51_AUTOTILE_SPRITESHEET.frameHeight,
+      },
+    );
+    this.load.spritesheet(
+      DUNGEONS_A21_AUTOTILE_SPRITESHEET.key,
+      DUNGEONS_A21_AUTOTILE_SPRITESHEET.path,
+      {
+        frameWidth: DUNGEONS_A21_AUTOTILE_SPRITESHEET.frameWidth,
+        frameHeight: DUNGEONS_A21_AUTOTILE_SPRITESHEET.frameHeight,
+      },
+    );
+    this.load.spritesheet(
+      DUNGEONS_A22_AUTOTILE_SPRITESHEET.key,
+      DUNGEONS_A22_AUTOTILE_SPRITESHEET.path,
+      {
+        frameWidth: DUNGEONS_A22_AUTOTILE_SPRITESHEET.frameWidth,
+        frameHeight: DUNGEONS_A22_AUTOTILE_SPRITESHEET.frameHeight,
       },
     );
     this.load.spritesheet(CHEST_SPRITESHEET.key, CHEST_SPRITESHEET.path, {
