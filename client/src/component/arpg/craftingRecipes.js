@@ -10,6 +10,14 @@ export const CRAFTING_RECIPES = {
     ],
     unlockLevel: 1, // optionnel - deblocage automatique par niveau, comme les competences
   },
+  woodenArrow: {
+    id: "woodenArrow",
+    name: "Flèche en bois",
+    resultItemId: "woodenArrow", // doit exister dans itemDefs.js
+    resultQuantity: 5,
+    ingredients: [{ itemId: "deerAntler", quantity: 1 }],
+    unlockLevel: 1,
+  },
 
   // recipe for enchanting weapons
 

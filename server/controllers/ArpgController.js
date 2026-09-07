@@ -176,6 +176,7 @@ async function getLevel(req, res) {
         xpReward: bossConfig.stats.xpReward,
         attackType: bossConfig.stats.attackType || "melee", // pas encore defini dans BOSS_ASSIGNMENTS (cf. bossConfig.js) - repli explicite, prêt si un futur boss veut attaquer a distance
         inflictsEffect: bossConfig.stats.inflictsEffect || null,
+        visualEffect: bossConfig.stats.visualEffect || null,
         drop: rollLoot("bossDrop", bossLootRng, depth),
       };
     } else {
@@ -470,6 +471,30 @@ async function getLevel(req, res) {
       }));
     }
 
+    // Cases interdites au placement d'ennemis/coffres, PEU IMPORTE le
+    // biome - correctif ajoute car allowedTiles ne valait jamais autre
+    // chose que null en dehors d'un etage a boss : rien n'empechait
+    // jusqu'ici un ennemi ou un coffre de recouvrir la sortie,
+    // l'escalier, la boutique, le hub de voyage, ou la porte du boss
+    // (deja fermee via allowedTiles, mais pas exclue en tant que CASE
+    // precise - un coffre pouvait donc apparaitre pile dessus). Place
+    // ICI (apres que tous les landmarks de ville soient connus, juste
+    // avant enemySpawns/generateChests) pour beneficier aux deux a la
+    // fois.
+    if (!allowedTiles) {
+      allowedTiles = reachableFloorSet(grid, playerSpawn);
+    }
+    const landmarkTiles = [
+      exitTile,
+      upstairsTile,
+      bossDoorTile,
+      shop,
+      travelHubTile,
+    ];
+    for (const tile of landmarkTiles) {
+      if (tile) allowedTiles.delete(`${tile.x},${tile.y}`);
+    }
+
     // Pas de persistance de l'etat "tue/vivant" ici, volontairement : a
     // chaque appel (donc a chaque entree/retour sur cet etage), on
     // regenere une liste d'ennemis fraiche et entierement vivante. C'est
@@ -478,7 +503,7 @@ async function getLevel(req, res) {
     // voir le commentaire en tete de enemySpawner.js.
     const enemySpawns = generateEnemySpawns({
       grid,
-      seed: seed + "-enemies",
+      seed: lootSeed + "-enemies", // <-- lootSeed au lieu de seed : position variable a chaque vraie revisite, stable en sauvegarde+reprise
       playerSpawn,
       enemyCount: biome.enemyBaseCount,
       allowedTiles,
@@ -490,7 +515,7 @@ async function getLevel(req, res) {
     // visuel (sprite) et mecanique (stats) ne puissent jamais diverger
     // entre les deux. Seed dediee, distincte de celle des positions de
     // spawn, pour ne pas coupler les deux tirages.
-    const enemyTypeRng = createRng(seed + "-enemy-types");
+    const enemyTypeRng = createRng(lootSeed + "-enemy-types"); // <-- idem, pour le TYPE d'ennemi choisi a chaque point de spawn
     const enemyLootRng = createRng(lootSeed + "-enemy-loot");
     const enemyTypeCandidates = biome.enemyTypes || ["enemyDefault"];
     const enemies = enemySpawns.map((spawn) => {
@@ -511,6 +536,7 @@ async function getLevel(req, res) {
         xpReward: stats.xpReward,
         attackType: stats.attackType,
         damageType: stats.damageType || "physical",
+        visualEffect: stats.visualEffect || null,
         resistances: stats.resistances || {},
         // PLURIEL desormais (drops, pas drop) - plusieurs tirages
         // independants (2) au lieu d'un seul, pour permettre un coffre
@@ -534,10 +560,11 @@ async function getLevel(req, res) {
 
     // coffres : meme principe que les ennemis (tires cote serveur,
     // contenu deja fixe a la generation) - exclut la salle de boss
-    // scellee du placement, comme les ennemis
+    // scellee ET les cases-repere (sortie/escalier/boutique/hub) du
+    // placement
     const chests = generateChests({
       grid,
-      seed,
+      seed: lootSeed, // <-- lootSeed au lieu de seed : position/nombre de coffres varient aussi desormais
       lootSeed,
       playerSpawn,
       chestCount: biome.chestCount,

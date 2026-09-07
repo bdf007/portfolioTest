@@ -620,6 +620,7 @@ const ENEMY_TYPES = {
     speedGrowthPerDepth: 4,
     defenseGrowthEveryNDepths: 5,
     resistances: { fire: 1, cold: -0.5, lightning: 0 },
+    visualEffect: "fire",
     lootTable: "deer1Drop",
   },
   deer2: {
@@ -981,6 +982,7 @@ function getEnemyStatsForDepth(depth, typeKey = "enemyDefault") {
     questLoot: type.questLoot || null,
     inflictsEffect: type.inflictsEffect || null,
     damageType: type.damageType || "physical",
+    visualEffect: type.visualEffect || null,
     lootTable: type.lootTable || null,
     resistances: type.resistances || {},
   };

@@ -11,6 +11,7 @@ import TravelHubScreen from "./TravelHubScreen";
 import ShopScreen from "./ShopScreen";
 import HotbarScreen from "./HotbarScreen";
 import CraftingScreen from "./CraftingScreen";
+import ChestScreen from "./ChestScreen";
 import TouchControls from "./TouchControls";
 import { computeLevelFromXp, getPlayerStatsForLevel } from "./leveling";
 import { resolveHeroStatsOverride } from "./spriteRegistry";
@@ -18,6 +19,8 @@ import { computeEquipmentBonuses } from "./equipment";
 import { resolveAbilityDef } from "./abilityDefs";
 import { resolveItemDef } from "./itemDefs";
 import { fetchMyGames, abandonGame, deleteGame } from "../../api/arpgClient";
+import AttributesScreen from "./AttributesScreen";
+import FullMapScreen from "./FullMapScreen";
 
 /**
  * Overlay sombre qui se dissout progressivement au-dessus d'un
@@ -105,8 +108,9 @@ export default function Arpg() {
   const [minimapData, setMinimapData] = useState(null);
   const [npcDialog, setNpcDialog] = useState(null);
   const [quests, setQuests] = useState({});
-  const [upstairsPrompt, setUpstairsPrompt] = useState(false);
-  const [exitPrompt, setExitPrompt] = useState(false);
+  const [chestScreenData, setChestScreenData] = useState(null);
+  const [upstairsPrompt, setUpstairsPrompt] = useState(null);
+  const [exitPrompt, setExitPrompt] = useState(null);
   const [resummonPrompt, setResummonPrompt] = useState(null);
   const [inventory, setInventory] = useState([]);
   const [equipped, setEquipped] = useState({
@@ -123,6 +127,7 @@ export default function Arpg() {
     quiver: null,
   });
   const [inventoryOpen, setInventoryOpen] = useState(false);
+  const [fullMapOpen, setFullMapOpen] = useState(false);
   const [travelDestinations, setTravelDestinations] = useState(null);
   const [shopStock, setShopStock] = useState(null);
   const [questsOpen, setQuestsOpen] = useState(false);
@@ -140,6 +145,14 @@ export default function Arpg() {
 
   const [unlockedRecipes, setUnlockedRecipes] = useState([]);
   const [craftingScreenOpen, setCraftingScreenOpen] = useState(false);
+
+  const [levelUpAvailable, setLevelUpAvailable] = useState(false);
+  const [levelUpScreenOpen, setLevelUpScreenOpen] = useState(false);
+  const [levelUpDraft, setLevelUpDraft] = useState({
+    confirmed: {},
+    draft: {},
+    unspent: 0,
+  });
 
   const loadGamesList = () => {
     fetchMyGames()
@@ -227,10 +240,32 @@ export default function Arpg() {
         clearTimeout(lootToastTimerRef.current);
         lootToastTimerRef.current = setTimeout(() => setLootToast(null), 3500);
       });
-      scene.events.on("upstairs-prompt", (show) => setUpstairsPrompt(!!show));
-      scene.events.on("exit-prompt", (show) => setExitPrompt(!!show));
+      scene.events.on("levelup-available", ({ available }) =>
+        setLevelUpAvailable(available),
+      );
+      scene.events.on("levelup-screen-open", (data) => {
+        if (data) {
+          setLevelUpDraft({
+            confirmed: data.attributes,
+            draft: data.draftAttributes,
+            unspent: data.unspent,
+          });
+          setLevelUpScreenOpen(true);
+        } else {
+          setLevelUpScreenOpen(false);
+        }
+      });
+      scene.events.on("levelup-draft-updated", ({ attributes, unspent }) =>
+        setLevelUpDraft((prev) => ({ ...prev, draft: attributes, unspent })),
+      );
+      scene.events.on("attributes-updated", ({ attributes, unspent }) =>
+        setLevelUpDraft((prev) => ({ ...prev, confirmed: attributes })),
+      );
+      scene.events.on("upstairs-prompt", (data) => setUpstairsPrompt(data));
+      scene.events.on("exit-prompt", (data) => setExitPrompt(data));
       scene.events.on("resummon-prompt", (data) => setResummonPrompt(data));
       scene.events.on("inventory-updated", (inv) => setInventory(inv));
+      scene.events.on("chest-screen", (data) => setChestScreenData(data));
       scene.events.on("travel-hub", (destinations) =>
         setTravelDestinations(destinations),
       );
@@ -285,6 +320,18 @@ export default function Arpg() {
   const handleCloseDialog = () => {
     const scene = gameRef.current?.scene.getScene("MainScene");
     if (scene) scene.closeDialog();
+  };
+  const handleTakeChestItem = (itemIndex) => {
+    const scene = gameRef.current?.scene.getScene("MainScene");
+    if (scene) scene.takeChestItem(itemIndex);
+  };
+  const handleTakeAllChest = () => {
+    const scene = gameRef.current?.scene.getScene("MainScene");
+    if (scene) scene.takeAllChestItems();
+  };
+  const handleCloseChestScreen = () => {
+    const scene = gameRef.current?.scene.getScene("MainScene");
+    if (scene) scene.closeChestScreen();
   };
 
   const handleSaveAndQuit = () => {
@@ -349,6 +396,18 @@ export default function Arpg() {
     if (scene) scene.unpauseGame("inventory");
   };
 
+  const handleOpenFullMap = () => {
+    setFullMapOpen(true);
+    const scene = gameRef.current?.scene.getScene("MainScene");
+    if (scene) scene.pauseGame("fullMap");
+  };
+
+  const handleCloseFullMap = () => {
+    setFullMapOpen(false);
+    const scene = gameRef.current?.scene.getScene("MainScene");
+    if (scene) scene.unpauseGame("fullMap");
+  };
+
   const handleOpenQuests = () => {
     setQuestsOpen(true);
     const scene = gameRef.current?.scene.getScene("MainScene");
@@ -402,6 +461,30 @@ export default function Arpg() {
     if (scene) scene.setKeyboardLayout(next);
   };
 
+  const handleOpenLevelUpScreen = () => {
+    const scene = gameRef.current?.scene.getScene("MainScene");
+    if (scene) scene.openLevelUpScreen();
+  };
+
+  const handleCloseLevelUpScreen = () => {
+    const scene = gameRef.current?.scene.getScene("MainScene");
+    if (scene) scene.closeLevelUpScreen();
+  };
+
+  const handleAllocatePoint = (attribute) => {
+    const scene = gameRef.current?.scene.getScene("MainScene");
+    if (scene) scene.allocateAttributePoint(attribute);
+  };
+  const handleDeallocatePoint = (attribute) => {
+    const scene = gameRef.current?.scene.getScene("MainScene");
+    if (scene) scene.deallocateAttributePoint(attribute);
+  };
+
+  const handleConfirmAllocation = () => {
+    const scene = gameRef.current?.scene.getScene("MainScene");
+    if (scene) scene.confirmAttributeAllocation();
+  };
+
   useEffect(() => {
     function handleGlobalKeyDown(e) {
       if (!gameRef.current) return;
@@ -433,14 +516,14 @@ export default function Arpg() {
     if (scene) scene.closeTravelHub();
   };
 
-  const handleBuyItem = (index) => {
+  const handleBuyItem = (index, quantity) => {
     const scene = gameRef.current?.scene.getScene("MainScene");
-    if (scene) scene.buyItem(index);
+    if (scene) scene.buyItem(index, quantity);
   };
 
-  const handleSellItem = (index) => {
+  const handleSellItem = (index, quantity) => {
     const scene = gameRef.current?.scene.getScene("MainScene");
-    if (scene) scene.sellItem(index);
+    if (scene) scene.sellItem(index, quantity);
   };
 
   const handleCloseShop = () => {
@@ -484,8 +567,9 @@ export default function Arpg() {
     setMinimapData(null);
     setNpcDialog(null);
     setQuests({});
-    setUpstairsPrompt(false);
-    setExitPrompt(false);
+    setChestScreenData(null);
+    setUpstairsPrompt(null);
+    setExitPrompt(null);
     setResummonPrompt(null);
     setInventory([]);
     setEquipped({
@@ -515,6 +599,9 @@ export default function Arpg() {
     setUnlockedRecipes([]);
     setCraftingScreenOpen(false);
     setLevelReady(false);
+    setLevelUpAvailable(false);
+    setLevelUpScreenOpen(false);
+    setLevelUpDraft({ confirmed: {}, draft: {}, unspent: 0 });
 
     setPhase("playing");
   };
@@ -656,10 +743,31 @@ export default function Arpg() {
           }}
           title="Carte"
         >
-          <span className="desktop-button-label">🗺️ Carte</span>
-          <span className="mobile-button-icon">🗺️</span>
+          <span className="desktop-button-label">
+            🗺️
+            <br /> mini Carte
+          </span>
+          <span className="mobile-button-icon">mini🗺️</span>
         </button>
-
+        <button
+          onClick={handleOpenFullMap}
+          style={{
+            padding: isMobile ? "4px 7px" : "4px 12px",
+            fontSize: isMobile ? 14 : 13,
+            borderRadius: 6,
+            border: "1px solid #555",
+            background: "#2a2a35",
+            color: "#eee",
+            cursor: "pointer",
+            flexShrink: 0,
+          }}
+          title="Carte complète"
+        >
+          <span className="desktop-button-label">
+            🗺️ Carte <br /> complète
+          </span>
+          <span className="mobile-button-icon">full🗺️</span>
+        </button>
         {!isMobile && (
           <button
             onClick={handleToggleKeyboardLayout}
@@ -883,111 +991,160 @@ export default function Arpg() {
             transform: "translateX(-50%)",
             zIndex: 15,
             display: "flex",
-            gap: 6,
+            alignItems: "center",
+            gap: 14,
             pointerEvents: "auto",
           }}
         >
-          {hotbarSlots.map((slot, index) => {
-            const iconId = slot
-              ? slot.type === "item"
-                ? slot.itemId
-                : slot.id
-              : null;
-            const showIcon = iconId && hasIconFrame(iconId);
-            const label = slot
-              ? slot.type === "ability"
-                ? resolveAbilityDef(slot.id).name
-                : resolveItemDef(slot.itemId).name
-              : null;
-            const cooldownKey = slot
-              ? slot.type === "ability"
-                ? `ability:${slot.id}`
-                : `item:${slot.itemId}`
-              : null;
-            const cooldownInfo = cooldownKey
-              ? cooldownEvents[cooldownKey]
-              : null;
-            const quantity =
-              slot?.type === "item"
-                ? (inventory.find((i) => i.itemId === slot.itemId)?.quantity ??
-                  0)
+          <div style={{ display: "flex", gap: 6 }}>
+            {hotbarSlots.map((slot, index) => {
+              const iconId = slot
+                ? slot.type === "item"
+                  ? slot.itemId
+                  : slot.id
                 : null;
+              const showIcon = iconId && hasIconFrame(iconId);
+              const label = slot
+                ? slot.type === "ability"
+                  ? resolveAbilityDef(slot.id).name
+                  : resolveItemDef(slot.itemId).name
+                : null;
+              const cooldownKey = slot
+                ? slot.type === "ability"
+                  ? `ability:${slot.id}`
+                  : `item:${slot.itemId}`
+                : null;
+              const cooldownInfo = cooldownKey
+                ? cooldownEvents[cooldownKey]
+                : null;
+              const quantity =
+                slot?.type === "item"
+                  ? (inventory.find((i) => i.itemId === slot.itemId)
+                      ?.quantity ?? 0)
+                  : null;
 
-            return (
-              <div
-                key={index}
-                onClick={() => {
-                  const scene = gameRef.current?.scene.getScene("MainScene");
-                  if (scene) scene.useHotbarSlot(index);
-                }}
-                style={{
-                  width: 42,
-                  height: 42,
-                  borderRadius: 6,
-                  border: "1px solid #555",
-                  background: slot
-                    ? "rgba(58,47,32,0.9)"
-                    : "rgba(30,32,41,0.6)",
-                  color: "#f0e6d0",
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: 9,
-                  textAlign: "center",
-                  padding: 2,
-                  boxSizing: "border-box",
-                  position: "relative",
-                  overflow: "hidden",
-                  cursor: slot ? "pointer" : "default",
-                }}
-                title={label || "Vide"}
-              >
-                <div style={{ fontSize: 10, color: "#8a7050" }}>
-                  {index + 1}
-                </div>
-                {showIcon ? (
-                  <ItemIcon itemId={iconId} scale={1.3} />
-                ) : (
-                  label && (
+              return (
+                <div
+                  key={index}
+                  onClick={() => {
+                    const scene = gameRef.current?.scene.getScene("MainScene");
+                    if (scene) scene.useHotbarSlot(index);
+                  }}
+                  style={{
+                    width: 42,
+                    height: 42,
+                    borderRadius: 6,
+                    border: "1px solid #555",
+                    background: slot
+                      ? "rgba(58,47,32,0.9)"
+                      : "rgba(30,32,41,0.6)",
+                    color: "#f0e6d0",
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: 9,
+                    textAlign: "center",
+                    padding: 2,
+                    boxSizing: "border-box",
+                    position: "relative",
+                    overflow: "hidden",
+                    cursor: slot ? "pointer" : "default",
+                  }}
+                  title={label || "Vide"}
+                >
+                  <div style={{ fontSize: 10, color: "#8a7050" }}>
+                    {index + 1}
+                  </div>
+                  {showIcon ? (
+                    <ItemIcon itemId={iconId} scale={1.3} />
+                  ) : (
+                    label && (
+                      <div
+                        style={{
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                          width: "100%",
+                        }}
+                      >
+                        {label}
+                      </div>
+                    )
+                  )}
+                  {quantity !== null && (
                     <div
                       style={{
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
-                        width: "100%",
+                        position: "absolute",
+                        bottom: 1,
+                        right: 3,
+                        fontSize: 9,
+                        color: "#f0e6d0",
+                        textShadow: "0 0 2px #000, 0 0 2px #000",
                       }}
                     >
-                      {label}
+                      x{quantity}
                     </div>
-                  )
-                )}
-                {quantity !== null && (
-                  <div
-                    style={{
-                      position: "absolute",
-                      bottom: 1,
-                      right: 3,
-                      fontSize: 9,
-                      color: "#f0e6d0",
-                      textShadow: "0 0 2px #000, 0 0 2px #000",
-                    }}
-                  >
-                    x{quantity}
-                  </div>
-                )}
-                {cooldownInfo && (
-                  <HotbarCooldownOverlay
-                    key={cooldownInfo.startedAt}
-                    startedAt={cooldownInfo.startedAt}
-                    cooldownMs={cooldownInfo.cooldownMs}
-                  />
-                )}
-              </div>
-            );
-          })}
-        </div>
+                  )}
+                  {cooldownInfo && (
+                    <HotbarCooldownOverlay
+                      key={cooldownInfo.startedAt}
+                      startedAt={cooldownInfo.startedAt}
+                      cooldownMs={cooldownInfo.cooldownMs}
+                    />
+                  )}
+                </div>
+              );
+            })}
+          </div>
 
+          <button
+            onClick={handleOpenLevelUpScreen}
+            style={{
+              width: 42,
+              height: 42,
+              borderRadius: 6,
+              border: levelUpAvailable ? "2px solid #ffd700" : "1px solid #555",
+              background: levelUpAvailable ? "#3a3320" : "rgba(30,32,41,0.6)",
+              color: "#f0e6d0",
+              fontSize: 20,
+              cursor: "pointer",
+              flexShrink: 0,
+              animation: levelUpAvailable
+                ? "arpg-pulse 1s ease-in-out infinite"
+                : "none",
+            }}
+            title="Monter de niveau"
+          >
+            +
+          </button>
+          <style>{`
+    @keyframes arpg-pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+  `}</style>
+        </div>
+        {/* <button
+          onClick={handleOpenLevelUpScreen}
+          style={{
+            width: 42,
+            height: 42,
+            borderRadius: 6,
+            border: levelUpAvailable ? "2px solid #ffd700" : "1px solid #555",
+            background: levelUpAvailable ? "#3a3320" : "rgba(30,32,41,0.6)",
+            color: "#f0e6d0",
+            fontSize: 20,
+            cursor: "pointer",
+            animation: levelUpAvailable
+              ? "arpg-pulse 1s ease-in-out infinite"
+              : "none",
+          }}
+          title="Monter de niveau"
+        >
+          +
+        </button>
+        <style>{`@keyframes arpg-pulse {0%, 100% { opacity: 1; } 50% { opacity: 0.5; }}`}</style> */}
         {loadError && (
           <div
             style={{
@@ -1126,6 +1283,27 @@ export default function Arpg() {
               gap: 16,
             }}
           >
+            {/* <div>Redescendre à l'étage précédent ?</div> */}
+            {/* {(upstairsPrompt.remainingEnemies > 0 ||
+              upstairsPrompt.unopenedChests > 0) && (
+              <div
+                style={{
+                  fontSize: 13,
+                  color: "#ffcc66",
+                  textAlign: "center",
+                  maxWidth: 320,
+                }}
+              >
+                ⚠️{" "}
+                {upstairsPrompt.remainingEnemies > 0 &&
+                  `${upstairsPrompt.remainingEnemies} ennemi${upstairsPrompt.remainingEnemies > 1 ? "s" : ""} restant${upstairsPrompt.remainingEnemies > 1 ? "s" : ""}`}
+                {upstairsPrompt.remainingEnemies > 0 &&
+                  upstairsPrompt.unopenedChests > 0 &&
+                  " · "}
+                {upstairsPrompt.unopenedChests > 0 &&
+                  `${upstairsPrompt.unopenedChests} coffre${upstairsPrompt.unopenedChests > 1 ? "s" : ""} non ouvert${upstairsPrompt.unopenedChests > 1 ? "s" : ""}`}
+              </div>
+            )} */}
             <div>Redescendre à l'étage précédent ?</div>
             <div style={{ display: "flex", gap: 12 }}>
               <button
@@ -1175,7 +1353,37 @@ export default function Arpg() {
               gap: 16,
             }}
           >
-            <div>Descendre à l'étage suivant ?</div>
+            <div>Monter à l'étage suivant ?</div>
+            {(exitPrompt.remainingEnemies > 0 ||
+              exitPrompt.unopenedChests > 0 ||
+              exitPrompt.partiallyLootedChests > 0) && (
+              <div
+                style={{
+                  fontSize: 13,
+                  color: "#ffcc66",
+                  textAlign: "center",
+                  maxWidth: 340,
+                }}
+              >
+                <div>
+                  ⚠️{" "}
+                  {exitPrompt.remainingEnemies > 0 &&
+                    `${exitPrompt.remainingEnemies} ennemi${exitPrompt.remainingEnemies > 1 ? "s" : ""} restant${exitPrompt.remainingEnemies > 1 ? "s" : ""}`}
+                  {exitPrompt.remainingEnemies > 0 &&
+                    exitPrompt.unopenedChests > 0 &&
+                    " · "}
+                  {exitPrompt.unopenedChests > 0 &&
+                    `${exitPrompt.unopenedChests} coffre${exitPrompt.unopenedChests > 1 ? "s" : ""} non ouvert${exitPrompt.unopenedChests > 1 ? "s" : ""}`}
+                </div>
+                {exitPrompt.partiallyLootedChests > 0 && (
+                  <div style={{ color: "#ff8888", marginTop: 4 }}>
+                    {exitPrompt.partiallyLootedChests} coffre
+                    {exitPrompt.partiallyLootedChests > 1 ? "s" : ""} avec du
+                    butin non récupéré — ce butin sera perdu si tu descends
+                  </div>
+                )}
+              </div>
+            )}
             <div style={{ display: "flex", gap: 12 }}>
               <button
                 onClick={handleConfirmExit}
@@ -1271,8 +1479,34 @@ export default function Arpg() {
             onClose={handleCloseInventory}
           />
         )}
+        {chestScreenData && (
+          <ChestScreen
+            items={chestScreenData.items}
+            onTakeItem={handleTakeChestItem}
+            onTakeAll={handleTakeAllChest}
+            onClose={handleCloseChestScreen}
+          />
+        )}
+        {fullMapOpen && (
+          <FullMapScreen
+            grid={minimapData?.grid}
+            fogState={minimapData?.fogState}
+            playerTile={minimapData?.playerTile}
+            exitTile={minimapData?.exitTile}
+            upstairsTile={minimapData?.upstairsTile}
+            questNpcs={minimapData?.questNpcs || []}
+            summons={minimapData?.summons || []}
+            bossDoorTile={minimapData?.bossDoorTile}
+            bossRoomOpen={minimapData?.bossRoomOpen}
+            onClose={handleCloseFullMap}
+          />
+        )}
         {questsOpen && (
-          <QuestsScreen quests={quests} onClose={handleCloseQuests} />
+          <QuestsScreen
+            quests={quests}
+            inventory={inventory}
+            onClose={handleCloseQuests}
+          />
         )}
         {hotbarScreenOpen && (
           <HotbarScreen
@@ -1290,6 +1524,17 @@ export default function Arpg() {
             inventory={inventory}
             onCraft={handleCraftItem}
             onClose={handleCloseCraftingScreen}
+          />
+        )}
+        {levelUpScreenOpen && (
+          <AttributesScreen
+            confirmedAttributes={levelUpDraft.confirmed}
+            draftAttributes={levelUpDraft.draft}
+            unspent={levelUpDraft.unspent}
+            onAllocate={handleAllocatePoint}
+            onDeallocate={handleDeallocatePoint}
+            onConfirm={handleConfirmAllocation}
+            onClose={handleCloseLevelUpScreen}
           />
         )}
         {travelDestinations && (

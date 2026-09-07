@@ -57,7 +57,7 @@ export const ITEM_DEFS = {
     slot: "mainHand",
     twoHanded: true, // occupe les DEUX mains - equiper libere mainHand ET offHand (cf. MainScene.equipItem)
     grantsRanged: true, // sans arme marquee ainsi equipee (ici ou en offHand), l'attaque a distance est indisponible - cf. MainScene.canUseRangedAttack
-    requiresAmmo: ["woodenArrow"], // itemId EXACT requis (pas juste un booleen) - un carreau ne peut pas alimenter un arc, cf. MainScene.performRangedAttack
+    requiresAmmo: ["woodenArrow", "bronzeArrow"], // itemId EXACT requis (pas juste un booleen) - un carreau ne peut pas alimenter un arc, cf. MainScene.performRangedAttack
     name: "Arc en bois",
     description:
       "+1 dégât à distance. Nécessite des flèches. Arme d'entraînement de départ.",
@@ -205,13 +205,13 @@ export const ITEM_DEFS = {
     statBonus: { rangedDamage: 1 },
     stackable: false,
     archetypes: ["mage"],
-    inflictsEffect: {
-      type: "slow",
-      kind: "modifier", // <-- le champ qui manquait, decide TOUT le comportement
-      chance: 1,
-      statModifiers: { moveSpeedPercent: -0.4 }, // -40% de vitesse
-      durationMs: 2500, // duree en ms, PAS ticks/tickIntervalMs/damagePerTick (ca c'est la forme DOT)
-    },
+    // inflictsEffect: {
+    //   type: "slow",
+    //   kind: "modifier", // <-- le champ qui manquait, decide TOUT le comportement
+    //   chance: 1,
+    //   statModifiers: { moveSpeedPercent: -0.4 }, // -40% de vitesse
+    //   durationMs: 2500, // duree en ms, PAS ticks/tickIntervalMs/damagePerTick (ca c'est la forme DOT)
+    // },
     price: 2,
   },
   ironDagger: {
@@ -249,9 +249,10 @@ export const ITEM_DEFS = {
     slot: "mainHand",
     twoHanded: true,
     grantsRanged: true,
-    requiresAmmo: ["woodenArrow", "ironArrow"],
+    requiresAmmo: ["woodenArrow", "ironArrow", "bronzeArrow"],
     name: "Arc de chasse",
     description: "+4 dégâts à distance. +5 de distance d'attaque",
+    unique: true,
     statBonus: { rangedDamage: 4, rangedRange: 5 },
     stackable: false,
     archetypes: ["archer"],
@@ -622,6 +623,15 @@ export const ITEM_DEFS = {
     statBonus: { rangedDamage: 15 },
     stackable: true,
     archetypes: ["archer"],
+    inflictsEffect: {
+      // chance d'infliger un effet par coup - PAS de cooldown ici
+      type: "acid",
+      kind: "dot",
+      chance: 0.3,
+      damagePerTick: 3,
+      tickIntervalMs: 1000,
+      ticks: 3,
+    },
     unlockLevel: 5,
     price: 45,
   },
@@ -869,6 +879,33 @@ export const ITEM_DEFS = {
     stackable: true,
     price: 50,
   },
+  woodenArrowRecipe: {
+    id: "woodenArrowRecipe",
+    category: "recipeScroll",
+    name: "Plan : Flèche en bois",
+    description: "Apprend la recette de la flèche en bois.",
+    grantsRecipe: "woodenArrow",
+    stackable: true,
+    price: 40,
+  },
+
+  // craft material
+  deerAntler: {
+    id: "deerAntler",
+    category: "craftingMaterial",
+    name: "Bois de cerf",
+    description: "Un bois de cerf robuste, utilisé en artisanat.",
+    stackable: true,
+    price: 8,
+  },
+  mushroom: {
+    id: "mushroom",
+    category: "craftingMaterial",
+    name: "Champignon",
+    description: "Un champignon commun, utilisé en artisanat.",
+    stackable: true,
+    price: 5,
+  },
 
   // exemple d'objet de quete - existe dans le monde, mais aucune quete
   // de type "en rapporter N" ne sait encore l'exploiter (cf. commentaire
@@ -900,6 +937,14 @@ export const ITEM_DEFS = {
     name: "Colis scellé",
     description: "À livrer à son destinataire, sans l'ouvrir.",
     stackable: false,
+  },
+  orangeMushroom: {
+    id: "orangeMushroom",
+    category: "questItem",
+    name: "Champignon orange",
+    description: "Un champignon rare.",
+    stackable: true,
+    price: 5,
   },
 };
 

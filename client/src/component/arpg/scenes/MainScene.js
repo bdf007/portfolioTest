@@ -54,9 +54,45 @@ import {
 } from "../tilesets/fortress1";
 
 import {
+  FORTRESS_AUTOTILE_SPRITESHEET,
   DUNGEON_AUTOTILE_SPRITESHEET,
   DESERT_AUTOTILE_SPRITESHEET,
-  FORTRESS_AUTOTILE_SPRITESHEET,
+  HILLS1_AUTOTILE_SPRITESHEET,
+  HILLS2_AUTOTILE_SPRITESHEET,
+  HILLS3_AUTOTILE_SPRITESHEET,
+  SNOW_AUTOTILE_SPRITESHEET,
+  DARKWOODS_AUTOTILE_SPRITESHEET,
+  DARKWOODS2_AUTOTILE_SPRITESHEET,
+  STANDARD_FIELDS2_AUTOTILE_SPRITESHEET,
+  CITY_WALLS1_AUTOTILE_SPRITESHEET,
+  CITY_WALLS2_AUTOTILE_SPRITESHEET,
+  CITY_WALLS3_AUTOTILE_SPRITESHEET,
+  CITY_WALLSE2_AUTOTILE_SPRITESHEET,
+  CITY_WALLSE3_AUTOTILE_SPRITESHEET,
+  FORTRESS1_AUTOTILE_SPRITESHEET,
+  FORTRESS2_AUTOTILE_SPRITESHEET,
+  FORTRESS3_AUTOTILE_SPRITESHEET,
+  FORTRESSE1_AUTOTILE_SPRITESHEET,
+  FORTRESSE2_AUTOTILE_SPRITESHEET,
+  FORTRESSE3_AUTOTILE_SPRITESHEET,
+  TECH_FORTRESS1_AUTOTILE_SPRITESHEET,
+  TECH_FORTRESS2_AUTOTILE_SPRITESHEET,
+  TECH_FORTRESSE1_AUTOTILE_SPRITESHEET,
+  TECH_FORTRESSE2_AUTOTILE_SPRITESHEET,
+  TOWER1_AUTOTILE_SPRITESHEET,
+  TOWER2_AUTOTILE_SPRITESHEET,
+  TOWER3_AUTOTILE_SPRITESHEET,
+  TOWERE1_AUTOTILE_SPRITESHEET,
+  TOWERE2_AUTOTILE_SPRITESHEET,
+  TOWERE3_AUTOTILE_SPRITESHEET,
+  MINES1_AUTOTILE_SPRITESHEET,
+  MINES2_AUTOTILE_SPRITESHEET,
+  DESERT_TOWNE1_AUTOTILE_SPRITESHEET,
+  DESERT_TOWNE2_AUTOTILE_SPRITESHEET,
+  ROUFTOPSF_AUTOTILE_SPRITESHEET,
+  DUNGEONS_A21_AUTOTILE_SPRITESHEET,
+  DUNGEONS_A22_AUTOTILE_SPRITESHEET,
+  GREY_COASTA51_AUTOTILE_SPRITESHEET,
 } from "../spriteRegistry";
 
 const TILE_SIZE = 32;
@@ -110,11 +146,6 @@ const PROJECTILE_SPEED = 320;
 const PROJECTILE_MAX_DISTANCE_DEFAULT = 380; // repli si le profil d'archetype ne definit pas rangedRange
 const PROJECTILE_RADIUS = 5;
 const CONSUMABLE_COOLDOWN_MS = 2000; // ajustable - meme delai pour toutes les potions pour l'instant
-// couleur de flash par TYPE d'effet de statut - seul endroit du code ou
-// la chaine `type` (arbitraire, choisie dans chaque itemDefs.js/
-// abilityDefs.js) influence quoi que ce soit d'autre que l'identifiant
-// de deduplication. Repli sur le rouge (bleed/generique) si un type
-// inconnu de cette table apparait un jour.
 const FURY_KILLS_REQUIRED = 10; // ajustable
 const MAX_SUMMONS = 3;
 const STATUS_EFFECT_COLORS = {
@@ -132,12 +163,6 @@ const ENEMY_RANGED_ATTACK_RANGE = 260; // portee de declenchement (attackType 'r
 const ENEMY_PROJECTILE_SPEED = 220; // plus lent que celui du joueur (PROJECTILE_SPEED=320) - laisse une vraie chance d'esquiver
 const ENEMY_PROJECTILE_MAX_DISTANCE = 300;
 
-// rendu placeholder par biome, en attendant du vrai tile art - purement
-// visuel, ne duplique aucune logique de génération (celle-ci reste
-// entièrement côté serveur)
-// lignes de salutation des PNJ ambiants (purement decoratifs, aucun
-// rapport avec une quete) - une seule choisie au hasard (seedee) par
-// PNJ a sa creation, cf. MainScene.createAmbientNpcs
 const AMBIENT_NPC_GREETINGS = [
   "Bonjour, voyageur !",
   "Belle journée, n'est-ce pas ?",
@@ -151,65 +176,146 @@ const AMBIENT_NPC_GREETINGS = [
 const TILESET_COLORS = {
   cave: { wall: 0x3a3542, floor: 0xc8be9e },
   ruins: { wall: 0x372f38, floor: 0xd2b48c },
-  cavechain: { wall: 0x2f3a34, floor: 0xa8c0a0 }, // teinte verdatre/humide, distincte de la grotte classique
-  drunkardwalk: { wall: 0x3a2f2a, floor: 0xb89878 }, // teinte terreuse/brune, tunnels creuses
-  maze: { wall: 0x28282f, floor: 0x8a8a9a }, // gris froid, austere - coherent avec l'aspect labyrinthe oppressant
-  noise: { wall: 0x2a3540, floor: 0x94b0a8 }, // teinte bleu-vert, cavites organiques
-  voronoi: { wall: 0x3a2f3a, floor: 0xb090a0 }, // violet/rose desature, distinct des formes polygonales
-  tree: { wall: 0x2e4a2a, floor: 0x5a7a4a }, // foret - le sol reste TOUJOURS en couleur pleine (floorKey=null dans TILE_IMAGE_REGISTRY, aucune vraie image de sol pour ce biome) ; le mur n'est qu'un repli si wall_tree echoue a charger
+  cavechain: { wall: 0x2f3a34, floor: 0xa8c0a0 },
+  drunkardwalk: { wall: 0x3a2f2a, floor: 0xb89878 },
+  maze: { wall: 0x28282f, floor: 0x8a8a9a },
+  noise: { wall: 0x2a3540, floor: 0x94b0a8 },
+  voronoi: { wall: 0x3a2f3a, floor: 0xb090a0 },
+  tree: { wall: 0x2e4a2a, floor: 0x5a7a4a },
   temple: { wall: 0x32303c, floor: 0xbec8d7 },
-  town: { wall: 0x5a4a3a, floor: 0xc8bfa0 }, // batiments en bois/pierre, place claire
+  town: { wall: 0x5a4a3a, floor: 0xc8bfa0 },
 };
 
-/// index = bitmask NE|SE|SW|NW (1|2|4|8) -> tileid dans Set_A_Desert1.png
-// extrait du JSON exporte depuis Tiled (Collections de Terrains "Cliffs I")
-const WALL_CORNER_INDEX_TO_FRAME = [
-  0, 32, 0, 16, 2, 32, 1, 23, 34, 33, 2, 7, 18, 6, 22, 17,
+const WALL_CORNER_INDEX_TO_FRAME_0_0 = [
+  70,
+  32,
+  0,
+  16,
+  2,
+  [32, 2],
+  1,
+  23,
+  34,
+  33,
+  [34, 0],
+  7,
+  18,
+  6,
+  22,
+  17,
 ];
-// hypothese a tester : la planche convertie suit deja l'ordre standard
-// blob47 (le convertisseur en ligne produit generalement cet ordre) -
-// donc frame n = index blob47 n, sans peinture manuelle dans Tiled
-// const AUTOTILE_ROW = 0; // laquelle des 9 rangees utiliser (0-8) - a ajuster selon la teinte voulue, cf. les bandes de couleur visibles sur la planche
-// const IDENTITY_WALL_BLOB_INDEX_TO_FRAME = Array.from(
-//   { length: 47 },
-//   (_, i) => AUTOTILE_ROW * 47 + i,
-// );
+const WALL_CORNER_INDEX_TO_FRAME_0_0_TOWER1 = [
+  118,
+  32,
+  0,
+  16,
+  2,
+  [32, 2],
+  1,
+  23,
+  34,
+  33,
+  [34, 0],
+  7,
+  18,
+  6,
+  22,
+  17,
+];
+const WALL_CORNER_INDEX_TO_FRAME_0_0_CITY_WALLS1 = [
+  224,
+  32,
+  0,
+  16,
+  2,
+  [32, 2],
+  1,
+  23,
+  34,
+  33,
+  [34, 0],
+  7,
+  18,
+  6,
+  22,
+  17,
+];
+const WALL_CORNER_INDEX_TO_FRAME_0_1 = [
+  70, 35, 3, 19, 5, 35, 4, 20, 37, 36, 5, 39, 21, 38, 20, 20,
+];
+const WALL_CORNER_INDEX_TO_FRAME_0_1_MINES2 = [
+  86,
+  35,
+  3,
+  19,
+  5,
+  [35, 5],
+  4,
+  4,
+  37,
+  36,
+  [37, 3],
+  39,
+  21,
+  38,
+  4,
+  20,
+];
+const WALL_CORNER_INDEX_TO_FRAME_1_0 = [
+  48, 80, 48, 64, 50, 80, 49, 68, 82, 81, 50, 52, 66, 51, 67, 65,
+];
+const WALL_CORNER_INDEX_TO_FRAME_MOUNTAIN3B = [
+  48, 80, 48, 64, 50, 80, 49, 51, 82, 81, 50, 67, 66, 68, 52, 65,
+];
+const WALL_CORNER_INDEX_TO_FRAME_2_0 = [
+  96, 128, 96, 112, 98, 128, 97, 99, 130, 129, 98, 115, 114, 116, 100, 113,
+];
 
-const ATTACK_ANIM_DURATION_MS = 400; // 4 frames a frameRate 10 = 400ms - a ajuster si tu changes frameRate
+// const WALL_CORNER_INDEX_TO_FRAME_FORTRESS2 = [
+//   32, 0, 32, 18, 34, 32, 33, 7, 2, 1, 34, 23, 16, 22, 6, 70,
+// ];
 
-/**
- * Scène de jeu principale. Contrairement à la démo de prototypage (un
- * seul fichier HTML qui devait tout simuler côté navigateur, génération
- * de niveau incluse), cette version appelle le vrai backend via
- * fetchLevel() et utilise les stats d'ennemis telles que renvoyées par
- * le serveur - jamais recalculées côté client, pour garder la même
- * garantie anti-triche que le reste de l'architecture (cf. commentaires
- * dans server/services/generation/enemyStats.js).
- *
- * Communique avec le composant React parent (arpg.jsx) par événements
- * Phaser plutôt que par manipulation directe du DOM - la démo utilisait
- * document.getElementById(), ce qui ne convient pas dans une vraie app
- * React (casse l'encapsulation, ne survit pas à un remount du composant).
- */
+const ATTACK_ANIM_DURATION_MS = 400;
+
+const ATTRIBUTE_POINTS_PER_LEVEL = 5;
+const DEFAULT_ATTRIBUTES = {
+  force: 0,
+  dexterite: 0,
+  intelligence: 0,
+  vitalite: 0,
+  constitution: 0,
+  endurance: 0,
+  chance: 0,
+};
+
+function createParticleTexture(scene, key, color) {
+  if (scene.textures.exists(key)) return;
+  const g = scene.make.graphics({ x: 0, y: 0, add: false });
+  g.fillStyle(color, 1);
+  g.fillCircle(4, 4, 4);
+  g.generateTexture(key, 8, 8);
+  g.destroy();
+}
+const INFLICTS_TO_VISUAL_EFFECT = {
+  burn: "fire",
+  acid: "gas",
+  slow: "ice",
+};
+
+function resolveVisualEffect(enemyData) {
+  if (enemyData.visualEffect) return enemyData.visualEffect;
+  const inflictsType = enemyData.inflictsEffect?.type;
+  return INFLICTS_TO_VISUAL_EFFECT[inflictsType] || null;
+}
+
 export default class MainScene extends Phaser.Scene {
-  // ==============================================================
-  // INITIALISATION
-  // ==============================================================
-
   constructor() {
     super("MainScene");
   }
 
-  /**
-   * Cree les animations d'une entree du registre, namespacees par la
-   * cle du registre (ex: 'hero1-walk-down', 'enemyDefault-walk-down') -
-   * meme si plusieurs entrees partagent la meme texture aujourd'hui,
-   * chacune garde ses propres objets Animation. Evite tout conflit le
-   * jour ou une entree divergera vraiment (texture ou decoupage propre).
-   */
   createAnimationsForEntry(entryKey, entry) {
     const prefix = entryKey + "-";
-    if (this.anims.exists(prefix + "walk-down")) return; // deja cree
+    if (this.anims.exists(prefix + "walk-down")) return;
 
     const { key: textureKey, animations: f } = entry;
     const walkRepeat = entry.oneShot ? 0 : -1;
@@ -300,12 +406,12 @@ export default class MainScene extends Phaser.Scene {
   }
 
   create() {
+    createParticleTexture(this, "particle-fire", 0xff6600);
+    createParticleTexture(this, "particle-ice", 0x99ddff);
+    createParticleTexture(this, "particle-gas", 0x88cc44);
     for (const [entryKey, entry] of Object.entries(SPRITE_REGISTRY)) {
       this.createAnimationsForEntry(entryKey, entry);
     }
-    // // TEMPORAIRE — debug calibration blob47
-    // this.scene.start("DebugTilesetScene", { row: 6 });
-    // return; // n'exécute pas le reste de create() de MainScene le temps du test
     this.heroSpriteKey = this.registry.get("heroId") || "hero1";
 
     const heroProfile = resolveHeroStatsOverride(this.heroSpriteKey);
@@ -347,10 +453,10 @@ export default class MainScene extends Phaser.Scene {
     this.enemies = [];
     this.projectiles = [];
     this.enemyProjectiles = [];
-    this.abilityProjectiles = []; // projectiles de competences (ex: boule de feu) - distinct de this.projectiles (attaque a distance normale) car l'impact declenche une explosion en zone, pas des degats mono-cible
-    this.zones = []; // nuages toxiques, mares de feu - zones persistantes
-    this.traps = []; // pieges poses au sol
-    this.boomerangs = []; // projectiles qui reviennent
+    this.abilityProjectiles = [];
+    this.zones = [];
+    this.traps = [];
+    this.boomerangs = [];
     this.wasStealthed = false;
     this.stealthUntil = 0;
     this.riposteUntil = 0;
@@ -362,6 +468,8 @@ export default class MainScene extends Phaser.Scene {
 
     this.xp = 0;
     this.playerLevel = 1;
+    this.playerAttributes = { ...DEFAULT_ATTRIBUTES };
+    this.unspentAttributePoints = 0;
     this.equipped = {
       mainHand: null,
       offHand: null,
@@ -379,7 +487,7 @@ export default class MainScene extends Phaser.Scene {
     this.playerHp = this.playerMaxHp;
     this.playerMana = this.playerMaxMana;
     this.playerStamina = this.playerMaxStamina;
-    this.playerStatusEffects = []; // saignement/brulure actifs sur le heros - cf. updateStatusEffects
+    this.playerStatusEffects = [];
     this.meleeCooldown = createCooldown(PLAYER_MELEE_COOLDOWN);
     this.rangedCooldown = createCooldown(PLAYER_RANGED_COOLDOWN);
     this.isDead = false;
@@ -393,10 +501,12 @@ export default class MainScene extends Phaser.Scene {
     this.pendingResummonTarget = null;
     this.physics.add.collider(this.enemyGroup, this.enemyGroup);
     this.summonGroup = this.physics.add.group();
-    this.physics.add.collider(this.summonGroup, this.summonGroup); // les invocations se repoussent entre elles, ne se superposent plus
+    this.physics.add.collider(this.summonGroup, this.summonGroup);
     this.physics.add.collider(this.summonGroup, this.enemyGroup);
     this.physics.add.collider(this.summonGroup, this.hero);
     this.levelColliders = [];
+    this.activeChest = null;
+    this.currentFloorChestRemainingLoot = {}; // { chestIndex: [{itemId, quantity}] } - ce qu'il reste a prendre dans un coffre partiellement loote, pour survivre a une sauvegarde+reprise SUR LE MEME etage
 
     const fogTilesetKey = "fog-tiles";
     const fogCanvasTex = this.textures.createCanvas(
@@ -415,28 +525,27 @@ export default class MainScene extends Phaser.Scene {
     this.currentSeed = null;
     this.currentGameId = null;
     this.visitedFloors = [];
-    // Mémoire des points remarquables découverts par étage.
     this.discoveredLandmarks = {};
-    // brouillard deja decouvert par etage, pour les retours EN COURS DE
-    // SESSION (distinct de la version sauvegardee, qui ne couvre que
-    // sauvegarder+recharger la page) - cf. loadLevel/persistProgressAsync/
-    // resumeFromSave
     this.floorFogCache = {};
     this.currentFloorKills = [];
     this.currentFloorOpenedChests = [];
     this.quests = {};
-    this.unlockedAbilities = []; // ids de competences debloquees (kit de depart + niveau + loot/achat)
+    this.unlockedAbilities = [];
     this.unlockedRecipes = [];
     this.furyKillCount = 0;
-    this.pendingWeaponImbue = null; // enchantement du prochain coup en attente - consomme au premier coup qui TOUCHE, restitue si le coup rate
+    this.pendingBossRoomOpen = false;
+    this.pendingBossAlive = null;
+    this.pendingWeaponImbue = null;
     this.dashState = null;
     this.summons = [];
+    this.obtainedUniqueItems = [];
     this.touchFuryRequested = false;
-    this.hotbarSlots = new Array(9).fill(null); // {type:'ability', id} | {type:'item', itemId} | null, par emplacement 1..9
-    this.abilityCooldowns = {}; // {abilityId: timestamp du prochain tir autorise} - meme esprit que meleeCooldown/rangedCooldown mais par competence, pas un seul cooldown global
-    this.itemCooldowns = {}; // {itemId prefixe: timestamp} - meme principe que abilityCooldowns, mais pour les consommables de la barre de raccourcis
+    this.hotbarSlots = new Array(9).fill(null);
+    this.abilityCooldowns = {};
+    this.itemCooldowns = {};
     this.activeDialogQuestKey = null;
     this.activeTalkingNpc = null;
+    this.shopSoldItems = {}; // { depth: [{itemId, quantity}] } - objets vendus a la boutique de CETTE ville precise, rachetables uniquement ici
     this.inventory = [];
     this.gamePaused = false;
     this.pauseReasons = new Set();
@@ -487,16 +596,9 @@ export default class MainScene extends Phaser.Scene {
       }
       this.events.emit("abilities-updated", [...this.unlockedAbilities]);
     }
+    this.unlockAvailableAbilitiesAndRecipes();
   }
 
-  /**
-   * Restaure XP/niveau/PV depuis une sauvegarde AVANT de charger le
-   * niveau, avec la seed sauvegardee (regenere donc exactement le meme
-   * plan). Contrairement a un changement d'etage normal (qui soigne
-   * entierement, cf. loadLevel), reprendre une sauvegarde restaure les PV
-   * exacts au moment de la sauvegarde - sinon recharger la page
-   * deviendrait un soin gratuit exploitable.
-   */
   async resumeFromSave(save) {
     this.currentGameId = save.gameId || null;
     this.visitedFloors = save.floors || [];
@@ -504,12 +606,18 @@ export default class MainScene extends Phaser.Scene {
     this.discoveredLandmarks = ps.discoveredLandmarks || {};
     this.xp = ps.xp || 0;
     this.playerLevel = ps.level || 1;
+    this.playerAttributes = ps.playerAttributes || { ...DEFAULT_ATTRIBUTES };
+    this.unspentAttributePoints = ps.unspentAttributePoints || 0;
     this.quests = ps.quests || {};
     this.inventory = ps.inventory || [];
     this.hotbarSlots = ps.hotbarSlots || new Array(9).fill(null);
     this.unlockedAbilities = ps.unlockedAbilities || [];
     this.unlockedRecipes = ps.unlockedRecipes || [];
+    this.shopSoldItems = ps.shopSoldItems || {};
+    this.obtainedUniqueItems = ps.obtainedUniqueItems || [];
     this.furyKillCount = ps.furyKillCount || 0;
+    this.pendingBossRoomOpen = ps.bossRoomOpen || false;
+    this.pendingBossAlive = ps.bossAlive ?? null;
     this.equipped = {
       mainHand: null,
       offHand: null,
@@ -533,11 +641,6 @@ export default class MainScene extends Phaser.Scene {
     this.recalculatePlayerStats();
     this.playerMana = ps.mana ?? this.playerMaxMana;
 
-    // restaure la memoire de TOUS les etages deja explores (pas
-    // seulement celui qu'on s'apprete a charger) - alimente le repli
-    // automatique de loadLevel (effectiveSavedFogState) pour chaque
-    // etage qu'on revisitera plus tard dans cette session reprise,
-    // exactement comme si on n'avait jamais quitte le jeu
     this.floorFogCache = ps.floorFogCache || {};
 
     await this.loadLevel(
@@ -547,8 +650,9 @@ export default class MainScene extends Phaser.Scene {
       ps.currentFloorKills || [],
       ps.currentFloorOpenedChests || [],
       ps.currentFloorLootSeed || null,
-      null, // savedFogState explicite retire - this.floorFogCache (deja restaure ci-dessus) le fournit desormais via le repli automatique de loadLevel
+      null,
       ps.playerPosition || null,
+      ps.currentFloorChestRemainingLoot || {},
     );
     for (const savedSummon of ps.summons || []) {
       const sprite = this.spawnSummonSprite(
@@ -581,6 +685,10 @@ export default class MainScene extends Phaser.Scene {
       maxMana: this.playerMaxMana,
     });
     this.events.emit("level-up", { level: this.playerLevel, stats });
+    this.events.emit("attributes-updated", {
+      attributes: { ...this.playerAttributes },
+      unspent: this.unspentAttributePoints,
+    });
   }
 
   getTotalTimePlayed() {
@@ -590,13 +698,15 @@ export default class MainScene extends Phaser.Scene {
     );
   }
 
-  // ==============================================================
-  // INVENTAIRE ET EQUIPEMENT
-  // ==============================================================
-
   addItemToInventory(itemId, quantity = 1) {
     if (!itemId || quantity <= 0) return;
     const def = resolveItemDef(itemId);
+
+    if (def.unique) {
+      if (this.obtainedUniqueItems.includes(itemId)) return; // deja obtenu une fois - jamais une deuxieme, meme vendu/perdu depuis
+      this.obtainedUniqueItems.push(itemId);
+      quantity = 1; // un objet unique ne peut jamais etre obtenu en plusieurs exemplaires d'un coup non plus
+    }
 
     if (def.stackable) {
       const existing = this.inventory.find((i) => i.itemId === itemId);
@@ -615,10 +725,6 @@ export default class MainScene extends Phaser.Scene {
   showLootToast(text) {
     this.events.emit("loot-toast", text);
   }
-
-  // ==============================================================
-  // ENTREES TACTILES ET CLAVIER
-  // ==============================================================
 
   setTouchMoveVector(x, y) {
     this.touchMoveVector = { x, y };
@@ -644,21 +750,40 @@ export default class MainScene extends Phaser.Scene {
     this.keyboardLayout = layout === "qwerty" ? "qwerty" : "azerty";
   }
 
+  computeAttributeBonuses() {
+    const a = this.playerAttributes;
+    return {
+      meleeDamage: a.force * 1,
+      rangedDamage: a.dexterite * 1,
+      maxMana: a.intelligence * 2,
+      maxHp: a.vitalite * 5,
+      defense: a.constitution * 0.5,
+      maxStamina: a.endurance * 2,
+      hpRegenBonus: a.vitalite * 0.02,
+      manaRegenBonus: a.intelligence * 0.02,
+      staminaRegenBonus: a.endurance * 0.05,
+    };
+  }
+
   recalculatePlayerStats() {
     const heroProfile = resolveHeroStatsOverride(this.heroSpriteKey);
 
     const base = getPlayerStatsForLevel(this.playerLevel, heroProfile);
 
     const bonus = computeEquipmentBonuses(this.equipped);
+    const attrBonus = this.computeAttributeBonuses();
 
-    this.playerMaxHp = base.maxHp + bonus.maxHp;
-    this.playerMeleeDamage = base.meleeDamage + bonus.meleeDamage;
-    this.playerRangedDamage = base.rangedDamage + bonus.rangedDamage;
-    this.playerDefense = base.defense + bonus.defense;
+    this.playerMaxHp = base.maxHp + bonus.maxHp + attrBonus.maxHp;
+    this.playerMeleeDamage =
+      base.meleeDamage + bonus.meleeDamage + attrBonus.meleeDamage;
+    this.playerRangedDamage =
+      base.rangedDamage + bonus.rangedDamage + attrBonus.rangedDamage;
+    this.playerDefense = base.defense + bonus.defense + attrBonus.defense;
     this.playerResistances = computeEquipmentResistances(this.equipped);
 
-    this.playerMaxMana = base.mana + bonus.mana;
-    this.playerMaxStamina = base.stamina + (bonus.stamina ?? 0);
+    this.playerMaxMana = base.mana + bonus.mana + attrBonus.maxMana;
+    this.playerMaxStamina =
+      base.stamina + (bonus.stamina ?? 0) + attrBonus.maxStamina;
 
     this.playerMeleeRange =
       (heroProfile?.meleeRange ?? PLAYER_MELEE_RANGE_DEFAULT) +
@@ -677,6 +802,24 @@ export default class MainScene extends Phaser.Scene {
       (bonus.moveSpeed ?? 0);
   }
 
+  /**
+   * Traduit une definition de competence/arme en degats reels, en tenant
+   * compte d'une eventuelle composante proportionnelle aux stats
+   * ACTUELLES du heros (def.damagePercent + def.scalesFrom). Absence de
+   * damagePercent = comportement inchange (juste def.damage brut).
+   */
+  computeAbilityDamage(def) {
+    let dmg = def.damage || 0;
+    if (def.damagePercent) {
+      const base =
+        def.scalesFrom === "melee"
+          ? this.getEffectivePlayerMeleeDamage()
+          : this.getEffectivePlayerRangedDamage();
+      dmg += base * def.damagePercent;
+    }
+    return dmg;
+  }
+
   adjustHpAfterMaxHpChange(oldMaxHp) {
     const delta = this.playerMaxHp - oldMaxHp;
     this.playerHp = Math.max(
@@ -693,11 +836,6 @@ export default class MainScene extends Phaser.Scene {
     const item = this.inventory[index];
     if (!item) return;
     const def = resolveItemDef(item.itemId);
-    // restriction d'archetype eventuelle (armes/armures reservees a
-    // certains heros, cf. def.archetypes optionnel dans itemDefs.js) -
-    // absent/vide = equipable par tous, comportement inchange. Meme
-    // mecanisme que pour les competences (cf. checkLevelUp/useConsumable
-    // plus haut dans ce fichier).
     if (def.archetypes && def.archetypes.length > 0) {
       const heroArchetype = resolveHeroStatsOverride(
         this.heroSpriteKey,
@@ -817,9 +955,6 @@ export default class MainScene extends Phaser.Scene {
         this.showLootToast("Ce parchemin ne convient pas à ton archétype");
         return;
       }
-      // niveau requis pour L'OBJET parchemin lui-meme - distinct d'unlockLevel
-      // sur ABILITY_DEFS (qui gere le deblocage GRATUIT automatique par
-      // niveau, un mecanisme totalement different)
       if (def.unlockLevel && this.playerLevel < def.unlockLevel) {
         this.showLootToast(`Nécessite le niveau ${def.unlockLevel}`);
         return;
@@ -923,25 +1058,10 @@ export default class MainScene extends Phaser.Scene {
     this.persistProgress();
   }
 
-  // ==============================================================
-  // SAUVEGARDE
-  // ==============================================================
-
-  /**
-   * Coeur de la sauvegarde, en version async attendable.
-   */
   async persistProgressAsync() {
-    if (!this.currentSeed) return; // aucun niveau charge pour l'instant
+    if (!this.currentSeed) return;
 
     try {
-      // brouillard de TOUS les etages deja explores (pas seulement
-      // l'etage courant) - fusionne le cache en memoire (floorFogCache,
-      // alimente a chaque changement d'etage, cf. loadLevel) avec l'etat
-      // LIVE de l'etage courant : ce dernier n'est mis en cache QUE
-      // lorsqu'on le QUITTE (cf. le debut de loadLevel), jamais en
-      // continu pendant qu'on y est - sans cette fusion, l'etage sur
-      // lequel le joueur se trouve AU MOMENT precis de la sauvegarde
-      // manquerait toujours a l'appel.
       const currentFloorTiles = [];
       if (this.fogState?.state) {
         for (let y = 0; y < this.fogState.state.length; y++) {
@@ -967,16 +1087,21 @@ export default class MainScene extends Phaser.Scene {
         {
           xp: this.xp,
           level: this.playerLevel,
+          playerAttributes: { ...this.playerAttributes },
+          unspentAttributePoints: this.unspentAttributePoints,
           hp: this.playerHp,
           mana: this.playerMana,
           heroId: this.heroSpriteKey,
           currentFloorKills: this.currentFloorKills,
           currentFloorOpenedChests: this.currentFloorOpenedChests,
+          currentFloorChestRemainingLoot: this.currentFloorChestRemainingLoot,
           currentFloorLootSeed: this.currentFloorLootSeed,
           quests: this.quests,
           inventory: this.inventory,
           hotbarSlots: this.hotbarSlots,
           unlockedRecipes: this.unlockedRecipes,
+          shopSoldItems: this.shopSoldItems,
+          obtainedUniqueItems: this.obtainedUniqueItems,
           summons: this.summons.map((s) => ({
             spriteKey: s.spriteKey,
             hp: s.hp,
@@ -987,24 +1112,18 @@ export default class MainScene extends Phaser.Scene {
             resistances: s.resistances,
             persistent: s.persistent,
             sourceAbilityId: s.sourceAbilityId,
-            // duree RESTANTE, jamais un timestamp absolu (this.time.now sera
-            // completement different au rechargement)
             remainingMs: s.expiresAt
               ? Math.max(0, s.expiresAt - this.time.now)
               : null,
           })),
           furyKillCount: this.furyKillCount,
+          bossRoomOpen: this.bossRoomOpen,
+          bossAlive: this.bossAlive,
           unlockedAbilities: this.unlockedAbilities,
           equipped: this.equipped,
           discoveredLandmarks: this.discoveredLandmarks,
           timePlayedSeconds: this.getTotalTimePlayed(),
-
-          // remplace l'ancien champ `fogState` (un seul etage, celui
-          // courant) - desormais TOUS les etages deja explores, sous
-          // forme de map {profondeur: tuiles decouvertes[]}
           floorFogCache: floorFogCacheToSave,
-
-          // Position du joueur au moment de la sauvegarde
           playerPosition: this.lastPlayerTile,
         },
       );
@@ -1024,14 +1143,99 @@ export default class MainScene extends Phaser.Scene {
     this.events.emit("quit-to-menu");
   }
 
-  // ==============================================================
-  // CHARGEMENT DE NIVEAU
-  // ==============================================================
-
   /**
-   * Charge un étage via l'API (GET /api/arpg/level) et reconstruit
-   * entièrement la scène à partir de la réponse serveur.
+   * Compose une texture de tileset a 4 coins (identite d'ordre - meme
+   * WALL_CORNER_INDEX_TO_FRAME_0_0 que Desert) a partir d'une spritesheet
+   * source generique - reutilisable pour tout tileset partageant EXACTEMENT
+   * la meme disposition de sprites (juste une teinte differente), comme
+   * Hills vis-a-vis de Desert.
    */
+  composeCornerAutotileTexture(
+    grid,
+    sourceSpritesheet,
+    cacheKeySuffix,
+    cornerTable = WALL_CORNER_INDEX_TO_FRAME_0_0,
+    floorTileId = 113,
+  ) {
+    const phaserTilesetKey = `${cacheKeySuffix}-autotile-composed`;
+    if (this.textures.exists(phaserTilesetKey))
+      this.textures.remove(phaserTilesetKey);
+
+    const SLOT_COUNT = 17;
+    const composedTex = this.textures.createCanvas(
+      phaserTilesetKey,
+      TILE_SIZE * SLOT_COUNT,
+      TILE_SIZE,
+    );
+    const cctx = composedTex.getContext();
+    cctx.imageSmoothingEnabled = false;
+    const sourceImg = this.textures.get(sourceSpritesheet.key).getSourceImage();
+    const SOURCE_COLS = 16;
+
+    const drawFloorAt = (slotIndex) => {
+      const floorSx = (floorTileId % SOURCE_COLS) * 16;
+      const floorSy = Math.floor(floorTileId / SOURCE_COLS) * 16;
+      cctx.drawImage(
+        sourceImg,
+        floorSx,
+        floorSy,
+        16,
+        16,
+        slotIndex * TILE_SIZE,
+        0,
+        TILE_SIZE,
+        TILE_SIZE,
+      );
+    };
+
+    const drawTileOnly = (tileid, slotIndex) => {
+      const sx = (tileid % SOURCE_COLS) * 16;
+      const sy = Math.floor(tileid / SOURCE_COLS) * 16;
+      cctx.drawImage(
+        sourceImg,
+        sx,
+        sy,
+        16,
+        16,
+        slotIndex * TILE_SIZE,
+        0,
+        TILE_SIZE,
+        TILE_SIZE,
+      );
+    };
+
+    drawFloorAt(0);
+    drawTileOnly(floorTileId, 0);
+
+    for (let bitmask = 0; bitmask < 16; bitmask++) {
+      const slotIndex = bitmask + 1;
+      drawFloorAt(slotIndex); // <-- le fond, UNE SEULE FOIS par case
+
+      const entry = cornerTable[bitmask];
+      if (Array.isArray(entry)) {
+        for (const tileid of entry) {
+          drawTileOnly(tileid, slotIndex); // <-- jamais de sol entre les couches
+        }
+      } else {
+        drawTileOnly(entry, slotIndex);
+      }
+    }
+    composedTex.refresh();
+
+    const renderGrid = Array.from({ length: grid.length }, () =>
+      new Array(grid[0].length).fill(0),
+    );
+    for (let y = 0; y < grid.length; y++) {
+      for (let x = 0; x < grid[0].length; x++) {
+        if (grid[y][x] === 1) {
+          renderGrid[y][x] = computeWallCornerIndex(grid, x, y) + 1;
+        }
+      }
+    }
+
+    return { phaserTilesetKey, renderGrid };
+  }
+
   async loadLevel(
     depth,
     seed,
@@ -1041,12 +1245,10 @@ export default class MainScene extends Phaser.Scene {
     lootSeed = null,
     savedFogState = null,
     savedPlayerPosition = null,
+    savedChestRemainingLoot = {},
   ) {
-    // cache le brouillard de l'etage qu'on QUITTE (this.fogState/
-    // this.currentDepth valent encore l'ANCIEN etage ici, avant d'etre
-    // ecrases plus bas) - permet de le restaurer si le joueur y revient
-    // plus tard dans la MEME session, sans avoir besoin de sauvegarder+
-    // recharger la page
+    this.currentFloorChestRemainingLoot = savedChestRemainingLoot || {};
+
     if (this.fogState?.state && this.currentDepth != null) {
       const discoveredTiles = [];
       for (let y = 0; y < this.fogState.state.length; y++) {
@@ -1085,16 +1287,12 @@ export default class MainScene extends Phaser.Scene {
       tileset,
     } = data;
 
-    // priorite au parametre explicite (reprise de sauvegarde), repli sur
-    // le cache en memoire (retour en cours de session), sinon rien
-    // (premiere visite)
     const effectiveSavedFogState =
       savedFogState || this.floorFogCache[depth] || null;
 
     this.currentDepth = depth;
     this.currentBiomeId = data.biome;
     this.currentSeed = data.seed;
-    // Initialise la mémoire des landmarks de cet étage.
     if (!this.discoveredLandmarks[depth]) {
       this.discoveredLandmarks[depth] = {
         exitTile: exitTile ? { ...exitTile } : null,
@@ -1181,10 +1379,14 @@ export default class MainScene extends Phaser.Scene {
     }
     this.chests = [];
     this.nextLootChestId = 0;
+    this.activeChest = null;
     this.dialogOpen = false;
     this.gamePaused = false;
     this.pauseReasons.clear();
-    this.enemies.forEach((e) => e.sprite.destroy());
+    this.enemies.forEach((e) => {
+      if (e.visualEmitter) e.visualEmitter.destroy();
+      e.sprite.destroy();
+    });
     if (this.enemyGroup) this.enemyGroup.clear(false, false);
     this.enemies = [];
     this.projectiles.forEach((p) => p.sprite.destroy());
@@ -1194,17 +1396,13 @@ export default class MainScene extends Phaser.Scene {
     this.abilityProjectiles.forEach((p) => p.sprite.destroy());
     this.abilityProjectiles = [];
     if (this.summonGroup) this.summonGroup.clear(false, false);
-    // les invocations PERSISTANTES (familier) survivent au changement
-    // d'etage - seule leur SPRITE est recreee (l'ancienne appartenait a la
-    // scene precedente, deja detruite par summonGroup.clear ci-dessus),
-    // leurs donnees (hp, degats...) restent intactes
     const persistentSummons = this.summons.filter((s) => s.persistent);
     this.summons.forEach((s) => {
       if (!s.persistent) s.sprite.destroy();
     });
     this.summons = [];
-    this.playerStatusEffects = []; // remis a zero a chaque changement d'etage, comme les projectiles
-    this.pendingWeaponImbue = null; // transitoire, remis a zero a chaque changement d'etage comme les autres etats de combat
+    this.playerStatusEffects = [];
+    this.pendingWeaponImbue = null;
     this.zones.forEach((z) => z.sprite.destroy());
     this.zones = [];
     this.traps.forEach((t) => t.sprite.destroy());
@@ -1237,17 +1435,33 @@ export default class MainScene extends Phaser.Scene {
     const worldW = grid[0].length * TILE_SIZE;
     const worldH = grid.length * TILE_SIZE;
 
-    // biome(s) utilisant la vraie planche importee - a etendre au fur et a
-    // mesure que d'autres tilesets sont convertis. Les autres biomes
-    // gardent l'ancien systeme procedural (2 couleurs/images), inchange.
-    const useRealAutotile = tileset === "desert";
-    const useDungeon1Autotile = tileset === "dungeon1"; // <-- à confirmer/corriger
+    const useRealAutotile =
+      tileset === "desert" || // WALL_CORNER_INDEX_TO_FRAME_0_0
+      tileset === "hills" ||
+      tileset === "snow" ||
+      tileset === "darkwoods" ||
+      tileset === "darkwoods2" ||
+      tileset === "standardFields2" ||
+      tileset === "desertMountain2" ||
+      tileset === "desertMountain3" ||
+      tileset === "desert2" ||
+      tileset === "hills1" ||
+      tileset === "hills2" ||
+      tileset === "hills3" ||
+      tileset === "hills4" ||
+      tileset === "hills5" ||
+      tileset === "hills6" ||
+      tileset === "hills7" ||
+      tileset === "hills8" ||
+      tileset === "mines2" || //WALL_CORNER_INDEX_TO_FRAME_0_1_MINES2
+      tileset === "tower1" || // WALL_CORNER_INDEX_TO_FRAME_0_0_TOWER1
+      tileset === "cityWalls1"; // WALL_CORNER_INDEX_TO_FRAME_0_0_CITY_WALLS1
+    const useDungeon1Autotile = tileset === "dungeon1";
     const useFortress1Autotile = tileset === "fortress1";
 
     let phaserTilesetKey;
     let renderGrid;
-    let dungeon1FloorFrameValue; // déclaré ici pour rester accessible plus bas (exclusion de collision)
-    // let fortressFloorFrameValue;
+    let dungeon1FloorFrameValue;
 
     if (useFortress1Autotile) {
       phaserTilesetKey = FORTRESS_AUTOTILE_SPRITESHEET.key;
@@ -1277,91 +1491,232 @@ export default class MainScene extends Phaser.Scene {
           }
         }
       }
-    } else if (useRealAutotile) {
-      phaserTilesetKey = "desert-autotile-composed";
-      if (this.textures.exists(phaserTilesetKey))
-        this.textures.remove(phaserTilesetKey);
-
-      // 1 slot pour le sol + 16 slots (un par combinaison de coin) - tout
-      // dessine a TILE_SIZE (32) directement, jamais de setScale() au
-      // niveau du layer (qui desynchronise la grille de collision Arcade,
-      // basee sur le tileWidth declare a la creation du tilemap, du rendu
-      // visuel reel)
-      const SLOT_COUNT = 17;
-      const composedTex = this.textures.createCanvas(
-        phaserTilesetKey,
-        TILE_SIZE * SLOT_COUNT,
-        TILE_SIZE,
+    } else if (tileset === "desert") {
+      const result = this.composeCornerAutotileTexture(
+        grid,
+        DESERT_AUTOTILE_SPRITESHEET,
+        "desert",
+        WALL_CORNER_INDEX_TO_FRAME_0_0,
+        17, // sol assorti a la montagne 1 - explicite maintenant, meme si c'etait deja la valeur par defaut
       );
-      const cctx = composedTex.getContext();
-      cctx.imageSmoothingEnabled = false; // <-- cette ligne - desactive le lissage, essentiel pour agrandir du pixel art proprement
-      const sourceImg = this.textures
-        .get(DESERT_AUTOTILE_SPRITESHEET.key)
-        .getSourceImage();
-      const SOURCE_COLS = 16; // colonnes reelles du fichier source (256/16)
-
-      const drawSourceTileAt = (tileid, slotIndex) => {
-        const sx = (tileid % SOURCE_COLS) * 16;
-        const sy = Math.floor(tileid / SOURCE_COLS) * 16;
-
-        // dessine d'abord le sol en fond (meme reference que le slot 0,
-        // tileid=113) PUIS l'art de la tuile par-dessus - les parties
-        // transparentes d'une piece de coin (le "reste" hors falaise)
-        // laissent alors apparaitre du sable coherent plutot que du noir/vide.
-        // Sans effet sur le slot sol lui-meme (dessine deux fois la meme
-        // image, inoffensif).
-        const floorSx = (113 % SOURCE_COLS) * 16;
-        const floorSy = Math.floor(113 / SOURCE_COLS) * 16;
-        cctx.drawImage(
-          sourceImg,
-          floorSx,
-          floorSy,
-          16,
-          16,
-          slotIndex * TILE_SIZE,
-          0,
-          TILE_SIZE,
-          TILE_SIZE,
-        );
-        cctx.drawImage(
-          sourceImg,
-          sx,
-          sy,
-          16,
-          16,
-          slotIndex * TILE_SIZE,
-          0,
-          TILE_SIZE,
-          TILE_SIZE,
-        );
-      };
-
-      drawSourceTileAt(113, 0); // slot 0 = sol
-      for (let bitmask = 0; bitmask < 16; bitmask++) {
-        drawSourceTileAt(WALL_CORNER_INDEX_TO_FRAME[bitmask], bitmask + 1);
-      }
-      composedTex.refresh();
-
-      // DEBUG TEMPORAIRE - affiche la bande des 17 slots extraits en haut a
-      // gauche de l'ecran, agrandie x3, pour voir immediatement lequel est
-      // noir/errone. A retirer une fois le probleme identifie.
-      // const debugSprite = this.add
-      //   .image(0, 0, phaserTilesetKey)
-      //   .setOrigin(0, 0)
-      //   .setScale(3)
-      //   .setDepth(1000)
-      //   .setScrollFactor(0);
-
-      renderGrid = Array.from({ length: grid.length }, () =>
-        new Array(grid[0].length).fill(0),
+      phaserTilesetKey = result.phaserTilesetKey;
+      renderGrid = result.renderGrid;
+    } else if (tileset === "desertMountain2") {
+      const result = this.composeCornerAutotileTexture(
+        grid,
+        DESERT_AUTOTILE_SPRITESHEET,
+        "desert-mountain2",
+        WALL_CORNER_INDEX_TO_FRAME_0_1,
+        20, // <-- a remplacer par le vrai numero de sol assorti a montagne2, une fois identifie
       );
-      for (let y = 0; y < grid.length; y++) {
-        for (let x = 0; x < grid[0].length; x++) {
-          if (grid[y][x] === 1) {
-            renderGrid[y][x] = computeWallCornerIndex(grid, x, y) + 1;
-          }
-        }
-      }
+      phaserTilesetKey = result.phaserTilesetKey;
+      renderGrid = result.renderGrid;
+    } else if (tileset === "desertMountain3") {
+      const result = this.composeCornerAutotileTexture(
+        grid,
+        DESERT_AUTOTILE_SPRITESHEET,
+        "desert-mountain3",
+        WALL_CORNER_INDEX_TO_FRAME_1_0,
+        65, // <-- pareil, a confirmer
+      );
+      phaserTilesetKey = result.phaserTilesetKey;
+      renderGrid = result.renderGrid;
+    } else if (tileset === "desert2") {
+      const result = this.composeCornerAutotileTexture(
+        grid,
+        DESERT_AUTOTILE_SPRITESHEET,
+        "desert2",
+        WALL_CORNER_INDEX_TO_FRAME_2_0,
+        161,
+      );
+      phaserTilesetKey = result.phaserTilesetKey;
+      renderGrid = result.renderGrid;
+    } else if (tileset === "hills1") {
+      const result = this.composeCornerAutotileTexture(
+        grid,
+        HILLS1_AUTOTILE_SPRITESHEET,
+        "hills1",
+        WALL_CORNER_INDEX_TO_FRAME_0_0,
+        17, // sol assorti a la montagne 1 - explicite maintenant, meme si c'etait deja la valeur par defaut
+      );
+      phaserTilesetKey = result.phaserTilesetKey;
+      renderGrid = result.renderGrid;
+    } else if (tileset === "cityWalls1") {
+      const result = this.composeCornerAutotileTexture(
+        grid,
+        CITY_WALLS1_AUTOTILE_SPRITESHEET,
+        "city-walls1",
+        WALL_CORNER_INDEX_TO_FRAME_0_0_CITY_WALLS1,
+        113, // sol assorti a la ville - explicite maintenant, meme si c'etait deja la valeur par defaut
+      );
+      phaserTilesetKey = result.phaserTilesetKey;
+      renderGrid = result.renderGrid;
+    } else if (tileset === "tower1") {
+      const result = this.composeCornerAutotileTexture(
+        grid,
+        TOWER1_AUTOTILE_SPRITESHEET,
+        "tower1",
+        WALL_CORNER_INDEX_TO_FRAME_0_0_TOWER1,
+        20, // sol assorti a la montagne 1 - explicite maintenant, meme si c'etait deja la valeur par defaut
+      );
+      phaserTilesetKey = result.phaserTilesetKey;
+      renderGrid = result.renderGrid;
+    } else if (tileset === "hills2") {
+      const result = this.composeCornerAutotileTexture(
+        grid,
+        HILLS1_AUTOTILE_SPRITESHEET,
+        "hills2",
+        WALL_CORNER_INDEX_TO_FRAME_0_1,
+        20, // <-- a remplacer par le vrai numero de sol assorti a montagne2, une fois identifie
+      );
+      phaserTilesetKey = result.phaserTilesetKey;
+      renderGrid = result.renderGrid;
+    } else if (tileset === "mines2") {
+      const result = this.composeCornerAutotileTexture(
+        grid,
+        MINES2_AUTOTILE_SPRITESHEET,
+        "mines2",
+        WALL_CORNER_INDEX_TO_FRAME_0_1_MINES2,
+        17, // <-- a remplacer par le vrai numero de sol assorti a montagne2, une fois identifie
+      );
+      phaserTilesetKey = result.phaserTilesetKey;
+      renderGrid = result.renderGrid;
+    } else if (tileset === "hills3") {
+      const result = this.composeCornerAutotileTexture(
+        grid,
+        HILLS3_AUTOTILE_SPRITESHEET,
+        "hills3",
+        WALL_CORNER_INDEX_TO_FRAME_MOUNTAIN3B,
+        65, // <-- pareil, a confirmer
+      );
+      phaserTilesetKey = result.phaserTilesetKey;
+      renderGrid = result.renderGrid;
+    } else if (tileset === "hills4") {
+      const result = this.composeCornerAutotileTexture(
+        grid,
+        HILLS3_AUTOTILE_SPRITESHEET,
+        "hills4",
+        WALL_CORNER_INDEX_TO_FRAME_0_1,
+        20, // <-- a remplacer par le vrai numero de sol assorti a montagne2, une fois identifie
+      );
+      phaserTilesetKey = result.phaserTilesetKey;
+      renderGrid = result.renderGrid;
+    } else if (tileset === "hills5") {
+      const result = this.composeCornerAutotileTexture(
+        grid,
+        HILLS2_AUTOTILE_SPRITESHEET,
+        "hills5",
+        WALL_CORNER_INDEX_TO_FRAME_0_0,
+        17, // sol assorti a la montagne 1 - explicite maintenant, meme si c'etait deja la valeur par defaut
+      );
+      phaserTilesetKey = result.phaserTilesetKey;
+      renderGrid = result.renderGrid;
+    } else if (tileset === "hills6") {
+      const result = this.composeCornerAutotileTexture(
+        grid,
+        HILLS2_AUTOTILE_SPRITESHEET,
+        "hills6",
+        WALL_CORNER_INDEX_TO_FRAME_0_1,
+        20, // <-- a remplacer par le vrai numero de sol assorti a montagne2, une fois identifie
+      );
+      phaserTilesetKey = result.phaserTilesetKey;
+      renderGrid = result.renderGrid;
+    } else if (tileset === "hills7") {
+      const result = this.composeCornerAutotileTexture(
+        grid,
+        HILLS2_AUTOTILE_SPRITESHEET,
+        "hills7",
+        WALL_CORNER_INDEX_TO_FRAME_1_0,
+        65, // <-- pareil, a confirmer
+      );
+      phaserTilesetKey = result.phaserTilesetKey;
+      renderGrid = result.renderGrid;
+    } else if (tileset === "hills8") {
+      const result = this.composeCornerAutotileTexture(
+        grid,
+        HILLS2_AUTOTILE_SPRITESHEET,
+        "hills8",
+        WALL_CORNER_INDEX_TO_FRAME_0_1,
+        20, // <-- a remplacer par le vrai numero de sol assorti a montagne2, une fois identifie
+      );
+      phaserTilesetKey = result.phaserTilesetKey;
+      renderGrid = result.renderGrid;
+    } else if (tileset === "hills9") {
+      const result = this.composeCornerAutotileTexture(
+        grid,
+        HILLS3_AUTOTILE_SPRITESHEET,
+        "hills9",
+        WALL_CORNER_INDEX_TO_FRAME_0_0,
+        17, // sol assorti a la montagne 1 - explicite maintenant, meme si c'etait deja la valeur par defaut
+      );
+      phaserTilesetKey = result.phaserTilesetKey;
+      renderGrid = result.renderGrid;
+    } else if (tileset === "hills10") {
+      const result = this.composeCornerAutotileTexture(
+        grid,
+        HILLS3_AUTOTILE_SPRITESHEET,
+        "hills10",
+        WALL_CORNER_INDEX_TO_FRAME_0_1,
+        20, // <-- a remplacer par le vrai numero de sol assorti a montagne2, une fois identifie
+      );
+      phaserTilesetKey = result.phaserTilesetKey;
+      renderGrid = result.renderGrid;
+    } else if (tileset === "hills11") {
+      const result = this.composeCornerAutotileTexture(
+        grid,
+        HILLS3_AUTOTILE_SPRITESHEET,
+        "hills11",
+        WALL_CORNER_INDEX_TO_FRAME_1_0,
+        65, // <-- pareil, a confirmer
+      );
+      phaserTilesetKey = result.phaserTilesetKey;
+      renderGrid = result.renderGrid;
+    } else if (tileset === "hills12") {
+      const result = this.composeCornerAutotileTexture(
+        grid,
+        HILLS3_AUTOTILE_SPRITESHEET,
+        "hills12",
+        WALL_CORNER_INDEX_TO_FRAME_0_1,
+        20, // <-- a remplacer par le vrai numero de sol assorti a montagne2, une fois identifie
+      );
+      phaserTilesetKey = result.phaserTilesetKey;
+      renderGrid = result.renderGrid;
+    } else if (tileset === "snow") {
+      const result = this.composeCornerAutotileTexture(
+        grid,
+        SNOW_AUTOTILE_SPRITESHEET,
+        "snow",
+        WALL_CORNER_INDEX_TO_FRAME_0_0,
+        17,
+      );
+      phaserTilesetKey = result.phaserTilesetKey;
+      renderGrid = result.renderGrid;
+    } else if (tileset === "darkwoods") {
+      const result = this.composeCornerAutotileTexture(
+        grid,
+        DARKWOODS_AUTOTILE_SPRITESHEET,
+        "darkwoods",
+        WALL_CORNER_INDEX_TO_FRAME_0_0,
+        17,
+      );
+      phaserTilesetKey = result.phaserTilesetKey;
+      renderGrid = result.renderGrid;
+    } else if (tileset === "darkwoods2") {
+      const result = this.composeCornerAutotileTexture(
+        grid,
+        DARKWOODS2_AUTOTILE_SPRITESHEET,
+        "darkwoods2",
+      );
+      phaserTilesetKey = result.phaserTilesetKey;
+      renderGrid = result.renderGrid;
+    } else if (tileset === "standardFields2") {
+      const result = this.composeCornerAutotileTexture(
+        grid,
+        STANDARD_FIELDS2_AUTOTILE_SPRITESHEET,
+        "standardFields2",
+      );
+      phaserTilesetKey = result.phaserTilesetKey;
+      renderGrid = result.renderGrid;
     } else {
       const colors = TILESET_COLORS[tileset] || TILESET_COLORS.cave;
       phaserTilesetKey = "tiles-" + tileset;
@@ -1428,11 +1783,6 @@ export default class MainScene extends Phaser.Scene {
     );
     this.layer = this.map.createLayer(0, phaserTileset, 0, 0);
 
-    if (useRealAutotile) {
-      this.layer.setCollisionByExclusion([0]);
-    } else {
-      this.layer.setCollision(WALL);
-    }
     if (useFortress1Autotile) {
       const wallRowStart = FORTRESS1_TILESET.roles.wall * COLUMNS_PER_ROW;
       this.layer.setCollisionBetween(wallRowStart, wallRowStart + 46, true);
@@ -1535,6 +1885,23 @@ export default class MainScene extends Phaser.Scene {
         repeat: -1,
       });
     }
+    if (this.pendingBossRoomOpen && this.bossDoorTile) {
+      this.bossRoomOpen = true;
+      const { x, y } = this.bossDoorTile;
+      this.layer.putTileAt(0, x, y);
+      this.fogGrid[y][x] = 0;
+      if (this.bossDoorMarker) {
+        this.bossDoorMarker.destroy();
+        this.bossDoorMarker = null;
+      }
+      if (this.pendingBossAlive === false) {
+        this.bossAlive = false; // deja vaincu avant l'interruption - ne jamais le refaire apparaitre
+      }
+      // si pendingBossAlive n'est PAS false, le boss reapparaitra normalement
+      // via le declenchement habituel (this.enemies.length === 0), inchange
+    }
+    this.pendingBossRoomOpen = false;
+    this.pendingBossAlive = null;
 
     if (this.travelHubTile) {
       this.travelHubMarker = this.add.circle(
@@ -1599,7 +1966,10 @@ export default class MainScene extends Phaser.Scene {
         .setOffset(ehb.offsetX, ehb.offsetY);
       sprite.setDepth(8);
       sprite.anims.play(spriteKey + "-idle-down");
-
+      const resolvedEffect = resolveVisualEffect(enemyData);
+      const visualEmitter = resolvedEffect
+        ? this.createEnemyVisualEffect(sprite, resolvedEffect)
+        : null;
       this.enemies.push({
         sprite,
         spriteKey,
@@ -1621,11 +1991,12 @@ export default class MainScene extends Phaser.Scene {
         defense: enemyData.defense,
         xpReward: enemyData.xpReward,
         attackType: enemyData.attackType || "melee",
-        questLoot: enemyData.questLoot || null, // objet garanti si une quete obtainItem le cible precisement - cf. damageEnemy
-        inflictsEffect: enemyData.inflictsEffect || null, // saignement/brulure eventuel inflige au joueur - cf. rollStatusEffect/updateEnemyAttacks
+        questLoot: enemyData.questLoot || null,
+        inflictsEffect: enemyData.inflictsEffect || null,
         resistances: enemyData.resistances || {},
         damageType: enemyData.damageType || "physical",
-        statusEffects: [], // saignement/brulure actifs SUR cet ennemi (infliges par le joueur) - cf. updateStatusEffects
+        visualEmitter,
+        statusEffects: [],
         drops: enemyData.drops || [],
         attackCooldown: createCooldown(ENEMY_ATTACK_COOLDOWN),
       });
@@ -1647,11 +2018,25 @@ export default class MainScene extends Phaser.Scene {
       this.levelColliders.push(this.physics.add.collider(this.hero, sprite));
       if (alreadyOpened) sprite.body.checkCollision.none = true;
 
+      // uniformise TOUJOURS en lootItems (tableau), meme pour un coffre a
+      // objet unique - un seul format a gerer partout ensuite (cf.
+      // performInteraction/openChestScreen). Si deja ouvert, restaure ce
+      // qui restait EXACTEMENT a prendre (registre separe) - absent du
+      // registre = deja entierement loote la derniere fois
+      let lootItems;
+      if (alreadyOpened) {
+        lootItems = this.currentFloorChestRemainingLoot[index]
+          ? this.currentFloorChestRemainingLoot[index].map((i) => ({ ...i }))
+          : [];
+      } else {
+        lootItems = chestData.loot ? [{ ...chestData.loot }] : [];
+      }
+
       this.chests.push({
         sprite,
         index,
         opened: alreadyOpened,
-        loot: chestData.loot,
+        lootItems,
         x: chestData.x,
         y: chestData.y,
         variant,
@@ -1711,8 +2096,6 @@ export default class MainScene extends Phaser.Scene {
 
       this.applyFogChanges(allChanges);
     } else {
-      // Si on avait un brouillard restaure (sauvegarde OU cache
-      // session), restaurer visuellement les cases deja decouvertes.
       if (effectiveSavedFogState) {
         for (const tile of effectiveSavedFogState) {
           const [x, y] = tile.split(",").map(Number);
@@ -1732,7 +2115,7 @@ export default class MainScene extends Phaser.Scene {
       const initialChanges = this.fogState.update(
         startPosition.x,
         startPosition.y,
-        this.playerVisionRadius,
+        this.getEffectivePlayerVisionRadius(),
       );
 
       this.applyFogChanges(initialChanges);
@@ -1748,12 +2131,12 @@ export default class MainScene extends Phaser.Scene {
       required: FURY_KILLS_REQUIRED,
     });
     this.events.emit("abilities-updated", [...this.unlockedAbilities]);
+    this.events.emit("attributes-updated", {
+      attributes: { ...this.playerAttributes },
+      unspent: this.unspentAttributePoints,
+    });
     this.persistProgress();
   }
-
-  // ==============================================================
-  // NAVIGATION ENTRE ETAGES ET VOYAGE RAPIDE
-  // ==============================================================
 
   retryLevel() {
     this.playerHp = this.playerMaxHp;
@@ -1788,52 +2171,96 @@ export default class MainScene extends Phaser.Scene {
     this.events.emit("travel-hub", null);
   }
 
-  // ==============================================================
-  // BOUTIQUE
-  // ==============================================================
+  getMergedShopStock() {
+    const baseStock = this.shopData?.stock || [];
+    const soldHere = this.shopSoldItems[this.currentDepth] || [];
+    const soldEntries = soldHere.map((s) => {
+      const def = resolveItemDef(s.itemId);
+      return {
+        itemId: s.itemId,
+        price: def.price || 0,
+        quantity: s.quantity,
+        soldByPlayer: true,
+      };
+    });
+    return [...baseStock, ...soldEntries];
+  }
 
   openShop() {
     this.pauseGame("shop");
-    this.events.emit("shop", this.shopData.stock);
+    this.events.emit("shop", this.getMergedShopStock());
   }
 
-  buyItem(shopItemIndex) {
-    const shopItem = this.shopData?.stock?.[shopItemIndex];
+  buyItem(shopItemIndex, quantity = 1) {
+    const merged = this.getMergedShopStock();
+    const shopItem = merged[shopItemIndex];
     if (!shopItem) return;
 
+    const buyQty = Math.max(1, quantity);
+    // objet rachete au joueur - jamais au-dela de ce qu'il en a vendu ici
+    const effectiveQty = shopItem.soldByPlayer
+      ? Math.min(buyQty, shopItem.quantity)
+      : buyQty;
+    if (effectiveQty <= 0) return;
+
+    const totalCost = shopItem.price * effectiveQty;
     const goldEntry = this.inventory.find((i) => i.itemId === "gold");
     const currentGold = goldEntry ? goldEntry.quantity : 0;
-    if (currentGold < shopItem.price) return;
+    if (currentGold < totalCost) return;
 
-    goldEntry.quantity -= shopItem.price;
+    goldEntry.quantity -= totalCost;
     if (goldEntry.quantity <= 0)
       this.inventory = this.inventory.filter((i) => i !== goldEntry);
 
-    this.addItemToInventory(shopItem.itemId, 1);
+    this.addItemToInventory(shopItem.itemId, effectiveQty);
+
+    if (shopItem.soldByPlayer) {
+      const soldHere = this.shopSoldItems[this.currentDepth] || [];
+      const entry = soldHere.find((s) => s.itemId === shopItem.itemId);
+      if (entry) {
+        entry.quantity -= effectiveQty;
+        if (entry.quantity <= 0) {
+          this.shopSoldItems[this.currentDepth] = soldHere.filter(
+            (s) => s !== entry,
+          );
+        }
+      }
+      this.events.emit("shop", this.getMergedShopStock());
+    }
   }
 
-  sellItem(inventoryIndex) {
+  sellItem(inventoryIndex, quantity = 1) {
     const item = this.inventory[inventoryIndex];
     if (!item) return;
     const def = resolveItemDef(item.itemId);
     if (!def.price) return;
 
-    const sellPrice = Math.floor(def.price * SELL_PRICE_RATIO);
+    const sellQty = Math.max(1, Math.min(quantity, item.quantity));
+    const sellPrice = Math.floor(def.price * SELL_PRICE_RATIO) * sellQty;
 
-    item.quantity -= 1;
+    item.quantity -= sellQty;
     if (item.quantity <= 0) this.inventory.splice(inventoryIndex, 1);
 
+    if (!this.shopSoldItems[this.currentDepth])
+      this.shopSoldItems[this.currentDepth] = [];
+    const existingSold = this.shopSoldItems[this.currentDepth].find(
+      (s) => s.itemId === item.itemId,
+    );
+    if (existingSold) existingSold.quantity += sellQty;
+    else
+      this.shopSoldItems[this.currentDepth].push({
+        itemId: item.itemId,
+        quantity: sellQty,
+      });
+
     this.addItemToInventory("gold", sellPrice);
+    this.events.emit("shop", this.getMergedShopStock());
   }
 
   closeShop() {
     this.unpauseGame("shop");
     this.events.emit("shop", null);
   }
-
-  // ==============================================================
-  // BOSS
-  // ==============================================================
 
   openBossDoor() {
     this.bossRoomOpen = true;
@@ -1869,7 +2296,10 @@ export default class MainScene extends Phaser.Scene {
       behaviorRng,
       { guard: 1 },
     );
-
+    const resolvedEffect = resolveVisualEffect(this.bossData);
+    const visualEmitter = resolvedEffect
+      ? this.createEnemyVisualEffect(sprite, resolvedEffect)
+      : null;
     this.enemies.push({
       sprite,
       spriteKey,
@@ -1892,18 +2322,15 @@ export default class MainScene extends Phaser.Scene {
       defense: this.bossData.defense,
       xpReward: this.bossData.xpReward,
       attackType: this.bossData.attackType || "melee",
-      inflictsEffect: this.bossData.inflictsEffect || null, // saignement/brulure eventuel - meme mecanisme que les ennemis normaux
-      statusEffects: [], // saignement/brulure actifs SUR le boss (infliges par le joueur)
+      inflictsEffect: this.bossData.inflictsEffect || null,
+      visualEmitter,
+      statusEffects: [],
       drop: this.bossData.drop || null,
       attackCooldown: createCooldown(ENEMY_ATTACK_COOLDOWN),
     });
 
     this.events.emit("boss-room-opened");
   }
-
-  // ==============================================================
-  // PAUSE DU JEU
-  // ==============================================================
 
   pauseGame(reason) {
     const wasAlreadyPaused = this.gamePaused;
@@ -1912,45 +2339,28 @@ export default class MainScene extends Phaser.Scene {
     if (this.hero) this.hero.setVelocity(0, 0);
 
     if (!wasAlreadyPaused) {
-      // marque le debut REEL de la pause - uniquement au premier passage
-      // non-pause -> pause, jamais re-decale si une DEUXIEME raison
-      // s'empile par-dessus une pause deja active
       this.pauseStartedAt = this.time.now;
     }
 
-    for (const enemy of this.enemies) {
-      if (enemy.sprite?.body) enemy.sprite.setVelocity(0, 0);
-    }
-    for (const npc of this.questNpcs || []) {
-      if (npc.sprite?.body) npc.sprite.setVelocity(0, 0);
-    }
-    for (const npc of this.ambientNpcs || []) {
-      if (npc.sprite?.body) npc.sprite.setVelocity(0, 0);
-    }
-    for (const proj of this.projectiles) {
-      if (proj.sprite?.body) proj.sprite.setVelocity(0, 0);
-    }
-    for (const proj of this.enemyProjectiles) {
-      if (proj.sprite?.body) proj.sprite.setVelocity(0, 0);
-    }
-    for (const proj of this.abilityProjectiles || []) {
-      if (proj.sprite?.body) proj.sprite.setVelocity(0, 0);
-    }
-  }
+    const freeze = (obj) => {
+      if (obj?.sprite && typeof obj.sprite.setVelocity === "function") {
+        obj.sprite.setVelocity(0, 0);
+      }
+    };
 
+    for (const enemy of this.enemies) freeze(enemy);
+    for (const npc of this.questNpcs || []) freeze(npc);
+    for (const npc of this.ambientNpcs || []) freeze(npc);
+    for (const proj of this.projectiles) freeze(proj);
+    for (const proj of this.enemyProjectiles) freeze(proj);
+    for (const proj of this.abilityProjectiles || []) freeze(proj);
+    for (const b of this.boomerangs || []) freeze(b); // <-- absent jusqu'ici, meme souci potentiel
+  }
   unpauseGame(reason) {
     this.pauseReasons.delete(reason);
     const stillPaused = this.pauseReasons.size > 0;
 
     if (this.gamePaused && !stillPaused) {
-      // on sort REELLEMENT de pause (plus aucune raison active) - decale
-      // tous les cooldowns en cours du temps ecoule pendant la pause,
-      // pour qu'ils n'aient jamais avance "gratuitement" pendant que le
-      // jeu semblait fige. HP/mana/stamina/statusEffects n'ont pas besoin
-      // de ce traitement : ils ne progressent QUE via update() (cf.
-      // updateRegen/updateStatusEffects), deja completement arrete par
-      // gamePaused - seuls abilityCooldowns/itemCooldowns comparent un
-      // timestamp absolu HORS de la boucle update(), d'ou ce trou.
       const pausedDuration = this.time.now - this.pauseStartedAt;
       for (const key of Object.keys(this.abilityCooldowns)) {
         this.abilityCooldowns[key] += pausedDuration;
@@ -1963,14 +2373,12 @@ export default class MainScene extends Phaser.Scene {
     this.gamePaused = stillPaused;
   }
 
-  // ==============================================================
-  // PROMPTS ESCALIER ET SORTIE
-  // ==============================================================
-
   showUpstairsPrompt() {
     if (this.pauseReasons.has("upstairs")) return;
     this.pauseGame("upstairs");
-    this.events.emit("upstairs-prompt", true);
+    const remainingEnemies = this.enemies.length;
+    const unopenedChests = this.chests.filter((c) => !c.opened).length;
+    this.events.emit("upstairs-prompt", { remainingEnemies, unopenedChests });
   }
 
   confirmGoUpstairs() {
@@ -1987,9 +2395,19 @@ export default class MainScene extends Phaser.Scene {
   showExitPrompt() {
     if (this.pauseReasons.has("exit")) return;
     this.pauseGame("exit");
-    this.events.emit("exit-prompt", true);
+    const remainingEnemies = this.enemies.length;
+    const unopenedChests = this.chests.filter(
+      (c) => !c.opened && c.lootItems.length > 0,
+    ).length;
+    const partiallyLootedChests = this.chests.filter(
+      (c) => c.opened && c.lootItems.length > 0,
+    ).length;
+    this.events.emit("exit-prompt", {
+      remainingEnemies,
+      unopenedChests,
+      partiallyLootedChests,
+    });
   }
-
   confirmDescend() {
     this.unpauseGame("exit");
     this.events.emit("exit-prompt", null);
@@ -2000,10 +2418,6 @@ export default class MainScene extends Phaser.Scene {
     this.unpauseGame("exit");
     this.events.emit("exit-prompt", null);
   }
-
-  // ==============================================================
-  // PNJ ET QUETES
-  // ==============================================================
 
   createQuestNpcs(npcDataArray) {
     const npcSpritePool = Object.keys(SPRITE_REGISTRY).filter((key) =>
@@ -2020,6 +2434,17 @@ export default class MainScene extends Phaser.Scene {
       if (!giverQs.accepted || giverQs.completed || giverQs.receiverKey)
         continue;
       if (giverQs.targetDepth !== this.currentDepth) continue;
+
+      // cherche le PROCHAIN pnj de cet etage qui n'a PAS deja de quete
+      // assignee - ne jamais ecraser un pnj existant (cf. le bug ou un pnj
+      // avec deja une quete tuer/looter se retrouvait transforme en
+      // destinataire de colis)
+      while (
+        nextReceiverIndex < npcDataArray.length &&
+        this.quests[`${this.currentDepth}-${nextReceiverIndex}`]
+      ) {
+        nextReceiverIndex++;
+      }
       if (nextReceiverIndex >= npcDataArray.length) continue;
 
       const receiverNpcIndex = nextReceiverIndex++;
@@ -2090,7 +2515,7 @@ export default class MainScene extends Phaser.Scene {
           itemReward: npcData.itemReward || null,
           targetEnemyType: npcData.targetEnemyType,
           targetItemId: npcData.targetItemId,
-          targetQuantity: npcData.targetQuantity, // uniquement pour questId==='obtainItem' - undefined sinon (repli sur 1 cote client, cf. openQuestDialog/turnInQuest)
+          targetQuantity: npcData.targetQuantity,
           targetBossDepth: npcData.targetBossDepth,
           targetBossType: npcData.targetBossType,
           dialogText: npcData.dialogText || null,
@@ -2106,27 +2531,16 @@ export default class MainScene extends Phaser.Scene {
     this.maybeInjectDeliveryQuest(freshlyCreatedKeys);
   }
 
-  /**
-   * Decide, avec une certaine probabilite, d'injecter une quete de
-   * livraison entre PNJ CLIENT-SIDE.
-   */
   maybeInjectDeliveryQuest(eligibleKeys) {
     if (eligibleKeys.length === 0) return;
+    if (this.currentBiomeId !== "town") return;
 
     const injectRng = createRng(`${this.currentSeed}-delivery-inject`);
-    if (injectRng() >= 0.2) return; // 20% de chance qu'une livraison apparaisse dans cette ville
+    if (injectRng() >= 0.2) return;
 
     const giverKey =
       eligibleKeys[Math.floor(injectRng() * eligibleKeys.length)];
 
-    // villes futures (VRAIS multiples de 10 - cf. TOWN_INTERVAL cote
-    // serveur, biomeConfig.js - jamais currentDepth+10*k, qui ne
-    // correspond a une vraie ville que si currentDepth est deja lui-meme
-    // un multiple de 10 par coincidence. Bug corrige : depuis l'etage 1,
-    // l'ancien calcul donnait 11/21/31...91 - aucun de ces etages n'est
-    // une ville, rendant la quete de livraison IMPOSSIBLE a completer,
-    // faute de PNJ destinataire a cet endroit) au-dela de l'etage
-    // courant, dans la limite du jeu, PAS encore dans this.visitedFloors
     const firstFutureTown = Math.floor(this.currentDepth / 10) * 10 + 10;
     const futureCandidates = [];
     for (let d = firstFutureTown; d <= 100; d += 10) {
@@ -2272,7 +2686,12 @@ export default class MainScene extends Phaser.Scene {
           qs.bossDepth && qs.bossType
             ? ` Le ${resolveEnemyDisplayName(qs.bossType)} de l'étage ${qs.bossDepth} le détient.`
             : "";
-        text = custom.offer || `Peux-tu me rapporter ${qtyLabel} ?${bossHint}`;
+        const enemyHint = qs.targetEnemyType
+          ? ` On en trouve parfois sur les ${resolveEnemyDisplayName(qs.targetEnemyType)}.`
+          : "";
+        text =
+          custom.offer ||
+          `Peux-tu me rapporter ${qtyLabel} ?${bossHint}${enemyHint}`;
         canAccept = true;
       }
     } else if (qs.questId === "defeatBoss") {
@@ -2281,8 +2700,7 @@ export default class MainScene extends Phaser.Scene {
         text = custom.complete || `Merci d'avoir vaincu ${bossName} !`;
       } else if (qs.accepted && qs.bossDefeated) {
         text =
-          custom.progress ||
-          `Tu l'as vaincu ! Reviens me voir pour ta récompense.`;
+          custom.progress || `Tu l'as vaincu ! Tu peux réclamer ta récompense.`;
         canTurnIn = true;
       } else if (qs.accepted) {
         text =
@@ -2331,8 +2749,7 @@ export default class MainScene extends Phaser.Scene {
       const enemyName = resolveEnemyDisplayName(qs.targetEnemyType);
       text = custom.complete || `Merci d'avoir tué ces ${enemyName} pour moi !`;
     } else if (qs.accepted && qs.killCount >= qs.target) {
-      text =
-        custom.progress || `C'est fait ! Reviens me voir pour ta récompense.`;
+      text = custom.progress || `C'est fait ! Tu peux réclamer ta récompense.`;
       canTurnIn = true;
     } else if (qs.accepted) {
       const enemyName = resolveEnemyDisplayName(qs.targetEnemyType);
@@ -2456,10 +2873,6 @@ export default class MainScene extends Phaser.Scene {
     this.events.emit("npc-dialog", null);
   }
 
-  // ==============================================================
-  // BOUCLE PRINCIPALE
-  // ==============================================================
-
   update(time, delta) {
     if (!this.hero || this.isDead) return;
     if (this.gamePaused) return;
@@ -2516,7 +2929,6 @@ export default class MainScene extends Phaser.Scene {
       }
 
       if (this.time.now < this.attackAnimUntil) {
-        // animation d'attaque en cours - ne pas l'interrompre avec idle/marche
       } else if (moving) {
         this.hero.anims.play(this.heroSpriteKey + "-walk-" + dir, true);
         this.lastDir = dir;
@@ -2590,14 +3002,6 @@ export default class MainScene extends Phaser.Scene {
       this.touchActionRequested = false;
       this.performInteraction();
     }
-    // si l'interaction qu'on vient de traiter a declenche une pause (ex:
-    // ouverture d'un dialogue), on s'arrete IMMEDIATEMENT plutot que de
-    // laisser le reste de CETTE MEME frame continuer a tourner - sinon
-    // updateEnemyMovement (plus bas) recalculerait une derniere vitesse
-    // fraiche pour les ennemis juste apres que pauseGame vienne de la
-    // remettre a zero, qui continuerait ensuite a glisser indefiniment
-    // (plus aucune frame suivante pour la re-annuler, gamePaused bloquant
-    // tout des le haut de la fonction a partir de la prochaine frame)
     if (this.gamePaused) return;
 
     this.updateEnemyMovement();
@@ -2653,10 +3057,6 @@ export default class MainScene extends Phaser.Scene {
       this.persistProgress();
     }
   }
-
-  // ==============================================================
-  // BROUILLARD DE GUERRE ET MINIMAP
-  // ==============================================================
 
   getQuestNpcMinimapData() {
     if (!this.questNpcs || !this.fogState?.state) return [];
@@ -2753,12 +3153,10 @@ export default class MainScene extends Phaser.Scene {
       upstairsTile: this.upstairsTile,
       questNpcs,
       summons,
+      bossDoorTile: this.bossDoorTile,
+      bossRoomOpen: this.bossRoomOpen,
     });
   }
-
-  // ==============================================================
-  // IA ENNEMIE
-  // ==============================================================
 
   isPlayerBehindEnemy(enemy, ex, ey, playerTileX, playerTileY) {
     const facing = ENEMY_DIR_VECTORS[enemy.lastDir] || ENEMY_DIR_VECTORS.down;
@@ -2782,10 +3180,6 @@ export default class MainScene extends Phaser.Scene {
       const ex = Math.floor(enemy.sprite.x / TILE_SIZE);
       const ey = Math.floor(enemy.sprite.y / TILE_SIZE);
 
-      // cible la plus proche entre le joueur et n'importe quelle
-      // invocation active - stocke le choix sur l'ennemi pour que
-      // updateEnemyMovement/updateEnemyAttacks restent coherents avec
-      // cette meme decision
       let targetTileX = playerTileX;
       let targetTileY = playerTileY;
       let targetType = "player";
@@ -2808,7 +3202,7 @@ export default class MainScene extends Phaser.Scene {
       enemy.chaseTargetType = targetType;
       enemy.chaseTargetRef = targetRef;
 
-      const distanceToPlayer = bestDist; // nom attendu par decideNextState, represente desormais la distance a la cible CHOISIE
+      const distanceToPlayer = bestDist;
       const losClear = hasClearLineOfSight(
         grid,
         width,
@@ -2820,8 +3214,6 @@ export default class MainScene extends Phaser.Scene {
       );
       const arrivedAtHome =
         Math.hypot(ex - enemy.home.x, ey - enemy.home.y) < 1;
-      // l'angle mort/la furtivite ne concernent que le joueur - jamais
-      // les invocations, qui n'ont pas cette mecanique
       const isPlayerBehind =
         targetType === "player"
           ? this.isPlayerBehindEnemy(enemy, ex, ey, playerTileX, playerTileY)
@@ -2865,9 +3257,12 @@ export default class MainScene extends Phaser.Scene {
     for (const enemy of this.enemies) {
       enemy.visible = this.isEnemyVisible(enemy);
       enemy.sprite.setVisible(enemy.visible);
-
+      if (enemy.visualEmitter) {
+        enemy.visualEmitter.setPosition(enemy.sprite.x, enemy.sprite.y - 30);
+        enemy.visualEmitter.setVisible(enemy.visible);
+      }
       if (this.time.now < (enemy.attackAnimUntil || 0)) {
-        continue; // animation d'attaque en cours - ne pas l'ecraser avec idle/marche
+        continue;
       }
 
       if (this.isEnemyStunned(enemy) || this.isEnemyRooted(enemy)) {
@@ -2880,8 +3275,6 @@ export default class MainScene extends Phaser.Scene {
       }
 
       if (enemy.state === "chase" || enemy.state === "returning") {
-        // securite : si la cible choisie etait une invocation entre-temps
-        // detruite/expiree, retombe sur le joueur plutot que de planter
         let targetType = enemy.chaseTargetType;
         let targetRef = enemy.chaseTargetRef;
         if (
@@ -2915,8 +3308,9 @@ export default class MainScene extends Phaser.Scene {
           const dx = enemy.sprite.x - targetX;
           const dy = enemy.sprite.y - targetY;
           const mag = Math.hypot(dx, dy) || 1;
-          const vx = (dx / mag) * ENEMY_SPEED;
-          const vy = (dy / mag) * ENEMY_SPEED;
+          const speed = this.getEffectiveEnemySpeed(enemy);
+          const vx = (dx / mag) * speed;
+          const vy = (dy / mag) * speed;
           enemy.sprite.setVelocity(vx, vy);
           const edir =
             Math.abs(vx) > Math.abs(vy)
@@ -2946,7 +3340,7 @@ export default class MainScene extends Phaser.Scene {
         this.moveEnemyToward(
           enemy,
           enemy.path[enemy.pathIndex],
-          ENEMY_SPEED,
+          this.getEffectiveEnemySpeed(enemy),
           () => enemy.pathIndex++,
         );
         continue;
@@ -2958,15 +3352,21 @@ export default class MainScene extends Phaser.Scene {
         enemy.patrolPath.length > 1
       ) {
         const waypoint = enemy.patrolPath[enemy.patrolIndex];
-        this.moveEnemyToward(enemy, waypoint, ENEMY_SPEED * 0.6, () => {
-          if (
-            enemy.patrolIndex + enemy.patrolDirection < 0 ||
-            enemy.patrolIndex + enemy.patrolDirection >= enemy.patrolPath.length
-          ) {
-            enemy.patrolDirection *= -1;
-          }
-          enemy.patrolIndex += enemy.patrolDirection;
-        });
+        this.moveEnemyToward(
+          enemy,
+          waypoint,
+          this.getEffectiveEnemySpeed(enemy) * 0.6,
+          () => {
+            if (
+              enemy.patrolIndex + enemy.patrolDirection < 0 ||
+              enemy.patrolIndex + enemy.patrolDirection >=
+                enemy.patrolPath.length
+            ) {
+              enemy.patrolDirection *= -1;
+            }
+            enemy.patrolIndex += enemy.patrolDirection;
+          },
+        );
         continue;
       }
 
@@ -3035,24 +3435,16 @@ export default class MainScene extends Phaser.Scene {
     enemy.lastDir = edir;
   }
 
-  /**
-  // ==============================================================
-  // REGENERATION PASSIVE
-  // ==============================================================
-
-  /**
-   * Regeneration PASSIVE de PV/mana/stamina - tres lente par design, et
-   * grimpe legerement avec le niveau (formule base + croissance*niveau).
-   * Appelee chaque frame depuis update(). Jamais au-dela du maximum de
-   * chaque stat, et aucun evenement emis si deja au max (evite du bruit
-   * inutile).
-   */
   updateRegen(deltaMs) {
     const n = this.playerLevel - 1;
     const deltaSec = deltaMs / 1000;
+    const attrBonus = this.computeAttributeBonuses();
 
     if (this.playerHp < this.playerMaxHp) {
-      const rate = HP_REGEN_PER_SEC_BASE + HP_REGEN_PER_SEC_GROWTH * n;
+      const rate =
+        HP_REGEN_PER_SEC_BASE +
+        HP_REGEN_PER_SEC_GROWTH * n +
+        attrBonus.hpRegenBonus;
       this.playerHp = Math.min(
         this.playerMaxHp,
         this.playerHp + rate * deltaSec,
@@ -3064,7 +3456,10 @@ export default class MainScene extends Phaser.Scene {
     }
 
     if (this.playerMana < this.playerMaxMana) {
-      const rate = MANA_REGEN_PER_SEC_BASE + MANA_REGEN_PER_SEC_GROWTH * n;
+      const rate =
+        MANA_REGEN_PER_SEC_BASE +
+        MANA_REGEN_PER_SEC_GROWTH * n +
+        attrBonus.manaRegenBonus;
       this.playerMana = Math.min(
         this.playerMaxMana,
         this.playerMana + rate * deltaSec,
@@ -3077,7 +3472,9 @@ export default class MainScene extends Phaser.Scene {
 
     if (this.playerStamina < this.playerMaxStamina) {
       const rate =
-        STAMINA_REGEN_PER_SEC_BASE + STAMINA_REGEN_PER_SEC_GROWTH * n;
+        STAMINA_REGEN_PER_SEC_BASE +
+        STAMINA_REGEN_PER_SEC_GROWTH * n +
+        attrBonus.staminaRegenBonus;
       this.playerStamina = Math.min(
         this.playerMaxStamina,
         this.playerStamina + rate * deltaSec,
@@ -3088,10 +3485,6 @@ export default class MainScene extends Phaser.Scene {
       });
     }
   }
-
-  // ==============================================================
-  // PNJ - MOUVEMENT
-  // ==============================================================
 
   updateNpcMovement(npcList) {
     if (!npcList) return;
@@ -3132,10 +3525,6 @@ export default class MainScene extends Phaser.Scene {
       npc.sprite.anims.play(`${npc.spriteKey}-idle-${npc.lastDir}`, true);
     }
   }
-
-  // ==============================================================
-  // COMBAT JOUEUR - MELEE ET DISTANCE
-  // ==============================================================
 
   performInteraction() {
     if (!this.dialogOpen) {
@@ -3198,7 +3587,7 @@ export default class MainScene extends Phaser.Scene {
 
     if (!this.dialogOpen) {
       const chest = this.chests.find((c) => {
-        if (c.opened) return false;
+        if (c.lootItems.length === 0) return false; // deja entierement loote
         const cx = c.x * TILE_SIZE + TILE_SIZE / 2;
         const cy = c.y * TILE_SIZE + TILE_SIZE / 2;
         return (
@@ -3207,30 +3596,80 @@ export default class MainScene extends Phaser.Scene {
         );
       });
       if (chest) {
-        chest.opened = true;
-        chest.sprite.setFrame(chest.variant.openFrame);
-        chest.sprite.body.checkCollision.none = true;
-        if (!chest.ephemeral) this.currentFloorOpenedChests.push(chest.index);
-
-        if (chest.loot) {
-          this.addItemToInventory(chest.loot.itemId, chest.loot.quantity);
-          const itemDef = resolveItemDef(chest.loot.itemId);
-          this.showLootToast(
-            `Trouvé : ${itemDef.name} x${chest.loot.quantity}`,
-          );
-        } else if (chest.lootItems && chest.lootItems.length > 0) {
-          for (const drop of chest.lootItems) {
-            this.addItemToInventory(drop.itemId, drop.quantity);
-          }
-          const summary = chest.lootItems
-            .map(
-              (drop) => `${resolveItemDef(drop.itemId).name} x${drop.quantity}`,
-            )
-            .join(", ");
-          this.showLootToast(`Trouvé : ${summary}`);
-        }
+        this.openChestScreen(chest);
         return;
       }
+    }
+  }
+
+  openChestScreen(chest) {
+    this.activeChest = chest;
+    this.pauseGame("chest");
+
+    if (!chest.opened) {
+      chest.opened = true;
+      chest.sprite.setFrame(chest.variant.openFrame);
+      chest.sprite.body.checkCollision.none = true;
+      if (!chest.ephemeral) this.currentFloorOpenedChests.push(chest.index);
+    }
+
+    this.events.emit("chest-screen", {
+      items: chest.lootItems.map((item, itemIndex) => ({
+        itemIndex,
+        itemId: item.itemId,
+        quantity: item.quantity,
+      })),
+    });
+  }
+
+  takeChestItem(itemIndex) {
+    const chest = this.activeChest;
+    if (!chest) return;
+    const item = chest.lootItems[itemIndex];
+    if (!item) return;
+
+    this.addItemToInventory(item.itemId, item.quantity);
+    chest.lootItems.splice(itemIndex, 1);
+    if (!chest.ephemeral) this.saveChestRemainingLoot(chest);
+
+    if (chest.lootItems.length === 0) {
+      this.closeChestScreen();
+      return;
+    }
+
+    this.events.emit("chest-screen", {
+      items: chest.lootItems.map((it, idx) => ({
+        itemIndex: idx,
+        itemId: it.itemId,
+        quantity: it.quantity,
+      })),
+    });
+  }
+
+  takeAllChestItems() {
+    const chest = this.activeChest;
+    if (!chest) return;
+    for (const item of chest.lootItems) {
+      this.addItemToInventory(item.itemId, item.quantity);
+    }
+    chest.lootItems = [];
+    if (!chest.ephemeral) this.saveChestRemainingLoot(chest);
+    this.closeChestScreen();
+  }
+
+  closeChestScreen() {
+    this.unpauseGame("chest");
+    this.activeChest = null;
+    this.events.emit("chest-screen", null);
+  }
+
+  saveChestRemainingLoot(chest) {
+    if (chest.lootItems.length > 0) {
+      this.currentFloorChestRemainingLoot[chest.index] = chest.lootItems.map(
+        (i) => ({ ...i }),
+      );
+    } else {
+      delete this.currentFloorChestRemainingLoot[chest.index];
     }
   }
 
@@ -3238,15 +3677,10 @@ export default class MainScene extends Phaser.Scene {
     if (!this.meleeCooldown.isReady(now)) return;
     this.meleeCooldown.trigger(now);
 
-    // arme en main principale UNIQUEMENT (jamais offHand, meme en double
-    // armement) - simplifie le declenchement de l'effet de statut
     const meleeWeaponDef = this.equipped.mainHand
       ? resolveItemDef(this.equipped.mainHand)
       : null;
 
-    // animation d'attaque du heros, si son sprite en definit une pour
-    // cette direction - optionnel, ne fait rien pour les heros qui n'ont
-    // pas ces frames (cf. createAnimationsForEntry)
     const hasAttackAnim = this.anims.exists(
       this.heroSpriteKey + "-attack-" + this.lastDir,
     );
@@ -3325,7 +3759,7 @@ export default class MainScene extends Phaser.Scene {
     }
 
     if (imbue && !anyHit) {
-      this.pendingWeaponImbue = imbue; // coup dans le vide - restitue plutot que gaspille
+      this.pendingWeaponImbue = imbue;
     }
 
     const aimDir =
@@ -3461,12 +3895,6 @@ export default class MainScene extends Phaser.Scene {
     sprite.setDepth(12);
     sprite.body.setVelocity(v.x * PROJECTILE_SPEED, v.y * PROJECTILE_SPEED);
 
-    // weaponDef ET la munition equipee (this.equipped.quiver) sont TOUTES
-    // DEUX capturees ICI (au moment du tir) - une munition (fleche,
-    // carreau) peut porter son PROPRE inflictsEffect, independant de
-    // celui de l'arme qui la propulse (ex: une fleche enflammee tiree par
-    // un arc normal, ou l'inverse). null si aucune munition equipee
-    // (arme magique comme le baton, requiresAmmo absent).
     const ammoDef = this.equipped.quiver
       ? resolveItemDef(this.equipped.quiver)
       : null;
@@ -3523,6 +3951,13 @@ export default class MainScene extends Phaser.Scene {
           let rawDamage =
             this.getEffectivePlayerRangedDamage() *
             (isCrit ? CRIT_MULTIPLIER : 1);
+
+          if (proj.weaponDef?.varianceDice) {
+            rawDamage = applyDiceVariance(
+              rawDamage,
+              proj.weaponDef.varianceDice,
+            );
+          }
 
           rawDamage = applyElementalResistance(
             rawDamage,
@@ -3593,18 +4028,6 @@ export default class MainScene extends Phaser.Scene {
     this.nextLootChestId++;
   }
 
-  /**
-  // ==============================================================
-  // BARRE DE RACCOURCIS
-  // ==============================================================
-
-  /**
-   * Active l'emplacement `slotIndex` (0-8, correspond aux touches 1-9) de
-   * la barre de raccourcis - un pouvoir OU un objet (potion), selon ce qui
-   * y est assigne. Meme garde de pause/mort que performMeleeAttack/
-   * performRangedAttack (jamais appelee directement par React sans passer
-   * par ce chemin).
-   */
   useHotbarSlot(slotIndex) {
     const slot = this.hotbarSlots[slotIndex];
     if (!slot) return;
@@ -3624,23 +4047,13 @@ export default class MainScene extends Phaser.Scene {
         this.showLootToast("Objet épuisé");
         return;
       }
-      this.useConsumable(invIndex); // le cooldown est verifie A L'INTERIEUR desormais
+      this.useConsumable(invIndex);
       return;
     }
 
     this.performAbility(slot.id);
   }
 
-  /**
-   * Utilise un parchemin DEPUIS LA BARRE - different de useConsumable
-   * (qui APPREND definitivement) : si l'archetype correspond, retombe
-   * sur l'apprentissage normal (un parchemin compatible reste toujours
-   * preferable a apprendre plutot qu'a "gaspiller" en usage unique). Si
-   * l'archetype ne correspond PAS, devient un consommable a USAGE UNIQUE
-   * - lance la competence UNE FOIS, jamais apprise, sans cout en mana/
-   * stamina (le parchemin porte deja son propre "cout" : il disparait),
-   * avec le MEME cooldown que les potions (itemCooldowns).
-   */
   useScrollFromHotbar(itemId) {
     const invIndex = this.inventory.findIndex((i) => i.itemId === itemId);
     if (invIndex === -1) {
@@ -3662,10 +4075,6 @@ export default class MainScene extends Phaser.Scene {
       !abilityDef.archetypes ||
       abilityDef.archetypes.length === 0 ||
       abilityDef.archetypes.includes(heroArchetype);
-    // meme garde que les autres chemins d'apprentissage (checkLevelUp,
-    // useConsumable) - une competence dont la ressource necessaire est
-    // plafonnee a 0 pour ce heros ne peut JAMAIS etre apprise
-    // "normalement", peu importe si l'archetype correspond par ailleurs
     const resourceAvailable =
       (!abilityDef.staminaCost || this.playerMaxStamina > 0) &&
       (!abilityDef.manaCost || this.playerMaxMana > 0);
@@ -3723,16 +4132,6 @@ export default class MainScene extends Phaser.Scene {
     this.persistProgress();
   }
 
-  /**
-  // ==============================================================
-  // COMPETENCES
-  // ==============================================================
-
-  /**
-   * Execute une competence par son id - verifie cooldown INDIVIDUEL (par
-   * competence, pas un seul cooldown global comme pour melee/ranged) et
-   * stamina, puis dispatche selon effectType.
-   */
   performAbility(abilityId) {
     if (!this.unlockedAbilities.includes(abilityId)) return;
 
@@ -3754,10 +4153,13 @@ export default class MainScene extends Phaser.Scene {
       return;
     }
 
-    // le garde anti-doublon manquait completement - c'est ce qui laissait
-    // invoquer plusieurs fois le meme familier. Rien n'est consomme ici -
-    // le cout/cooldown ne s'appliquent que si le joueur confirme le
-    // renouvellement (cf. confirmResummon)
+    const now = this.time.now;
+    const readyAt = this.abilityCooldowns[abilityId] || 0;
+    if (now < readyAt) {
+      this.showLootToast("Compétence en recharge");
+      return;
+    }
+
     if (def.effectType === "summon" && def.persistent) {
       const existing = this.summons.find(
         (s) => s.persistent && s.sourceAbilityId === def.id,
@@ -3771,17 +4173,6 @@ export default class MainScene extends Phaser.Scene {
       }
     }
 
-    const now = this.time.now;
-    const readyAt = this.abilityCooldowns[abilityId] || 0;
-    if (now < readyAt) {
-      this.showLootToast("Compétence en recharge");
-      return;
-    }
-
-    // ressource consommee : stamina OU mana, jamais les deux - chaque
-    // competence declare UN SEUL des deux couts (cf. abilityDefs.js) selon
-    // ce qui est coherent avec son archetype (coup physique -> stamina,
-    // sort -> mana)
     if (def.staminaCost && this.playerStamina < def.staminaCost) {
       this.showLootToast("Pas assez de stamina !");
       return;
@@ -3903,6 +4294,7 @@ export default class MainScene extends Phaser.Scene {
   }
 
   performRepelAbility(def) {
+    const abilityDamage = this.computeAbilityDamage(def);
     for (const enemy of this.enemies) {
       if (!this.isEnemyVisible(enemy)) continue;
       const dx = enemy.sprite.x - this.hero.x;
@@ -3910,8 +4302,13 @@ export default class MainScene extends Phaser.Scene {
       const dist = Math.hypot(dx, dy);
       if (dist > def.radius) continue;
 
-      if (def.damage) {
-        this.damageEnemy(enemy, computeDamage(def.damage, enemy.defense));
+      if (abilityDamage) {
+        const rawDamage = applyElementalResistance(
+          abilityDamage,
+          def.damageType,
+          enemy.resistances,
+        );
+        this.damageEnemy(enemy, computeDamage(rawDamage, enemy.defense));
       }
 
       const mag = dist || 1;
@@ -3933,13 +4330,6 @@ export default class MainScene extends Phaser.Scene {
     });
   }
 
-  /**
-   * Cree et configure un sprite d'invocation a une position donnee -
-   * factorise car reutilise a 3 endroits : creation initiale
-   * (performSummonAbility), reapparition d'un familier persistant a
-   * chaque etage (loadLevel), et restauration a la reprise d'une
-   * sauvegarde (resumeFromSave).
-   */
   spawnSummonSprite(spriteKey, x, y) {
     const summonSpriteInfo =
       SPRITE_REGISTRY[spriteKey] || SPRITE_REGISTRY.enemyDefault;
@@ -3961,12 +4351,6 @@ export default class MainScene extends Phaser.Scene {
     return sprite;
   }
 
-  /**
-   * Cree une invocation temporaire - une seule active a la fois (une
-   * nouvelle remplace l'ancienne). Expire par duree (def.durationMs) OU
-   * par mort (hp <= 0, cf. updateSummons et le ciblage ajoute dans
-   * updateEnemyAttacks).
-   */
   performSummonAbility(def) {
     if (this.summons.length >= MAX_SUMMONS) {
       const oldestIndex = this.summons.findIndex((s) => !s.persistent);
@@ -4019,9 +4403,6 @@ export default class MainScene extends Phaser.Scene {
     this.pendingResummonTarget = null;
     if (!def || !existing) return;
 
-    // memes verifications de ressource que performAbility aurait faites -
-    // le renouvellement n'est pas gratuit, juste differe jusqu'a
-    // confirmation
     if (def.staminaCost && this.playerStamina < def.staminaCost) {
       this.showLootToast("Pas assez de stamina !");
       return;
@@ -4077,11 +4458,7 @@ export default class MainScene extends Phaser.Scene {
     this.pendingResummonDef = null;
     this.pendingResummonTarget = null;
   }
-  /**
-   * IA simplifiee de l'invocation : suit le heros si aucun ennemi
-   * proche, sinon fonce sur l'ennemi visible le plus proche et
-   * l'attaque a portee. Appelee chaque frame depuis update().
-   */
+
   updateSummons(now) {
     const remaining = [];
     for (const summon of this.summons) {
@@ -4096,8 +4473,6 @@ export default class MainScene extends Phaser.Scene {
         continue;
       }
 
-      // animation d'attaque en cours - ne pas l'interrompre avec le
-      // reste de la logique de mouvement/ciblage de cette frame
       if (now < (summon.attackAnimUntil || 0)) {
         remaining.push(summon);
         continue;
@@ -4222,12 +4597,7 @@ export default class MainScene extends Phaser.Scene {
     };
     this.hero.setVelocity(dir.x * def.dashSpeed, dir.y * def.dashSpeed);
   }
-  /**
-   * Deplace un sprite ennemi d'un delta donne, SEULEMENT si la case
-   * d'arrivee n'est pas un mur - sinon le recul est simplement annule
-   * (l'ennemi reste sur place plutot que d'etre pousse dans/a travers une
-   * paroi solide). Reutilise par repel ET shieldBash.
-   */
+
   knockbackEnemyIfClear(enemy, dx, dy) {
     const newX = enemy.sprite.x + dx;
     const newY = enemy.sprite.y + dy;
@@ -4245,19 +4615,14 @@ export default class MainScene extends Phaser.Scene {
     enemy.sprite.x = newX;
     enemy.sprite.y = newY;
   }
-  /**
-   * Fait avancer le dash en cours - appelee CHAQUE frame depuis update()
-   * A LA PLACE du mouvement normal (input clavier ignore pendant le dash).
-   * S'arrete des que la distance prevue est parcourue OU que le heros a
-   * physiquement percute un mur (vitesse annulee par le collider deja en
-   * place avec this.layer).
-   */
+
   updateShieldBash() {
     const ds = this.dashState;
     const traveled = Math.hypot(
       this.hero.x - ds.startX,
       this.hero.y - ds.startY,
     );
+    const abilityDamage = this.computeAbilityDamage(ds.def);
 
     for (const enemy of this.enemies) {
       if (ds.hitEnemyIds.has(enemy)) continue;
@@ -4266,7 +4631,12 @@ export default class MainScene extends Phaser.Scene {
         enemy.sprite.y - this.hero.y,
       );
       if (dist <= 24) {
-        this.damageEnemy(enemy, computeDamage(ds.def.damage, enemy.defense));
+        const rawDamage = applyElementalResistance(
+          abilityDamage,
+          ds.def.damageType,
+          enemy.resistances,
+        );
+        this.damageEnemy(enemy, computeDamage(rawDamage, enemy.defense));
         ds.hitEnemyIds.add(enemy);
         this.knockbackEnemyIfClear(
           enemy,
@@ -4284,12 +4654,6 @@ export default class MainScene extends Phaser.Scene {
     }
   }
 
-  /**
-   * Force tous les ennemis proches (visibles) en 'chase', peu importe
-   * leur etat actuel - meme mecanisme que damageEnemy (cf. le correctif
-   * anti-farming de critiques dans le dos), juste declenche a distance
-   * plutot que par un coup physique.
-   */
   performTauntAbility(def) {
     for (const enemy of this.enemies) {
       if (!this.isEnemyVisible(enemy)) continue;
@@ -4325,14 +4689,8 @@ export default class MainScene extends Phaser.Scene {
     });
   }
 
-  /**
-   * Degats en zone autour du heros (rayon def.radius) - touche TOUS les
-   * ennemis visibles dans ce rayon, pas juste un cone comme la melee de
-   * base. Reutilise damageEnemy tel quel (meme consequences qu'un coup
-   * normal : XP/butin/quete/mort). Pas de critique ici (les competences
-   * ont leurs propres degats fixes, distincts du systeme melee/ranged).
-   */
   performAoeAbility(def) {
+    const abilityDamage = this.computeAbilityDamage(def);
     for (const enemy of this.enemies) {
       if (!this.isEnemyVisible(enemy)) continue;
       const dist = Math.hypot(
@@ -4341,7 +4699,7 @@ export default class MainScene extends Phaser.Scene {
       );
       if (dist > def.radius) continue;
       const rawDamage = applyElementalResistance(
-        def.damage,
+        abilityDamage,
         def.damageType,
         enemy.resistances,
       );
@@ -4361,13 +4719,7 @@ export default class MainScene extends Phaser.Scene {
       onComplete: () => circle.destroy(),
     });
   }
-  /**
-   * Lance un projectile de competence (boule de feu) - meme auto-visee
-   * que l'attaque a distance normale (ennemi visible le plus proche,
-   * repli sur lastAimVector), mais stocke dans this.abilityProjectiles
-   * (SEPARE de this.projectiles) car son impact declenche une explosion
-   * en zone plutot que des degats mono-cible.
-   */
+
   performProjectileAoeAbility(def) {
     let v = this.lastAimVector;
     let nearestDist = Infinity;
@@ -4403,15 +4755,7 @@ export default class MainScene extends Phaser.Scene {
       `${def.name} activée - le prochain coup sera renforcé !`,
     );
   }
-  /**
-   * Lance un projectile PERFORANT - meme auto-visee que les autres
-   * projectiles, mais NE S'ARRETE JAMAIS au premier contact (cf.
-   * updateAbilityProjectiles, qui distingue le comportement via
-   * def.effectType). hitEnemyIds (un Set de references d'objets ennemi,
-   * pas d'ids numeriques) evite de toucher DEUX FOIS le meme ennemi
-   * pendant qu'il reste dans le rayon de collision sur plusieurs frames
-   * consecutives.
-   */
+
   performPierceAbility(def) {
     let v = this.lastAimVector;
     let nearestDist = Infinity;
@@ -4443,11 +4787,7 @@ export default class MainScene extends Phaser.Scene {
       pierceCount: 0,
     });
   }
-  /**
-   * Buff temporaire SUR LE JOUEUR lui-meme (ex: hate) - reutilise
-   * applyStatusEffect/this.playerStatusEffects, kind:'modifier'. Aucune
-   * cible a viser, applique immediatement.
-   */
+
   performSelfBuffAbility(def) {
     this.applyStatusEffect(this.playerStatusEffects, {
       type: def.id,
@@ -4458,11 +4798,6 @@ export default class MainScene extends Phaser.Scene {
     this.showLootToast(`${def.name} activé !`);
   }
 
-  /**
-   * Debuff temporaire (ex: ralentissement) a TOUS les ennemis visibles
-   * dans def.radius - meme perimetre que performAoeAbility (degats) mais
-   * applique un statusEffect plutot qu'un coup instantane.
-   */
   performAoeDebuffAbility(def) {
     for (const enemy of this.enemies) {
       if (!this.isEnemyVisible(enemy)) continue;
@@ -4479,7 +4814,7 @@ export default class MainScene extends Phaser.Scene {
       });
     }
 
-    const circle = this.add.circle(this.hero.x, this.hero.y, 10, 0x4488ff, 0.4); // bleu, distinct de l'orange feu
+    const circle = this.add.circle(this.hero.x, this.hero.y, 10, 0x4488ff, 0.4);
     circle.setDepth(14);
     this.tweens.add({
       targets: circle,
@@ -4489,14 +4824,7 @@ export default class MainScene extends Phaser.Scene {
       onComplete: () => circle.destroy(),
     });
   }
-  /**
-   * Cases de sol atteignables depuis une position, sans jamais traverser
-   * un mur - sert a EXCLURE la salle du boss (scellee tant que la porte
-   * n'est pas ouverte : elle EST un mur dans this.fogGrid) des effets qui
-   * ignorent normalement les murs (ex: le pulse d'exploration) - une
-   * zone structurellement inaccessible ne doit jamais etre revelee, meme
-   * par un effet qui "voit a travers".
-   */
+
   computeReachableFloorTiles(originX, originY) {
     const grid = this.fogGrid;
     const height = grid.length;
@@ -4524,19 +4852,15 @@ export default class MainScene extends Phaser.Scene {
     }
     return visited;
   }
-  /**
-   * Explosion au point d'impact d'une competence-projectile - touche TOUS
-   * les ennemis visibles dans def.radius autour de CE POINT (pas autour
-   * du heros, contrairement a performAoeAbility). Reutilise damageEnemy
-   * tel quel.
-   */
+
   explodeAbilityProjectile(def, x, y) {
+    const abilityDamage = this.computeAbilityDamage(def);
     for (const enemy of this.enemies) {
       if (!this.isEnemyVisible(enemy)) continue;
       const dist = Math.hypot(enemy.sprite.x - x, enemy.sprite.y - y);
       if (dist > def.radius) continue;
       const rawDamage = applyElementalResistance(
-        def.damage,
+        abilityDamage,
         def.damageType,
         enemy.resistances,
       );
@@ -4556,14 +4880,7 @@ export default class MainScene extends Phaser.Scene {
       onComplete: () => circle.destroy(),
     });
   }
-  /**
-   * Determine precisement quelles cases appartiennent a la salle du boss
-   * scellee - sans connaitre ses dimensions exactes, en comparant
-   * l'atteignable AVEC la porte fermee (etat reel) contre l'atteignable SI
-   * elle etait ouverte (simulation ponctuelle sur fogGrid, restauree
-   * immediatement, jamais de mutation persistante). La difference entre
-   * les deux EST la salle du boss.
-   */
+
   computeBossRoomTiles() {
     if (!this.bossDoorTile || this.bossRoomOpen) return new Set();
 
@@ -4577,12 +4894,12 @@ export default class MainScene extends Phaser.Scene {
 
     const { x: dx, y: dy } = this.bossDoorTile;
     const original = this.fogGrid[dy][dx];
-    this.fogGrid[dy][dx] = 0; // simule la porte ouverte, temporairement
+    this.fogGrid[dy][dx] = 0;
     const reachableIfOpen = this.computeReachableFloorTiles(
       centerTileX,
       centerTileY,
     );
-    this.fogGrid[dy][dx] = original; // restaure immediatement
+    this.fogGrid[dy][dx] = original;
 
     const bossRoomTiles = new Set();
     for (const key of reachableIfOpen) {
@@ -4591,20 +4908,6 @@ export default class MainScene extends Phaser.Scene {
     return bossRoomTiles;
   }
 
-  /**
-   * Revele temporairement le brouillard sur un grand rayon (ligne de vue
-   * respectee, jamais a travers les murs - reutilise EXACTEMENT le meme
-   * calcul que la vision normale, computeVisibleTiles). Ne fait QUE
-   * forcer state=2 sur les cases concernees et redessiner - aucune
-   * logique de "redescente" a ecrire : au prochain deplacement du
-   * joueur, fogState.update() recalculera sa PROPRE visibilite (son
-   * vrai playerVisionRadius, plus petit) et redescendra naturellement
-   * ces cases a 1 (deja vu, hors de vue) exactement comme il le fait
-   * deja pour n'importe quelle case quittee normalement. Les ennemis/
-   * coffres dans cette zone deviennent donc visibles pendant le pulse,
-   * puis se remasquent tout seuls des le prochain pas - isEnemyVisible
-   * relit l'etat chaque frame, jamais mis en cache.
-   */
   performFogPulseAbility(def) {
     const centerTileX = Math.floor(this.hero.x / TILE_SIZE);
     const centerTileY = Math.floor(this.hero.y / TILE_SIZE);
@@ -4624,7 +4927,7 @@ export default class MainScene extends Phaser.Scene {
           const key = x + "," + y;
           if (Math.hypot(x - centerTileX, y - centerTileY) > def.radius)
             continue;
-          if (bossRoomTiles.has(key)) continue; // exclut SEULEMENT la salle du boss
+          if (bossRoomTiles.has(key)) continue;
           revealed.add(key);
         }
       }
@@ -4659,12 +4962,6 @@ export default class MainScene extends Phaser.Scene {
     });
   }
 
-  /**
-   * Fait avancer this.abilityProjectiles - meme structure que
-   * updateProjectiles (deplacement, sortie de limites/mur, visibilite au
-   * brouillard), mais l'impact declenche explodeAbilityProjectile
-   * (explosion en zone) plutot que des degats mono-cible.
-   */
   updateAbilityProjectiles() {
     const grid = this.fogGrid;
     const remaining = [];
@@ -4703,8 +5000,9 @@ export default class MainScene extends Phaser.Scene {
             enemy.sprite.y - proj.sprite.y,
           );
           if (dist <= 14 && this.isEnemyVisible(enemy)) {
+            const abilityDamage = this.computeAbilityDamage(proj.def);
             const rawDamage = applyElementalResistance(
-              proj.def.damage,
+              abilityDamage,
               proj.def.damageType,
               enemy.resistances,
             );
@@ -4795,10 +5093,6 @@ export default class MainScene extends Phaser.Scene {
     this.hero.x = targetX;
     this.hero.y = targetY;
 
-    // les invocations actives teleportent AVEC le heros - sinon elles
-    // restent bloquees a l'ancien endroit (IA sans vrai pathfinding,
-    // juste une ligne droite - un familier laisse derriere peut rester
-    // coince contre un mur indefiniment)
     for (const summon of this.summons) {
       summon.sprite.x = targetX + (Math.random() - 0.5) * 40;
       summon.sprite.y = targetY + (Math.random() - 0.5) * 40;
@@ -4820,15 +5114,12 @@ export default class MainScene extends Phaser.Scene {
     this.showLootToast(`${def.name} activée !`);
   }
 
-  // Reutilisation : etendue dans updateEnemyDecisions (cf. plus bas) - un
-  // ennemi PAS DEJA en 'chase' ne peut initier aucune detection tant que
-  // this.stealthUntil est dans le futur
-
   performChainLightningAbility(def) {
     let currentX = this.hero.x;
     let currentY = this.hero.y;
     const hit = new Set();
     let jumps = 0;
+    const abilityDamage = this.computeAbilityDamage(def);
 
     while (jumps < def.maxJumps) {
       let nearest = null;
@@ -4847,7 +5138,7 @@ export default class MainScene extends Phaser.Scene {
       if (!nearest) break;
 
       const rawDamage = applyElementalResistance(
-        def.damage,
+        abilityDamage,
         def.damageType,
         nearest.resistances,
       );
@@ -4887,7 +5178,12 @@ export default class MainScene extends Phaser.Scene {
       x: this.hero.x,
       y: this.hero.y,
       radius: def.radius,
-      damagePerTick: def.damagePerTick,
+      damagePerTick: this.computeAbilityDamage({
+        damage: def.damagePerTick,
+        damagePercent: def.damagePercent,
+        scalesFrom: def.scalesFrom,
+      }),
+      damageType: def.damageType || "physical",
       tickIntervalMs: def.tickIntervalMs,
       nextTickAt: this.time.now,
       expiresAt: this.time.now + def.durationMs,
@@ -4949,6 +5245,7 @@ export default class MainScene extends Phaser.Scene {
     const dir = this.lastAimVector;
     const angleRad = (def.angleDegrees * Math.PI) / 180;
     const baseAngle = Math.atan2(dir.y, dir.x);
+    const abilityDamage = this.computeAbilityDamage(def);
 
     for (const enemy of this.enemies) {
       if (!this.isEnemyVisible(enemy)) continue;
@@ -4962,7 +5259,7 @@ export default class MainScene extends Phaser.Scene {
       if (angleDiff > angleRad / 2) continue;
 
       const rawDamage = applyElementalResistance(
-        def.damage,
+        abilityDamage,
         def.damageType,
         enemy.resistances,
       );
@@ -5075,10 +5372,6 @@ export default class MainScene extends Phaser.Scene {
   }
 
   performConditionalBuffAbility(def) {
-    // le seuil de PV est deja verifie EN AMONT dans performAbility (cf.
-    // le garde hpThresholdPercent ajoute avant le dispatch) - ici on ne
-    // fait qu'appliquer le buff, coherent avec le reste des methodes
-    // perform* qui supposent deja tout valide
     this.applyStatusEffect(this.playerStatusEffects, {
       type: def.id,
       kind: "modifier",
@@ -5175,8 +5468,9 @@ export default class MainScene extends Phaser.Scene {
           enemy.sprite.y - b.sprite.y,
         );
         if (dist <= 14 && this.isEnemyVisible(enemy)) {
+          const abilityDamage = this.computeAbilityDamage(b.def);
           const rawDamage = applyElementalResistance(
-            b.def.damage,
+            abilityDamage,
             b.def.damageType,
             enemy.resistances,
           );
@@ -5188,15 +5482,7 @@ export default class MainScene extends Phaser.Scene {
     }
     this.boomerangs = remaining;
   }
-  /**
-   * Assigne une competence OU un objet (potion) a un emplacement de la
-   * barre de raccourcis (0-8). Si ce MEME pouvoir/objet est deja assigne
-   * a un AUTRE emplacement, on le retire de la-bas d'abord (deplace
-   * plutot que duplique) - purement une question de clarte pour le
-   * joueur (fonctionnellement, un doublon ne casserait rien : le
-   * cooldown est partage par abilityId, pas par emplacement), mais deux
-   * touches pour exactement la meme action preterait a confusion.
-   */
+
   assignHotbarSlot(slotIndex, payload) {
     if (slotIndex < 0 || slotIndex > 8) return;
 
@@ -5224,18 +5510,6 @@ export default class MainScene extends Phaser.Scene {
     this.events.emit("hotbar-updated", [...this.hotbarSlots]);
   }
 
-  // ==============================================================
-  // EFFETS DE STATUT
-  // ==============================================================
-
-  /**
-   * Tire (aleatoire simple, Math.random - meme esprit que rollCritical
-   * dans combat.js) si une source (arme du joueur ou type d'ennemi,
-   * toutes deux au format {inflictsEffect: {type, chance, damagePerTick,
-   * tickIntervalMs, ticks}}) declenche son effet de statut sur CE coup
-   * precis. Renvoie l'effet a appliquer, ou null si la source n'en
-   * inflige aucun ou si le tirage a echoue.
-   */
   rollStatusEffect(sourceDef) {
     if (!sourceDef || !sourceDef.inflictsEffect) return null;
     const inflict = sourceDef.inflictsEffect;
@@ -5250,7 +5524,6 @@ export default class MainScene extends Phaser.Scene {
       };
     }
 
-    // dot (saignement/brulure, inchange)
     return {
       type: inflict.type,
       kind: "dot",
@@ -5260,22 +5533,11 @@ export default class MainScene extends Phaser.Scene {
     };
   }
 
-  /**
-   * Ajoute/rafraichit un effet de statut sur une cible (enemy.statusEffects
-   * OU this.playerStatusEffects, meme forme des deux cotes). Un effet du
-   * MEME type REMPLACE l'existant (rafraichit la duree) plutot que de
-   * s'empiler.
-   */
   applyStatusEffect(list, effect) {
     if (!effect) return;
     const existingIndex = list.findIndex((e) => e.type === effect.type);
     if (existingIndex !== -1) list.splice(existingIndex, 1);
     if (effect.kind === "modifier") {
-      // buff/debuff : PAS de tic - juste une expiration a verifier chaque
-      // frame (cf. updateStatusEffects). L'effet reste actif tant que
-      // present dans la liste - getEffectiveEnemySpeed/
-      // getEffectivePlayerMoveSpeed relisent la liste EN DIRECT, jamais
-      // de valeur mise en cache a "annuler" explicitement a l'expiration.
       list.push({ ...effect, expiresAt: this.time.now + effect.durationMs });
     } else {
       list.push({
@@ -5285,10 +5547,6 @@ export default class MainScene extends Phaser.Scene {
     }
   }
 
-  /**
-   * Flash de teinte bref pour signaler un tic de saignement (rouge) ou
-   * de brulure (orange).
-   */
   flashStatusTint(sprite, effectType) {
     if (!sprite || !sprite.active) return;
     const color = STATUS_EFFECT_COLORS[effectType] ?? 0xcc0000;
@@ -5301,12 +5559,6 @@ export default class MainScene extends Phaser.Scene {
     });
   }
 
-  /**
-   * Fait avancer tous les effets de statut actifs - cote ENNEMIS
-   * (enemy.statusEffects) ET cote JOUEUR (this.playerStatusEffects). Un
-   * tic passe TOUJOURS par damageEnemy / la reduction normale de
-   * playerHp.
-   */
   updateStatusEffects(now) {
     for (const enemy of this.enemies) {
       if (!enemy.statusEffects || enemy.statusEffects.length === 0) continue;
@@ -5314,7 +5566,7 @@ export default class MainScene extends Phaser.Scene {
       for (const effect of enemy.statusEffects) {
         if (effect.kind === "modifier") {
           if (now < effect.expiresAt) remaining.push(effect);
-          continue; // jamais de degats/flash pour un modificateur pur
+          continue;
         }
         if (now >= effect.nextTickAt) {
           this.damageEnemy(enemy, effect.damagePerTick);
@@ -5352,19 +5604,57 @@ export default class MainScene extends Phaser.Scene {
   }
 
   /**
-   * Vitesse de deplacement EFFECTIVE d'un ennemi - base ENEMY_SPEED
-   * (globale : le champ enemy.speed calcule cote serveur par archetype
-   * n'est PAS branche cote client aujourd'hui, hors perimetre de cette
-   * demande) moduleé par les effets de statut actifs portant
-   * statModifiers.moveSpeedPercent (ex: 'slow' a -0.5). Jamais sous 20%
-   * de la vitesse de base - un ennemi ralenti reste toujours un minimum
-   * mobile, jamais totalement fige.
+   * Cree un emetteur de particules purement decoratif, attache et suivant
+   * un sprite d'ennemi - fire/ice/gas selon enemy.visualEffect (optionnel,
+   * cf. ENEMY_TYPES cote serveur). Aucun impact sur le gameplay - pure
+   * decoration, independante de inflictsEffect/damageType.
    */
+  createEnemyVisualEffect(sprite, effectType) {
+    const configs = {
+      fire: {
+        texture: "particle-fire",
+        speed: { min: 8, max: 20 },
+        scale: { start: 1.5, end: 0 },
+        alpha: { start: 2.0, end: 0 },
+        lifespan: 450,
+        frequency: 120,
+      },
+      ice: {
+        texture: "particle-ice",
+        speed: { min: 5, max: 15 },
+        scale: { start: 0.6, end: 0 },
+        alpha: { start: 0.7, end: 0 },
+        lifespan: 700,
+        frequency: 100,
+      },
+      gas: {
+        texture: "particle-gas",
+        speed: { min: 5, max: 20 },
+        scale: { start: 1, end: 0.3 },
+        alpha: { start: 0.5, end: 0 },
+        lifespan: 900,
+        frequency: 80,
+      },
+    };
+    const config = configs[effectType];
+    if (!config) return null;
 
-  // ==============================================================
-  // STATS EFFECTIVES (BUFFS/DEBUFFS)
-  // ==============================================================
-
+    const emitter = this.add.particles(
+      sprite.x,
+      sprite.y - 30,
+      config.texture,
+      {
+        speed: config.speed,
+        scale: config.scale,
+        alpha: config.alpha,
+        lifespan: config.lifespan,
+        frequency: config.frequency,
+        blendMode: "ADD",
+      },
+    );
+    emitter.setDepth(sprite.depth + 1);
+    return emitter;
+  }
   getEffectiveEnemySpeed(enemy) {
     let multiplier = 1;
     for (const effect of enemy.statusEffects) {
@@ -5384,11 +5674,6 @@ export default class MainScene extends Phaser.Scene {
     return Math.max(0, enemy.damage * multiplier);
   }
 
-  /**
-   * Meme principe pour le heros - this.playerMoveSpeed (deja calcule par
-   * recalculatePlayerStats, niveau+equipement) module par les effets
-   * actifs (ex: 'haste' a +0.6).
-   */
   getEffectivePlayerMoveSpeed() {
     let multiplier = 1;
     for (const effect of this.playerStatusEffects) {
@@ -5434,16 +5719,7 @@ export default class MainScene extends Phaser.Scene {
       this.time.now < this.visionBonusUntil ? this.visionBonusAmount : 0;
     return this.playerVisionRadius + bonus;
   }
-  // ==============================================================
-  // FURIE
-  // ==============================================================
 
-  /**
-   * Declenche la furie de l'archetype actuel - disponible uniquement une
-   * fois this.furyKillCount >= FURY_KILLS_REQUIRED. Contrairement aux
-   * competences normales : AUCUN cout en ressource, AUCUN cooldown
-   * temporel.
-   */
   useFury() {
     if (this.furyKillCount < FURY_KILLS_REQUIRED) {
       this.showLootToast(
@@ -5475,7 +5751,12 @@ export default class MainScene extends Phaser.Scene {
           enemy.sprite.y - this.hero.y,
         );
         if (dist > fury.aoeRadius) continue;
-        this.damageEnemy(enemy, computeDamage(fury.aoeDamage, enemy.defense));
+        const rawDamage = applyElementalResistance(
+          fury.aoeDamage,
+          fury.damageType,
+          enemy.resistances,
+        );
+        this.damageEnemy(enemy, computeDamage(rawDamage, enemy.defense));
       }
       const circle = this.add.circle(
         this.hero.x,
@@ -5535,20 +5816,7 @@ export default class MainScene extends Phaser.Scene {
     this.showLootToast(`${fury.name} déclenchée !`);
   }
 
-  // ==============================================================
-  // DEGATS ET PROGRESSION
-  // ==============================================================
-
   damageEnemy(enemy, amount) {
-    // se faire TOUCHER physiquement est TOUJOURS une detection, quelle
-    // que soit la position (dos ou face) - contrairement a
-    // decideNextState (base uniquement sur position/ligne de vue), etre
-    // frappe ne peut pas rester "non detecte" indefiniment. Sans ca, un
-    // ennemi jamais repere restait eternellement en patrol/guard/etc,
-    // rendant CHAQUE coup un critique GARANTI a l'infini (cf.
-    // rollCritical(enemy.state !== 'chase'), deja calcule par l'appelant
-    // AVANT ce point - le coup EN COURS garde donc son statut de critique
-    // deja decide, seuls les coups SUIVANTS perdent la garantie).
     if (enemy.state !== "chase") {
       enemy.state = "chase";
       const ex = Math.floor(enemy.sprite.x / TILE_SIZE);
@@ -5572,9 +5840,6 @@ export default class MainScene extends Phaser.Scene {
       this.events.emit("xp-changed", { xp: this.xp });
       this.checkLevelUp();
       this.currentFloorKills.push(enemy.spawnIndex);
-      // alimente la furie - plafonne a FURY_KILLS_REQUIRED, jamais au-dela
-      // (pas besoin de deborder, useFury remet a 0 de toute facon au
-      // declenchement)
       if (this.furyKillCount < FURY_KILLS_REQUIRED) {
         this.furyKillCount++;
         this.events.emit("fury-progress", {
@@ -5585,16 +5850,8 @@ export default class MainScene extends Phaser.Scene {
           this.showLootToast("Furie prête !");
         }
       }
-      if (enemy.drops && enemy.drops.length > 0) {
-        this.spawnLootChest(enemy.sprite.x, enemy.sprite.y, enemy.drops);
-      }
+      const lootItems = [...(enemy.drops || [])];
 
-      // objet de quete garanti pour un ennemi NORMAL (cf. enemy.questLoot,
-      // derive de ENEMY_TYPES[...].questLoot cote serveur) - INDEPENDANT
-      // du coffre de butin classique ci-dessus. Un seul objet par ennemi
-      // (contrairement au boss, qui garantit TOUS les objets de quete
-      // actifs a la fois) - jamais de drop sans quete active qui cible
-      // PRECISEMENT cet objet.
       if (!enemy.isBoss && enemy.questLoot) {
         for (const questKey of Object.keys(this.quests)) {
           const qs = this.quests[questKey];
@@ -5604,13 +5861,15 @@ export default class MainScene extends Phaser.Scene {
           const haveQty = this.inventory
             .filter((i) => i.itemId === enemy.questLoot)
             .reduce((sum, i) => sum + i.quantity, 0);
-          if (haveQty >= (qs.targetQuantity || 1)) continue; // deja assez - n'en redonne plus
+          if (haveQty >= (qs.targetQuantity || 1)) continue;
 
-          this.addItemToInventory(enemy.questLoot, 1);
-          const lootDef = resolveItemDef(enemy.questLoot);
-          this.showLootToast(`${lootDef.name} obtenu !`);
+          lootItems.push({ itemId: enemy.questLoot, quantity: 1 });
           break;
         }
+      }
+
+      if (lootItems.length > 0) {
+        this.spawnLootChest(enemy.sprite.x, enemy.sprite.y, lootItems);
       }
 
       if (enemy.isBoss) {
@@ -5619,21 +5878,27 @@ export default class MainScene extends Phaser.Scene {
           const qs = this.quests[questKey];
           if (qs.questId !== "obtainItem" || !qs.accepted || qs.completed)
             continue;
+          if (!qs.isBossItem) continue; // <-- nouveau : jamais un objet issu d'un ennemi normal
           neededCounts[qs.targetItemId] =
             (neededCounts[qs.targetItemId] || 0) + 1;
         }
+        const bossLootItems = [];
         for (const [itemId, neededCount] of Object.entries(neededCounts)) {
           const haveCount = this.inventory
             .filter((i) => i.itemId === itemId)
             .reduce((sum, i) => sum + i.quantity, 0);
           const toGrant = neededCount - haveCount;
-          if (toGrant > 0) {
-            this.addItemToInventory(itemId, toGrant);
-            const itemDef = resolveItemDef(itemId);
-            this.showLootToast(
-              `Le boss laisse tomber : ${itemDef.name} x${toGrant}`,
-            );
-          }
+          if (toGrant > 0) bossLootItems.push({ itemId, quantity: toGrant });
+        }
+        if (enemy.drop) {
+          bossLootItems.push({
+            itemId: enemy.drop.itemId,
+            quantity: enemy.drop.quantity,
+          });
+        }
+        if (bossLootItems.length > 0) {
+          this.spawnLootChest(enemy.sprite.x, enemy.sprite.y, bossLootItems);
+          this.showLootToast("Le boss a laissé tomber un coffre de butin !");
         }
 
         let anyDefeatBossUpdated = false;
@@ -5674,6 +5939,7 @@ export default class MainScene extends Phaser.Scene {
         this.events.emit("quests-updated", { ...this.quests });
         this.persistProgress();
       }
+      if (enemy.visualEmitter) enemy.visualEmitter.destroy();
 
       enemy.sprite.destroy();
       this.enemies = this.enemies.filter((e) => e !== enemy);
@@ -5702,8 +5968,42 @@ export default class MainScene extends Phaser.Scene {
   checkLevelUp() {
     const { level } = computeLevelFromXp(this.xp);
     if (level <= this.playerLevel) return;
+    this.events.emit("levelup-available", { available: true });
+  }
 
+  openLevelUpScreen() {
+    const inCombat = this.enemies.some((e) => e.state === "chase");
+    if (inCombat) {
+      this.showLootToast("Impossible en plein combat");
+      return;
+    }
+
+    const { level } = computeLevelFromXp(this.xp);
+    if (level > this.playerLevel) {
+      this.applyPendingLevelUp(level);
+    }
+
+    this.draftAttributes = { ...this.playerAttributes };
+    this.draftUnspentPoints = this.unspentAttributePoints;
+
+    this.pauseGame("levelup");
+    this.events.emit("levelup-screen-open", {
+      attributes: { ...this.playerAttributes }, // confirme - le plancher pour le bouton "-"
+      draftAttributes: { ...this.draftAttributes },
+      unspent: this.draftUnspentPoints,
+      level: this.playerLevel,
+    });
+  }
+
+  closeLevelUpScreen() {
+    this.unpauseGame("levelup");
+    this.events.emit("levelup-screen-open", null);
+  }
+
+  applyPendingLevelUp(level) {
+    const levelsGained = level - this.playerLevel;
     this.playerLevel = level;
+    this.unspentAttributePoints += ATTRIBUTE_POINTS_PER_LEVEL * levelsGained;
     this.recalculatePlayerStats();
     this.playerHp = this.playerMaxHp;
     this.playerMana = this.playerMaxMana;
@@ -5722,9 +6022,6 @@ export default class MainScene extends Phaser.Scene {
         continue;
       if (def.unlockLevel == null || def.unlockLevel > level) continue;
       if (this.unlockedAbilities.includes(def.id)) continue;
-      // <-- LES 2 NOUVELLES LIGNES, ICI, entre le filtre "deja debloquee"
-      // et le push - jamais debloquer une competence dont la ressource
-      // necessaire est plafonnee a 0 pour ce heros precis
       if (def.staminaCost && this.playerMaxStamina <= 0) continue;
       if (def.manaCost && this.playerMaxMana <= 0) continue;
       this.unlockedAbilities.push(def.id);
@@ -5757,12 +6054,124 @@ export default class MainScene extends Phaser.Scene {
       maxStamina: this.playerMaxStamina,
     });
     this.events.emit("level-up", { level });
+    this.events.emit("levelup-available", { available: false });
     this.persistProgress();
   }
+  /**
+   * Debloque tout ce qui a unlockLevel <= niveau actuel - separee
+   * d'applyPendingLevelUp car appelee aussi a la CREATION du personnage
+   * (niveau 1), moment ou aucune vraie "montee de niveau" ne se produit
+   * jamais (on demarre deja a ce niveau, on ne le "franchit" pas).
+   */
+  unlockAvailableAbilitiesAndRecipes() {
+    const heroArchetype = resolveHeroStatsOverride(
+      this.heroSpriteKey,
+    )?.archetype;
+    for (const def of Object.values(ABILITY_DEFS)) {
+      if (
+        def.archetypes &&
+        def.archetypes.length > 0 &&
+        !def.archetypes.includes(heroArchetype)
+      )
+        continue;
+      if (def.unlockLevel == null || def.unlockLevel > this.playerLevel)
+        continue;
+      if (this.unlockedAbilities.includes(def.id)) continue;
+      if (def.staminaCost && this.playerMaxStamina <= 0) continue;
+      if (def.manaCost && this.playerMaxMana <= 0) continue;
+      this.unlockedAbilities.push(def.id);
+    }
+    for (const recipe of Object.values(CRAFTING_RECIPES)) {
+      if (recipe.unlockLevel == null || recipe.unlockLevel > this.playerLevel)
+        continue;
+      if (this.unlockedRecipes.includes(recipe.id)) continue;
+      this.unlockedRecipes.push(recipe.id);
+    }
+  }
 
-  // ==============================================================
-  // COMBAT ENNEMI
-  // ==============================================================
+  allocateAttributePoint(attribute) {
+    if (this.draftUnspentPoints <= 0) return;
+    if (!(attribute in this.draftAttributes)) return;
+    const inCombat = this.enemies.some((e) => e.state === "chase");
+    if (inCombat) {
+      this.showLootToast("Impossible en plein combat");
+      return;
+    }
+
+    this.draftAttributes[attribute]++;
+    this.draftUnspentPoints--;
+
+    this.events.emit("levelup-draft-updated", {
+      attributes: { ...this.draftAttributes },
+      unspent: this.draftUnspentPoints,
+    });
+  }
+
+  /**
+   * Retire un point du brouillon - UNIQUEMENT si ce point a ete ajoute
+   * CETTE session (jamais en dessous de this.playerAttributes, deja
+   * confirme lors d'une session precedente).
+   */
+  deallocateAttributePoint(attribute) {
+    if (!(attribute in this.draftAttributes)) return;
+    if (this.draftAttributes[attribute] <= this.playerAttributes[attribute])
+      return;
+
+    this.draftAttributes[attribute]--;
+    this.draftUnspentPoints++;
+
+    this.events.emit("levelup-draft-updated", {
+      attributes: { ...this.draftAttributes },
+      unspent: this.draftUnspentPoints,
+    });
+  }
+
+  /**
+   * Applique reellement le brouillon - stats recalculees (proportions de
+   * ressources preservees, meme principe qu'avant), sauvegarde. Tant que
+   * cette methode n'est pas appelee, rien n'est definitif - fermer l'ecran
+   * sans valider abandonne silencieusement le brouillon (this.playerAttributes
+   * n'a jamais ete touche entre-temps).
+   */
+  confirmAttributeAllocation() {
+    this.playerAttributes = { ...this.draftAttributes };
+    this.unspentAttributePoints = this.draftUnspentPoints;
+
+    const previousHpRatio = this.playerHp / this.playerMaxHp;
+    const previousManaRatio =
+      this.playerMaxMana > 0 ? this.playerMana / this.playerMaxMana : 1;
+    const previousStaminaRatio =
+      this.playerMaxStamina > 0
+        ? this.playerStamina / this.playerMaxStamina
+        : 1;
+
+    this.recalculatePlayerStats();
+
+    this.playerHp = Math.round(this.playerMaxHp * previousHpRatio);
+    this.playerMana = Math.round(this.playerMaxMana * previousManaRatio);
+    this.playerStamina = Math.round(
+      this.playerMaxStamina * previousStaminaRatio,
+    );
+
+    this.events.emit("player-hp-changed", {
+      hp: this.playerHp,
+      maxHp: this.playerMaxHp,
+    });
+    this.events.emit("player-mana-changed", {
+      mana: this.playerMana,
+      maxMana: this.playerMaxMana,
+    });
+    this.events.emit("player-stamina-changed", {
+      stamina: this.playerStamina,
+      maxStamina: this.playerMaxStamina,
+    });
+    this.events.emit("attributes-updated", {
+      attributes: { ...this.playerAttributes },
+      unspent: this.unspentAttributePoints,
+    });
+    this.showLootToast("Attributs confirmés !");
+    this.persistProgress();
+  }
 
   updateEnemyAttacks(now) {
     for (const enemy of this.enemies) {
@@ -5855,10 +6264,15 @@ export default class MainScene extends Phaser.Scene {
 
       if (target.isSummon) {
         const dmg = computeDamage(
-          this.getEffectiveEnemyDamage(enemy),
+          applyElementalResistance(
+            this.getEffectiveEnemyDamage(enemy),
+            enemy.damageType,
+            target.summon.resistances,
+          ),
           target.defense,
         );
         target.summon.hp = Math.max(0, target.summon.hp - dmg);
+
         this.showDamageNumber(target.summon.sprite, dmg, "#ff44c7");
       } else {
         let dmg = computeDamage(
@@ -5949,8 +6363,6 @@ export default class MainScene extends Phaser.Scene {
           maxHp: this.playerMaxHp,
         });
 
-        // effet de statut capture au TIR (proj.inflictsEffect), pas une
-        // relecture de l'ennemi qui a tire
         this.applyStatusEffect(
           this.playerStatusEffects,
           this.rollStatusEffect({ inflictsEffect: proj.inflictsEffect }),
@@ -5973,10 +6385,6 @@ export default class MainScene extends Phaser.Scene {
 
     this.enemyProjectiles = remaining;
   }
-
-  // ==============================================================
-  // CRAFTING
-  // ==============================================================
 
   craftItem(recipeId) {
     if (!this.unlockedRecipes.includes(recipeId)) return;
@@ -6007,13 +6415,7 @@ export default class MainScene extends Phaser.Scene {
 
     this.addItemToInventory(recipe.resultItemId, recipe.resultQuantity);
     this.showLootToast(`${recipe.name} fabriquée !`);
-    // addItemToInventory emet deja inventory-updated et persiste - pas
-    // besoin de le refaire ici
   }
-
-  // ==============================================================
-  // AFFICHAGE
-  // ==============================================================
 
   drawHpBars() {
     const g = this.hpBarGraphics;
@@ -6045,10 +6447,7 @@ export default class MainScene extends Phaser.Scene {
       g.fillRect(bx, by, barW * ratio, barH);
     }
 
-    // invocations temporaires uniquement - le familier (persistent:true)
-    // est volontairement exclu de l'affichage
     for (const summon of this.summons) {
-      // if (summon.persistent) continue;
       const ratio = summon.hp / summon.maxHp;
       const bx = summon.sprite.x - barW / 2;
       const by = summon.sprite.y - 26;

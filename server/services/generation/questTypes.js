@@ -91,9 +91,39 @@ function generateObtainItemQuest(seed, itemPool, bossDepths = []) {
     xpReward: OBTAIN_ITEM_XP_REWARD,
     goldReward,
     itemReward: null,
+    isBossItem: true, // <-- nouveau : distingue du butin d'ennemi normal (generateObtainEnemyLootQuest)
     dialogText: {
       offer: `Peux-tu me rapporter ${itemName} ?${depthHint}`,
     },
+  };
+}
+
+/**
+ * Quête "vaincre tel boss" - meme "tier" de recompense que
+ * generateObtainItemQuest (le joueur redescend affronter un boss dans
+ * les deux cas). La progression (bossDefeated) est geree ENTIEREMENT
+ * cote client (MainScene.damageEnemy, au moment ou le boss meurt) -
+ * cette fonction ne fait que definir l'objectif et la recompense.
+ *
+ * @param {string} seed seed DEJA distincte par PNJ
+ * @param {number} bossDepth etage ou se trouve le boss cible
+ * @param {string} bossType type du boss cible (cf. bossConfig.js) - pour
+ *   affichage uniquement (nom du boss dans le texte de dialogue)
+ * @returns {{questId:string, targetBossDepth:number, targetBossType:string, xpReward:number, goldReward:number, itemReward:null, dialogText:Object}}
+ */
+function generateDefeatBossQuest(seed, bossDepth, bossType) {
+  const rng = createRng(String(seed) + "-defeat-boss");
+  const [minGold, maxGold] = OBTAIN_ITEM_GOLD_REWARD_RANGE;
+  const goldReward = minGold + Math.floor(rng() * (maxGold - minGold + 1));
+
+  return {
+    questId: "defeatBoss",
+    targetBossDepth: bossDepth,
+    targetBossType: bossType,
+    xpReward: OBTAIN_ITEM_XP_REWARD,
+    goldReward,
+    itemReward: null,
+    dialogText: {},
   };
 }
 
@@ -223,12 +253,10 @@ function generateObtainEnemyLootQuest(seed, lootPool) {
     questId: "obtainItem",
     targetItemId: choice.itemId,
     targetQuantity,
+    targetEnemyType: choice.enemyType,
     xpReward: OBTAIN_ENEMY_LOOT_XP_REWARD,
     goldReward,
     itemReward: null,
-    dialogText: {
-      offer: `Peux-tu me rapporter ${targetQuantity} ${itemName} ? On en trouve parfois sur ${choice.enemyType}.`,
-    },
   };
 }
 
@@ -237,6 +265,7 @@ module.exports = {
   FIXED_QUESTS,
   generateQuestForNpc,
   generateObtainItemQuest,
+  generateDefeatBossQuest,
   getFixedQuest,
   generateObtainEnemyLootQuest,
 };

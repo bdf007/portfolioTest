@@ -107,6 +107,42 @@ import stairupSprite from "../../assets/stair_up.png";
 import wallTreeSprite from "../../assets/wall_tree.png";
 import floorTreeSprite from "../../assets/floor_tree.png";
 import desertAutotileImg from "../../assets/Set_A_Desert1.png";
+import hillsAutotileImg from "../../assets/Set_A_Hills1.png";
+import hills2AutotileImg from "../../assets/Set_A_Hills2.png";
+import hills3AutotileImg from "../../assets/Set_A_Hills3.png";
+import snowAutotileImg from "../../assets/Set_A_Snow1.png";
+import darkwoodsAutotileImg from "../../assets/Set_A_Darkwoods1.png";
+import darkwoods2AutotileImg from "../../assets/Set_A_Darkwoods2.png";
+import cityWalls1AutotileImg from "../../assets/Set_A_CityWalls1.png";
+import cityWalls2AutotileImg from "../../assets/Set_A_CityWalls2.png";
+import cityWalls3AutotileImg from "../../assets/Set_A_CityWalls3.png";
+import cityWallsE2AutotileImg from "../../assets/Set_E_CityWalls2.png";
+import cityWallsE3AutotileImg from "../../assets/Set_E_CityWalls3.png";
+import fortress1AutotileImg from "../../assets/Set_A_Fortress1.png";
+import fortress2AutotileImg from "../../assets/Set_A_Fortress2.png";
+import fortress3AutotileImg from "../../assets/Set_A_Fortress3.png";
+import fortressE1AutotileImg from "../../assets/Set_E_Fortress1.png";
+import fortressE2AutotileImg from "../../assets/Set_E_Fortress2.png";
+import fortressE3AutotileImg from "../../assets/Set_E_Fortress3.png";
+import mines1AutotileImg from "../../assets/Set_A_Mines1.png";
+import mines2AutotileImg from "../../assets/Set_A_Mines2.png";
+import techFortress1AutotileImg from "../../assets/Set_A_TechFortress1.png";
+import techFortress2AutotileImg from "../../assets/Set_A_TechFortress2.png";
+import techFortressE1AutotileImg from "../../assets/Set_E_TechFortress1.png";
+import techFortressE2AutotileImg from "../../assets/Set_E_TechFortress2.png";
+import tower1AutotileImg from "../../assets/Set_A_Tower1.png";
+import tower2AutotileImg from "../../assets/Set_A_Tower2.png";
+import tower3AutotileImg from "../../assets/Set_A_Tower3.png";
+import towerE1AutotileImg from "../../assets/Set_E_Tower1.png";
+import towerE2AutotileImg from "../../assets/Set_E_Tower2.png";
+import towerE3AutotileImg from "../../assets/Set_E_Tower3.png";
+import desertTownE1AutotileImg from "../../assets/Set_E_Desert_Town1.png";
+import desertTownE2AutotileImg from "../../assets/Set_E_Desert_Town2.png";
+import rooftopsFAutotileImg from "../../assets/Set_F_Rooftops.png";
+import dungeonsA21AutotileImg from "../../assets/Set_A2_Dungeons1.png";
+import dungeonsA22AutotileImg from "../../assets/Set_A2_Dungeons2.png";
+import standardFields2AutotileImg from "../../assets/Set_A_StandardFields2.png";
+import greyCoastA51AutotileImg from "../../assets/Set_A5_GreyCoast1.png";
 // import objects
 import chestsSpritesheet from "../../assets/Chests.png";
 import iconSheet1 from "../../assets/icon_sheet1.png";
@@ -170,6 +206,228 @@ export const FORTRESS_AUTOTILE_SPRITESHEET = {
 export const DESERT_AUTOTILE_SPRITESHEET = {
   key: "desertAutotile",
   path: desertAutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+
+export const HILLS1_AUTOTILE_SPRITESHEET = {
+  key: "hillsAutotile",
+  path: hillsAutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+export const HILLS2_AUTOTILE_SPRITESHEET = {
+  key: "hills2Autotile",
+  path: hills2AutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+export const HILLS3_AUTOTILE_SPRITESHEET = {
+  key: "hills3Autotile",
+  path: hills3AutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+
+export const SNOW_AUTOTILE_SPRITESHEET = {
+  key: "snowAutotile",
+  path: snowAutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+
+export const DARKWOODS_AUTOTILE_SPRITESHEET = {
+  key: "darkwoodsAutotile",
+  path: darkwoodsAutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+export const DARKWOODS2_AUTOTILE_SPRITESHEET = {
+  key: "darkwoods2Autotile",
+  path: darkwoods2AutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+export const STANDARD_FIELDS2_AUTOTILE_SPRITESHEET = {
+  key: "standardFields2Autotile",
+  path: standardFields2AutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+export const CITY_WALLS1_AUTOTILE_SPRITESHEET = {
+  key: "cityWalls1Autotile",
+  path: cityWalls1AutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+export const CITY_WALLS2_AUTOTILE_SPRITESHEET = {
+  key: "cityWalls2Autotile",
+  path: cityWalls2AutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+export const CITY_WALLS3_AUTOTILE_SPRITESHEET = {
+  key: "cityWalls3Autotile",
+  path: cityWalls3AutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+export const CITY_WALLSE2_AUTOTILE_SPRITESHEET = {
+  key: "cityWallsE2Autotile",
+  path: cityWallsE2AutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+export const CITY_WALLSE3_AUTOTILE_SPRITESHEET = {
+  key: "cityWallsE3Autotile",
+  path: cityWallsE3AutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+export const FORTRESS1_AUTOTILE_SPRITESHEET = {
+  key: "fortress1Autotile",
+  path: fortress1AutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+export const FORTRESS2_AUTOTILE_SPRITESHEET = {
+  key: "fortress2Autotile",
+  path: fortress2AutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+export const FORTRESS3_AUTOTILE_SPRITESHEET = {
+  key: "fortress3Autotile",
+  path: fortress3AutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+export const FORTRESSE1_AUTOTILE_SPRITESHEET = {
+  key: "fortressE1Autotile",
+  path: fortressE1AutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+export const FORTRESSE2_AUTOTILE_SPRITESHEET = {
+  key: "fortressE2Autotile",
+  path: fortressE2AutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+export const FORTRESSE3_AUTOTILE_SPRITESHEET = {
+  key: "fortressE3Autotile",
+  path: fortressE3AutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+export const TECH_FORTRESS1_AUTOTILE_SPRITESHEET = {
+  key: "techFortress1Autotile",
+  path: techFortress1AutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+export const TECH_FORTRESS2_AUTOTILE_SPRITESHEET = {
+  key: "techFortress2Autotile",
+  path: techFortress2AutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+export const TECH_FORTRESSE1_AUTOTILE_SPRITESHEET = {
+  key: "techFortressE1Autotile",
+  path: techFortressE1AutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+export const TECH_FORTRESSE2_AUTOTILE_SPRITESHEET = {
+  key: "techFortressE2Autotile",
+  path: techFortressE2AutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+export const TOWER1_AUTOTILE_SPRITESHEET = {
+  key: "towers1Autotile",
+  path: tower1AutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+export const TOWER2_AUTOTILE_SPRITESHEET = {
+  key: "tower2Autotile",
+  path: tower2AutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+export const TOWER3_AUTOTILE_SPRITESHEET = {
+  key: "tower3Autotile",
+  path: tower3AutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+export const TOWERE1_AUTOTILE_SPRITESHEET = {
+  key: "towersE1Autotile",
+  path: towerE1AutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+export const TOWERE2_AUTOTILE_SPRITESHEET = {
+  key: "towersE2Autotile",
+  path: towerE2AutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+export const TOWERE3_AUTOTILE_SPRITESHEET = {
+  key: "towerE3Autotile",
+  path: towerE3AutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+
+export const MINES1_AUTOTILE_SPRITESHEET = {
+  key: "mines1Autotile",
+  path: mines1AutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+export const MINES2_AUTOTILE_SPRITESHEET = {
+  key: "mines2Autotile",
+  path: mines2AutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+export const DESERT_TOWNE1_AUTOTILE_SPRITESHEET = {
+  key: "desertTownE1Autotile",
+  path: desertTownE1AutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+export const DESERT_TOWNE2_AUTOTILE_SPRITESHEET = {
+  key: "desertTownE2Autotile",
+  path: desertTownE2AutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+export const ROUFTOPSF_AUTOTILE_SPRITESHEET = {
+  key: "rooftopsFAutotile",
+  path: rooftopsFAutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+export const DUNGEONS_A21_AUTOTILE_SPRITESHEET = {
+  key: "dungeonsA21Autotile",
+  path: dungeonsA21AutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+
+export const DUNGEONS_A22_AUTOTILE_SPRITESHEET = {
+  key: "dungeonsA22Autotile",
+  path: dungeonsA22AutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+
+export const GREY_COASTA51_AUTOTILE_SPRITESHEET = {
+  key: "greyCoastA51Autotile",
+  path: greyCoastA51AutotileImg,
   frameWidth: 16,
   frameHeight: 16,
 };
@@ -548,7 +806,7 @@ export const SPRITE_REGISTRY = {
   },
   wolfFamiliar: {
     key: "wolfFamiliar",
-    displayName: "wolfFamiliar",
+    displayName: "Familier de loup",
     path: wolfSpriteSheet,
     frameWidth: 48,
     frameHeight: 48,
@@ -559,7 +817,7 @@ export const SPRITE_REGISTRY = {
 
   monks1: {
     key: "monks1",
-    displayName: "monks1",
+    displayName: "Moine 1",
     path: minisMonksSpritesheet,
     frameWidth: 48,
     frameHeight: 48,
@@ -569,7 +827,7 @@ export const SPRITE_REGISTRY = {
   },
   monks2: {
     key: "monks2",
-    displayName: "monks2",
+    displayName: "Moine 2",
     path: minisMonksSpritesheet,
     frameWidth: 48,
     frameHeight: 48,
@@ -579,7 +837,7 @@ export const SPRITE_REGISTRY = {
   },
   monks3: {
     key: "monks3",
-    displayName: "monks3",
+    displayName: "Moine 3",
     path: minisMonksSpritesheet,
     frameWidth: 48,
     frameHeight: 48,
@@ -589,7 +847,7 @@ export const SPRITE_REGISTRY = {
   },
   monks4: {
     key: "monks4",
-    displayName: "monks4",
+    displayName: "Moine 4",
     path: minisMonksSpritesheet,
     frameWidth: 48,
     frameHeight: 48,
@@ -599,7 +857,7 @@ export const SPRITE_REGISTRY = {
   },
   elementalFairy1: {
     key: "elementalFairy1",
-    displayName: "elementalFairy1",
+    displayName: "Fée élémentaire 1",
     path: fairiesElementalSpritesheet,
     frameWidth: 48,
     frameHeight: 48,
@@ -609,7 +867,7 @@ export const SPRITE_REGISTRY = {
   },
   elementalFairy2: {
     key: "elementalFairy2",
-    displayName: "elementalFairy2",
+    displayName: "Fée élémentaire 2",
     path: fairiesElementalSpritesheet,
     frameWidth: 48,
     frameHeight: 48,
@@ -619,7 +877,7 @@ export const SPRITE_REGISTRY = {
   },
   elementalFairy3: {
     key: "elementalFairy3",
-    displayName: "elementalFairy3",
+    displayName: "Fée élémentaire 3",
     path: fairiesElementalSpritesheet,
     frameWidth: 48,
     frameHeight: 48,
@@ -629,7 +887,7 @@ export const SPRITE_REGISTRY = {
   },
   elementalFairy4: {
     key: "elementalFairy4",
-    displayName: "elementalFairy4",
+    displayName: "Fée élémentaire 4",
     path: fairiesElementalSpritesheet,
     frameWidth: 48,
     frameHeight: 48,
@@ -639,7 +897,7 @@ export const SPRITE_REGISTRY = {
   },
   elementalFairy5: {
     key: "elementalFairy5",
-    displayName: "elementalFairy5",
+    displayName: "Fée élémentaire 5",
     path: fairiesElementalSpritesheet,
     frameWidth: 48,
     frameHeight: 48,
@@ -649,7 +907,7 @@ export const SPRITE_REGISTRY = {
   },
   elementalFairy6: {
     key: "elementalFairy6",
-    displayName: "elementalFairy6",
+    displayName: "Fée élémentaire 6",
     path: fairiesElementalSpritesheet,
     frameWidth: 48,
     frameHeight: 48,
@@ -659,7 +917,7 @@ export const SPRITE_REGISTRY = {
   },
   elementalFairy7: {
     key: "elementalFairy7",
-    displayName: "elementalFairy7",
+    displayName: "Fée élémentaire 7",
     path: fairiesElementalSpritesheet,
     frameWidth: 48,
     frameHeight: 48,
@@ -669,7 +927,7 @@ export const SPRITE_REGISTRY = {
   },
   elementalFairy8: {
     key: "elementalFairy8",
-    displayName: "elementalFairy8",
+    displayName: "Fée élémentaire 8",
     path: fairiesElementalSpritesheet,
     frameWidth: 48,
     frameHeight: 48,
@@ -679,7 +937,7 @@ export const SPRITE_REGISTRY = {
   },
   elementalFairy9: {
     key: "elementalFairy9",
-    displayName: "elementalFairy9",
+    displayName: "Fée élémentaire 9",
     path: fairiesElemental2Spritesheet,
     frameWidth: 48,
     frameHeight: 48,
@@ -689,7 +947,7 @@ export const SPRITE_REGISTRY = {
   },
   elementalFairy10: {
     key: "elementalFairy10",
-    displayName: "elementalFairy10",
+    displayName: "Fée élémentaire 10",
     path: fairiesElemental2Spritesheet,
     frameWidth: 48,
     frameHeight: 48,
@@ -699,7 +957,7 @@ export const SPRITE_REGISTRY = {
   },
   elementalFairy11: {
     key: "elementalFairy11",
-    displayName: "elementalFairy11",
+    displayName: "Fée élémentaire 11",
     path: fairiesElemental2Spritesheet,
     frameWidth: 48,
     frameHeight: 48,
@@ -709,7 +967,7 @@ export const SPRITE_REGISTRY = {
   },
   elementalFairy12: {
     key: "elementalFairy12",
-    displayName: "elementalFairy12",
+    displayName: "Fée élémentaire 12",
     path: fairiesElemental2Spritesheet,
     frameWidth: 48,
     frameHeight: 48,
@@ -719,7 +977,7 @@ export const SPRITE_REGISTRY = {
   },
   elementalFairy13: {
     key: "elementalFairy13",
-    displayName: "elementalFairy13",
+    displayName: "Fée élémentaire 13",
     path: fairiesElemental2Spritesheet,
     frameWidth: 48,
     frameHeight: 48,
@@ -729,7 +987,7 @@ export const SPRITE_REGISTRY = {
   },
   elementalFairy14: {
     key: "elementalFairy14",
-    displayName: "elementalFairy14",
+    displayName: "Fée élémentaire 14",
     path: fairiesElemental2Spritesheet,
     frameWidth: 48,
     frameHeight: 48,
@@ -739,7 +997,7 @@ export const SPRITE_REGISTRY = {
   },
   elementalFairy15: {
     key: "elementalFairy15",
-    displayName: "elementalFairy15",
+    displayName: "Fée élémentaire 15",
     path: fairiesElemental2Spritesheet,
     frameWidth: 48,
     frameHeight: 48,
@@ -749,7 +1007,7 @@ export const SPRITE_REGISTRY = {
   },
   elementalFairy16: {
     key: "elementalFairy16",
-    displayName: "elementalFairy16",
+    displayName: "Fée élémentaire 16",
     path: fairiesElemental2Spritesheet,
     frameWidth: 48,
     frameHeight: 48,
@@ -759,7 +1017,7 @@ export const SPRITE_REGISTRY = {
   },
   fairy1: {
     key: "fairy1",
-    displayName: "fairy1",
+    displayName: "Fée 1",
     path: fairiesSpritesheet,
     frameWidth: 48,
     frameHeight: 48,
@@ -769,7 +1027,7 @@ export const SPRITE_REGISTRY = {
   },
   fairy2: {
     key: "fairy2",
-    displayName: "fairy2",
+    displayName: "Fée 2",
     path: fairiesSpritesheet,
     frameWidth: 48,
     frameHeight: 48,
@@ -779,7 +1037,7 @@ export const SPRITE_REGISTRY = {
   },
   fairy3: {
     key: "fairy3",
-    displayName: "fairy3",
+    displayName: "Fée 3",
     path: fairiesSpritesheet,
     frameWidth: 48,
     frameHeight: 48,
@@ -789,7 +1047,7 @@ export const SPRITE_REGISTRY = {
   },
   fairy4: {
     key: "fairy4",
-    displayName: "fairy4",
+    displayName: "Fée 4",
     path: fairiesSpritesheet,
     frameWidth: 48,
     frameHeight: 48,
@@ -799,7 +1057,7 @@ export const SPRITE_REGISTRY = {
   },
   fairy5: {
     key: "fairy5",
-    displayName: "fairy5",
+    displayName: "Fée 5",
     path: fairiesElementalSpritesheet,
     frameWidth: 48,
     frameHeight: 48,
@@ -809,7 +1067,7 @@ export const SPRITE_REGISTRY = {
   },
   fairy6: {
     key: "fairy6",
-    displayName: "fairy6",
+    displayName: "Fée 6",
     path: fairiesElementalSpritesheet,
     frameWidth: 48,
     frameHeight: 48,
@@ -819,7 +1077,7 @@ export const SPRITE_REGISTRY = {
   },
   fairy7: {
     key: "fairy7",
-    displayName: "fairy7",
+    displayName: "Fée 7",
     path: fairiesElementalSpritesheet,
     frameWidth: 48,
     frameHeight: 48,
@@ -829,7 +1087,7 @@ export const SPRITE_REGISTRY = {
   },
   fairy8: {
     key: "fairy8",
-    displayName: "fairy8",
+    displayName: "Fée 8",
     path: fairiesElementalSpritesheet,
     frameWidth: 48,
     frameHeight: 48,
@@ -839,7 +1097,7 @@ export const SPRITE_REGISTRY = {
   },
   colorBat1: {
     key: "colorBat1",
-    displayName: "colorBat1",
+    displayName: "Chauve-souris colorée 1",
     path: colorBatSpritesheet,
     frameWidth: 48,
     frameHeight: 48,
@@ -849,7 +1107,7 @@ export const SPRITE_REGISTRY = {
   },
   colorBat2: {
     key: "colorBat2",
-    displayName: "colorBat2",
+    displayName: "Chauve-souris colorée 2",
     path: colorBatSpritesheet,
     frameWidth: 48,
     frameHeight: 48,
@@ -859,7 +1117,7 @@ export const SPRITE_REGISTRY = {
   },
   colorBat3: {
     key: "colorBat3",
-    displayName: "colorBat3",
+    displayName: "Chauve-souris colorée 3",
     path: colorBatSpritesheet,
     frameWidth: 48,
     frameHeight: 48,
@@ -869,7 +1127,7 @@ export const SPRITE_REGISTRY = {
   },
   colorBat4: {
     key: "colorBat4",
-    displayName: "colorBat4",
+    displayName: "Chauve-souris colorée 4",
     path: colorBatSpritesheet,
     frameWidth: 48,
     frameHeight: 48,
@@ -879,7 +1137,7 @@ export const SPRITE_REGISTRY = {
   },
   colorBat5: {
     key: "colorBat5",
-    displayName: "colorBat5",
+    displayName: "Chauve-souris colorée 5",
     path: colorBatSpritesheet,
     frameWidth: 48,
     frameHeight: 48,
@@ -889,7 +1147,7 @@ export const SPRITE_REGISTRY = {
   },
   colorBat6: {
     key: "colorBat6",
-    displayName: "colorBat6",
+    displayName: "Chauve-souris colorée 6",
     path: colorBatSpritesheet,
     frameWidth: 48,
     frameHeight: 48,
@@ -899,7 +1157,7 @@ export const SPRITE_REGISTRY = {
   },
   colorBat7: {
     key: "colorBat7",
-    displayName: "colorBat7",
+    displayName: "Chauve-souris colorée 7",
     path: colorBatSpritesheet,
     frameWidth: 48,
     frameHeight: 48,
@@ -909,7 +1167,7 @@ export const SPRITE_REGISTRY = {
   },
   colorBat8: {
     key: "colorBat8",
-    displayName: "colorBat8",
+    displayName: "Chauve-souris colorée 8",
     path: colorBatSpritesheet,
     frameWidth: 48,
     frameHeight: 48,
@@ -919,7 +1177,7 @@ export const SPRITE_REGISTRY = {
   },
   brownMushroom: {
     key: "brownMushroom",
-    displayName: "brownMushroom",
+    displayName: "Champignon marron",
     path: forestMonsterSpritesheet,
     frameWidth: 48,
     frameHeight: 48,
@@ -929,7 +1187,7 @@ export const SPRITE_REGISTRY = {
   },
   angryBrownMushroom: {
     key: "angryBrownMushroom",
-    displayName: "angryBrownMushroom",
+    displayName: "Champignon marron en colère",
     path: forestMonsterSpritesheet,
     frameWidth: 48,
     frameHeight: 48,
@@ -940,7 +1198,7 @@ export const SPRITE_REGISTRY = {
   },
   redMushroom: {
     key: "redMushroom",
-    displayName: "redMushroom",
+    displayName: "Champignon rouge",
     path: forestMonsterSpritesheet,
     frameWidth: 48,
     frameHeight: 48,
@@ -950,7 +1208,7 @@ export const SPRITE_REGISTRY = {
   },
   angryRedMushroom: {
     key: "angryRedMushroom",
-    displayName: "angryRedMushroom",
+    displayName: "Champignon rouge en colère",
     path: forestMonsterSpritesheet,
     frameWidth: 48,
     frameHeight: 48,
@@ -960,7 +1218,7 @@ export const SPRITE_REGISTRY = {
   },
   angryStump: {
     key: "angryStump",
-    displayName: "angryStump",
+    displayName: "Souche en colère",
     path: forestMonsterSpritesheet,
     frameWidth: 48,
     frameHeight: 48,
@@ -970,7 +1228,7 @@ export const SPRITE_REGISTRY = {
   },
   armsAngryStumps: {
     key: "armsAngryStumps",
-    displayName: "armsAngryStumps",
+    displayName: "Bras de souches en colère",
     path: forestMonsterSpritesheet,
     frameWidth: 48,
     frameHeight: 48,
@@ -980,7 +1238,7 @@ export const SPRITE_REGISTRY = {
   },
   redEarthworms: {
     key: "redEarthworms",
-    displayName: "redEarthworms",
+    displayName: "Vers de terre rouges",
     path: forestMonsterSpritesheet,
     frameWidth: 48,
     frameHeight: 48,
@@ -990,7 +1248,7 @@ export const SPRITE_REGISTRY = {
   },
   blackBug: {
     key: "blackBug",
-    displayName: "blackBug",
+    displayName: "Insecte noir",
     path: forestMonsterSpritesheet,
     frameWidth: 48,
     frameHeight: 48,
@@ -1000,7 +1258,7 @@ export const SPRITE_REGISTRY = {
   },
   demonLady1: {
     key: "demonLady1",
-    displayName: "demonLady1",
+    displayName: "Dame démoniaque 1",
     path: demonLadySpritesheet,
     frameWidth: 48,
     frameHeight: 48,
@@ -1010,7 +1268,7 @@ export const SPRITE_REGISTRY = {
   },
   demonLady2: {
     key: "demonLady2",
-    displayName: "demonLady2",
+    displayName: "Dame démoniaque 2",
     path: demonLadySpritesheet,
     frameWidth: 48,
     frameHeight: 48,
@@ -1020,7 +1278,7 @@ export const SPRITE_REGISTRY = {
   },
   demonLady3: {
     key: "demonLady3",
-    displayName: "demonLady3",
+    displayName: "Dame démoniaque 3",
     path: demonLadySpritesheet,
     frameWidth: 48,
     frameHeight: 48,
@@ -1030,7 +1288,7 @@ export const SPRITE_REGISTRY = {
   },
   demonLady4: {
     key: "demonLady4",
-    displayName: "demonLady4",
+    displayName: "Dame démoniaque 4",
     path: demonLadySpritesheet,
     frameWidth: 48,
     frameHeight: 48,
@@ -1040,7 +1298,7 @@ export const SPRITE_REGISTRY = {
   },
   demonLady5: {
     key: "demonLady5",
-    displayName: "demonLady5",
+    displayName: "Dame démoniaque 5",
     path: demonLadySpritesheet,
     frameWidth: 48,
     frameHeight: 48,
@@ -1050,7 +1308,7 @@ export const SPRITE_REGISTRY = {
   },
   demonLady6: {
     key: "demonLady6",
-    displayName: "demonLady6",
+    displayName: "Dame démoniaque 6",
     path: demonLadySpritesheet,
     frameWidth: 48,
     frameHeight: 48,
@@ -1060,7 +1318,7 @@ export const SPRITE_REGISTRY = {
   },
   demonLady7: {
     key: "demonLady7",
-    displayName: "demonLady7",
+    displayName: "Dame démoniaque 7",
     path: demonLadySpritesheet,
     frameWidth: 48,
     frameHeight: 48,
@@ -1070,7 +1328,7 @@ export const SPRITE_REGISTRY = {
   },
   demonLady8: {
     key: "demonLady8",
-    displayName: "demonLady8",
+    displayName: "Dame démoniaque 8",
     path: demonLadySpritesheet,
     frameWidth: 48,
     frameHeight: 48,
@@ -1080,7 +1338,7 @@ export const SPRITE_REGISTRY = {
   },
   gazer1: {
     key: "gazer1",
-    displayName: "gazer rouge",
+    displayName: "Gazer rouge",
     path: gazerSpritesheet,
     frameWidth: 48,
     frameHeight: 48,
@@ -1090,7 +1348,7 @@ export const SPRITE_REGISTRY = {
   },
   gazer2: {
     key: "gazer2",
-    displayName: "gazer bordeau",
+    displayName: "Gazer bordeau",
     path: gazerSpritesheet,
     frameWidth: 48,
     frameHeight: 48,
@@ -1100,7 +1358,7 @@ export const SPRITE_REGISTRY = {
   },
   gazer3: {
     key: "gazer3",
-    displayName: "gazer bleu",
+    displayName: "Gazer bleu",
     path: gazerSpritesheet,
     frameWidth: 48,
     frameHeight: 48,
@@ -1110,7 +1368,7 @@ export const SPRITE_REGISTRY = {
   },
   gazer4: {
     key: "gazer4",
-    displayName: "gazer noir",
+    displayName: "Gazer noir",
     path: gazerSpritesheet,
     frameWidth: 48,
     frameHeight: 48,
@@ -1120,7 +1378,7 @@ export const SPRITE_REGISTRY = {
   },
   gazer5: {
     key: "gazer5",
-    displayName: "gazer vert",
+    displayName: "Gazer vert",
     path: gazerSpritesheet,
     frameWidth: 48,
     frameHeight: 48,
@@ -2598,8 +2856,8 @@ const HERO_STATS_PROFILES = {
     meleeRange: 42,
     rangedRange: 440,
     startingEquipment: ["woodenBow"],
-    startingAmmo: { itemId: "woodenArrow", quantity: 20 },
-    startingAbilities: ["piercingArrow"],
+    startingAmmo: { itemId: "woodenArrow", quantity: 100 },
+    startingAbilities: ["piercingArrow", "scoutPulse"],
   },
   knight: {
     archetype: "guerrier",
@@ -2651,7 +2909,7 @@ const HERO_STATS_PROFILES = {
     rangedRange: 400,
     startingEquipment: ["woodenDagger"],
     startingAmmo: null,
-    startingAbilities: ["stealth"],
+    startingAbilities: ["stealth", "scoutPulse"],
   },
   warrior: {
     archetype: "guerrier",
