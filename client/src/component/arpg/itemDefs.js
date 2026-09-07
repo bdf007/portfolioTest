@@ -668,8 +668,8 @@ export const ITEM_DEFS = {
     unlockLevel: 3,
     price: 50,
   },
-  bigHealthPotion: {
-    id: "bigHealthPotion",
+  largeHealthPotion: {
+    id: "largeHealthPotion",
     category: "consumable",
     name: "Grande potion de soin",
     description: "Restaure 120 PV à l'usage.",
@@ -700,8 +700,8 @@ export const ITEM_DEFS = {
     unlockLevel: 3,
     price: 45,
   },
-  bigManaPotion: {
-    id: "bigManaPotion",
+  largeManaPotion: {
+    id: "largeManaPotion",
     category: "consumable",
     name: "Grande potion de mana",
     description: "Restaure 80 PM à l'usage.",
