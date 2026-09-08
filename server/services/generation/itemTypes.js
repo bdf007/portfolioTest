@@ -565,7 +565,7 @@ const ITEM_TYPES = {
     category: "ammo",
     slot: "quiver",
     name: "Flèche en bois géante",
-    description: "+1 dégât à distance tant que des flèches sont encochées.",
+    description: "+5 dégât à distance tant que des flèches sont encochées.",
     statBonus: { rangedDamage: 5 },
     stackable: true,
     archetypes: ["archer"],
