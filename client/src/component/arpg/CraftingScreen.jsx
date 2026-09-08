@@ -289,14 +289,16 @@ export default function CraftingScreen({
               key={entry.itemId}
               style={{
                 display: "flex",
+                flexWrap: "wrap",
                 alignItems: "center",
                 justifyContent: "space-between",
+                gap: 8,
                 padding: 8,
                 background: "#1e2029",
                 border: "1px solid #444",
                 borderRadius: 6,
-              }}
-            >
+            }}
+          >
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 {hasIconFrame(entry.itemId) && <ItemIcon itemId={entry.itemId} scale={1.4} />}
                 <div style={{ fontSize: 12 }}>
