@@ -907,15 +907,15 @@ export const ITEM_DEFS = {
     stackable: true,
     price: 40,
   },
-  bigWoodenArrowRecipe: {
-    id: "bigWoodenArrowRecipe",
-    category: "recipeScroll",
-    name: "Plan: Flèche en bois géante",
-    description: "Apprend la recete de la flèche en bois géante.",
-    granstRecipe: "bigWoodenArrow",
-    stackable: true,
-    price: 80,
-  },
+  // bigWoodenArrowRecipe: {
+  //   id: "bigWoodenArrowRecipe",
+  //   category: "recipeScroll",
+  //   name: "Plan: Flèche en bois géante",
+  //   description: "Apprend la recete de la flèche en bois géante.",
+  //   granstRecipe: "bigWoodenArrow",
+  //   stackable: true,
+  //   price: 80,
+  // },
 
   // craft material
   deerAntler: {
