@@ -556,7 +556,7 @@ export const ITEM_DEFS = {
     category: "ammo",
     slot: "quiver",
     name: "Flèche en bois géante",
-    description: "+1 dégât à distance tant que des flèches sont encochées.",
+    description: "+5 dégât à distance tant que des flèches sont encochées.",
     statBonus: { rangedDamage: 5 },
     stackable: true,
     archetypes: ["archer"],
@@ -910,7 +910,7 @@ export const ITEM_DEFS = {
   bigWoodenArrowRecipe: {
     id: "bigWoodenArrowRecipe",
     category: "recipeScroll",
-    name: "Plan: Fléche en bois géante",
+    name: "Plan: Flèche en bois géante",
     description: "Apprend la recete de la flèche en bois géante.",
     granstRecipe: "bigWoodenArrow",
     stackable: true,
