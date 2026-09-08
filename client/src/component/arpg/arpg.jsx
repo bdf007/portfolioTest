@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import Phaser from "phaser";
 import BootScene from "./scenes/BootScene";
 import MainScene from "./scenes/MainScene";
@@ -13,9 +13,7 @@ import HotbarScreen from "./HotbarScreen";
 import CraftingScreen from "./CraftingScreen";
 import ChestScreen from "./ChestScreen";
 import TouchControls from "./TouchControls";
-import { computeLevelFromXp, getPlayerStatsForLevel } from "./leveling";
-import { resolveHeroStatsOverride } from "./spriteRegistry";
-import { computeEquipmentBonuses } from "./equipment";
+import { computeLevelFromXp } from "./leveling";
 import { resolveAbilityDef } from "./abilityDefs";
 import { resolveItemDef } from "./itemDefs";
 import { fetchMyGames, abandonGame, deleteGame } from "../../api/arpgClient";
@@ -133,6 +131,21 @@ export default function Arpg() {
   const [questsOpen, setQuestsOpen] = useState(false);
   const [lootToast, setLootToast] = useState(null);
   const [minimapVisible, setMinimapVisible] = useState(true);
+  const minimapWasVisibleRef = useRef(true);
+  const overlayActiveRef = useRef(false); // vrai tant qu'AU MOINS un ecran est ouvert, meme en changeant de l'un a l'autre
+
+  const hideMinimapForOverlay = useCallback(() => {
+    if (!overlayActiveRef.current) {
+      minimapWasVisibleRef.current = minimapVisible;
+      overlayActiveRef.current = true;
+    }
+    setMinimapVisible(false);
+  }, [minimapVisible]);
+
+  const restoreMinimapAfterOverlay = useCallback(() => {
+    overlayActiveRef.current = false;
+    setMinimapVisible(minimapWasVisibleRef.current);
+  }, []);
   const [keyboardLayout, setKeyboardLayoutState] = useState("azerty");
   const [username, setUsername] = useState(null);
 
@@ -154,6 +167,7 @@ export default function Arpg() {
     draft: {},
     unspent: 0,
   });
+  const [combatStats, setCombatStats] = useState({ level: 1 });
 
   const loadGamesList = () => {
     fetchMyGames()
@@ -297,6 +311,7 @@ export default function Arpg() {
         setPhase("picker");
         loadGamesList();
       });
+      scene.events.on("player-stats-changed", (stats) => setCombatStats(stats));
     });
 
     return () => {
@@ -388,50 +403,74 @@ export default function Arpg() {
     if (scene) scene.useConsumable(index);
   };
 
-  const handleOpenInventory = () => {
+  const handleOpenInventory = useCallback(() => {
+    hideMinimapForOverlay();
     setInventoryOpen(true);
+    setFullMapOpen(false);
+    setQuestsOpen(false);
+    setHotbarScreenOpen(false);
+    setCraftingScreenOpen(false);
     const scene = gameRef.current?.scene.getScene("MainScene");
     if (scene) scene.pauseGame("inventory");
-  };
+  }, [hideMinimapForOverlay]);
 
-  const handleCloseInventory = () => {
+  const handleCloseInventory = useCallback(() => {
     setInventoryOpen(false);
+    restoreMinimapAfterOverlay();
     const scene = gameRef.current?.scene.getScene("MainScene");
     if (scene) scene.unpauseGame("inventory");
-  };
+  }, [restoreMinimapAfterOverlay]);
 
   const handleOpenFullMap = () => {
+    hideMinimapForOverlay();
     setFullMapOpen(true);
+    setInventoryOpen(false);
+    setQuestsOpen(false);
+    setHotbarScreenOpen(false);
+    setCraftingScreenOpen(false);
     const scene = gameRef.current?.scene.getScene("MainScene");
     if (scene) scene.pauseGame("fullMap");
   };
 
   const handleCloseFullMap = () => {
     setFullMapOpen(false);
+    restoreMinimapAfterOverlay();
     const scene = gameRef.current?.scene.getScene("MainScene");
     if (scene) scene.unpauseGame("fullMap");
   };
 
-  const handleOpenQuests = () => {
+  const handleOpenQuests = useCallback(() => {
+    hideMinimapForOverlay();
     setQuestsOpen(true);
+    setFullMapOpen(false);
+    setHotbarScreenOpen(false);
+    setCraftingScreenOpen(false);
+    setInventoryOpen(false);
     const scene = gameRef.current?.scene.getScene("MainScene");
     if (scene) scene.pauseGame("quests");
-  };
+  }, [hideMinimapForOverlay]);
 
-  const handleCloseQuests = () => {
+  const handleCloseQuests = useCallback(() => {
     setQuestsOpen(false);
+    restoreMinimapAfterOverlay();
     const scene = gameRef.current?.scene.getScene("MainScene");
     if (scene) scene.unpauseGame("quests");
-  };
+  }, [restoreMinimapAfterOverlay]);
 
   const handleOpenHotbarScreen = () => {
+    hideMinimapForOverlay();
     setHotbarScreenOpen(true);
+    setFullMapOpen(false);
+    setQuestsOpen(false);
+    setCraftingScreenOpen(false);
+    setInventoryOpen(false);
     const scene = gameRef.current?.scene.getScene("MainScene");
     if (scene) scene.pauseGame("hotbar");
   };
 
   const handleCloseHotbarScreen = () => {
     setHotbarScreenOpen(false);
+    restoreMinimapAfterOverlay();
     const scene = gameRef.current?.scene.getScene("MainScene");
     if (scene) scene.unpauseGame("hotbar");
   };
@@ -442,13 +481,19 @@ export default function Arpg() {
   };
 
   const handleOpenCraftingScreen = () => {
+    hideMinimapForOverlay();
     setCraftingScreenOpen(true);
+    setFullMapOpen(false);
+    setQuestsOpen(false);
+    setHotbarScreenOpen(false);
+    setInventoryOpen(false);
     const scene = gameRef.current?.scene.getScene("MainScene");
     if (scene) scene.pauseGame("crafting");
   };
 
   const handleCloseCraftingScreen = () => {
     setCraftingScreenOpen(false);
+    restoreMinimapAfterOverlay();
     const scene = gameRef.current?.scene.getScene("MainScene");
     if (scene) scene.unpauseGame("crafting");
   };
@@ -513,7 +558,14 @@ export default function Arpg() {
     }
     window.addEventListener("keydown", handleGlobalKeyDown);
     return () => window.removeEventListener("keydown", handleGlobalKeyDown);
-  }, [inventoryOpen, questsOpen]);
+  }, [
+    inventoryOpen,
+    questsOpen,
+    handleOpenInventory,
+    handleCloseInventory,
+    handleOpenQuests,
+    handleCloseQuests,
+  ]);
 
   const handleTravelToDepth = (depth) => {
     const scene = gameRef.current?.scene.getScene("MainScene");
@@ -664,23 +716,6 @@ export default function Arpg() {
   }
 
   const xpProgress = computeLevelFromXp(xp);
-  const combatStats = {
-    level,
-    ...(() => {
-      const base = getPlayerStatsForLevel(
-        level,
-        resolveHeroStatsOverride(heroId),
-      );
-      const bonus = computeEquipmentBonuses(equipped);
-      return {
-        maxHp: base.maxHp + bonus.maxHp,
-        meleeDamage: base.meleeDamage + bonus.meleeDamage,
-        rangedDamage: base.rangedDamage + bonus.rangedDamage,
-        defense: base.defense + bonus.defense,
-        mana: base.mana,
-      };
-    })(),
-  };
 
   return (
     <div
@@ -1483,6 +1518,7 @@ export default function Arpg() {
             equipped={equipped}
             stats={combatStats}
             heroId={heroId}
+            isMobile={isMobile}
             onEquip={handleEquip}
             onUnequip={handleUnequip}
             onUse={handleUseConsumable}

@@ -820,6 +820,18 @@ export default class MainScene extends Phaser.Scene {
     this.playerMoveSpeed =
       (heroProfile?.moveSpeed ?? PLAYER_MOVE_SPEED_DEFAULT) +
       (bonus.moveSpeed ?? 0);
+    this.events.emit("player-stats-changed", {
+      level: this.playerLevel,
+      maxHp: this.playerMaxHp,
+      meleeDamage: this.playerMeleeDamage,
+      rangedDamage: this.playerRangedDamage,
+      defense: this.playerDefense,
+      maxMana: this.playerMaxMana,
+      maxStamina: this.playerMaxStamina,
+      moveSpeed: this.playerMoveSpeed,
+      visionRadius: this.playerVisionRadius,
+      rangedRange: this.playerRangedRange,
+    });
   }
 
   /**
