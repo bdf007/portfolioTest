@@ -532,6 +532,7 @@ export default class MainScene extends Phaser.Scene {
     this.quests = {};
     this.unlockedAbilities = [];
     this.unlockedRecipes = [];
+    this.discoveredLockedRecipes = [];
     this.furyKillCount = 0;
     this.pendingBossRoomOpen = false;
     this.pendingBossAlive = null;
@@ -613,6 +614,7 @@ export default class MainScene extends Phaser.Scene {
     this.hotbarSlots = ps.hotbarSlots || new Array(9).fill(null);
     this.unlockedAbilities = ps.unlockedAbilities || [];
     this.unlockedRecipes = ps.unlockedRecipes || [];
+    this.discoveredLockedRecipes = ps.discoveredLockedRecipes || [];
     this.shopSoldItems = ps.shopSoldItems || {};
     this.obtainedUniqueItems = ps.obtainedUniqueItems || [];
     this.furyKillCount = ps.furyKillCount || 0;
@@ -1100,6 +1102,7 @@ export default class MainScene extends Phaser.Scene {
           inventory: this.inventory,
           hotbarSlots: this.hotbarSlots,
           unlockedRecipes: this.unlockedRecipes,
+          discoveredLockedRecipes: this.discoveredLockedRecipes,
           shopSoldItems: this.shopSoldItems,
           obtainedUniqueItems: this.obtainedUniqueItems,
           summons: this.summons.map((s) => ({
@@ -2126,6 +2129,7 @@ export default class MainScene extends Phaser.Scene {
     this.events.emit("equipment-updated", { ...this.equipped });
     this.events.emit("hotbar-updated", [...this.hotbarSlots]);
     this.events.emit("recipes-updated", [...this.unlockedRecipes]);
+    this.events.emit("locked-recipes-updated", [...this.discoveredLockedRecipes]);
     this.events.emit("fury-progress", {
       count: this.furyKillCount,
       required: FURY_KILLS_REQUIRED,
@@ -6033,6 +6037,7 @@ export default class MainScene extends Phaser.Scene {
     let anyRecipeUnlocked = false;
     for (const recipe of Object.values(CRAFTING_RECIPES)) {
       if (recipe.unlockLevel == null || recipe.unlockLevel > level) continue;
+      if (recipe.discoveryOnly) continue;
       if (this.unlockedRecipes.includes(recipe.id)) continue;
       this.unlockedRecipes.push(recipe.id);
       anyRecipeUnlocked = true;
@@ -6040,6 +6045,14 @@ export default class MainScene extends Phaser.Scene {
     }
     if (anyRecipeUnlocked)
       this.events.emit("recipes-updated", [...this.unlockedRecipes]);
+
+    const stillLocked = this.discoveredLockedRecipes.filter(
+  (id) => !this.unlockedRecipes.includes(id),
+);
+if (stillLocked.length !== this.discoveredLockedRecipes.length) {
+  this.discoveredLockedRecipes = stillLocked;
+  this.events.emit("locked-recipes-updated", [...this.discoveredLockedRecipes]);
+}
 
     this.events.emit("player-hp-changed", {
       hp: this.playerHp,
@@ -6385,7 +6398,92 @@ export default class MainScene extends Phaser.Scene {
 
     this.enemyProjectiles = remaining;
   }
+attemptFreeCraft(selectedItems) {
+  const matchedRecipe = this.findMatchingRecipeIgnoringLevel(selectedItems);
+  if (!matchedRecipe) {
+    this.showLootToast("Cette combinaison ne donne rien de connu");
+    return { success: false };
+  }
 
+  const levelLocked =
+    matchedRecipe.unlockLevel && this.playerLevel < matchedRecipe.unlockLevel;
+  if (levelLocked) {
+    if (
+      !this.discoveredLockedRecipes.includes(matchedRecipe.id) &&
+      !this.unlockedRecipes.includes(matchedRecipe.id)
+    ) {
+      this.discoveredLockedRecipes.push(matchedRecipe.id);
+      this.events.emit("locked-recipes-updated", [
+        ...this.discoveredLockedRecipes,
+      ]);
+      this.persistProgress();
+    }
+    this.showLootToast(
+      `Recette découverte : ${matchedRecipe.name} - nécessite le niveau ${matchedRecipe.unlockLevel} !`,
+    );
+    return { success: false };
+  }
+
+  for (const ing of matchedRecipe.ingredients) {
+    let remaining = ing.quantity;
+    for (let i = this.inventory.length - 1; i >= 0 && remaining > 0; i--) {
+      const entry = this.inventory[i];
+      if (entry.itemId !== ing.itemId) continue;
+      const take = Math.min(entry.quantity, remaining);
+      entry.quantity -= take;
+      remaining -= take;
+      if (entry.quantity <= 0) this.inventory.splice(i, 1);
+    }
+  }
+
+  this.addItemToInventory(matchedRecipe.resultItemId, matchedRecipe.resultQuantity);
+
+  const wasAlreadyKnown = this.unlockedRecipes.includes(matchedRecipe.id);
+  if (!wasAlreadyKnown) {
+    this.unlockedRecipes.push(matchedRecipe.id);
+    this.discoveredLockedRecipes = this.discoveredLockedRecipes.filter(
+      (id) => id !== matchedRecipe.id,
+    );
+    this.events.emit("recipes-updated", [...this.unlockedRecipes]);
+    this.events.emit("locked-recipes-updated", [
+      ...this.discoveredLockedRecipes,
+    ]);
+    this.showLootToast(`Nouvelle recette découverte : ${matchedRecipe.name} !`);
+  } else {
+    this.showLootToast(`${matchedRecipe.name} fabriquée !`);
+  }
+
+  this.events.emit("inventory-updated", [...this.inventory]);
+  this.persistProgress();
+  return { success: true, recipe: matchedRecipe };
+}
+
+findMatchingRecipeIgnoringLevel(selectedItems) {
+  const selectedMap = new Map();
+  for (const s of selectedItems) {
+    if (!s.itemId || s.quantity <= 0) continue;
+    selectedMap.set(s.itemId, (selectedMap.get(s.itemId) || 0) + s.quantity);
+  }
+
+  for (const recipe of Object.values(CRAFTING_RECIPES)) {
+    if (recipe.ingredients.some((ing) => ing.itemId === "gold")) continue;
+
+    const recipeMap = new Map();
+    for (const ing of recipe.ingredients) {
+      recipeMap.set(ing.itemId, (recipeMap.get(ing.itemId) || 0) + ing.quantity);
+    }
+    if (recipeMap.size !== selectedMap.size) continue;
+    let matches = true;
+    for (const [itemId, qty] of recipeMap) {
+      if (selectedMap.get(itemId) !== qty) {
+        matches = false;
+        break;
+      }
+    }
+    if (matches) return recipe;
+  }
+  return null;
+}
   craftItem(recipeId) {
     if (!this.unlockedRecipes.includes(recipeId)) return;
     const recipe = resolveCraftingRecipe(recipeId);

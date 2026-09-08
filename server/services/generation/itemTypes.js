@@ -67,7 +67,7 @@ const ITEM_TYPES = {
     slot: "mainHand",
     twoHanded: true, // occupe les DEUX mains - equiper libere mainHand ET offHand (cf. MainScene.equipItem)
     grantsRanged: true, // sans arme marquee ainsi equipee (ici ou en offHand), l'attaque a distance est indisponible - cf. MainScene.canUseRangedAttack
-    requiresAmmo: ["woodenArrow", "bronzeArrow"], // itemId EXACT requis (pas juste un booleen) - un carreau ne peut pas alimenter un arc, cf. MainScene.performRangedAttack
+    requiresAmmo: ["woodenArrow", "bronzeArrow", "bigWoodenArrow"], // itemId EXACT requis (pas juste un booleen) - un carreau ne peut pas alimenter un arc, cf. MainScene.performRangedAttack
     name: "Arc en bois",
     description:
       "+1 dégât à distance. Nécessite des flèches. Arme d'entraînement de départ.",
@@ -258,7 +258,7 @@ const ITEM_TYPES = {
     slot: "mainHand",
     twoHanded: true,
     grantsRanged: true,
-    requiresAmmo: ["woodenArrow", "ironArrow", "bronzeArrow"],
+    requiresAmmo: ["woodenArrow", "ironArrow", "bronzeArrow","bigWoodenArrow"],
     name: "Arc de chasse",
     description: "+4 dégâts à distance. +5 de distance d'attaque",
     unique: true,
@@ -559,6 +559,25 @@ const ITEM_TYPES = {
       statModifiers: { moveSpeedPercent: -0.4 }, // -40% de vitesse
       durationMs: 2500, // duree en ms, PAS ticks/tickIntervalMs/damagePerTick (ca c'est la forme DOT)
     },
+  },
+   bigWoodenArrow: {
+    id: "bigWoodenArrow",
+    category: "ammo",
+    slot: "quiver",
+    name: "Flèche en bois géante",
+    description: "+5 dégât à distance tant que des flèches sont encochées.",
+    statBonus: { rangedDamage: 5 },
+    stackable: true,
+    archetypes: ["archer"],
+    unlockLevel: 1,
+    price: 15,
+    // inflictsEffect: {
+    //   type: "slow",
+    //   kind: "modifier", // <-- le champ qui manquait, decide TOUT le comportement
+    //   chance: 1,
+    //   statModifiers: { moveSpeedPercent: -0.4 }, // -40% de vitesse
+    //   durationMs: 2500, // duree en ms, PAS ticks/tickIntervalMs/damagePerTick (ca c'est la forme DOT)
+    // },
   },
   woodenCrossbowBolt: {
     id: "woodenCrossbowBolt",
@@ -887,6 +906,7 @@ const ITEM_TYPES = {
     stackable: true,
     price: 40,
   },
+
   healthPotionRecipe: {
     id: "healthPotionRecipe",
     category: "recipeScroll",

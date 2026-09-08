@@ -144,6 +144,7 @@ export default function Arpg() {
   const [furyProgress, setFuryProgress] = useState({ count: 0, required: 10 });
 
   const [unlockedRecipes, setUnlockedRecipes] = useState([]);
+  const [discoveredLockedRecipes, setDiscoveredLockedRecipes] = useState([]);
   const [craftingScreenOpen, setCraftingScreenOpen] = useState(false);
 
   const [levelUpAvailable, setLevelUpAvailable] = useState(false);
@@ -289,6 +290,9 @@ export default function Arpg() {
       scene.events.on("recipes-updated", (recipes) =>
         setUnlockedRecipes(recipes),
       );
+      scene.events.on("locked-recipes-updated", (recipes) =>
+  setDiscoveredLockedRecipes(recipes),
+);
       scene.events.on("quit-to-menu", () => {
         setPhase("picker");
         loadGamesList();
@@ -454,6 +458,11 @@ export default function Arpg() {
     if (scene) scene.craftItem(recipeId);
   };
 
+  const handleAttemptFreeCraft = (selectedItems) => {
+  const scene = gameRef.current?.scene.getScene("MainScene");
+  if (scene) scene.attemptFreeCraft(selectedItems);
+};
+
   const handleToggleKeyboardLayout = () => {
     const next = keyboardLayout === "azerty" ? "qwerty" : "azerty";
     setKeyboardLayoutState(next);
@@ -597,6 +606,7 @@ export default function Arpg() {
     setHotbarScreenOpen(false);
     setFuryProgress({ count: 0, required: 10 });
     setUnlockedRecipes([]);
+    setDiscoveredLockedRecipes([]);
     setCraftingScreenOpen(false);
     setLevelReady(false);
     setLevelUpAvailable(false);
@@ -1519,13 +1529,15 @@ export default function Arpg() {
           />
         )}
         {craftingScreenOpen && (
-          <CraftingScreen
-            unlockedRecipes={unlockedRecipes}
-            inventory={inventory}
-            onCraft={handleCraftItem}
-            onClose={handleCloseCraftingScreen}
-          />
-        )}
+  <CraftingScreen
+    unlockedRecipes={unlockedRecipes}
+    discoveredLockedRecipes={discoveredLockedRecipes}
+    inventory={inventory}
+    onCraft={handleCraftItem}
+    onFreeCraft={handleAttemptFreeCraft}
+    onClose={handleCloseCraftingScreen}
+  />
+)}
         {levelUpScreenOpen && (
           <AttributesScreen
             confirmedAttributes={levelUpDraft.confirmed}
