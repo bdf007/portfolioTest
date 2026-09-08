@@ -906,15 +906,7 @@ const ITEM_TYPES = {
     stackable: true,
     price: 40,
   },
-  bigWoodenArrowRecipe: {
-    id: "bigWoodenArrowRecipe",
-    category: 'recipeScroll",
-      name: 'Plan : Flèche en bois géante",
-  description: "Apprend la recette de la flèche géante.",
-  grantsRecipe: "bigWoodenArrow",
-  stackable: true,
-  price: 80,
-  },
+
   healthPotionRecipe: {
     id: "healthPotionRecipe",
     category: "recipeScroll",
