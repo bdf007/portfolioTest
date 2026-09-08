@@ -6095,8 +6095,8 @@ if (stillLocked.length !== this.discoveredLockedRecipes.length) {
       this.unlockedAbilities.push(def.id);
     }
     for (const recipe of Object.values(CRAFTING_RECIPES)) {
-      if (recipe.unlockLevel == null || recipe.unlockLevel > this.playerLevel)
-        continue;
+      if (recipe.unlockLevel == null || recipe.unlockLevel > this.playerLevel) continue;
+      if (recipe.discoveryOnly) continue; // <-- nouveau, meme garde qu'applyPendingLevelUp
       if (this.unlockedRecipes.includes(recipe.id)) continue;
       this.unlockedRecipes.push(recipe.id);
     }
