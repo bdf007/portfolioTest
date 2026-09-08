@@ -258,7 +258,7 @@ const ITEM_TYPES = {
     slot: "mainHand",
     twoHanded: true,
     grantsRanged: true,
-    requiresAmmo: ["woodenArrow", "ironArrow", "bronzeArrow","bigWoodenArrow"],
+    requiresAmmo: ["woodenArrow", "ironArrow", "bronzeArrow", "bigWoodenArrow"],
     name: "Arc de chasse",
     description: "+4 dégâts à distance. +5 de distance d'attaque",
     unique: true,
@@ -560,7 +560,7 @@ const ITEM_TYPES = {
       durationMs: 2500, // duree en ms, PAS ticks/tickIntervalMs/damagePerTick (ca c'est la forme DOT)
     },
   },
-   bigWoodenArrow: {
+  bigWoodenArrow: {
     id: "bigWoodenArrow",
     category: "ammo",
     slot: "quiver",
@@ -997,7 +997,6 @@ const LOOT_TABLES = {
     { itemId: "ironSickle", weight: 10 },
     { itemId: "ironShovel", weight: 10 },
     { itemId: "ironAxe", weight: 10 },
-    { itemId: "ironMace", weight: 10 },
     { itemId: "ironMallet", weight: 10 },
     { itemId: "ironPickaxe", weight: 10 },
     { itemId: "ironHammer", weight: 10 },

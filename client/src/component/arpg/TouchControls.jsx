@@ -113,7 +113,7 @@ export default function TouchControls({ gameRef, furyReady }) {
         style={{
           position: "absolute",
           left: 24,
-          bottom: 24,
+          bottom: 70,
           width: JOYSTICK_RADIUS * 2,
           height: JOYSTICK_RADIUS * 2,
           borderRadius: "50%",

@@ -187,7 +187,16 @@ const TILESET_COLORS = {
 };
 
 const WALL_CORNER_INDEX_TO_FRAME_0_0 = [
-  70,
+  {
+    variants: [
+      { tiles: 70, weight: 5 }, // mur normal, le plus frequent
+      { tiles: 71, weight: 1 }, // meme mur + déco superposee, plus rare
+      { tiles: 86, weight: 1 }, // autre variante, encore plus rare
+      { tiles: 87, weight: 1 },
+      { tiles: 69, weight: 1 },
+      { tiles: 85, weight: 1 },
+    ],
+  },
   32,
   0,
   16,
@@ -196,7 +205,16 @@ const WALL_CORNER_INDEX_TO_FRAME_0_0 = [
   1,
   23,
   34,
-  33,
+  {
+    variants: [
+      { tiles: 33, weight: 5 }, // mur normal, le plus frequent
+      { tiles: [33, 46], weight: 1 }, // meme mur + déco superposee, plus rare
+      { tiles: [33, 183], weight: 1 }, // autre variante, encore plus rare
+      { tiles: [33, 182], weight: 1 }, // autre variante, encore plus rare
+      { tiles: [33, 181], weight: 1 }, // autre variante, encore plus rare
+      { tiles: [33, 70], weight: 1 }, // autre variante, encore plus rare
+    ],
+  },
   [34, 0],
   7,
   18,
@@ -1158,13 +1176,44 @@ export default class MainScene extends Phaser.Scene {
     sourceSpritesheet,
     cacheKeySuffix,
     cornerTable = WALL_CORNER_INDEX_TO_FRAME_0_0,
-    floorTileId = 113,
+    floorTileId = 17,
   ) {
     const phaserTilesetKey = `${cacheKeySuffix}-autotile-composed`;
     if (this.textures.exists(phaserTilesetKey))
       this.textures.remove(phaserTilesetKey);
 
-    const SLOT_COUNT = 17;
+    const rawFloorVariants = Array.isArray(floorTileId)
+      ? floorTileId
+      : [floorTileId];
+    const floorVariants = rawFloorVariants.map((v) =>
+      typeof v === "number" ? { tileId: v, weight: 1 } : v,
+    );
+
+    // normalise chaque position du cornerTable en une liste de variantes
+    // ponderees {tiles, weight} - un nombre nu ou un tableau [x,y] devient
+    // une variante UNIQUE de poids 1 (comportement historique inchange) ;
+    // {variants:[...]} est deja dans ce format
+    const normalizedCorners = cornerTable.map((entry) => {
+      if (
+        entry &&
+        typeof entry === "object" &&
+        !Array.isArray(entry) &&
+        entry.variants
+      ) {
+        return entry.variants;
+      }
+      return [{ tiles: entry, weight: 1 }];
+    });
+
+    let slotCursor = 1; // slot 0 = sol de base
+    const cornerSlotRanges = normalizedCorners.map((variants) =>
+      variants.map(() => slotCursor++),
+    );
+    const floorExtraSlots = [];
+    for (let i = 1; i < floorVariants.length; i++)
+      floorExtraSlots.push(slotCursor++);
+    const SLOT_COUNT = slotCursor;
+
     const composedTex = this.textures.createCanvas(
       phaserTilesetKey,
       TILE_SIZE * SLOT_COUNT,
@@ -1174,22 +1223,6 @@ export default class MainScene extends Phaser.Scene {
     cctx.imageSmoothingEnabled = false;
     const sourceImg = this.textures.get(sourceSpritesheet.key).getSourceImage();
     const SOURCE_COLS = 16;
-
-    const drawFloorAt = (slotIndex) => {
-      const floorSx = (floorTileId % SOURCE_COLS) * 16;
-      const floorSy = Math.floor(floorTileId / SOURCE_COLS) * 16;
-      cctx.drawImage(
-        sourceImg,
-        floorSx,
-        floorSy,
-        16,
-        16,
-        slotIndex * TILE_SIZE,
-        0,
-        TILE_SIZE,
-        TILE_SIZE,
-      );
-    };
 
     const drawTileOnly = (tileid, slotIndex) => {
       const sx = (tileid % SOURCE_COLS) * 16;
@@ -1206,24 +1239,48 @@ export default class MainScene extends Phaser.Scene {
         TILE_SIZE,
       );
     };
+    const drawFloorAt = (slotIndex, variantIndex = 0) => {
+      drawTileOnly(floorVariants[variantIndex].tileId, slotIndex);
+    };
 
-    drawFloorAt(0);
-    drawTileOnly(floorTileId, 0);
+    drawFloorAt(0, 0);
 
-    for (let bitmask = 0; bitmask < 16; bitmask++) {
-      const slotIndex = bitmask + 1;
-      drawFloorAt(slotIndex); // <-- le fond, UNE SEULE FOIS par case
+    normalizedCorners.forEach((variants, bitmask) => {
+      const range = cornerSlotRanges[bitmask];
+      variants.forEach((variant, vi) => {
+        const slotIndex = range[vi];
+        drawFloorAt(slotIndex, 0);
+        const tiles = Array.isArray(variant.tiles)
+          ? variant.tiles
+          : [variant.tiles];
+        for (const t of tiles) drawTileOnly(t, slotIndex);
+      });
+    });
 
-      const entry = cornerTable[bitmask];
-      if (Array.isArray(entry)) {
-        for (const tileid of entry) {
-          drawTileOnly(tileid, slotIndex); // <-- jamais de sol entre les couches
-        }
-      } else {
-        drawTileOnly(entry, slotIndex);
-      }
-    }
+    floorVariants.forEach((v, i) => {
+      if (i === 0) return;
+      drawFloorAt(floorExtraSlots[i - 1], i);
+    });
     composedTex.refresh();
+
+    const floorSlotIndices = [0, ...floorExtraSlots];
+    const floorWeights = floorVariants.map((v) => v.weight);
+    const floorRng = createRng(
+      `${this.currentSeed}-${cacheKeySuffix}-floor-variant`,
+    );
+    const cornerRng = createRng(
+      `${this.currentSeed}-${cacheKeySuffix}-corner-variant`,
+    );
+
+    const pickWeighted = (rng, weights, slots) => {
+      const total = weights.reduce((s, w) => s + w, 0);
+      let r = rng() * total;
+      for (let i = 0; i < weights.length; i++) {
+        r -= weights[i];
+        if (r < 0) return slots[i];
+      }
+      return slots[slots.length - 1];
+    };
 
     const renderGrid = Array.from({ length: grid.length }, () =>
       new Array(grid[0].length).fill(0),
@@ -1231,12 +1288,28 @@ export default class MainScene extends Phaser.Scene {
     for (let y = 0; y < grid.length; y++) {
       for (let x = 0; x < grid[0].length; x++) {
         if (grid[y][x] === 1) {
-          renderGrid[y][x] = computeWallCornerIndex(grid, x, y) + 1;
+          const bitmask = computeWallCornerIndex(grid, x, y);
+          const variants = normalizedCorners[bitmask];
+          const slots = cornerSlotRanges[bitmask];
+          renderGrid[y][x] =
+            variants.length === 1
+              ? slots[0]
+              : pickWeighted(
+                  cornerRng,
+                  variants.map((v) => v.weight),
+                  slots,
+                );
+        } else if (floorSlotIndices.length > 1) {
+          renderGrid[y][x] = pickWeighted(
+            floorRng,
+            floorWeights,
+            floorSlotIndices,
+          );
         }
       }
     }
 
-    return { phaserTilesetKey, renderGrid };
+    return { phaserTilesetKey, renderGrid, floorSlotIndices };
   }
 
   async loadLevel(
@@ -1465,6 +1538,7 @@ export default class MainScene extends Phaser.Scene {
     let phaserTilesetKey;
     let renderGrid;
     let dungeon1FloorFrameValue;
+    let composedFloorSlots = [0];
 
     if (useFortress1Autotile) {
       phaserTilesetKey = FORTRESS_AUTOTILE_SPRITESHEET.key;
@@ -1504,6 +1578,7 @@ export default class MainScene extends Phaser.Scene {
       );
       phaserTilesetKey = result.phaserTilesetKey;
       renderGrid = result.renderGrid;
+      composedFloorSlots = result.floorSlotIndices;
     } else if (tileset === "desertMountain2") {
       const result = this.composeCornerAutotileTexture(
         grid,
@@ -1514,6 +1589,7 @@ export default class MainScene extends Phaser.Scene {
       );
       phaserTilesetKey = result.phaserTilesetKey;
       renderGrid = result.renderGrid;
+      composedFloorSlots = result.floorSlotIndices;
     } else if (tileset === "desertMountain3") {
       const result = this.composeCornerAutotileTexture(
         grid,
@@ -1524,6 +1600,7 @@ export default class MainScene extends Phaser.Scene {
       );
       phaserTilesetKey = result.phaserTilesetKey;
       renderGrid = result.renderGrid;
+      composedFloorSlots = result.floorSlotIndices;
     } else if (tileset === "desert2") {
       const result = this.composeCornerAutotileTexture(
         grid,
@@ -1534,6 +1611,7 @@ export default class MainScene extends Phaser.Scene {
       );
       phaserTilesetKey = result.phaserTilesetKey;
       renderGrid = result.renderGrid;
+      composedFloorSlots = result.floorSlotIndices;
     } else if (tileset === "hills1") {
       const result = this.composeCornerAutotileTexture(
         grid,
@@ -1544,16 +1622,18 @@ export default class MainScene extends Phaser.Scene {
       );
       phaserTilesetKey = result.phaserTilesetKey;
       renderGrid = result.renderGrid;
+      composedFloorSlots = result.floorSlotIndices;
     } else if (tileset === "cityWalls1") {
       const result = this.composeCornerAutotileTexture(
         grid,
         CITY_WALLS1_AUTOTILE_SPRITESHEET,
         "city-walls1",
         WALL_CORNER_INDEX_TO_FRAME_0_0_CITY_WALLS1,
-        113, // sol assorti a la ville - explicite maintenant, meme si c'etait deja la valeur par defaut
+        113 || 17, // sol assorti a la ville - explicite maintenant, meme si c'etait deja la valeur par defaut
       );
       phaserTilesetKey = result.phaserTilesetKey;
       renderGrid = result.renderGrid;
+      composedFloorSlots = result.floorSlotIndices;
     } else if (tileset === "tower1") {
       const result = this.composeCornerAutotileTexture(
         grid,
@@ -1564,6 +1644,7 @@ export default class MainScene extends Phaser.Scene {
       );
       phaserTilesetKey = result.phaserTilesetKey;
       renderGrid = result.renderGrid;
+      composedFloorSlots = result.floorSlotIndices;
     } else if (tileset === "hills2") {
       const result = this.composeCornerAutotileTexture(
         grid,
@@ -1574,6 +1655,7 @@ export default class MainScene extends Phaser.Scene {
       );
       phaserTilesetKey = result.phaserTilesetKey;
       renderGrid = result.renderGrid;
+      composedFloorSlots = result.floorSlotIndices;
     } else if (tileset === "mines2") {
       const result = this.composeCornerAutotileTexture(
         grid,
@@ -1584,6 +1666,7 @@ export default class MainScene extends Phaser.Scene {
       );
       phaserTilesetKey = result.phaserTilesetKey;
       renderGrid = result.renderGrid;
+      composedFloorSlots = result.floorSlotIndices;
     } else if (tileset === "hills3") {
       const result = this.composeCornerAutotileTexture(
         grid,
@@ -1594,6 +1677,7 @@ export default class MainScene extends Phaser.Scene {
       );
       phaserTilesetKey = result.phaserTilesetKey;
       renderGrid = result.renderGrid;
+      composedFloorSlots = result.floorSlotIndices;
     } else if (tileset === "hills4") {
       const result = this.composeCornerAutotileTexture(
         grid,
@@ -1604,6 +1688,7 @@ export default class MainScene extends Phaser.Scene {
       );
       phaserTilesetKey = result.phaserTilesetKey;
       renderGrid = result.renderGrid;
+      composedFloorSlots = result.floorSlotIndices;
     } else if (tileset === "hills5") {
       const result = this.composeCornerAutotileTexture(
         grid,
@@ -1614,6 +1699,7 @@ export default class MainScene extends Phaser.Scene {
       );
       phaserTilesetKey = result.phaserTilesetKey;
       renderGrid = result.renderGrid;
+      composedFloorSlots = result.floorSlotIndices;
     } else if (tileset === "hills6") {
       const result = this.composeCornerAutotileTexture(
         grid,
@@ -1624,6 +1710,7 @@ export default class MainScene extends Phaser.Scene {
       );
       phaserTilesetKey = result.phaserTilesetKey;
       renderGrid = result.renderGrid;
+      composedFloorSlots = result.floorSlotIndices;
     } else if (tileset === "hills7") {
       const result = this.composeCornerAutotileTexture(
         grid,
@@ -1634,6 +1721,7 @@ export default class MainScene extends Phaser.Scene {
       );
       phaserTilesetKey = result.phaserTilesetKey;
       renderGrid = result.renderGrid;
+      composedFloorSlots = result.floorSlotIndices;
     } else if (tileset === "hills8") {
       const result = this.composeCornerAutotileTexture(
         grid,
@@ -1644,6 +1732,7 @@ export default class MainScene extends Phaser.Scene {
       );
       phaserTilesetKey = result.phaserTilesetKey;
       renderGrid = result.renderGrid;
+      composedFloorSlots = result.floorSlotIndices;
     } else if (tileset === "hills9") {
       const result = this.composeCornerAutotileTexture(
         grid,
@@ -1654,6 +1743,7 @@ export default class MainScene extends Phaser.Scene {
       );
       phaserTilesetKey = result.phaserTilesetKey;
       renderGrid = result.renderGrid;
+      composedFloorSlots = result.floorSlotIndices;
     } else if (tileset === "hills10") {
       const result = this.composeCornerAutotileTexture(
         grid,
@@ -1664,6 +1754,7 @@ export default class MainScene extends Phaser.Scene {
       );
       phaserTilesetKey = result.phaserTilesetKey;
       renderGrid = result.renderGrid;
+      composedFloorSlots = result.floorSlotIndices;
     } else if (tileset === "hills11") {
       const result = this.composeCornerAutotileTexture(
         grid,
@@ -1674,6 +1765,7 @@ export default class MainScene extends Phaser.Scene {
       );
       phaserTilesetKey = result.phaserTilesetKey;
       renderGrid = result.renderGrid;
+      composedFloorSlots = result.floorSlotIndices;
     } else if (tileset === "hills12") {
       const result = this.composeCornerAutotileTexture(
         grid,
@@ -1684,6 +1776,7 @@ export default class MainScene extends Phaser.Scene {
       );
       phaserTilesetKey = result.phaserTilesetKey;
       renderGrid = result.renderGrid;
+      composedFloorSlots = result.floorSlotIndices;
     } else if (tileset === "snow") {
       const result = this.composeCornerAutotileTexture(
         grid,
@@ -1694,16 +1787,22 @@ export default class MainScene extends Phaser.Scene {
       );
       phaserTilesetKey = result.phaserTilesetKey;
       renderGrid = result.renderGrid;
+      composedFloorSlots = result.floorSlotIndices;
     } else if (tileset === "darkwoods") {
       const result = this.composeCornerAutotileTexture(
         grid,
         DARKWOODS_AUTOTILE_SPRITESHEET,
         "darkwoods",
         WALL_CORNER_INDEX_TO_FRAME_0_0,
-        17,
+        [
+          { tileId: 17, weight: 5 },
+          { tileId: 65, weight: 3 },
+          { tileId: 113, weight: 1 },
+        ],
       );
       phaserTilesetKey = result.phaserTilesetKey;
       renderGrid = result.renderGrid;
+      composedFloorSlots = result.floorSlotIndices;
     } else if (tileset === "darkwoods2") {
       const result = this.composeCornerAutotileTexture(
         grid,
@@ -1712,6 +1811,7 @@ export default class MainScene extends Phaser.Scene {
       );
       phaserTilesetKey = result.phaserTilesetKey;
       renderGrid = result.renderGrid;
+      composedFloorSlots = result.floorSlotIndices;
     } else if (tileset === "standardFields2") {
       const result = this.composeCornerAutotileTexture(
         grid,
@@ -1720,6 +1820,7 @@ export default class MainScene extends Phaser.Scene {
       );
       phaserTilesetKey = result.phaserTilesetKey;
       renderGrid = result.renderGrid;
+      composedFloorSlots = result.floorSlotIndices;
     } else {
       const colors = TILESET_COLORS[tileset] || TILESET_COLORS.cave;
       phaserTilesetKey = "tiles-" + tileset;
@@ -1792,7 +1893,7 @@ export default class MainScene extends Phaser.Scene {
     } else if (useDungeon1Autotile) {
       this.layer.setCollisionByExclusion([dungeon1FloorFrameValue]);
     } else if (useRealAutotile) {
-      this.layer.setCollisionByExclusion([0]);
+      this.layer.setCollisionByExclusion(composedFloorSlots);
     } else {
       this.layer.setCollision(WALL);
     }
@@ -2129,7 +2230,9 @@ export default class MainScene extends Phaser.Scene {
     this.events.emit("equipment-updated", { ...this.equipped });
     this.events.emit("hotbar-updated", [...this.hotbarSlots]);
     this.events.emit("recipes-updated", [...this.unlockedRecipes]);
-    this.events.emit("locked-recipes-updated", [...this.discoveredLockedRecipes]);
+    this.events.emit("locked-recipes-updated", [
+      ...this.discoveredLockedRecipes,
+    ]);
     this.events.emit("fury-progress", {
       count: this.furyKillCount,
       required: FURY_KILLS_REQUIRED,
@@ -6047,12 +6150,14 @@ export default class MainScene extends Phaser.Scene {
       this.events.emit("recipes-updated", [...this.unlockedRecipes]);
 
     const stillLocked = this.discoveredLockedRecipes.filter(
-  (id) => !this.unlockedRecipes.includes(id),
-);
-if (stillLocked.length !== this.discoveredLockedRecipes.length) {
-  this.discoveredLockedRecipes = stillLocked;
-  this.events.emit("locked-recipes-updated", [...this.discoveredLockedRecipes]);
-}
+      (id) => !this.unlockedRecipes.includes(id),
+    );
+    if (stillLocked.length !== this.discoveredLockedRecipes.length) {
+      this.discoveredLockedRecipes = stillLocked;
+      this.events.emit("locked-recipes-updated", [
+        ...this.discoveredLockedRecipes,
+      ]);
+    }
 
     this.events.emit("player-hp-changed", {
       hp: this.playerHp,
@@ -6095,7 +6200,8 @@ if (stillLocked.length !== this.discoveredLockedRecipes.length) {
       this.unlockedAbilities.push(def.id);
     }
     for (const recipe of Object.values(CRAFTING_RECIPES)) {
-      if (recipe.unlockLevel == null || recipe.unlockLevel > this.playerLevel) continue;
+      if (recipe.unlockLevel == null || recipe.unlockLevel > this.playerLevel)
+        continue;
       if (recipe.discoveryOnly) continue; // <-- nouveau, meme garde qu'applyPendingLevelUp
       if (this.unlockedRecipes.includes(recipe.id)) continue;
       this.unlockedRecipes.push(recipe.id);
@@ -6398,108 +6504,33 @@ if (stillLocked.length !== this.discoveredLockedRecipes.length) {
 
     this.enemyProjectiles = remaining;
   }
-attemptFreeCraft(selectedItems) {
-  const matchedRecipe = this.findMatchingRecipeIgnoringLevel(selectedItems);
-  if (!matchedRecipe) {
-    this.showLootToast("Cette combinaison ne donne rien de connu");
-    return { success: false };
-  }
-
-  const levelLocked =
-    matchedRecipe.unlockLevel && this.playerLevel < matchedRecipe.unlockLevel;
-  if (levelLocked) {
-    if (
-      !this.discoveredLockedRecipes.includes(matchedRecipe.id) &&
-      !this.unlockedRecipes.includes(matchedRecipe.id)
-    ) {
-      this.discoveredLockedRecipes.push(matchedRecipe.id);
-      this.events.emit("locked-recipes-updated", [
-        ...this.discoveredLockedRecipes,
-      ]);
-      this.persistProgress();
+  attemptFreeCraft(selectedItems) {
+    const matchedRecipe = this.findMatchingRecipeIgnoringLevel(selectedItems);
+    if (!matchedRecipe) {
+      this.showLootToast("Cette combinaison ne donne rien de connu");
+      return { success: false };
     }
-    this.showLootToast(
-      `Recette découverte : ${matchedRecipe.name} - nécessite le niveau ${matchedRecipe.unlockLevel} !`,
-    );
-    return { success: false };
-  }
 
-  for (const ing of matchedRecipe.ingredients) {
-    let remaining = ing.quantity;
-    for (let i = this.inventory.length - 1; i >= 0 && remaining > 0; i--) {
-      const entry = this.inventory[i];
-      if (entry.itemId !== ing.itemId) continue;
-      const take = Math.min(entry.quantity, remaining);
-      entry.quantity -= take;
-      remaining -= take;
-      if (entry.quantity <= 0) this.inventory.splice(i, 1);
-    }
-  }
-
-  this.addItemToInventory(matchedRecipe.resultItemId, matchedRecipe.resultQuantity);
-
-  const wasAlreadyKnown = this.unlockedRecipes.includes(matchedRecipe.id);
-  if (!wasAlreadyKnown) {
-    this.unlockedRecipes.push(matchedRecipe.id);
-    this.discoveredLockedRecipes = this.discoveredLockedRecipes.filter(
-      (id) => id !== matchedRecipe.id,
-    );
-    this.events.emit("recipes-updated", [...this.unlockedRecipes]);
-    this.events.emit("locked-recipes-updated", [
-      ...this.discoveredLockedRecipes,
-    ]);
-    this.showLootToast(`Nouvelle recette découverte : ${matchedRecipe.name} !`);
-  } else {
-    this.showLootToast(`${matchedRecipe.name} fabriquée !`);
-  }
-
-  this.events.emit("inventory-updated", [...this.inventory]);
-  this.persistProgress();
-  return { success: true, recipe: matchedRecipe };
-}
-
-findMatchingRecipeIgnoringLevel(selectedItems) {
-  const selectedMap = new Map();
-  for (const s of selectedItems) {
-    if (!s.itemId || s.quantity <= 0) continue;
-    selectedMap.set(s.itemId, (selectedMap.get(s.itemId) || 0) + s.quantity);
-  }
-
-  for (const recipe of Object.values(CRAFTING_RECIPES)) {
-    if (recipe.ingredients.some((ing) => ing.itemId === "gold")) continue;
-
-    const recipeMap = new Map();
-    for (const ing of recipe.ingredients) {
-      recipeMap.set(ing.itemId, (recipeMap.get(ing.itemId) || 0) + ing.quantity);
-    }
-    if (recipeMap.size !== selectedMap.size) continue;
-    let matches = true;
-    for (const [itemId, qty] of recipeMap) {
-      if (selectedMap.get(itemId) !== qty) {
-        matches = false;
-        break;
+    const levelLocked =
+      matchedRecipe.unlockLevel && this.playerLevel < matchedRecipe.unlockLevel;
+    if (levelLocked) {
+      if (
+        !this.discoveredLockedRecipes.includes(matchedRecipe.id) &&
+        !this.unlockedRecipes.includes(matchedRecipe.id)
+      ) {
+        this.discoveredLockedRecipes.push(matchedRecipe.id);
+        this.events.emit("locked-recipes-updated", [
+          ...this.discoveredLockedRecipes,
+        ]);
+        this.persistProgress();
       }
-    }
-    if (matches) return recipe;
-  }
-  return null;
-}
-  craftItem(recipeId) {
-    if (!this.unlockedRecipes.includes(recipeId)) return;
-    const recipe = resolveCraftingRecipe(recipeId);
-    if (!recipe) return;
-
-    for (const ing of recipe.ingredients) {
-      const have = this.inventory
-        .filter((i) => i.itemId === ing.itemId)
-        .reduce((sum, i) => sum + i.quantity, 0);
-      if (have < ing.quantity) {
-        this.showLootToast(`Il manque des ingrédients pour ${recipe.name}`);
-        return;
-      }
+      this.showLootToast(
+        `Recette découverte : ${matchedRecipe.name} - nécessite le niveau ${matchedRecipe.unlockLevel} !`,
+      );
+      return { success: false };
     }
 
-    for (const ing of recipe.ingredients) {
+    for (const ing of matchedRecipe.ingredients) {
       let remaining = ing.quantity;
       for (let i = this.inventory.length - 1; i >= 0 && remaining > 0; i--) {
         const entry = this.inventory[i];
@@ -6508,6 +6539,126 @@ findMatchingRecipeIgnoringLevel(selectedItems) {
         entry.quantity -= take;
         remaining -= take;
         if (entry.quantity <= 0) this.inventory.splice(i, 1);
+      }
+    }
+
+    this.addItemToInventory(
+      matchedRecipe.resultItemId,
+      matchedRecipe.resultQuantity,
+    );
+
+    const wasAlreadyKnown = this.unlockedRecipes.includes(matchedRecipe.id);
+    if (!wasAlreadyKnown) {
+      this.unlockedRecipes.push(matchedRecipe.id);
+      this.discoveredLockedRecipes = this.discoveredLockedRecipes.filter(
+        (id) => id !== matchedRecipe.id,
+      );
+      this.events.emit("recipes-updated", [...this.unlockedRecipes]);
+      this.events.emit("locked-recipes-updated", [
+        ...this.discoveredLockedRecipes,
+      ]);
+      this.showLootToast(
+        `Nouvelle recette découverte : ${matchedRecipe.name} !`,
+      );
+    } else {
+      this.showLootToast(`${matchedRecipe.name} fabriquée !`);
+    }
+
+    this.events.emit("inventory-updated", [...this.inventory]);
+    this.persistProgress();
+    return { success: true, recipe: matchedRecipe };
+  }
+
+  findMatchingRecipeIgnoringLevel(selectedItems) {
+    const selectedMap = new Map();
+    for (const s of selectedItems) {
+      if (!s.itemId || s.quantity <= 0) continue;
+      selectedMap.set(s.itemId, (selectedMap.get(s.itemId) || 0) + s.quantity);
+    }
+
+    for (const recipe of Object.values(CRAFTING_RECIPES)) {
+      if (this.recipeMatchesSelection(recipe, selectedMap)) return recipe;
+    }
+    return null;
+  }
+
+  recipeMatchesSelection(recipe, selectedMap) {
+    const allAcceptedIds = new Set();
+    for (const ing of recipe.ingredients) {
+      if (ing.itemId === "gold") return false;
+      const ids = ing.acceptedItemIds || [ing.itemId];
+      for (const id of ids) allAcceptedIds.add(id);
+    }
+
+    for (const itemId of selectedMap.keys()) {
+      if (!allAcceptedIds.has(itemId)) return false;
+    }
+
+    for (const ing of recipe.ingredients) {
+      const ids = ing.acceptedItemIds || [ing.itemId];
+      const totalSelected = ids.reduce(
+        (sum, id) => sum + (selectedMap.get(id) || 0),
+        0,
+      );
+      if (totalSelected !== ing.quantity) return false;
+    }
+
+    return true;
+  }
+
+  craftItem(recipeId, flexAllocations = {}) {
+    // flexAllocations: { indexIngredient: { itemId: quantite } } - la
+    // repartition choisie par le joueur pour chaque ingredient FLEXIBLE
+    // (acceptedItemIds) - ignoree pour les ingredients simples
+    if (!this.unlockedRecipes.includes(recipeId)) return;
+    const recipe = resolveCraftingRecipe(recipeId);
+    if (!recipe) return;
+
+    for (let i = 0; i < recipe.ingredients.length; i++) {
+      const ing = recipe.ingredients[i];
+      if (ing.acceptedItemIds) {
+        const allocation = flexAllocations[i] || {};
+        const total = Object.values(allocation).reduce((s, q) => s + q, 0);
+        if (total < ing.quantity) {
+          this.showLootToast(`Il manque des ingrédients pour ${recipe.name}`);
+          return;
+        }
+        for (const [itemId, qty] of Object.entries(allocation)) {
+          const have = this.inventory
+            .filter((x) => x.itemId === itemId)
+            .reduce((s, x) => s + x.quantity, 0);
+          if (have < qty) {
+            this.showLootToast(`Il manque des ingrédients pour ${recipe.name}`);
+            return;
+          }
+        }
+      } else {
+        const have = this.inventory
+          .filter((x) => x.itemId === ing.itemId)
+          .reduce((s, x) => s + x.quantity, 0);
+        if (have < ing.quantity) {
+          this.showLootToast(`Il manque des ingrédients pour ${recipe.name}`);
+          return;
+        }
+      }
+    }
+
+    for (let i = 0; i < recipe.ingredients.length; i++) {
+      const ing = recipe.ingredients[i];
+      const toConsume = ing.acceptedItemIds
+        ? Object.entries(flexAllocations[i] || {})
+        : [[ing.itemId, ing.quantity]];
+
+      for (const [itemId, qty] of toConsume) {
+        let remaining = qty;
+        for (let j = this.inventory.length - 1; j >= 0 && remaining > 0; j--) {
+          const entry = this.inventory[j];
+          if (entry.itemId !== itemId) continue;
+          const take = Math.min(entry.quantity, remaining);
+          entry.quantity -= take;
+          remaining -= take;
+          if (entry.quantity <= 0) this.inventory.splice(j, 1);
+        }
       }
     }
 

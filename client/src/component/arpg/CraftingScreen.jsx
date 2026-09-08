@@ -8,14 +8,13 @@ import { ItemIcon, hasIconFrame } from "./InventoryScreen";
  * InventoryScreen/HotbarScreen/QuestsScreen).
  *
  * Trois sections :
- * - Recettes connues (apprises via parchemin OU decouvertes par
- *   combinaison libre) - fabrication en un clic, comme avant.
- * - Recettes decouvertes mais verrouillees (combinaison correcte
- *   trouvee, mais niveau insuffisant) - purement informatif, jamais
- *   fabricable ici.
- * - Combinaison libre - a la Minecraft : le joueur choisit librement des
- *   objets de son inventaire (jamais l'or) et tente sa chance, sans
- *   jamais rien perdre si la combinaison ne correspond a rien.
+ * - Recettes connues - fabrication en un clic pour les ingredients
+ *   simples ; pour un ingredient FLEXIBLE (acceptedItemIds), le joueur
+ *   choisit lui-meme la repartition (l'un, l'autre, ou un melange) avant
+ *   de pouvoir fabriquer.
+ * - Recettes decouvertes mais verrouillees (niveau insuffisant) -
+ *   purement informatif.
+ * - Combinaison libre - a la Minecraft.
  */
 export default function CraftingScreen({
   unlockedRecipes,
@@ -25,7 +24,8 @@ export default function CraftingScreen({
   onFreeCraft,
   onClose,
 }) {
-  const [selection, setSelection] = useState({}); // { itemId: quantity }
+  const [selection, setSelection] = useState({}); // combinaison libre : { itemId: quantity }
+  const [flexAllocations, setFlexAllocations] = useState({}); // recettes connues : { "recipeId:ingIndex": { itemId: quantity } }
 
   function getQuantity(itemId) {
     return inventory
@@ -33,15 +33,88 @@ export default function CraftingScreen({
       .reduce((sum, i) => sum + i.quantity, 0);
   }
 
-  function canCraft(recipe) {
-    return recipe.ingredients.every(
-      (ing) => getQuantity(ing.itemId) >= ing.quantity,
-    );
+  // ------------------------------------------------------------
+  // Recettes connues - ingredients flexibles (repartition manuelle)
+  // ------------------------------------------------------------
+
+  function flexKey(recipeId, ingIndex) {
+    return `${recipeId}:${ingIndex}`;
   }
 
-  // objets combinables librement - jamais l'or, jamais les objets de
-  // quete/uniques sans prix (ceux qui n'ont de toute facon leur place
-  // dans aucune recette normale)
+  function getFlexAllocation(recipeId, ingIndex) {
+    return flexAllocations[flexKey(recipeId, ingIndex)] || {};
+  }
+
+  function getFlexTotal(recipeId, ingIndex) {
+    const alloc = getFlexAllocation(recipeId, ingIndex);
+    return Object.values(alloc).reduce((s, q) => s + q, 0);
+  }
+
+  function adjustFlex(recipeId, ingIndex, itemId, delta, requiredQty) {
+    setFlexAllocations((prev) => {
+      const key = flexKey(recipeId, ingIndex);
+      const current = prev[key] || {};
+      const currentForItem = current[itemId] || 0;
+      const currentTotal = Object.values(current).reduce((s, q) => s + q, 0);
+
+      const owned = getQuantity(itemId);
+      let next = currentForItem + delta;
+      if (next < 0) next = 0;
+      if (next > owned) next = owned;
+
+      const nextTotal = currentTotal - currentForItem + next;
+      if (delta > 0 && nextTotal > requiredQty) return prev; // ne depasse jamais le total requis
+
+      return { ...prev, [key]: { ...current, [itemId]: next } };
+    });
+  }
+
+  function autoFillFlex(recipeId, ingIndex, ing) {
+    setFlexAllocations((prev) => {
+      let remaining = ing.quantity;
+      const next = {};
+      for (const itemId of ing.acceptedItemIds) {
+        if (remaining <= 0) break;
+        const owned = getQuantity(itemId);
+        const take = Math.min(owned, remaining);
+        if (take > 0) next[itemId] = take;
+        remaining -= take;
+      }
+      return { ...prev, [flexKey(recipeId, ingIndex)]: next };
+    });
+  }
+
+  function canCraft(recipe) {
+    return recipe.ingredients.every((ing, ingIndex) => {
+      if (ing.acceptedItemIds) {
+        return getFlexTotal(recipe.id, ingIndex) >= ing.quantity;
+      }
+      return getQuantity(ing.itemId) >= ing.quantity;
+    });
+  }
+
+  function handleCraft(recipe) {
+    const payload = {};
+    recipe.ingredients.forEach((ing, ingIndex) => {
+      if (ing.acceptedItemIds) {
+        payload[ingIndex] = getFlexAllocation(recipe.id, ingIndex);
+      }
+    });
+    onCraft(recipe.id, payload);
+    // nettoie les repartitions de CETTE recette apres fabrication
+    setFlexAllocations((prev) => {
+      const next = { ...prev };
+      recipe.ingredients.forEach(
+        (_, ingIndex) => delete next[flexKey(recipe.id, ingIndex)],
+      );
+      return next;
+    });
+  }
+
+  // ------------------------------------------------------------
+  // Combinaison libre
+  // ------------------------------------------------------------
+
   const combinableEntries = inventory.filter(
     (i) => i.itemId !== "gold" && getQuantity(i.itemId) > 0,
   );
@@ -68,10 +141,12 @@ export default function CraftingScreen({
   }
 
   function handleCombine() {
-    const selectedItems = Object.entries(selection).map(([itemId, quantity]) => ({
-      itemId,
-      quantity,
-    }));
+    const selectedItems = Object.entries(selection).map(
+      ([itemId, quantity]) => ({
+        itemId,
+        quantity,
+      }),
+    );
     if (selectedItems.length === 0) return;
     onFreeCraft(selectedItems);
     setSelection({});
@@ -126,7 +201,14 @@ export default function CraftingScreen({
           Aucune recette connue pour l'instant.
         </div>
       )}
-      <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 24 }}>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: 10,
+          marginBottom: 24,
+        }}
+      >
         {unlockedRecipes.map((recipeId) => {
           const recipe = resolveCraftingRecipe(recipeId);
           if (!recipe) return null;
@@ -136,30 +218,197 @@ export default function CraftingScreen({
           return (
             <div
               key={recipeId}
-              style={{ padding: 12, background: "#1e2029", border: "1px solid #444", borderRadius: 8 }}
+              style={{
+                padding: 12,
+                background: "#1e2029",
+                border: "1px solid #444",
+                borderRadius: 8,
+              }}
             >
-              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
-                {hasIconFrame(recipe.resultItemId) && <ItemIcon itemId={recipe.resultItemId} scale={2} />}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10,
+                  marginBottom: 8,
+                }}
+              >
+                {hasIconFrame(recipe.resultItemId) && (
+                  <ItemIcon itemId={recipe.resultItemId} scale={2} />
+                )}
                 <div>
                   <div style={{ fontSize: 14 }}>{recipe.name}</div>
                   <div style={{ fontSize: 11, color: "#8a7050" }}>
-                    Produit : {resultDef.name}{recipe.resultQuantity > 1 ? ` x${recipe.resultQuantity}` : ""}
+                    Produit : {resultDef.name}
+                    {recipe.resultQuantity > 1
+                      ? ` x${recipe.resultQuantity}`
+                      : ""}
                   </div>
                 </div>
               </div>
 
-              <div style={{ display: "flex", flexDirection: "column", gap: 4, marginBottom: 10 }}>
-                {recipe.ingredients.map((ing) => {
-                  const have = getQuantity(ing.itemId);
-                  const enough = have >= ing.quantity;
-                  const ingDef = resolveItemDef(ing.itemId);
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 8,
+                  marginBottom: 10,
+                }}
+              >
+                {recipe.ingredients.map((ing, ingIndex) => {
+                  if (!ing.acceptedItemIds) {
+                    const have = getQuantity(ing.itemId);
+                    const enough = have >= ing.quantity;
+                    const ingDef = resolveItemDef(ing.itemId);
+                    return (
+                      <div
+                        key={ingIndex}
+                        style={{
+                          fontSize: 12,
+                          color: enough ? "#7fae8f" : "#c96060",
+                          display: "flex",
+                          justifyContent: "space-between",
+                        }}
+                      >
+                        <span>{ingDef.name}</span>
+                        <span>
+                          {have} / {ing.quantity}
+                        </span>
+                      </div>
+                    );
+                  }
+
+                  // ingredient flexible - repartition manuelle
+                  const total = getFlexTotal(recipeId, ingIndex);
+                  const complete = total >= ing.quantity;
                   return (
                     <div
-                      key={ing.itemId}
-                      style={{ fontSize: 12, color: enough ? "#7fae8f" : "#c96060", display: "flex", justifyContent: "space-between" }}
+                      key={ingIndex}
+                      style={{
+                        padding: 8,
+                        background: "#171921",
+                        borderRadius: 6,
+                        border: "1px solid #333",
+                      }}
                     >
-                      <span>{ingDef.name}</span>
-                      <span>{have} / {ing.quantity}</span>
+                      <div
+                        style={{
+                          fontSize: 12,
+                          color: complete ? "#7fae8f" : "#c96060",
+                          display: "flex",
+                          justifyContent: "space-between",
+                          marginBottom: 6,
+                        }}
+                      >
+                        <span>Au choix (ou en mélange)</span>
+                        <span>
+                          {total} / {ing.quantity}
+                        </span>
+                      </div>
+                      {ing.acceptedItemIds.map((itemId) => {
+                        const def = resolveItemDef(itemId);
+                        const owned = getQuantity(itemId);
+                        const allocated =
+                          getFlexAllocation(recipeId, ingIndex)[itemId] || 0;
+                        return (
+                          <div
+                            key={itemId}
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "space-between",
+                              fontSize: 12,
+                              marginBottom: 4,
+                            }}
+                          >
+                            <span>
+                              {def.name} ({owned} en stock)
+                            </span>
+                            <div
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 4,
+                              }}
+                            >
+                              <button
+                                onClick={() =>
+                                  adjustFlex(
+                                    recipeId,
+                                    ingIndex,
+                                    itemId,
+                                    -1,
+                                    ing.quantity,
+                                  )
+                                }
+                                disabled={allocated <= 0}
+                                style={{
+                                  width: 22,
+                                  height: 22,
+                                  borderRadius: 4,
+                                  border: "1px solid #555",
+                                  background: "#2a2a35",
+                                  color: "#eee",
+                                  cursor:
+                                    allocated <= 0 ? "not-allowed" : "pointer",
+                                  fontSize: 12,
+                                }}
+                              >
+                                −
+                              </button>
+                              <span
+                                style={{ minWidth: 16, textAlign: "center" }}
+                              >
+                                {allocated}
+                              </span>
+                              <button
+                                onClick={() =>
+                                  adjustFlex(
+                                    recipeId,
+                                    ingIndex,
+                                    itemId,
+                                    1,
+                                    ing.quantity,
+                                  )
+                                }
+                                disabled={
+                                  allocated >= owned || total >= ing.quantity
+                                }
+                                style={{
+                                  width: 22,
+                                  height: 22,
+                                  borderRadius: 4,
+                                  border: "1px solid #555",
+                                  background: "#2a2a35",
+                                  color: "#eee",
+                                  cursor:
+                                    allocated >= owned || total >= ing.quantity
+                                      ? "not-allowed"
+                                      : "pointer",
+                                  fontSize: 12,
+                                }}
+                              >
+                                +
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                      <button
+                        onClick={() => autoFillFlex(recipeId, ingIndex, ing)}
+                        style={{
+                          marginTop: 2,
+                          padding: "2px 8px",
+                          fontSize: 10,
+                          borderRadius: 5,
+                          border: "1px solid #555",
+                          background: "#2a2a35",
+                          color: "#aaa",
+                          cursor: "pointer",
+                        }}
+                      >
+                        Remplir automatiquement
+                      </button>
                     </div>
                   );
                 })}
@@ -167,9 +416,12 @@ export default function CraftingScreen({
 
               <button
                 disabled={!craftable}
-                onClick={() => onCraft(recipeId)}
+                onClick={() => handleCraft(recipe)}
                 style={{
-                  padding: "6px 14px", fontSize: 12, borderRadius: 6, border: "1px solid #8a7050",
+                  padding: "6px 14px",
+                  fontSize: 12,
+                  borderRadius: 6,
+                  border: "1px solid #8a7050",
                   background: craftable ? "#3a2f20" : "#2a2a35",
                   color: craftable ? "#f0e6d0" : "#777",
                   cursor: craftable ? "pointer" : "not-allowed",
@@ -188,7 +440,14 @@ export default function CraftingScreen({
           <div style={{ fontSize: 13, color: "#999", marginBottom: 8 }}>
             Recettes découvertes (niveau insuffisant)
           </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 24 }}>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: 10,
+              marginBottom: 24,
+            }}
+          >
             {discoveredLockedRecipes.map((recipeId) => {
               const recipe = resolveCraftingRecipe(recipeId);
               if (!recipe) return null;
@@ -196,14 +455,32 @@ export default function CraftingScreen({
               return (
                 <div
                   key={recipeId}
-                  style={{ padding: 12, background: "#241e1e", border: "1px solid #4a3838", borderRadius: 8, opacity: 0.8 }}
+                  style={{
+                    padding: 12,
+                    background: "#241e1e",
+                    border: "1px solid #4a3838",
+                    borderRadius: 8,
+                    opacity: 0.8,
+                  }}
                 >
-                  <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
-                    {hasIconFrame(recipe.resultItemId) && <ItemIcon itemId={recipe.resultItemId} scale={2} />}
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 10,
+                      marginBottom: 4,
+                    }}
+                  >
+                    {hasIconFrame(recipe.resultItemId) && (
+                      <ItemIcon itemId={recipe.resultItemId} scale={2} />
+                    )}
                     <div>
                       <div style={{ fontSize: 14 }}>{recipe.name}</div>
                       <div style={{ fontSize: 11, color: "#8a7050" }}>
-                        Produit : {resultDef.name}{recipe.resultQuantity > 1 ? ` x${recipe.resultQuantity}` : ""}
+                        Produit : {resultDef.name}
+                        {recipe.resultQuantity > 1
+                          ? ` x${recipe.resultQuantity}`
+                          : ""}
                       </div>
                     </div>
                   </div>
@@ -257,7 +534,9 @@ export default function CraftingScreen({
                 }}
                 title="Cliquer pour retirer une unité"
               >
-                {hasIconFrame(itemId) && <ItemIcon itemId={itemId} scale={1.2} />}
+                {hasIconFrame(itemId) && (
+                  <ItemIcon itemId={itemId} scale={1.2} />
+                )}
                 {def.name} x{quantity}
               </div>
             );
@@ -271,8 +550,6 @@ export default function CraftingScreen({
           flexDirection: "column",
           gap: 6,
           marginBottom: 16,
-          maxHeight: 220,
-          overflowY: "auto",
         }}
       >
         {combinableEntries.length === 0 && (
@@ -297,10 +574,12 @@ export default function CraftingScreen({
                 background: "#1e2029",
                 border: "1px solid #444",
                 borderRadius: 6,
-            }}
-          >
+              }}
+            >
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                {hasIconFrame(entry.itemId) && <ItemIcon itemId={entry.itemId} scale={1.4} />}
+                {hasIconFrame(entry.itemId) && (
+                  <ItemIcon itemId={entry.itemId} scale={1.4} />
+                )}
                 <div style={{ fontSize: 12 }}>
                   {def.name} ({picked}/{owned} choisi{picked > 1 ? "s" : ""})
                 </div>
@@ -310,9 +589,13 @@ export default function CraftingScreen({
                   onClick={() => removeFromSelection(entry.itemId)}
                   disabled={picked <= 0}
                   style={{
-                    width: 24, height: 24, borderRadius: 5,
-                    border: "1px solid #555", background: "#2a2a35",
-                    color: "#eee", cursor: picked <= 0 ? "not-allowed" : "pointer",
+                    width: 24,
+                    height: 24,
+                    borderRadius: 5,
+                    border: "1px solid #555",
+                    background: "#2a2a35",
+                    color: "#eee",
+                    cursor: picked <= 0 ? "not-allowed" : "pointer",
                     fontSize: 13,
                   }}
                 >
@@ -322,9 +605,13 @@ export default function CraftingScreen({
                   onClick={() => addToSelection(entry.itemId)}
                   disabled={picked >= owned}
                   style={{
-                    width: 24, height: 24, borderRadius: 5,
-                    border: "1px solid #555", background: "#2a2a35",
-                    color: "#eee", cursor: picked >= owned ? "not-allowed" : "pointer",
+                    width: 24,
+                    height: 24,
+                    borderRadius: 5,
+                    border: "1px solid #555",
+                    background: "#2a2a35",
+                    color: "#eee",
+                    cursor: picked >= owned ? "not-allowed" : "pointer",
                     fontSize: 13,
                   }}
                 >
@@ -343,7 +630,10 @@ export default function CraftingScreen({
           padding: "10px 20px",
           fontSize: 14,
           borderRadius: 8,
-          border: selectionEntries.length > 0 ? "1px solid #ffd700" : "1px solid #555",
+          border:
+            selectionEntries.length > 0
+              ? "1px solid #ffd700"
+              : "1px solid #555",
           background: selectionEntries.length > 0 ? "#3a3320" : "#2a2a35",
           color: selectionEntries.length > 0 ? "#f0e8c0" : "#777",
           cursor: selectionEntries.length > 0 ? "pointer" : "not-allowed",

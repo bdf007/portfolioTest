@@ -76,7 +76,9 @@ export default function ChestScreen({ items, onTakeItem, onTakeAll, onClose }) {
                     borderRadius: 8,
                   }}
                 >
-                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <div
+                    style={{ display: "flex", alignItems: "center", gap: 10 }}
+                  >
                     {showIcon && <ItemIcon itemId={item.itemId} scale={1.5} />}
                     <div style={{ fontSize: 13 }}>
                       {def.name}
