@@ -19,6 +19,16 @@ export const CRAFTING_RECIPES = {
     unlockLevel: 1,
   },
 
+  bigWoodenArrow: {
+  id: "bigWoodenArrow",
+  name: "Flèche en bois géante",
+  resultItemId: "bigWoodenArrow",
+  resultQuantity: 5,
+  ingredients: [{ itemId: "deerAntler", quantity: 3 }],
+  unlockLevel: 1, // niveau minimum pour l'UTILISER, meme une fois decouverte
+  discoveryOnly: true, // <-- jamais debloquee automatiquement, uniquement par combinaison
+},
+
   // recipe for enchanting weapons
 
   reinforcedSword: {
