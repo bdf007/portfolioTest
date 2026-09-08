@@ -20,14 +20,16 @@ export const CRAFTING_RECIPES = {
   },
 
   bigWoodenArrow: {
-  id: "bigWoodenArrow",
-  name: "Flèche en bois géante",
-  resultItemId: "bigWoodenArrow",
-  resultQuantity: 5,
-  ingredients: [{ itemId: "deerAntler", quantity: 3 }],
-  // unlockLevel: 1, // niveau minimum pour l'UTILISER, meme une fois decouverte
-  discoveryOnly: true, // <-- jamais debloquee automatiquement, uniquement par combinaison
-},
+    id: "bigWoodenArrow",
+    name: "Flèche en bois géante",
+    resultItemId: "bigWoodenArrow",
+    resultQuantity: 5,
+    ingredients: [
+      { acceptedItemIds: ["deerAntler", "woodenArrow"], quantity: 3 },
+    ],
+    // unlockLevel: 1, // niveau minimum pour l'UTILISER, meme une fois decouverte
+    discoveryOnly: true, // <-- jamais debloquee automatiquement, uniquement par combinaison
+  },
 
   // recipe for enchanting weapons
 
@@ -55,6 +57,16 @@ export const CRAFTING_RECIPES = {
     unlockLevel: 8,
   },
 };
+
+/**
+ * Normalise recipe.ingredients (une seule liste, comportement historique)
+ * OU recipe.ingredientOptions (plusieurs listes alternatives - une seule
+ * doit etre entierement satisfaite) en un tableau d'options uniforme,
+ * pour que tout le reste du code n'ait qu'UNE seule forme a traiter.
+ */
+export function getIngredientOptions(recipe) {
+  return recipe.ingredientOptions || [recipe.ingredients];
+}
 
 export function resolveCraftingRecipe(recipeId) {
   return CRAFTING_RECIPES[recipeId] || null;
