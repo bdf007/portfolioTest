@@ -6037,6 +6037,7 @@ export default class MainScene extends Phaser.Scene {
     let anyRecipeUnlocked = false;
     for (const recipe of Object.values(CRAFTING_RECIPES)) {
       if (recipe.unlockLevel == null || recipe.unlockLevel > level) continue;
+      if (recipe.discoveryOnly) continue;
       if (this.unlockedRecipes.includes(recipe.id)) continue;
       this.unlockedRecipes.push(recipe.id);
       anyRecipeUnlocked = true;
