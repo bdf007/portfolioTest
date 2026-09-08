@@ -25,7 +25,7 @@ export const CRAFTING_RECIPES = {
   resultItemId: "bigWoodenArrow",
   resultQuantity: 5,
   ingredients: [{ itemId: "deerAntler", quantity: 3 }],
-  unlockLevel: 1, // niveau minimum pour l'UTILISER, meme une fois decouverte
+  // unlockLevel: 1, // niveau minimum pour l'UTILISER, meme une fois decouverte
   discoveryOnly: true, // <-- jamais debloquee automatiquement, uniquement par combinaison
 },
 
