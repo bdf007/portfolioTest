@@ -38,6 +38,7 @@ const {
   reachableFloorSet,
 } = require("../services/generation/bossRoom");
 const { generateChests } = require("../services/generation/chestGenerator");
+const { generateTraps } = require("../services/generation/trapGenerator");
 const { generateShopStock } = require("../services/generation/shopGenerator");
 const {
   rollLoot,
@@ -570,6 +571,7 @@ async function getLevel(req, res) {
       chestCount: biome.chestCount,
       allowedTiles,
     });
+    const traps = generateTraps(grid, seed, playerSpawn, biome.trapConfig, allowedTiles);
 
     res.json({
       depth,
@@ -588,6 +590,7 @@ async function getLevel(req, res) {
       boss,
       enemies,
       chests,
+      traps,
     });
   } catch (error) {
     console.error("[ArpgController.getLevel]", error);
