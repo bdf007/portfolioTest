@@ -98,7 +98,17 @@ export default function FullMapScreen({
         CELL_SIZE + 2,
       );
     }
-  }, [grid, fogState, playerTile, exitTile, upstairsTile, questNpcs, summons]);
+  }, [
+    grid,
+    fogState,
+    playerTile,
+    exitTile,
+    upstairsTile,
+    questNpcs,
+    summons,
+    bossDoorTile,
+    bossRoomOpen,
+  ]);
 
   return (
     <div
