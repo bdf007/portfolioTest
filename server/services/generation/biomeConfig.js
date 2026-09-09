@@ -32,12 +32,6 @@ const BIOMES = [
     bossRoomSize: 40,
     enemyTypes: ["deer1", "angryBrownMushroom"],
     chestCount: [1, 3],
-    trapConfig: {
-      frequency: 0.03,
-      damageType: "physical",
-      damageAmount: [8, 15],
-      inflictsEffect: null,
-    },
     generatorParams: {
       width: 30,
       height: 30,
