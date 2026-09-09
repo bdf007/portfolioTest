@@ -175,7 +175,7 @@ export const ABILITY_DEFS = {
     name: "Détection de pièges",
     effectType: "detectTrap",
     cooldownMs: 8000,
-    manaCost: 10,
+    staminaCost: 10,
     // radius absent -> utilise this.playerVisionRadius par defaut (cf.
     // performDetectTrapAbility) - ajoute radius: N ici si tu veux un
     // rayon fixe different de la vision du heros
