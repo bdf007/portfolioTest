@@ -293,6 +293,11 @@ const WALL_CORNER_INDEX_TO_FRAME_2_0 = [
 //   32, 0, 32, 18, 34, 32, 33, 7, 2, 1, 34, 23, 16, 22, 6, 70,
 // ];
 
+const TRAP_VISUALS_DESERT = {
+  spritesheetKey: DESERT_AUTOTILE_SPRITESHEET.key,
+  spikeAnimFrames: [166, 182, 198, 214],
+};
+
 const ATTACK_ANIM_DURATION_MS = 400;
 
 const ATTRIBUTE_POINTS_PER_LEVEL = 5;
@@ -547,6 +552,8 @@ export default class MainScene extends Phaser.Scene {
     this.floorFogCache = {};
     this.currentFloorKills = [];
     this.currentFloorOpenedChests = [];
+    this.floorTraps = [];
+    this.currentFloorTriggeredTraps = [];
     this.quests = {};
     this.unlockedAbilities = [];
     this.unlockedRecipes = [];
@@ -673,6 +680,7 @@ export default class MainScene extends Phaser.Scene {
       null,
       ps.playerPosition || null,
       ps.currentFloorChestRemainingLoot || {},
+      ps.currentFloorTriggeredTraps || [],
     );
     for (const savedSummon of ps.summons || []) {
       const sprite = this.spawnSummonSprite(
@@ -1126,6 +1134,7 @@ export default class MainScene extends Phaser.Scene {
           heroId: this.heroSpriteKey,
           currentFloorKills: this.currentFloorKills,
           currentFloorOpenedChests: this.currentFloorOpenedChests,
+          currentFloorTriggeredTraps: this.currentFloorTriggeredTraps,
           currentFloorChestRemainingLoot: this.currentFloorChestRemainingLoot,
           currentFloorLootSeed: this.currentFloorLootSeed,
           quests: this.quests,
@@ -1334,8 +1343,10 @@ export default class MainScene extends Phaser.Scene {
     savedFogState = null,
     savedPlayerPosition = null,
     savedChestRemainingLoot = {},
+    savedTriggeredTraps = [],
   ) {
     this.currentFloorChestRemainingLoot = savedChestRemainingLoot || {};
+    this.currentFloorTriggeredTraps = savedTriggeredTraps || [];
 
     if (this.fogState?.state && this.currentDepth != null) {
       const discoveredTiles = [];
@@ -1468,6 +1479,8 @@ export default class MainScene extends Phaser.Scene {
     this.chests = [];
     this.nextLootChestId = 0;
     this.activeChest = null;
+    this.floorTraps.forEach((t) => t.sprite.destroy());
+    this.floorTraps = [];
     this.dialogOpen = false;
     this.gamePaused = false;
     this.pauseReasons.clear();
@@ -1551,6 +1564,7 @@ export default class MainScene extends Phaser.Scene {
     let renderGrid;
     let dungeon1FloorFrameValue;
     let composedFloorSlots = [0];
+    let trapVisualConfig = null;
 
     if (useFortress1Autotile) {
       phaserTilesetKey = FORTRESS_AUTOTILE_SPRITESHEET.key;
@@ -1591,6 +1605,7 @@ export default class MainScene extends Phaser.Scene {
       phaserTilesetKey = result.phaserTilesetKey;
       renderGrid = result.renderGrid;
       composedFloorSlots = result.floorSlotIndices;
+      trapVisualConfig = TRAP_VISUALS_DESERT;
     } else if (tileset === "desertMountain2") {
       const result = this.composeCornerAutotileTexture(
         grid,
@@ -1602,6 +1617,7 @@ export default class MainScene extends Phaser.Scene {
       phaserTilesetKey = result.phaserTilesetKey;
       renderGrid = result.renderGrid;
       composedFloorSlots = result.floorSlotIndices;
+      trapVisualConfig = TRAP_VISUALS_DESERT;
     } else if (tileset === "desertMountain3") {
       const result = this.composeCornerAutotileTexture(
         grid,
@@ -1613,6 +1629,7 @@ export default class MainScene extends Phaser.Scene {
       phaserTilesetKey = result.phaserTilesetKey;
       renderGrid = result.renderGrid;
       composedFloorSlots = result.floorSlotIndices;
+      trapVisualConfig = TRAP_VISUALS_DESERT;
     } else if (tileset === "desert2") {
       const result = this.composeCornerAutotileTexture(
         grid,
@@ -1624,6 +1641,7 @@ export default class MainScene extends Phaser.Scene {
       phaserTilesetKey = result.phaserTilesetKey;
       renderGrid = result.renderGrid;
       composedFloorSlots = result.floorSlotIndices;
+      trapVisualConfig = TRAP_VISUALS_DESERT;
     } else if (tileset === "hills1") {
       const result = this.composeCornerAutotileTexture(
         grid,
@@ -1635,6 +1653,7 @@ export default class MainScene extends Phaser.Scene {
       phaserTilesetKey = result.phaserTilesetKey;
       renderGrid = result.renderGrid;
       composedFloorSlots = result.floorSlotIndices;
+      trapVisualConfig = TRAP_VISUALS_DESERT;
     } else if (tileset === "cityWalls1") {
       const result = this.composeCornerAutotileTexture(
         grid,
@@ -1646,6 +1665,7 @@ export default class MainScene extends Phaser.Scene {
       phaserTilesetKey = result.phaserTilesetKey;
       renderGrid = result.renderGrid;
       composedFloorSlots = result.floorSlotIndices;
+      trapVisualConfig = TRAP_VISUALS_DESERT;
     } else if (tileset === "tower1") {
       const result = this.composeCornerAutotileTexture(
         grid,
@@ -1657,6 +1677,7 @@ export default class MainScene extends Phaser.Scene {
       phaserTilesetKey = result.phaserTilesetKey;
       renderGrid = result.renderGrid;
       composedFloorSlots = result.floorSlotIndices;
+      trapVisualConfig = TRAP_VISUALS_DESERT;
     } else if (tileset === "hills2") {
       const result = this.composeCornerAutotileTexture(
         grid,
@@ -1668,6 +1689,7 @@ export default class MainScene extends Phaser.Scene {
       phaserTilesetKey = result.phaserTilesetKey;
       renderGrid = result.renderGrid;
       composedFloorSlots = result.floorSlotIndices;
+      trapVisualConfig = TRAP_VISUALS_DESERT;
     } else if (tileset === "mines2") {
       const result = this.composeCornerAutotileTexture(
         grid,
@@ -1679,6 +1701,7 @@ export default class MainScene extends Phaser.Scene {
       phaserTilesetKey = result.phaserTilesetKey;
       renderGrid = result.renderGrid;
       composedFloorSlots = result.floorSlotIndices;
+      trapVisualConfig = TRAP_VISUALS_DESERT;
     } else if (tileset === "hills3") {
       const result = this.composeCornerAutotileTexture(
         grid,
@@ -1690,6 +1713,7 @@ export default class MainScene extends Phaser.Scene {
       phaserTilesetKey = result.phaserTilesetKey;
       renderGrid = result.renderGrid;
       composedFloorSlots = result.floorSlotIndices;
+      trapVisualConfig = TRAP_VISUALS_DESERT;
     } else if (tileset === "hills4") {
       const result = this.composeCornerAutotileTexture(
         grid,
@@ -1701,6 +1725,7 @@ export default class MainScene extends Phaser.Scene {
       phaserTilesetKey = result.phaserTilesetKey;
       renderGrid = result.renderGrid;
       composedFloorSlots = result.floorSlotIndices;
+      trapVisualConfig = TRAP_VISUALS_DESERT;
     } else if (tileset === "hills5") {
       const result = this.composeCornerAutotileTexture(
         grid,
@@ -1712,6 +1737,7 @@ export default class MainScene extends Phaser.Scene {
       phaserTilesetKey = result.phaserTilesetKey;
       renderGrid = result.renderGrid;
       composedFloorSlots = result.floorSlotIndices;
+      trapVisualConfig = TRAP_VISUALS_DESERT;
     } else if (tileset === "hills6") {
       const result = this.composeCornerAutotileTexture(
         grid,
@@ -1723,6 +1749,7 @@ export default class MainScene extends Phaser.Scene {
       phaserTilesetKey = result.phaserTilesetKey;
       renderGrid = result.renderGrid;
       composedFloorSlots = result.floorSlotIndices;
+      trapVisualConfig = TRAP_VISUALS_DESERT;
     } else if (tileset === "hills7") {
       const result = this.composeCornerAutotileTexture(
         grid,
@@ -1734,6 +1761,7 @@ export default class MainScene extends Phaser.Scene {
       phaserTilesetKey = result.phaserTilesetKey;
       renderGrid = result.renderGrid;
       composedFloorSlots = result.floorSlotIndices;
+      trapVisualConfig = TRAP_VISUALS_DESERT;
     } else if (tileset === "hills8") {
       const result = this.composeCornerAutotileTexture(
         grid,
@@ -1745,6 +1773,7 @@ export default class MainScene extends Phaser.Scene {
       phaserTilesetKey = result.phaserTilesetKey;
       renderGrid = result.renderGrid;
       composedFloorSlots = result.floorSlotIndices;
+      trapVisualConfig = TRAP_VISUALS_DESERT;
     } else if (tileset === "hills9") {
       const result = this.composeCornerAutotileTexture(
         grid,
@@ -1756,6 +1785,7 @@ export default class MainScene extends Phaser.Scene {
       phaserTilesetKey = result.phaserTilesetKey;
       renderGrid = result.renderGrid;
       composedFloorSlots = result.floorSlotIndices;
+      trapVisualConfig = TRAP_VISUALS_DESERT;
     } else if (tileset === "hills10") {
       const result = this.composeCornerAutotileTexture(
         grid,
@@ -1767,6 +1797,7 @@ export default class MainScene extends Phaser.Scene {
       phaserTilesetKey = result.phaserTilesetKey;
       renderGrid = result.renderGrid;
       composedFloorSlots = result.floorSlotIndices;
+      trapVisualConfig = TRAP_VISUALS_DESERT;
     } else if (tileset === "hills11") {
       const result = this.composeCornerAutotileTexture(
         grid,
@@ -1778,6 +1809,7 @@ export default class MainScene extends Phaser.Scene {
       phaserTilesetKey = result.phaserTilesetKey;
       renderGrid = result.renderGrid;
       composedFloorSlots = result.floorSlotIndices;
+      trapVisualConfig = TRAP_VISUALS_DESERT;
     } else if (tileset === "hills12") {
       const result = this.composeCornerAutotileTexture(
         grid,
@@ -1789,6 +1821,7 @@ export default class MainScene extends Phaser.Scene {
       phaserTilesetKey = result.phaserTilesetKey;
       renderGrid = result.renderGrid;
       composedFloorSlots = result.floorSlotIndices;
+      trapVisualConfig = TRAP_VISUALS_DESERT;
     } else if (tileset === "snow") {
       const result = this.composeCornerAutotileTexture(
         grid,
@@ -1800,6 +1833,7 @@ export default class MainScene extends Phaser.Scene {
       phaserTilesetKey = result.phaserTilesetKey;
       renderGrid = result.renderGrid;
       composedFloorSlots = result.floorSlotIndices;
+      trapVisualConfig = TRAP_VISUALS_DESERT;
     } else if (tileset === "darkwoods") {
       const result = this.composeCornerAutotileTexture(
         grid,
@@ -1815,6 +1849,7 @@ export default class MainScene extends Phaser.Scene {
       phaserTilesetKey = result.phaserTilesetKey;
       renderGrid = result.renderGrid;
       composedFloorSlots = result.floorSlotIndices;
+      trapVisualConfig = TRAP_VISUALS_DESERT;
     } else if (tileset === "darkwoods2") {
       const result = this.composeCornerAutotileTexture(
         grid,
@@ -1824,6 +1859,7 @@ export default class MainScene extends Phaser.Scene {
       phaserTilesetKey = result.phaserTilesetKey;
       renderGrid = result.renderGrid;
       composedFloorSlots = result.floorSlotIndices;
+      trapVisualConfig = TRAP_VISUALS_DESERT;
     } else if (tileset === "standardFields2") {
       const result = this.composeCornerAutotileTexture(
         grid,
@@ -1833,6 +1869,7 @@ export default class MainScene extends Phaser.Scene {
       phaserTilesetKey = result.phaserTilesetKey;
       renderGrid = result.renderGrid;
       composedFloorSlots = result.floorSlotIndices;
+      trapVisualConfig = TRAP_VISUALS_DESERT;
     } else {
       const colors = TILESET_COLORS[tileset] || TILESET_COLORS.cave;
       phaserTilesetKey = "tiles-" + tileset;
@@ -2158,6 +2195,39 @@ export default class MainScene extends Phaser.Scene {
         variant,
       });
     });
+    const trapVariantRng = createRng(`${this.currentSeed}-traps-visual`);
+
+    (traps || []).forEach((trapData, index) => {
+      if (!trapVisualConfig) {
+        console.warn(`[MainScene] pas de visuel de piege configure pour le tileset "${tileset}" - piege ignore`);
+        return;
+      }
+
+    const alreadyTriggered = this.currentFloorTriggeredTraps.includes(index);
+
+    const sprite = this.add.sprite(
+      trapData.x * TILE_SIZE + TILE_SIZE / 2,
+      trapData.y * TILE_SIZE + TILE_SIZE / 2,
+      trapVisualConfig.spritesheetKey,
+      trapVisualConfig.spikeAnimFrames[
+        alreadyTriggered ? trapVisualConfig.spikeAnimFrames.length - 1 : 0
+      ],
+    );
+    sprite.setDepth(3);
+    sprite.setVisible(alreadyTriggered);
+
+    this.floorTraps.push({
+      sprite,
+      index,
+      x: trapData.x,
+      y: trapData.y,
+      spikeAnimFrames: trapVisualConfig.spikeAnimFrames,
+      damageType: trapData.damageType,
+      damageAmount: trapData.damageAmount,
+      inflictsEffect: trapData.inflictsEffect,
+      triggered: alreadyTriggered,
+    });
+  });
 
     if (data.questNpcs && data.questNpcs.length > 0) {
       this.createQuestNpcs(data.questNpcs);
@@ -3154,6 +3224,7 @@ export default class MainScene extends Phaser.Scene {
     this.updateNpcMovement(this.questNpcs);
     this.updateNpcMovement(this.ambientNpcs);
     this.updateSummons(this.time.now);
+    this.checkFloorTraps();
     if (this.wasStealthed && this.time.now >= this.stealthUntil) {
       this.tweens.add({
         targets: this.hero,
@@ -3643,6 +3714,76 @@ export default class MainScene extends Phaser.Scene {
       npc.sprite.setVelocity(0, 0);
       npc.sprite.anims.play(`${npc.spriteKey}-idle-${npc.lastDir}`, true);
     }
+  }
+
+  checkFloorTraps() {
+    const heroTileX = Math.floor(this.hero.x / TILE_SIZE);
+    const heroTileY = Math.floor(this.hero.y / TILE_SIZE);
+
+    for (const trap of this.floorTraps) {
+      if (trap.triggered) continue;
+
+      if (trap.x === heroTileX && trap.y === heroTileY) {
+        this.triggerFloorTrap(trap, { isHero: true });
+        continue;
+      }
+
+      for (const summon of this.summons) {
+        const sx = Math.floor(summon.sprite.x / TILE_SIZE);
+        const sy = Math.floor(summon.sprite.y / TILE_SIZE);
+        if (trap.x === sx && trap.y === sy) {
+          this.triggerFloorTrap(trap, { isHero: false, summon });
+          break;
+        }
+      }
+    }
+  }
+
+  triggerFloorTrap(trap, target) {
+    trap.triggered = true;
+    trap.sprite.setVisible(true);
+    this.currentFloorTriggeredTraps.push(trap.index);
+
+    const frames = trap.spikeAnimFrames;
+    let frameIndex = 0;
+    this.time.addEvent({
+      delay: 80,
+      repeat: frames.length - 1,
+      callback: () => {
+        frameIndex++;
+        trap.sprite.setFrame(frames[frameIndex]);
+      },
+    });
+
+    if (target.isHero) {
+      const rawDamage = applyElementalResistance(
+        trap.damageAmount,
+        trap.damageType,
+        this.playerResistances,
+      );
+      const dmg = computeDamage(rawDamage, this.playerDefense);
+      this.playerHp = Math.max(0, this.playerHp - dmg);
+      this.showDamageNumber(this.hero, dmg, "#ff4444");
+      this.events.emit("player-hp-changed", {
+        hp: this.playerHp,
+        maxHp: this.playerMaxHp,
+      });
+      this.applyStatusEffect(
+        this.playerStatusEffects,
+        this.rollStatusEffect({ inflictsEffect: trap.inflictsEffect }),
+      );
+    } else {
+      const rawDamage = applyElementalResistance(
+        trap.damageAmount,
+        trap.damageType,
+        target.summon.resistances,
+      );
+      const dmg = computeDamage(rawDamage, target.summon.defense);
+      target.summon.hp = Math.max(0, target.summon.hp - dmg);
+      this.showDamageNumber(target.summon.sprite, dmg, "#ff44c7");
+    }
+
+    this.persistProgress();
   }
 
   performInteraction() {
