@@ -170,16 +170,21 @@ export const ABILITY_DEFS = {
     // disabledBiomes: ["maze1", "maze2"], // ids de biomeConfig.js - absent/vide = utilisable partout
     unlockLevel: null,
   },
+  
   detectTraps: {
     id: "detectTraps",
     name: "Détection de pièges",
+    archetypes: [],
+    description: "Révèle les pièges cachés à portée de vue. 10 stamina.",
     effectType: "detectTrap",
     cooldownMs: 8000,
     staminaCost: 10,
+    unlockLevel: null,
     // radius absent -> utilise this.playerVisionRadius par defaut (cf.
     // performDetectTrapAbility) - ajoute radius: N ici si tu veux un
     // rayon fixe different de la vision du heros
   },
+  
   shieldBash: {
     id: "shieldBash",
     name: "Coup de bouclier",
