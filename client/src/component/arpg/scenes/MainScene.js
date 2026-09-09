@@ -295,6 +295,7 @@ const WALL_CORNER_INDEX_TO_FRAME_2_0 = [
 
 const TRAP_VISUALS_DESERT = {
   spritesheetKey: DESERT_AUTOTILE_SPRITESHEET.key,
+  hiddenFrames: [229, 245], // affiche UNE FOIS detecte via detectTrap - jamais par defaut
   spikeAnimFrames: [166, 182, 198, 214],
 };
 
@@ -2203,30 +2204,36 @@ export default class MainScene extends Phaser.Scene {
         return;
       }
 
-    const alreadyTriggered = this.currentFloorTriggeredTraps.includes(index);
+   const alreadyTriggered = this.currentFloorTriggeredTraps.includes(index);
+   const hiddenFrame =
+   trapVisualConfig.hiddenFrames[
+     Math.floor(trapVariantRng() * trapVisualConfig.hiddenFrames.length)
+   ];
 
-    const sprite = this.add.sprite(
-      trapData.x * TILE_SIZE + TILE_SIZE / 2,
-      trapData.y * TILE_SIZE + TILE_SIZE / 2,
-      trapVisualConfig.spritesheetKey,
-      trapVisualConfig.spikeAnimFrames[
-        alreadyTriggered ? trapVisualConfig.spikeAnimFrames.length - 1 : 0
-      ],
-    );
-    sprite.setDepth(3);
-    sprite.setVisible(alreadyTriggered);
+   const sprite = this.add.sprite(
+     trapData.x * TILE_SIZE + TILE_SIZE / 2,
+     trapData.y * TILE_SIZE + TILE_SIZE / 2,
+     trapVisualConfig.spritesheetKey,
+     alreadyTriggered
+       ? trapVisualConfig.spikeAnimFrames[trapVisualConfig.spikeAnimFrames.length - 1]
+       : hiddenFrame,
+   );
+   sprite.setDepth(3);
+   sprite.setVisible(alreadyTriggered);
 
-    this.floorTraps.push({
-      sprite,
-      index,
-      x: trapData.x,
-      y: trapData.y,
-      spikeAnimFrames: trapVisualConfig.spikeAnimFrames,
-      damageType: trapData.damageType,
-      damageAmount: trapData.damageAmount,
-      inflictsEffect: trapData.inflictsEffect,
-      triggered: alreadyTriggered,
-    });
+   this.floorTraps.push({
+     sprite,
+     index,
+     x: trapData.x,
+     y: trapData.y,
+     hiddenFrame,
+     spikeAnimFrames: trapVisualConfig.spikeAnimFrames,
+     damageType: trapData.damageType,
+     damageAmount: trapData.damageAmount,
+     inflictsEffect: trapData.inflictsEffect,
+     revealed: alreadyTriggered,
+     triggered: alreadyTriggered,
+   });
   });
 
     if (data.questNpcs && data.questNpcs.length > 0) {
@@ -3716,6 +3723,24 @@ export default class MainScene extends Phaser.Scene {
     }
   }
 
+  performDetectTrapAbility(def) {
+    const radius = def.radius || this.playerVisionRadius;
+    const heroTileX = Math.floor(this.hero.x / TILE_SIZE);
+    const heroTileY = Math.floor(this.hero.y / TILE_SIZE);
+
+    let anyRevealed = false;
+    for (const trap of this.floorTraps) {
+      if (trap.triggered || trap.revealed) continue;
+      const dist = Math.hypot(trap.x - heroTileX, trap.y - heroTileY);
+      if (dist > radius) continue;
+      trap.revealed = true;
+      trap.sprite.setVisible(true);
+      anyRevealed = true;
+    }
+
+    this.showLootToast(anyRevealed ? "Pièges détectés !" : "Aucun piège à proximité");
+  }
+
   checkFloorTraps() {
     const heroTileX = Math.floor(this.hero.x / TILE_SIZE);
     const heroTileY = Math.floor(this.hero.y / TILE_SIZE);
@@ -4498,6 +4523,8 @@ export default class MainScene extends Phaser.Scene {
       this.performBloodPactAbility(def);
     } else if (def.effectType === "conditionalBuff") {
       this.performConditionalBuffAbility(def);
+    } else if (def.effectType === "detectTrap") {
+      this.performDetectTrapAbility(def);
     } else {
       this.showLootToast(`${def.name} : effet pas encore implémenté`);
       return;
