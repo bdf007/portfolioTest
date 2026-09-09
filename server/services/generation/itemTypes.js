@@ -878,6 +878,16 @@ const ITEM_TYPES = {
     price: 100,
   },
 
+ //  detectTrapsScroll: {
+ //   id: "detectTrapsScroll",
+ //   category: "abilityScroll",
+ //   name: "Parchemin : Détection de pièges",
+ //   description: "Apprend la compétence Détection de pièges.",
+ //   grantsAbility: "detectTraps",
+ //   stackable: false,
+ //   price: 40, // optionnel - retire ce champ si tu veux qu'il ne soit JAMAIS achetable en boutique (cf. getPurchasableItemIds, base uniquement sur la presence de price)
+ // },
+
   // recipes
   reinforcedSwordRecipe: {
     id: "reinforcedSwordRecipe",

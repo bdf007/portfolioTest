@@ -2909,7 +2909,7 @@ const HERO_STATS_PROFILES = {
     rangedRange: 400,
     startingEquipment: ["woodenDagger"],
     startingAmmo: null,
-    startingAbilities: ["stealth", "scoutPulse"],
+    startingAbilities: ["stealth", "scoutPulse", "detectTraps"],
   },
   warrior: {
     archetype: "guerrier",
