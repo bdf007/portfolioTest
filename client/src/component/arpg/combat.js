@@ -36,9 +36,9 @@ const CRIT_MULTIPLIER = 2; // degats du joueur doubles sur un coup critique
  * ennemies (cf. MainScene.updateEnemyAttacks/updateEnemyProjectiles, qui
  * n'appellent jamais cette fonction).
  */
-function rollCritical(guaranteed, rng = Math.random) {
+function rollCritical(guaranteed, bonusChance = 0, rng = Math.random) {
   if (guaranteed) return true;
-  return rng() < CRIT_CHANCE;
+  return rng() < CRIT_CHANCE + bonusChance;
 }
 
 /**

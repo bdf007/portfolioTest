@@ -194,6 +194,7 @@ export default function Arpg() {
     overlayActiveRef.current = false;
     setMinimapVisible(minimapWasVisibleRef.current);
   }, []);
+
   const [keyboardLayout, setKeyboardLayoutState] = useState("azerty");
   const [username, setUsername] = useState(null);
 
@@ -207,7 +208,38 @@ export default function Arpg() {
   const [unlockedRecipes, setUnlockedRecipes] = useState([]);
   const [discoveredLockedRecipes, setDiscoveredLockedRecipes] = useState([]);
   const [craftingScreenOpen, setCraftingScreenOpen] = useState(false);
-
+  const closeOtherOverlays = useCallback(
+    (exceptReason) => {
+      const scene = gameRef.current?.scene.getScene("MainScene");
+      if (exceptReason !== "inventory" && inventoryOpen) {
+        setInventoryOpen(false);
+        if (scene) scene.unpauseGame("inventory");
+      }
+      if (exceptReason !== "quests" && questsOpen) {
+        setQuestsOpen(false);
+        if (scene) scene.unpauseGame("quests");
+      }
+      if (exceptReason !== "hotbar" && hotbarScreenOpen) {
+        setHotbarScreenOpen(false);
+        if (scene) scene.unpauseGame("hotbar");
+      }
+      if (exceptReason !== "crafting" && craftingScreenOpen) {
+        setCraftingScreenOpen(false);
+        if (scene) scene.unpauseGame("crafting");
+      }
+      if (exceptReason !== "fullMap" && fullMapOpen) {
+        setFullMapOpen(false);
+        if (scene) scene.unpauseGame("fullMap");
+      }
+    },
+    [
+      inventoryOpen,
+      questsOpen,
+      hotbarScreenOpen,
+      craftingScreenOpen,
+      fullMapOpen,
+    ],
+  );
   const [levelUpAvailable, setLevelUpAvailable] = useState(false);
   const [levelUpScreenOpen, setLevelUpScreenOpen] = useState(false);
   const [levelUpDraft, setLevelUpDraft] = useState({
@@ -453,14 +485,11 @@ export default function Arpg() {
 
   const handleOpenInventory = useCallback(() => {
     hideMinimapForOverlay();
+    closeOtherOverlays("inventory");
     setInventoryOpen(true);
-    setFullMapOpen(false);
-    setQuestsOpen(false);
-    setHotbarScreenOpen(false);
-    setCraftingScreenOpen(false);
     const scene = gameRef.current?.scene.getScene("MainScene");
     if (scene) scene.pauseGame("inventory");
-  }, [hideMinimapForOverlay]);
+  }, [hideMinimapForOverlay, closeOtherOverlays]);
 
   const handleCloseInventory = useCallback(() => {
     setInventoryOpen(false);
@@ -489,14 +518,11 @@ export default function Arpg() {
 
   const handleOpenQuests = useCallback(() => {
     hideMinimapForOverlay();
+    closeOtherOverlays("quests");
     setQuestsOpen(true);
-    setFullMapOpen(false);
-    setHotbarScreenOpen(false);
-    setCraftingScreenOpen(false);
-    setInventoryOpen(false);
     const scene = gameRef.current?.scene.getScene("MainScene");
     if (scene) scene.pauseGame("quests");
-  }, [hideMinimapForOverlay]);
+  }, [hideMinimapForOverlay, closeOtherOverlays]);
 
   const handleCloseQuests = useCallback(() => {
     setQuestsOpen(false);
@@ -505,16 +531,13 @@ export default function Arpg() {
     if (scene) scene.unpauseGame("quests");
   }, [restoreMinimapAfterOverlay]);
 
-  const handleOpenHotbarScreen = () => {
+  const handleOpenHotbarScreen = useCallback(() => {
     hideMinimapForOverlay();
+    closeOtherOverlays("hotbar");
     setHotbarScreenOpen(true);
-    setFullMapOpen(false);
-    setQuestsOpen(false);
-    setCraftingScreenOpen(false);
-    setInventoryOpen(false);
     const scene = gameRef.current?.scene.getScene("MainScene");
     if (scene) scene.pauseGame("hotbar");
-  };
+  }, [hideMinimapForOverlay, closeOtherOverlays]);
 
   const handleCloseHotbarScreen = () => {
     setHotbarScreenOpen(false);
@@ -528,16 +551,13 @@ export default function Arpg() {
     if (scene) scene.assignHotbarSlot(index, payload);
   };
 
-  const handleOpenCraftingScreen = () => {
+  const handleOpenCraftingScreen = useCallback(() => {
     hideMinimapForOverlay();
+    closeOtherOverlays("crafting");
     setCraftingScreenOpen(true);
-    setFullMapOpen(false);
-    setQuestsOpen(false);
-    setHotbarScreenOpen(false);
-    setInventoryOpen(false);
     const scene = gameRef.current?.scene.getScene("MainScene");
     if (scene) scene.pauseGame("crafting");
-  };
+  }, [hideMinimapForOverlay, closeOtherOverlays]);
 
   const handleCloseCraftingScreen = () => {
     setCraftingScreenOpen(false);
