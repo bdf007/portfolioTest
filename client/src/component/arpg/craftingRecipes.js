@@ -31,6 +31,19 @@ export const CRAFTING_RECIPES = {
     discoveryOnly: true, // <-- jamais debloquee automatiquement, uniquement par combinaison
   },
 
+  detectTrapsScroll: {
+    id: "detectTrapsScroll",
+    name: "Parchemin de détection",
+    resultItemId: "detectTrapsScroll",
+    resultQuantity: 1,
+    ingredients: [
+      { itemId: "deerAntler", quantity: 2 }, // tes ingredients au choix
+      { itemId: "mushroom", quantity : 2 },
+    ],
+    discoveryOnly: true,
+    // unlockLevel: ..., // optionnel
+  },
+
   // recipe for enchanting weapons
 
   reinforcedSword: {
