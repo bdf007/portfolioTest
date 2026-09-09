@@ -52,6 +52,54 @@ function HotbarCooldownOverlay({ startedAt, cooldownMs }) {
   );
 }
 
+/**
+ * Barre de statistique compacte (vie/mana/stamina/XP) - remplace les
+ * anciens indicateurs textuels espaces, qui debordaient sur mobile des
+ * que mana ET stamina etaient tous les deux presents (le bouton
+ * "sauvegarder et quitter" disparaissait alors hors ecran). La valeur
+ * reste affichee, mais SUR la barre plutot qu'a cote.
+ */
+function StatBar({ value, max, color, label, width }) {
+  const pct = max > 0 ? Math.min(100, Math.max(0, (value / max) * 100)) : 0;
+  return (
+    <div
+      style={{
+        position: "relative",
+        width,
+        height: 13,
+        background: "rgba(0,0,0,0.45)",
+        borderRadius: 4,
+        overflow: "hidden",
+        border: "1px solid #444",
+        flexShrink: 0,
+      }}
+    >
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          width: `${pct}%`,
+          background: color,
+          transition: "width 0.2s",
+        }}
+      />
+      <div
+        style={{
+          position: "relative",
+          fontSize: 9,
+          color: "#fff",
+          textAlign: "center",
+          lineHeight: "13px",
+          textShadow: "0 0 2px #000, 0 0 2px #000",
+          whiteSpace: "nowrap",
+        }}
+      >
+        {label}
+      </div>
+    </div>
+  );
+}
+
 export default function Arpg() {
   const containerRef = useRef(null);
   const gameRef = useRef(null);
@@ -746,27 +794,47 @@ export default function Arpg() {
         <span>Étage : {depth}</span>
         <span>Niv. : {level}</span>
 
-        <span>
-          ❤️ {Math.round(Math.max(0, playerHp.hp))}/{playerHp.maxHp}
-        </span>
+        <div style={{ display: "flex", gap: 4 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+            <StatBar
+              value={playerHp.hp}
+              max={playerHp.maxHp}
+              color="#c0392b"
+              width={isMobile ? 70 : 90}
+              label={`${Math.round(Math.max(0, playerHp.hp))}/${playerHp.maxHp}`}
+            />
+            <StatBar
+              value={xpProgress.xpIntoLevel}
+              max={xpProgress.xpForNextLevel}
+              color="#d4af37"
+              width={isMobile ? 70 : 90}
+              label={`${xpProgress.xpIntoLevel}/${xpProgress.xpForNextLevel}`}
+            />
+          </div>
 
-        {playerMana.maxMana > 0 && (
-          <span>
-            💧 {Math.round(Math.max(0, playerMana.mana))}/{playerMana.maxMana}
-          </span>
-        )}
-
-        {playerStamina.maxStamina > 0 && (
-          <span>
-            🏃 {Math.round(Math.max(0, playerStamina.stamina))}/
-            {playerStamina.maxStamina}
-          </span>
-        )}
-
-        <span>
-          XP : {xpProgress.xpIntoLevel}/{xpProgress.xpForNextLevel}
-        </span>
-
+          {(playerMana.maxMana > 0 || playerStamina.maxStamina > 0) && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+              {playerMana.maxMana > 0 && (
+                <StatBar
+                  value={playerMana.mana}
+                  max={playerMana.maxMana}
+                  color="#2980b9"
+                  width={isMobile ? 70 : 90}
+                  label={`${Math.round(Math.max(0, playerMana.mana))}/${playerMana.maxMana}`}
+                />
+              )}
+              {playerStamina.maxStamina > 0 && (
+                <StatBar
+                  value={playerStamina.stamina}
+                  max={playerStamina.maxStamina}
+                  color="#27ae60"
+                  width={isMobile ? 70 : 90}
+                  label={`${Math.round(Math.max(0, playerStamina.stamina))}/${playerStamina.maxStamina}`}
+                />
+              )}
+            </div>
+          )}
+        </div>
         <span
           title={`Furie : ${furyProgress.count}/${furyProgress.required} ennemis`}
         >
