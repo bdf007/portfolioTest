@@ -23,6 +23,8 @@ const { createRng } = require("./rng");
  * Tous les objets sont `stackable` sauf l'équipement (un exemplaire à la
  * fois par emplacement, cohérent avec le concept d'équiper une seule
  * épée à la fois).
+ * Seuls les objets dans ce fichier peuvent étre acheter ou looter
+ *
  */
 const ITEM_TYPES = {
   woodenDagger: {
@@ -877,16 +879,6 @@ const ITEM_TYPES = {
     unlockLevel: 5,
     price: 100,
   },
-
- //  detectTrapsScroll: {
- //   id: "detectTrapsScroll",
- //   category: "abilityScroll",
- //   name: "Parchemin : Détection de pièges",
- //   description: "Apprend la compétence Détection de pièges.",
- //   grantsAbility: "detectTraps",
- //   stackable: false,
- //   price: 40, // optionnel - retire ce champ si tu veux qu'il ne soit JAMAIS achetable en boutique (cf. getPurchasableItemIds, base uniquement sur la presence de price)
- // },
 
   // recipes
   reinforcedSwordRecipe: {

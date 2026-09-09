@@ -571,7 +571,13 @@ async function getLevel(req, res) {
       chestCount: biome.chestCount,
       allowedTiles,
     });
-    const traps = generateTraps(grid, seed, playerSpawn, biome.trapConfig, allowedTiles);
+    const traps = generateTraps(
+      grid,
+      lootSeed,
+      playerSpawn,
+      biome.trapConfig,
+      allowedTiles,
+    );
 
     res.json({
       depth,

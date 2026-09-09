@@ -295,8 +295,9 @@ const WALL_CORNER_INDEX_TO_FRAME_2_0 = [
 
 const TRAP_VISUALS_DESERT = {
   spritesheetKey: DESERT_AUTOTILE_SPRITESHEET.key,
-  hiddenFrames: [229, 245], // affiche UNE FOIS detecte via detectTrap - jamais par defaut
-  spikeAnimFrames: [166, 182, 198, 214],
+  hiddenFrames: [229],
+  baseFrame: 229, // le trou - couche de fond, ne change jamais une fois revele
+  spikeAnimFrames: [134, 150, 166, 214], // la couche du dessus, qui s'anime seule
 };
 
 const ATTACK_ANIM_DURATION_MS = 400;
@@ -555,6 +556,7 @@ export default class MainScene extends Phaser.Scene {
     this.currentFloorOpenedChests = [];
     this.floorTraps = [];
     this.currentFloorTriggeredTraps = [];
+    this.currentFloorRevealedTraps = [];
     this.quests = {};
     this.unlockedAbilities = [];
     this.unlockedRecipes = [];
@@ -603,8 +605,10 @@ export default class MainScene extends Phaser.Scene {
     const profile = resolveHeroStatsOverride(this.heroSpriteKey);
     if (!profile) return;
 
-    for (const itemId of profile.startingEquipment || []) {
-      this.addItemToInventory(itemId, 1);
+    for (const entry of profile.startingItems || []) {
+      const itemId = typeof entry === "string" ? entry : entry.itemId;
+      const quantity = typeof entry === "string" ? 1 : entry.quantity || 1;
+      this.addItemToInventory(itemId, quantity);
       const newIndex = this.inventory.length - 1;
       this.equipItem(newIndex);
     }
@@ -622,6 +626,14 @@ export default class MainScene extends Phaser.Scene {
         this.unlockedAbilities.push(abilityId);
       }
       this.events.emit("abilities-updated", [...this.unlockedAbilities]);
+    }
+    if (profile.startingRecipes) {
+      for (const recipeId of profile.startingRecipes) {
+        if (!this.unlockedRecipes.includes(recipeId)) {
+          this.unlockedRecipes.push(recipeId);
+        }
+      }
+      this.events.emit("recipes-updated", [...this.unlockedRecipes]);
     }
     this.unlockAvailableAbilitiesAndRecipes();
   }
@@ -682,6 +694,7 @@ export default class MainScene extends Phaser.Scene {
       ps.playerPosition || null,
       ps.currentFloorChestRemainingLoot || {},
       ps.currentFloorTriggeredTraps || [],
+      ps.currentFloorRevealedTraps || [],
     );
     for (const savedSummon of ps.summons || []) {
       const sprite = this.spawnSummonSprite(
@@ -1092,6 +1105,39 @@ export default class MainScene extends Phaser.Scene {
       });
     }
 
+    if (def.effect.stamina) {
+      this.playerStamina = Math.min(
+        this.playerMaxStamina,
+        this.playerStamina + def.effect.stamina,
+      );
+      this.events.emit("player-stamina-changed", {
+        stamina: this.playerStamina,
+        maxStamina: this.playerMaxStamina,
+      });
+    }
+
+    if (def.effect.buff) {
+      this.applyStatusEffect(this.playerStatusEffects, {
+        type: `potion-${def.id}`,
+        kind: "modifier",
+        statModifiers: def.effect.buff.statModifiers,
+        durationMs: def.effect.buff.durationMs,
+      });
+    }
+
+    if (def.effect.combat) {
+      const combatDef = def.effect.combat;
+      if (combatDef.effectType === "aoe") this.performAoeAbility(combatDef);
+      else if (combatDef.effectType === "aoeStun")
+        this.performAoeStunAbility(combatDef);
+      else if (combatDef.effectType === "aoeDebuff")
+        this.performAoeDebuffAbility(combatDef);
+      else if (combatDef.effectType === "zone")
+        this.performZoneAbility(combatDef);
+      else if (combatDef.effectType === "cone")
+        this.performConeAbility(combatDef);
+    }
+
     item.quantity -= 1;
     if (item.quantity <= 0) this.inventory.splice(index, 1);
 
@@ -1136,6 +1182,7 @@ export default class MainScene extends Phaser.Scene {
           currentFloorKills: this.currentFloorKills,
           currentFloorOpenedChests: this.currentFloorOpenedChests,
           currentFloorTriggeredTraps: this.currentFloorTriggeredTraps,
+          currentFloorRevealedTraps: this.currentFloorRevealedTraps,
           currentFloorChestRemainingLoot: this.currentFloorChestRemainingLoot,
           currentFloorLootSeed: this.currentFloorLootSeed,
           quests: this.quests,
@@ -1345,9 +1392,11 @@ export default class MainScene extends Phaser.Scene {
     savedPlayerPosition = null,
     savedChestRemainingLoot = {},
     savedTriggeredTraps = [],
+    savedRevealedTraps = [],
   ) {
     this.currentFloorChestRemainingLoot = savedChestRemainingLoot || {};
     this.currentFloorTriggeredTraps = savedTriggeredTraps || [];
+    this.currentFloorRevealedTraps = savedRevealedTraps || [];
 
     if (this.fogState?.state && this.currentDepth != null) {
       const discoveredTiles = [];
@@ -1384,6 +1433,7 @@ export default class MainScene extends Phaser.Scene {
       ambientNpcs: ambientNpcData,
       enemies,
       chests,
+      traps,
       tileset,
     } = data;
 
@@ -1480,7 +1530,10 @@ export default class MainScene extends Phaser.Scene {
     this.chests = [];
     this.nextLootChestId = 0;
     this.activeChest = null;
-    this.floorTraps.forEach((t) => t.sprite.destroy());
+    this.floorTraps.forEach((t) => {
+      t.sprite.destroy();
+      t.spikeSprite.destroy();
+    });
     this.floorTraps = [];
     this.dialogOpen = false;
     this.gamePaused = false;
@@ -2200,41 +2253,58 @@ export default class MainScene extends Phaser.Scene {
 
     (traps || []).forEach((trapData, index) => {
       if (!trapVisualConfig) {
-        console.warn(`[MainScene] pas de visuel de piege configure pour le tileset "${tileset}" - piege ignore`);
+        console.warn(
+          `[MainScene] pas de visuel de piege configure pour le tileset "${tileset}" - piege ignore`,
+        );
         return;
       }
 
-   const alreadyTriggered = this.currentFloorTriggeredTraps.includes(index);
-   const hiddenFrame =
-   trapVisualConfig.hiddenFrames[
-     Math.floor(trapVariantRng() * trapVisualConfig.hiddenFrames.length)
-   ];
+      const alreadyTriggered = this.currentFloorTriggeredTraps.includes(index);
+      const alreadyRevealed =
+        alreadyTriggered || this.currentFloorRevealedTraps.includes(index);
+      const hiddenFrame =
+        trapVisualConfig.hiddenFrames[
+          Math.floor(trapVariantRng() * trapVisualConfig.hiddenFrames.length)
+        ];
 
-   const sprite = this.add.sprite(
-     trapData.x * TILE_SIZE + TILE_SIZE / 2,
-     trapData.y * TILE_SIZE + TILE_SIZE / 2,
-     trapVisualConfig.spritesheetKey,
-     alreadyTriggered
-       ? trapVisualConfig.spikeAnimFrames[trapVisualConfig.spikeAnimFrames.length - 1]
-       : hiddenFrame,
-   );
-   sprite.setDepth(3);
-   sprite.setVisible(alreadyTriggered);
+      const sprite = this.add.sprite(
+        trapData.x * TILE_SIZE + TILE_SIZE / 2,
+        trapData.y * TILE_SIZE + TILE_SIZE / 2,
+        trapVisualConfig.spritesheetKey,
+        alreadyRevealed ? trapVisualConfig.baseFrame : hiddenFrame,
+      );
+      sprite.setScale(TILE_SIZE / 16);
+      sprite.setDepth(3);
+      sprite.setVisible(alreadyRevealed);
 
-   this.floorTraps.push({
-     sprite,
-     index,
-     x: trapData.x,
-     y: trapData.y,
-     hiddenFrame,
-     spikeAnimFrames: trapVisualConfig.spikeAnimFrames,
-     damageType: trapData.damageType,
-     damageAmount: trapData.damageAmount,
-     inflictsEffect: trapData.inflictsEffect,
-     revealed: alreadyTriggered,
-     triggered: alreadyTriggered,
-   });
-  });
+      const spikeSprite = this.add.sprite(
+        trapData.x * TILE_SIZE + TILE_SIZE / 2,
+        trapData.y * TILE_SIZE + TILE_SIZE / 2,
+        trapVisualConfig.spritesheetKey,
+        trapVisualConfig.spikeAnimFrames[
+          trapVisualConfig.spikeAnimFrames.length - 1
+        ],
+      );
+      spikeSprite.setScale(TILE_SIZE / 16);
+      spikeSprite.setDepth(4);
+      spikeSprite.setVisible(alreadyTriggered);
+
+      this.floorTraps.push({
+        sprite,
+        spikeSprite,
+        index,
+        x: trapData.x,
+        y: trapData.y,
+        hiddenFrame,
+        baseFrame: trapVisualConfig.baseFrame,
+        spikeAnimFrames: trapVisualConfig.spikeAnimFrames,
+        damageType: trapData.damageType,
+        damageAmount: trapData.damageAmount,
+        inflictsEffect: trapData.inflictsEffect,
+        revealed: alreadyRevealed,
+        triggered: alreadyTriggered,
+      });
+    });
 
     if (data.questNpcs && data.questNpcs.length > 0) {
       this.createQuestNpcs(data.questNpcs);
@@ -2909,6 +2979,15 @@ export default class MainScene extends Phaser.Scene {
         canAccept = true;
       }
     } else if (qs.questId === "delivery") {
+      if (qs.role === "receiver" && !this.quests[qs.linkedKey]?.accepted) {
+        text = "Bonjour, voyageur !";
+        this.events.emit("npc-dialog", {
+          text,
+          canAccept: false,
+          canTurnIn: false,
+        });
+        return;
+      }
       if (qs.role === "giver") {
         if (qs.completed) {
           text = custom.complete || `Merci d'avoir livré mon colis !`;
@@ -3727,18 +3806,36 @@ export default class MainScene extends Phaser.Scene {
     const radius = def.radius || this.playerVisionRadius;
     const heroTileX = Math.floor(this.hero.x / TILE_SIZE);
     const heroTileY = Math.floor(this.hero.y / TILE_SIZE);
+    const grid = this.fogGrid;
+    const width = grid[0].length;
+    const height = grid.length;
 
     let anyRevealed = false;
     for (const trap of this.floorTraps) {
       if (trap.triggered || trap.revealed) continue;
       const dist = Math.hypot(trap.x - heroTileX, trap.y - heroTileY);
       if (dist > radius) continue;
+      if (
+        !hasClearLineOfSight(
+          grid,
+          width,
+          height,
+          heroTileX,
+          heroTileY,
+          trap.x,
+          trap.y,
+        )
+      )
+        continue;
       trap.revealed = true;
       trap.sprite.setVisible(true);
+      this.currentFloorRevealedTraps.push(trap.index);
       anyRevealed = true;
     }
 
-    this.showLootToast(anyRevealed ? "Pièges détectés !" : "Aucun piège à proximité");
+    this.showLootToast(
+      anyRevealed ? "Pièges détectés !" : "Aucun piège à proximité",
+    );
   }
 
   checkFloorTraps() {
@@ -3766,17 +3863,20 @@ export default class MainScene extends Phaser.Scene {
 
   triggerFloorTrap(trap, target) {
     trap.triggered = true;
+    trap.sprite.setFrame(trap.baseFrame);
     trap.sprite.setVisible(true);
+    trap.spikeSprite.setVisible(true);
     this.currentFloorTriggeredTraps.push(trap.index);
 
     const frames = trap.spikeAnimFrames;
     let frameIndex = 0;
+    trap.spikeSprite.setFrame(frames[0]);
     this.time.addEvent({
-      delay: 80,
-      repeat: frames.length - 1,
+      delay: 150,
+      repeat: frames.length - 2,
       callback: () => {
         frameIndex++;
-        trap.sprite.setFrame(frames[frameIndex]);
+        trap.spikeSprite.setFrame(frames[frameIndex]);
       },
     });
 
@@ -3994,7 +4094,10 @@ export default class MainScene extends Phaser.Scene {
         if (dot < MELEE_CONE_DOT_THRESHOLD) continue;
       }
 
-      const isCrit = rollCritical(enemy.state !== "chase");
+      const isCrit = rollCritical(
+        enemy.state !== "chase",
+        imbue?.critChanceBonus || 0,
+      );
       let rawDamage =
         this.getEffectivePlayerMeleeDamage() * (isCrit ? CRIT_MULTIPLIER : 1);
 
@@ -4232,7 +4335,10 @@ export default class MainScene extends Phaser.Scene {
           enemy.sprite.y - proj.sprite.y,
         );
         if (dist <= PROJECTILE_RADIUS + 14 && this.isEnemyVisible(enemy)) {
-          const isCrit = rollCritical(enemy.state !== "chase");
+          const isCrit = rollCritical(
+            enemy.state !== "chase",
+            proj.imbue?.critChanceBonus || 0,
+          );
           let rawDamage =
             this.getEffectivePlayerRangedDamage() *
             (isCrit ? CRIT_MULTIPLIER : 1);
