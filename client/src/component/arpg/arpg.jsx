@@ -103,6 +103,8 @@ function StatBar({ value, max, color, label, width }) {
 export default function Arpg() {
   const containerRef = useRef(null);
   const gameRef = useRef(null);
+  const arpgContainerRef = useRef(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   const [isMobile] = useState(
     () =>
@@ -132,6 +134,17 @@ export default function Arpg() {
       window.removeEventListener("orientationchange", handleOrientationChange);
     };
   }, [isMobile]);
+  useEffect(() => {
+    function handleFullscreenChange() {
+      setIsFullscreen(!!document.fullscreenElement);
+    }
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    document.addEventListener("webkitfullscreenchange", handleFullscreenChange);
+    return () => {
+      document.removeEventListener("fullscreenchange", handleFullscreenChange);
+      document.removeEventListener("webkitfullscreenchange", handleFullscreenChange);
+    };
+  }, []);
   const lootToastTimerRef = useRef(null);
 
   const [phase, setPhase] = useState("loading");
@@ -498,6 +511,16 @@ export default function Arpg() {
     if (scene) scene.unpauseGame("inventory");
   }, [restoreMinimapAfterOverlay]);
 
+  const handleToggleFullscreen = () => {
+    const el = arpgContainerRef.current;
+    if (!el) return;
+    if (!document.fullscreenElement) {
+      (el.requestFullscreen || el.webkitRequestFullscreen)?.call(el);
+    } else {
+    (document.exitFullscreen || document.webkitExitFullscreen)?.call(document);
+    }
+  };
+
   const handleOpenFullMap = () => {
     hideMinimapForOverlay();
     setFullMapOpen(true);
@@ -787,6 +810,7 @@ export default function Arpg() {
 
   return (
     <div
+      ref={arpgContainerRef}
       className={isMobile ? "arpg arpg-mobile" : "arpg"}
       style={{
         position: "relative",
@@ -1042,6 +1066,26 @@ export default function Arpg() {
           overflow: "hidden",
         }}
       >
+        <button
+          onClick={handleToggleFullscreen}
+          style={{
+          position: "absolute",
+          top: 8,
+          left: 8,
+          zIndex: 6,
+          width: 32,
+          height: 32,
+          borderRadius: 6,
+          border: "1px solid #555",
+          background: "rgba(30,32,41,0.7)",
+          color: "#eee",
+          cursor: "pointer",
+          fontSize: 15,
+        }}
+        title={isFullscreen ? "Quitter le plein écran" : "Plein écran"}
+        >
+          {isFullscreen ? "⤡" : "⤢"}
+        </button>
         <div
           ref={containerRef}
           id="arpg-container"
