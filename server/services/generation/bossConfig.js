@@ -56,6 +56,14 @@ const BOSS_ASSIGNMENTS = [
     // comportement actuel a l'identique pour ce boss precis, seul a
     // exister pour l'instant
     stats: { hp: 100, damage: 10, defense: 2, speed: 62, xpReward: 50 },
+    summonAbility: {
+      summonTypes: ["colorBat1", "colorBat2"], // liste fixe, propre a ce boss
+      cooldownMs: 15000,
+      maxActive: 2,
+      hpScale: 0.3,
+      damageScale: 0.3,
+      defenseScale: 0.3,
+    },
   },
   {
     depth: 9,

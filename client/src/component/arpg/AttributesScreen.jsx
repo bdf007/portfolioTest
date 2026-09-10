@@ -12,6 +12,7 @@ export default function AttributesScreen({
   confirmedAttributes,
   draftAttributes,
   unspent,
+  focusedLabel,
   onAllocate,
   onDeallocate,
   onConfirm,
@@ -61,6 +62,7 @@ export default function AttributesScreen({
             background: "#2a2a35",
             color: "#eee",
             cursor: "pointer",
+            outline: focusedLabel === "attr-close" ? "3px solid #fff" : "none",
           }}
         >
           Fermer
@@ -107,6 +109,10 @@ export default function AttributesScreen({
                     color: canRemove ? "#eee" : "#555",
                     cursor: canRemove ? "pointer" : "not-allowed",
                     fontSize: 16,
+                    outline:
+                      focusedLabel === `attr-${key}-minus`
+                        ? "3px solid #fff"
+                        : "none",
                   }}
                 >
                   −
@@ -128,6 +134,10 @@ export default function AttributesScreen({
                     color: unspent > 0 ? "#f0e6d0" : "#777",
                     cursor: unspent > 0 ? "pointer" : "not-allowed",
                     fontSize: 16,
+                    outline:
+                      focusedLabel === `attr-${key}-plus`
+                        ? "3px solid #fff"
+                        : "none",
                   }}
                 >
                   +
@@ -150,6 +160,7 @@ export default function AttributesScreen({
           color: hasPendingChanges ? "#f0e8c0" : "#777",
           cursor: hasPendingChanges ? "pointer" : "not-allowed",
           alignSelf: "center",
+          outline: focusedLabel === "attr-confirm" ? "3px solid #fff" : "none",
         }}
       >
         Valider la répartition

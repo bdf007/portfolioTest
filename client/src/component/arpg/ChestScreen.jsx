@@ -8,7 +8,13 @@ import { ItemIcon, hasIconFrame } from "./InventoryScreen";
  * coffre reste interactif (réouvrable) tant qu'il lui reste des objets,
  * cf. MainScene.performInteraction qui filtre sur lootItems.length > 0.
  */
-export default function ChestScreen({ items, onTakeItem, onTakeAll, onClose }) {
+export default function ChestScreen({
+  items,
+  focusedLabel,
+  onTakeItem,
+  onTakeAll,
+  onClose,
+}) {
   return (
     <div
       style={{
@@ -42,6 +48,7 @@ export default function ChestScreen({ items, onTakeItem, onTakeAll, onClose }) {
             background: "#2a2a35",
             color: "#eee",
             cursor: "pointer",
+            outline: focusedLabel === "chest-close" ? "3px solid #fff" : "none",
           }}
         >
           Fermer
@@ -95,6 +102,10 @@ export default function ChestScreen({ items, onTakeItem, onTakeAll, onClose }) {
                       background: "#3a2f20",
                       color: "#f0e6d0",
                       cursor: "pointer",
+                      outline:
+                        focusedLabel === `chest-item-${item.itemIndex}`
+                          ? "3px solid #fff"
+                          : "none",
                     }}
                   >
                     Prendre
@@ -114,6 +125,8 @@ export default function ChestScreen({ items, onTakeItem, onTakeAll, onClose }) {
               color: "#f0e8c0",
               cursor: "pointer",
               alignSelf: "center",
+              outline:
+                focusedLabel === "chest-take-all" ? "3px solid #fff" : "none",
             }}
           >
             Tout prendre

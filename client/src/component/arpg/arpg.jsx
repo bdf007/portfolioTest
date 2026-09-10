@@ -99,6 +99,17 @@ function StatBar({ value, max, color, label, width }) {
     </div>
   );
 }
+const AZERTY_DIGIT_MAP = {
+  "&": 1,
+  é: 2,
+  '"': 3,
+  "'": 4,
+  "(": 5,
+  "-": 6,
+  è: 7,
+  _: 8,
+  ç: 9,
+};
 
 export default function Arpg() {
   const containerRef = useRef(null);
@@ -142,9 +153,13 @@ export default function Arpg() {
     document.addEventListener("webkitfullscreenchange", handleFullscreenChange);
     return () => {
       document.removeEventListener("fullscreenchange", handleFullscreenChange);
-      document.removeEventListener("webkitfullscreenchange", handleFullscreenChange);
+      document.removeEventListener(
+        "webkitfullscreenchange",
+        handleFullscreenChange,
+      );
     };
   }, []);
+
   const lootToastTimerRef = useRef(null);
 
   const [phase, setPhase] = useState("loading");
@@ -261,6 +276,11 @@ export default function Arpg() {
     unspent: 0,
   });
   const [combatStats, setCombatStats] = useState({ level: 1 });
+  const [focusedButtonIndex, setFocusedButtonIndex] = useState(0);
+
+  useEffect(() => {
+    setFocusedButtonIndex(0);
+  }, [exitPrompt, upstairsPrompt, resummonPrompt, npcDialog]);
 
   const loadGamesList = () => {
     fetchMyGames()
@@ -419,67 +439,67 @@ export default function Arpg() {
     if (scene) scene.retryLevel();
   };
 
-  const handleAcceptQuest = () => {
+  const handleAcceptQuest = useCallback(() => {
     const scene = gameRef.current?.scene.getScene("MainScene");
     if (scene) scene.acceptQuest();
-  };
+  }, []);
 
-  const handleTurnInQuest = () => {
+  const handleTurnInQuest = useCallback(() => {
     const scene = gameRef.current?.scene.getScene("MainScene");
     if (scene) scene.turnInQuest();
-  };
+  }, []);
 
-  const handleCloseDialog = () => {
+  const handleCloseDialog = useCallback(() => {
     const scene = gameRef.current?.scene.getScene("MainScene");
     if (scene) scene.closeDialog();
-  };
-  const handleTakeChestItem = (itemIndex) => {
+  }, []);
+  const handleTakeChestItem = useCallback((itemIndex) => {
     const scene = gameRef.current?.scene.getScene("MainScene");
     if (scene) scene.takeChestItem(itemIndex);
-  };
-  const handleTakeAllChest = () => {
+  }, []);
+  const handleTakeAllChest = useCallback(() => {
     const scene = gameRef.current?.scene.getScene("MainScene");
     if (scene) scene.takeAllChestItems();
-  };
-  const handleCloseChestScreen = () => {
+  }, []);
+  const handleCloseChestScreen = useCallback(() => {
     const scene = gameRef.current?.scene.getScene("MainScene");
     if (scene) scene.closeChestScreen();
-  };
+  }, []);
 
   const handleSaveAndQuit = () => {
     const scene = gameRef.current?.scene.getScene("MainScene");
     if (scene) scene.saveAndQuit();
   };
 
-  const handleConfirmUpstairs = () => {
+  const handleConfirmUpstairs = useCallback(() => {
     const scene = gameRef.current?.scene.getScene("MainScene");
     if (scene) scene.confirmGoUpstairs();
-  };
+  }, []);
 
-  const handleCancelUpstairs = () => {
+  const handleCancelUpstairs = useCallback(() => {
     const scene = gameRef.current?.scene.getScene("MainScene");
     if (scene) scene.cancelGoUpstairs();
-  };
+  }, []);
 
-  const handleConfirmExit = () => {
+  const handleConfirmExit = useCallback(() => {
     const scene = gameRef.current?.scene.getScene("MainScene");
     if (scene) scene.confirmDescend();
-  };
+  }, []);
 
-  const handleCancelExit = () => {
+  const handleCancelExit = useCallback(() => {
     const scene = gameRef.current?.scene.getScene("MainScene");
     if (scene) scene.cancelDescend();
-  };
+  }, []);
 
-  const handleConfirmResummon = () => {
+  const handleConfirmResummon = useCallback(() => {
     const scene = gameRef.current?.scene.getScene("MainScene");
     if (scene) scene.confirmResummon();
-  };
+  }, []);
 
-  const handleCancelResummon = () => {
+  const handleCancelResummon = useCallback(() => {
     const scene = gameRef.current?.scene.getScene("MainScene");
     if (scene) scene.cancelResummon();
-  };
+  }, []);
 
   const handleEquip = (index) => {
     const scene = gameRef.current?.scene.getScene("MainScene");
@@ -494,6 +514,11 @@ export default function Arpg() {
   const handleUseConsumable = (index) => {
     const scene = gameRef.current?.scene.getScene("MainScene");
     if (scene) scene.useConsumable(index);
+  };
+
+  const handleDecraftItem = (index) => {
+    const scene = gameRef.current?.scene.getScene("MainScene");
+    if (scene) scene.decraftItem(index);
   };
 
   const handleOpenInventory = useCallback(() => {
@@ -511,33 +536,32 @@ export default function Arpg() {
     if (scene) scene.unpauseGame("inventory");
   }, [restoreMinimapAfterOverlay]);
 
-  const handleToggleFullscreen = () => {
+  const handleToggleFullscreen = useCallback(() => {
     const el = arpgContainerRef.current;
     if (!el) return;
     if (!document.fullscreenElement) {
       (el.requestFullscreen || el.webkitRequestFullscreen)?.call(el);
     } else {
-    (document.exitFullscreen || document.webkitExitFullscreen)?.call(document);
+      (document.exitFullscreen || document.webkitExitFullscreen)?.call(
+        document,
+      );
     }
-  };
+  }, []);
 
-  const handleOpenFullMap = () => {
+  const handleOpenFullMap = useCallback(() => {
     hideMinimapForOverlay();
+    closeOtherOverlays("fullMap");
     setFullMapOpen(true);
-    setInventoryOpen(false);
-    setQuestsOpen(false);
-    setHotbarScreenOpen(false);
-    setCraftingScreenOpen(false);
     const scene = gameRef.current?.scene.getScene("MainScene");
     if (scene) scene.pauseGame("fullMap");
-  };
+  }, [hideMinimapForOverlay, closeOtherOverlays]);
 
-  const handleCloseFullMap = () => {
+  const handleCloseFullMap = useCallback(() => {
     setFullMapOpen(false);
     restoreMinimapAfterOverlay();
     const scene = gameRef.current?.scene.getScene("MainScene");
     if (scene) scene.unpauseGame("fullMap");
-  };
+  }, [restoreMinimapAfterOverlay]);
 
   const handleOpenQuests = useCallback(() => {
     hideMinimapForOverlay();
@@ -562,12 +586,12 @@ export default function Arpg() {
     if (scene) scene.pauseGame("hotbar");
   }, [hideMinimapForOverlay, closeOtherOverlays]);
 
-  const handleCloseHotbarScreen = () => {
+  const handleCloseHotbarScreen = useCallback(() => {
     setHotbarScreenOpen(false);
     restoreMinimapAfterOverlay();
     const scene = gameRef.current?.scene.getScene("MainScene");
     if (scene) scene.unpauseGame("hotbar");
-  };
+  }, [restoreMinimapAfterOverlay]);
 
   const handleAssignHotbarSlot = (index, payload) => {
     const scene = gameRef.current?.scene.getScene("MainScene");
@@ -582,12 +606,12 @@ export default function Arpg() {
     if (scene) scene.pauseGame("crafting");
   }, [hideMinimapForOverlay, closeOtherOverlays]);
 
-  const handleCloseCraftingScreen = () => {
+  const handleCloseCraftingScreen = useCallback(() => {
     setCraftingScreenOpen(false);
     restoreMinimapAfterOverlay();
     const scene = gameRef.current?.scene.getScene("MainScene");
     if (scene) scene.unpauseGame("crafting");
-  };
+  }, [restoreMinimapAfterOverlay]);
 
   const handleCraftItem = (recipeId, flexAllocations) => {
     const scene = gameRef.current?.scene.getScene("MainScene");
@@ -606,45 +630,183 @@ export default function Arpg() {
     if (scene) scene.setKeyboardLayout(next);
   };
 
-  const handleOpenLevelUpScreen = () => {
+  const handleOpenLevelUpScreen = useCallback(() => {
     const scene = gameRef.current?.scene.getScene("MainScene");
     if (scene) scene.openLevelUpScreen();
-  };
+  }, []);
 
-  const handleCloseLevelUpScreen = () => {
+  const handleCloseLevelUpScreen = useCallback(() => {
     const scene = gameRef.current?.scene.getScene("MainScene");
     if (scene) scene.closeLevelUpScreen();
-  };
+  }, []);
 
-  const handleAllocatePoint = (attribute) => {
+  const handleAllocatePoint = useCallback((attribute) => {
     const scene = gameRef.current?.scene.getScene("MainScene");
     if (scene) scene.allocateAttributePoint(attribute);
-  };
-  const handleDeallocatePoint = (attribute) => {
+  }, []);
+  const handleDeallocatePoint = useCallback((attribute) => {
     const scene = gameRef.current?.scene.getScene("MainScene");
     if (scene) scene.deallocateAttributePoint(attribute);
-  };
+  }, []);
 
-  const handleConfirmAllocation = () => {
+  const handleConfirmAllocation = useCallback(() => {
     const scene = gameRef.current?.scene.getScene("MainScene");
     if (scene) scene.confirmAttributeAllocation();
-  };
+  }, []);
+  const getCurrentDialogActions = useCallback(() => {
+    if (levelUpScreenOpen) {
+      const attrKeys = [
+        "force",
+        "dexterite",
+        "intelligence",
+        "vitalite",
+        "constitution",
+        "endurance",
+        "chance",
+      ];
+      const actions = [];
+      for (const key of attrKeys) {
+        actions.push({
+          label: `attr-${key}-minus`,
+          onClick: () => handleDeallocatePoint(key),
+        });
+        actions.push({
+          label: `attr-${key}-plus`,
+          onClick: () => handleAllocatePoint(key),
+        });
+      }
+      actions.push({ label: "attr-confirm", onClick: handleConfirmAllocation });
+      actions.push({ label: "attr-close", onClick: handleCloseLevelUpScreen });
+      return actions;
+    }
+    if (chestScreenData) {
+      const actions = chestScreenData.items.map((item) => ({
+        label: `chest-item-${item.itemIndex}`,
+        onClick: () => handleTakeChestItem(item.itemIndex),
+      }));
+      if (chestScreenData.items.length > 0) {
+        actions.push({ label: "chest-take-all", onClick: handleTakeAllChest });
+      }
+      actions.push({ label: "chest-close", onClick: handleCloseChestScreen });
+      return actions;
+    }
+    if (exitPrompt) {
+      return [
+        { label: "Oui", onClick: handleConfirmExit },
+        { label: "Non", onClick: handleCancelExit },
+      ];
+    }
+    if (upstairsPrompt) {
+      return [
+        { label: "Oui", onClick: handleConfirmUpstairs },
+        { label: "Non", onClick: handleCancelUpstairs },
+      ];
+    }
+    if (resummonPrompt) {
+      return [
+        { label: "Oui", onClick: handleConfirmResummon },
+        { label: "Non", onClick: handleCancelResummon },
+      ];
+    }
+    if (npcDialog) {
+      const actions = [];
+      if (npcDialog.canAccept)
+        actions.push({ label: "Accepter", onClick: handleAcceptQuest });
+      if (npcDialog.canTurnIn)
+        actions.push({ label: "Rendre", onClick: handleTurnInQuest });
+      actions.push({ label: "Fermer", onClick: handleCloseDialog });
+      return actions;
+    }
+    return [];
+  }, [
+    exitPrompt,
+    upstairsPrompt,
+    resummonPrompt,
+    npcDialog,
+    chestScreenData,
+    levelUpScreenOpen,
+    handleConfirmExit,
+    handleCancelExit,
+    handleConfirmUpstairs,
+    handleCancelUpstairs,
+    handleConfirmResummon,
+    handleCancelResummon,
+    handleAcceptQuest,
+    handleTurnInQuest,
+    handleCloseDialog,
+    handleTakeChestItem,
+    handleTakeAllChest,
+    handleCloseChestScreen,
+    handleAllocatePoint,
+    handleDeallocatePoint,
+    handleConfirmAllocation,
+    handleCloseLevelUpScreen,
+  ]);
 
   useEffect(() => {
     function handleGlobalKeyDown(e) {
       if (!gameRef.current) return;
       const key = e.key.toLowerCase();
+
+      // navigation au clavier dans un dialogue actif - prioritaire sur
+      // tout le reste tant qu'un dialogue est ouvert
+      const dialogActions = getCurrentDialogActions();
+      if (dialogActions.length > 0) {
+        const isLeft = key === "arrowleft" || key === "q" || key === "a";
+        const isRight = key === "arrowright" || key === "d";
+        if (isLeft) {
+          e.preventDefault();
+          setFocusedButtonIndex(
+            (prev) => (prev - 1 + dialogActions.length) % dialogActions.length,
+          );
+          return;
+        }
+        if (isRight) {
+          e.preventDefault();
+          setFocusedButtonIndex((prev) => (prev + 1) % dialogActions.length);
+          return;
+        }
+        if (key === "e" || key === "enter") {
+          e.preventDefault();
+          if (key === "e") {
+            const scene = gameRef.current?.scene.getScene("MainScene");
+            scene?.keys?.action?.reset(); // empeche Phaser de redeclencher performInteraction via cette MEME pression de E
+          }
+          dialogActions[focusedButtonIndex]?.onClick();
+          return;
+        }
+      }
+
       if (key === "i") {
         if (inventoryOpen) handleCloseInventory();
         else handleOpenInventory();
       } else if (key === "r") {
         if (questsOpen) handleCloseQuests();
         else handleOpenQuests();
+      } else if (key === "f") {
+        if (hotbarScreenOpen) handleCloseHotbarScreen();
+        else handleOpenHotbarScreen();
+      } else if (key === "g") {
+        if (craftingScreenOpen) handleCloseCraftingScreen();
+        else handleOpenCraftingScreen();
+      } else if (key === "h") {
+        if (fullMapOpen) handleCloseFullMap();
+        else handleOpenFullMap();
+      } else if (key === "t") {
+        if (levelUpScreenOpen) handleCloseLevelUpScreen();
+        else handleOpenLevelUpScreen();
+      } else if (key === "tab") {
+        e.preventDefault();
+        handleToggleFullscreen();
       } else if (key === "v") {
         setMinimapVisible((v) => !v);
-      } else if (key >= "1" && key <= "9") {
+      } else if (
+        (key >= "1" && key <= "9") ||
+        AZERTY_DIGIT_MAP[key] !== undefined
+      ) {
+        const digit = AZERTY_DIGIT_MAP[key] ?? Number(key);
         const scene = gameRef.current.scene.getScene("MainScene");
-        if (scene) scene.useHotbarSlot(Number(key) - 1);
+        if (scene) scene.useHotbarSlot(digit - 1);
       }
     }
     window.addEventListener("keydown", handleGlobalKeyDown);
@@ -652,10 +814,25 @@ export default function Arpg() {
   }, [
     inventoryOpen,
     questsOpen,
+    hotbarScreenOpen,
+    craftingScreenOpen,
+    fullMapOpen,
+    levelUpScreenOpen,
+    focusedButtonIndex,
+    getCurrentDialogActions,
     handleOpenInventory,
     handleCloseInventory,
     handleOpenQuests,
     handleCloseQuests,
+    handleOpenHotbarScreen,
+    handleCloseHotbarScreen,
+    handleOpenCraftingScreen,
+    handleCloseCraftingScreen,
+    handleOpenFullMap,
+    handleCloseFullMap,
+    handleOpenLevelUpScreen,
+    handleCloseLevelUpScreen,
+    handleToggleFullscreen,
   ]);
 
   const handleTravelToDepth = (depth) => {
@@ -673,9 +850,9 @@ export default function Arpg() {
     if (scene) scene.buyItem(index, quantity);
   };
 
-  const handleSellItem = (index, quantity) => {
+  const handleSellItem = (itemId, quantity) => {
     const scene = gameRef.current?.scene.getScene("MainScene");
-    if (scene) scene.sellItem(index, quantity);
+    if (scene) scene.sellItem(itemId, quantity);
   };
 
   const handleCloseShop = () => {
@@ -814,10 +991,10 @@ export default function Arpg() {
       className={isMobile ? "arpg arpg-mobile" : "arpg"}
       style={{
         position: "relative",
-        width: isMobile ? "100%" : 1000,
-        height: isMobile ? "100dvh" : undefined,
-        display: isMobile ? "flex" : undefined,
-        flexDirection: isMobile ? "column" : undefined,
+        width: isMobile || isFullscreen ? "100%" : 1000,
+        height: isMobile ? "100dvh" : isFullscreen ? "100vh" : undefined,
+        display: isMobile || isFullscreen ? "flex" : undefined,
+        flexDirection: isMobile || isFullscreen ? "column" : undefined,
         overflow: "hidden",
         boxSizing: "border-box",
       }}
@@ -1061,28 +1238,28 @@ export default function Arpg() {
         }
         style={{
           position: "relative",
-          flex: isMobile ? 1 : undefined,
-          minHeight: isMobile ? 0 : undefined,
+          flex: isMobile || isFullscreen ? 1 : undefined,
+          minHeight: isMobile || isFullscreen ? 0 : undefined,
           overflow: "hidden",
         }}
       >
         <button
           onClick={handleToggleFullscreen}
           style={{
-          position: "absolute",
-          top: 8,
-          left: 8,
-          zIndex: 6,
-          width: 32,
-          height: 32,
-          borderRadius: 6,
-          border: "1px solid #555",
-          background: "rgba(30,32,41,0.7)",
-          color: "#eee",
-          cursor: "pointer",
-          fontSize: 15,
-        }}
-        title={isFullscreen ? "Quitter le plein écran" : "Plein écran"}
+            position: "absolute",
+            top: 8,
+            left: 8,
+            zIndex: 6,
+            width: 32,
+            height: 32,
+            borderRadius: 6,
+            border: "1px solid #555",
+            background: "rgba(30,32,41,0.7)",
+            color: "#eee",
+            cursor: "pointer",
+            fontSize: 15,
+          }}
+          title={isFullscreen ? "Quitter le plein écran" : "Plein écran"}
         >
           {isFullscreen ? "⤡" : "⤢"}
         </button>
@@ -1091,7 +1268,7 @@ export default function Arpg() {
           id="arpg-container"
           className="arpg-container"
           style={
-            isMobile
+            isMobile || isFullscreen
               ? {
                   width: "100%",
                   height: "100%",
@@ -1302,26 +1479,6 @@ export default function Arpg() {
     }
   `}</style>
         </div>
-        {/* <button
-          onClick={handleOpenLevelUpScreen}
-          style={{
-            width: 42,
-            height: 42,
-            borderRadius: 6,
-            border: levelUpAvailable ? "2px solid #ffd700" : "1px solid #555",
-            background: levelUpAvailable ? "#3a3320" : "rgba(30,32,41,0.6)",
-            color: "#f0e6d0",
-            fontSize: 20,
-            cursor: "pointer",
-            animation: levelUpAvailable
-              ? "arpg-pulse 1s ease-in-out infinite"
-              : "none",
-          }}
-          title="Monter de niveau"
-        >
-          +
-        </button>
-        <style>{`@keyframes arpg-pulse {0%, 100% { opacity: 1; } 50% { opacity: 0.5; }}`}</style> */}
         {loadError && (
           <div
             style={{
@@ -1405,6 +1562,11 @@ export default function Arpg() {
                     background: "#3a2f20",
                     color: "#f0e6d0",
                     cursor: "pointer",
+                    outline:
+                      getCurrentDialogActions()[focusedButtonIndex]?.label ===
+                      "Accepter"
+                        ? "3px solid #fff"
+                        : "none",
                   }}
                 >
                   Accepter
@@ -1421,6 +1583,11 @@ export default function Arpg() {
                     background: "#3a2f20",
                     color: "#f0e6d0",
                     cursor: "pointer",
+                    outline:
+                      getCurrentDialogActions()[focusedButtonIndex]?.label ===
+                      "Rendre"
+                        ? "3px solid #fff"
+                        : "none",
                   }}
                 >
                   Rendre
@@ -1436,6 +1603,11 @@ export default function Arpg() {
                   background: "#2a2a35",
                   color: "#eee",
                   cursor: "pointer",
+                  outline:
+                    getCurrentDialogActions()[focusedButtonIndex]?.label ===
+                    "Fermer"
+                      ? "3px solid #fff"
+                      : "none",
                 }}
               >
                 Fermer
@@ -1460,27 +1632,6 @@ export default function Arpg() {
               gap: 16,
             }}
           >
-            {/* <div>Redescendre à l'étage précédent ?</div> */}
-            {/* {(upstairsPrompt.remainingEnemies > 0 ||
-              upstairsPrompt.unopenedChests > 0) && (
-              <div
-                style={{
-                  fontSize: 13,
-                  color: "#ffcc66",
-                  textAlign: "center",
-                  maxWidth: 320,
-                }}
-              >
-                ⚠️{" "}
-                {upstairsPrompt.remainingEnemies > 0 &&
-                  `${upstairsPrompt.remainingEnemies} ennemi${upstairsPrompt.remainingEnemies > 1 ? "s" : ""} restant${upstairsPrompt.remainingEnemies > 1 ? "s" : ""}`}
-                {upstairsPrompt.remainingEnemies > 0 &&
-                  upstairsPrompt.unopenedChests > 0 &&
-                  " · "}
-                {upstairsPrompt.unopenedChests > 0 &&
-                  `${upstairsPrompt.unopenedChests} coffre${upstairsPrompt.unopenedChests > 1 ? "s" : ""} non ouvert${upstairsPrompt.unopenedChests > 1 ? "s" : ""}`}
-              </div>
-            )} */}
             <div>Redescendre à l'étage précédent ?</div>
             <div style={{ display: "flex", gap: 12 }}>
               <button
@@ -1493,6 +1644,7 @@ export default function Arpg() {
                   background: "#3a1f1f",
                   color: "#f0d0d0",
                   cursor: "pointer",
+                  outline: focusedButtonIndex === 0 ? "3px solid #fff" : "none",
                 }}
               >
                 Oui
@@ -1507,6 +1659,7 @@ export default function Arpg() {
                   background: "#2a2a35",
                   color: "#eee",
                   cursor: "pointer",
+                  outline: focusedButtonIndex === 1 ? "3px solid #fff" : "none",
                 }}
               >
                 Non
@@ -1572,6 +1725,7 @@ export default function Arpg() {
                   background: "#3a3320",
                   color: "#f0e8c0",
                   cursor: "pointer",
+                  outline: focusedButtonIndex === 0 ? "3px solid #fff" : "none",
                 }}
               >
                 Oui
@@ -1586,6 +1740,7 @@ export default function Arpg() {
                   background: "#2a2a35",
                   color: "#eee",
                   cursor: "pointer",
+                  outline: focusedButtonIndex === 1 ? "3px solid #fff" : "none",
                 }}
               >
                 Non
@@ -1623,6 +1778,7 @@ export default function Arpg() {
                   background: "#3a3320",
                   color: "#f0e8c0",
                   cursor: "pointer",
+                  outline: focusedButtonIndex === 0 ? "3px solid #fff" : "none",
                 }}
               >
                 Oui
@@ -1637,6 +1793,7 @@ export default function Arpg() {
                   background: "#2a2a35",
                   color: "#eee",
                   cursor: "pointer",
+                  outline: focusedButtonIndex === 1 ? "3px solid #fff" : "none",
                 }}
               >
                 Non
@@ -1651,15 +1808,18 @@ export default function Arpg() {
             stats={combatStats}
             heroId={heroId}
             isMobile={isMobile}
+            unlockedRecipes={unlockedRecipes}
             onEquip={handleEquip}
             onUnequip={handleUnequip}
             onUse={handleUseConsumable}
+            onDecraft={handleDecraftItem}
             onClose={handleCloseInventory}
           />
         )}
         {chestScreenData && (
           <ChestScreen
             items={chestScreenData.items}
+            focusedLabel={getCurrentDialogActions()[focusedButtonIndex]?.label}
             onTakeItem={handleTakeChestItem}
             onTakeAll={handleTakeAllChest}
             onClose={handleCloseChestScreen}
@@ -1711,6 +1871,7 @@ export default function Arpg() {
             confirmedAttributes={levelUpDraft.confirmed}
             draftAttributes={levelUpDraft.draft}
             unspent={levelUpDraft.unspent}
+            focusedLabel={getCurrentDialogActions()[focusedButtonIndex]?.label}
             onAllocate={handleAllocatePoint}
             onDeallocate={handleDeallocatePoint}
             onConfirm={handleConfirmAllocation}
@@ -1728,6 +1889,7 @@ export default function Arpg() {
           <ShopScreen
             stock={shopStock}
             inventory={inventory}
+            equipped={equipped}
             onBuy={handleBuyItem}
             onSell={handleSellItem}
             onClose={handleCloseShop}

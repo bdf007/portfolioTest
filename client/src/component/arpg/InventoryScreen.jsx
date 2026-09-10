@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { resolveItemDef } from "./itemDefs";
+import { CRAFTING_RECIPES } from "./craftingRecipes";
 import {
   SPRITE_REGISTRY,
   ICON_SPRITESHEET,
@@ -47,7 +48,7 @@ const PREVIEW_SCALE = 3; // meme echelle que CharacterSelectScreen, pour un port
  * LEQUEL des exemplaires identiques est equipe/utilise en premier, ils
  * sont interchangeables par definition).
  */
-function groupInventory(inventory) {
+export function groupInventory(inventory) {
   const groups = new Map();
   inventory.forEach((entry, index) => {
     if (!groups.has(entry.itemId)) {
@@ -141,9 +142,11 @@ export default function InventoryScreen({
   stats,
   heroId,
   isMobile,
+  unlockedRecipes,
   onEquip,
   onUnequip,
   onUse,
+  onDecraft,
   onClose,
 }) {
   const heroEntry = SPRITE_REGISTRY[heroId] || SPRITE_REGISTRY.hero1;
@@ -428,6 +431,26 @@ export default function InventoryScreen({
                       }}
                     >
                       Utiliser
+                    </button>
+                  )}
+                  {Object.values(CRAFTING_RECIPES).some(
+                    (r) =>
+                      r.resultItemId === group.itemId &&
+                      unlockedRecipes.includes(r.id),
+                  ) && (
+                    <button
+                      onClick={() => onDecraft(group.firstIndex)}
+                      style={{
+                        padding: "4px 10px",
+                        fontSize: 11,
+                        borderRadius: 5,
+                        border: "1px solid #8a7050",
+                        background: "rgba(120,100,70,0.15)",
+                        color: "#5a4a35",
+                        cursor: "pointer",
+                      }}
+                    >
+                      Décrafter
                     </button>
                   )}
                 </div>
