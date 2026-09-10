@@ -101,6 +101,7 @@ const WALL = 1;
 const VISION_RADIUS_DEFAULT = 6; // repli si le profil d'archetype (cf. HERO_STATS_PROFILES) ne definit pas visionRadius
 const ENEMY_SPEED = 90;
 const SELL_PRICE_RATIO = 0.5; // moitie du prix d'achat - cf. sellItem
+const DECRAFT_RATIO = 0.5; // proportion des ingredients rendus au decraft - reglable independamment de SELL_PRICE_RATIO
 const ENEMY_STOP_DISTANCE = 28; // attackType 'melee' - juste en dessous de ENEMY_ATTACK_RANGE (34)
 const ENEMY_RANGED_STOP_DISTANCE = 180; // attackType 'ranged' - confortablement dans ENEMY_RANGED_ATTACK_RANGE (260), mais loin de la melee - sans ca, un ennemi a distance marcherait jusqu'a bout portant avant de tirer
 const ENEMY_RANGED_RETREAT_DISTANCE = 100; // en dessous de cette distance, un ennemi a distance recule ACTIVEMENT plutot que de simplement s'arreter - recule et tire en meme temps (les deux systemes sont deja decouples, cf. updateEnemyAttacks), jamais besoin de s'arreter pour viser
@@ -1553,7 +1554,7 @@ export default class MainScene extends Phaser.Scene {
     if (this.summonGroup) this.summonGroup.clear(false, false);
     const persistentSummons = this.summons.filter((s) => s.persistent);
     this.summons.forEach((s) => {
-      if (!s.persistent) s.sprite.destroy();
+      s.sprite.destroy(); // detruit TOUJOURS l'ancien sprite - meme pour un persistant, qui en recevra un nouveau juste apres (spawnSummonSprite)
     });
     this.summons = [];
     this.playerStatusEffects = [];
@@ -2495,31 +2496,42 @@ export default class MainScene extends Phaser.Scene {
     }
   }
 
-  sellItem(inventoryIndex, quantity = 1) {
-    const item = this.inventory[inventoryIndex];
-    if (!item) return;
-    const def = resolveItemDef(item.itemId);
+  sellItem(itemId, quantity = 1) {
+    const def = resolveItemDef(itemId);
     if (!def.price) return;
 
-    const sellQty = Math.max(1, Math.min(quantity, item.quantity));
-    const sellPrice = Math.floor(def.price * SELL_PRICE_RATIO) * sellQty;
+    const haveQty = this.inventory
+      .filter((i) => i.itemId === itemId)
+      .reduce((s, i) => s + i.quantity, 0);
+    const sellQty = Math.max(1, Math.min(quantity, haveQty));
+    if (sellQty <= 0) return;
 
-    item.quantity -= sellQty;
-    if (item.quantity <= 0) this.inventory.splice(inventoryIndex, 1);
+    // consomme A TRAVERS toutes les entrees correspondantes - pas juste
+    // un index precis, indispensable pour un equipement non-empilable ou
+    // plusieurs exemplaires identiques vivent dans des entrees SEPAREES
+    // (cf. le commentaire de groupInventory dans InventoryScreen.jsx)
+    let remaining = sellQty;
+    for (let i = this.inventory.length - 1; i >= 0 && remaining > 0; i--) {
+      const entry = this.inventory[i];
+      if (entry.itemId !== itemId) continue;
+      const take = Math.min(entry.quantity, remaining);
+      entry.quantity -= take;
+      remaining -= take;
+      if (entry.quantity <= 0) this.inventory.splice(i, 1);
+    }
+
+    const sellPrice = Math.floor(def.price * SELL_PRICE_RATIO) * sellQty;
+    this.addItemToInventory("gold", sellPrice);
 
     if (!this.shopSoldItems[this.currentDepth])
       this.shopSoldItems[this.currentDepth] = [];
     const existingSold = this.shopSoldItems[this.currentDepth].find(
-      (s) => s.itemId === item.itemId,
+      (s) => s.itemId === itemId,
     );
     if (existingSold) existingSold.quantity += sellQty;
     else
-      this.shopSoldItems[this.currentDepth].push({
-        itemId: item.itemId,
-        quantity: sellQty,
-      });
+      this.shopSoldItems[this.currentDepth].push({ itemId, quantity: sellQty });
 
-    this.addItemToInventory("gold", sellPrice);
     this.events.emit("shop", this.getMergedShopStock());
   }
 
@@ -2593,6 +2605,9 @@ export default class MainScene extends Phaser.Scene {
       statusEffects: [],
       drop: this.bossData.drop || null,
       attackCooldown: createCooldown(ENEMY_ATTACK_COOLDOWN),
+      summonAbility: this.bossData.summonAbility || null,
+      summonCooldownReadyAt: 0,
+      summonedMinions: [],
     });
 
     this.events.emit("boss-room-opened");
@@ -3303,6 +3318,7 @@ export default class MainScene extends Phaser.Scene {
       chest.sprite.setVisible(chestVisible);
     }
     this.updateEnemyAttacks(now);
+    this.updateBossSummons();
     this.updateProjectiles();
     this.updateEnemyProjectiles();
     this.updateAbilityProjectiles();
@@ -3836,6 +3852,96 @@ export default class MainScene extends Phaser.Scene {
     this.showLootToast(
       anyRevealed ? "Pièges détectés !" : "Aucun piège à proximité",
     );
+  }
+
+  updateBossSummons() {
+    const now = this.time.now;
+    for (const enemy of this.enemies) {
+      if (!enemy.isBoss || !enemy.summonAbility) continue;
+      if (enemy.state !== "chase") continue;
+      if (now < enemy.summonCooldownReadyAt) continue;
+
+      const aliveCount = enemy.summonedMinions.filter((m) =>
+        this.enemies.includes(m),
+      ).length;
+      if (aliveCount >= enemy.summonAbility.maxActive) continue;
+
+      this.bossSummonMinion(enemy);
+      enemy.summonCooldownReadyAt = now + enemy.summonAbility.cooldownMs;
+    }
+  }
+
+  bossSummonMinion(boss) {
+    const ability = boss.summonAbility;
+    const summonTypes = ability.summonTypes;
+    if (!summonTypes || summonTypes.length === 0) return;
+
+    const typeKey = summonTypes[Math.floor(Math.random() * summonTypes.length)];
+    const { entry: enemySprite, spriteKey } = resolveEnemySprite(typeKey);
+
+    const angle = Math.random() * Math.PI * 2;
+    const spawnDist = 50;
+    const spawnX = boss.sprite.x + Math.cos(angle) * spawnDist;
+    const spawnY = boss.sprite.y + Math.sin(angle) * spawnDist;
+
+    const sprite = this.enemyGroup.create(
+      spawnX,
+      spawnY,
+      enemySprite.key,
+      enemySprite.animations.idleDown,
+    );
+    sprite.setScale(enemySprite.scale);
+    const ehb = enemySprite.hitbox;
+    sprite.body
+      .setSize(ehb.width, ehb.height)
+      .setOffset(ehb.offsetX, ehb.offsetY);
+    sprite.setDepth(8);
+    sprite.anims.play(spriteKey + "-idle-down");
+
+    const spawnTileX = Math.floor(spawnX / TILE_SIZE);
+    const spawnTileY = Math.floor(spawnY / TILE_SIZE);
+    const behaviorRng = createRng(
+      `${this.currentSeed}-boss-minion-${this.time.now}`,
+    );
+    const behavior = createEnemyBehavior(
+      this.fogGrid,
+      { x: spawnTileX, y: spawnTileY },
+      behaviorRng,
+      { guard: 1 },
+    );
+
+    const minion = {
+      sprite,
+      spriteKey,
+      spawnIndex: -1,
+      archetype: typeKey,
+      type: behavior.type,
+      state: "chase", // deja hostile des l'apparition, pas de phase "endormi"
+      home: behavior.home,
+      aggroRadius: behavior.aggroRadius,
+      patrolPath: null,
+      patrolIndex: 0,
+      patrolDirection: 1,
+      path: null,
+      pathIndex: 0,
+      lastDir: "down",
+      hp: Math.round(boss.maxHp * ability.hpScale),
+      maxHp: Math.round(boss.maxHp * ability.hpScale),
+      damage: Math.round(boss.damage * ability.damageScale),
+      defense: Math.round(boss.defense * (ability.defenseScale || 0)),
+      xpReward: Math.round((boss.xpReward || 0) * 0.1),
+      attackType: "melee",
+      questLoot: null,
+      inflictsEffect: null,
+      resistances: {},
+      damageType: "physical",
+      statusEffects: [],
+      drops: [],
+      attackCooldown: createCooldown(ENEMY_ATTACK_COOLDOWN),
+    };
+
+    this.enemies.push(minion);
+    boss.summonedMinions.push(minion);
   }
 
   checkFloorTraps() {
@@ -4420,6 +4526,7 @@ export default class MainScene extends Phaser.Scene {
   }
 
   useHotbarSlot(slotIndex) {
+    if (this.gamePaused) return; // jamais utilisable pendant qu'un ecran (inventaire, quetes, craft...) ou un dialogue est ouvert
     const slot = this.hotbarSlots[slotIndex];
     if (!slot) return;
 
@@ -6890,6 +6997,52 @@ export default class MainScene extends Phaser.Scene {
     }
 
     return true;
+  }
+  decraftItem(inventoryIndex) {
+    const item = this.inventory[inventoryIndex];
+    if (!item) return;
+
+    const recipe = Object.values(CRAFTING_RECIPES).find(
+      (r) =>
+        r.resultItemId === item.itemId && this.unlockedRecipes.includes(r.id),
+    );
+    if (!recipe) {
+      this.showLootToast("Impossible de décrafter cet objet");
+      return;
+    }
+    if (recipe.ingredients.some((ing) => ing.acceptedItemIds)) {
+      this.showLootToast(
+        "Cet objet ne peut pas être décrafté (ingrédients flexibles)",
+      );
+      return;
+    }
+
+    const haveQty = this.inventory
+      .filter((i) => i.itemId === item.itemId)
+      .reduce((s, i) => s + i.quantity, 0);
+    if (haveQty < recipe.resultQuantity) {
+      this.showLootToast("Pas assez d'exemplaires pour décrafter");
+      return;
+    }
+
+    let remaining = recipe.resultQuantity;
+    for (let i = this.inventory.length - 1; i >= 0 && remaining > 0; i--) {
+      const entry = this.inventory[i];
+      if (entry.itemId !== item.itemId) continue;
+      const take = Math.min(entry.quantity, remaining);
+      entry.quantity -= take;
+      remaining -= take;
+      if (entry.quantity <= 0) this.inventory.splice(i, 1);
+    }
+
+    for (const ing of recipe.ingredients) {
+      const returned = Math.floor(ing.quantity * DECRAFT_RATIO);
+      if (returned > 0) this.addItemToInventory(ing.itemId, returned);
+    }
+
+    this.showLootToast(`${resolveItemDef(item.itemId).name} décrafté !`);
+    this.events.emit("inventory-updated", [...this.inventory]);
+    this.persistProgress();
   }
 
   craftItem(recipeId, flexAllocations = {}) {

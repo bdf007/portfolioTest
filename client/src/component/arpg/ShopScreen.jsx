@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
 import { resolveItemDef } from "./itemDefs";
+import { groupInventory } from "./InventoryScreen";
 
 const SELL_PRICE_RATIO = 0.5; // doit rester synchronise avec MainScene.js
 
 export default function ShopScreen({
   stock,
   inventory,
+  equipped,
   onBuy,
   onSell,
   onClose,
@@ -23,6 +25,9 @@ export default function ShopScreen({
 
   const goldEntry = inventory.find((i) => i.itemId === "gold");
   const currentGold = goldEntry ? goldEntry.quantity : 0;
+  const groupedInventory = groupInventory(inventory).filter(
+    (g) => g.itemId !== "gold" && g.itemId !== equipped.quiver,
+  );
 
   function getQty(store, index, max) {
     const q = store[index] || 1;
@@ -188,24 +193,24 @@ export default function ShopScreen({
       </div>
 
       <div style={{ fontSize: 13, color: "#999", marginBottom: 8 }}>Vendre</div>
-      {inventory.every((item) => !resolveItemDef(item.itemId).price) && (
+      {groupedInventory.every((g) => !resolveItemDef(g.itemId).price) && (
         <div style={{ color: "#666", fontSize: 13 }}>
           Rien à vendre pour l'instant.
         </div>
       )}
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-        {inventory.map((item, index) => {
-          const def = resolveItemDef(item.itemId);
+        {groupedInventory.map((group) => {
+          const def = resolveItemDef(group.itemId);
           if (!def.price) return null;
-          const maxQty = item.quantity;
-          const qty = getQty(sellQuantities, index, maxQty);
+          const maxQty = group.totalQuantity;
+          const qty = getQty(sellQuantities, group.itemId, maxQty);
           const unitPrice = Math.floor(def.price * SELL_PRICE_RATIO);
           const totalPrice = unitPrice * qty;
           const atMax = qty >= maxQty;
 
           return (
             <div
-              key={`${item.itemId}-${index}`}
+              key={group.itemId}
               style={{
                 display: "flex",
                 justifyContent: "space-between",
@@ -219,7 +224,7 @@ export default function ShopScreen({
               <div>
                 <div style={{ fontSize: 13 }}>
                   {def.name}
-                  {item.quantity > 1 ? ` x${item.quantity}` : ""}
+                  {group.totalQuantity > 1 ? ` x${group.totalQuantity}` : ""}
                 </div>
                 <div style={{ fontSize: 12, color: "#d4af37", marginTop: 4 }}>
                   {totalPrice} or {qty > 1 ? `(${unitPrice}/u.)` : ""}
@@ -228,7 +233,7 @@ export default function ShopScreen({
               <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                 <button
                   onClick={() =>
-                    adjustQty(setSellQuantities, index, -1, maxQty)
+                    adjustQty(setSellQuantities, group.itemId, -1, maxQty)
                   }
                   disabled={qty <= 1}
                   style={{
@@ -250,7 +255,9 @@ export default function ShopScreen({
                   {qty}
                 </span>
                 <button
-                  onClick={() => adjustQty(setSellQuantities, index, 1, maxQty)}
+                  onClick={() =>
+                    adjustQty(setSellQuantities, group.itemId, 1, maxQty)
+                  }
                   disabled={atMax}
                   style={{
                     width: 24,
@@ -266,7 +273,7 @@ export default function ShopScreen({
                   +
                 </button>
                 <button
-                  onClick={() => onSell(index, qty)}
+                  onClick={() => onSell(group.itemId, qty)}
                   style={{
                     padding: "6px 12px",
                     fontSize: 12,

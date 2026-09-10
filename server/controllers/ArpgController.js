@@ -179,6 +179,7 @@ async function getLevel(req, res) {
         inflictsEffect: bossConfig.stats.inflictsEffect || null,
         visualEffect: bossConfig.stats.visualEffect || null,
         drop: rollLoot("bossDrop", bossLootRng, depth),
+        summonAbility: bossConfig.summonAbility || null,
       };
     } else {
       exitTile = findExitTile(grid, playerSpawn);

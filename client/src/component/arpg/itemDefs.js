@@ -1381,7 +1381,7 @@ export const ITEM_DEFS = {
     category: "recipeScroll",
     name: "Plan : Potion de soin",
     description: "Apprend la recette de la potion de soin.",
-    grantsRecipe: "healthPotion",
+    grantsRecipe: "healthPotionRecipe",
     stackable: true,
     price: 50,
   },

@@ -92,8 +92,14 @@ function carveBossRoom(grid, playerSpawn, roomSize = 5) {
     }
   }
 
-  const bossSpawn = { x: roomStartX + roomSize - 1, y: doorTile.y };
-  const exitTile = bossSpawn;
+  const bossSpawn = {
+    x: roomStartX + Math.floor(roomSize / 2), // centre horizontal de la salle
+    y: doorTile.y, // deja le centre vertical (la salle est creusee symetriquement autour de cette ligne)
+  };
+  const exitTile = {
+    x: roomStartX + roomSize - 1, // mur du fond, oppose a la porte - la position qu'occupait le boss avant
+    y: doorTile.y,
+  };
 
   return { grid: newGrid, doorTile, bossSpawn, exitTile };
 }
