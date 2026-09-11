@@ -345,7 +345,7 @@ export const CRAFTING_RECIPES = {
       { itemId: "gold", quantity: 20 },
     ],
     // unlockLevel: 1,
-    discoveryOnly: true, // optionnel - deblocage automatique par niveau, comme les competences
+    // discoveryOnly: true, // optionnel - deblocage automatique par niveau, comme les competences
   },
   flamingSwordRecipe: {
     id: "flamingSwordRecipe",

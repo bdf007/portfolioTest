@@ -150,6 +150,7 @@ import iconSheet2 from "../../assets/objects_icons/icon_sheet2.png";
 import iconskill1Spritesheet from "../../assets/objects_icons/icon_skill_1.png";
 import items1Spritesheet from "../../assets/objects_icons/items1.png";
 import monster_lootsSpritesheet from "../../assets/objects_icons/monster_loots.png";
+import leverSpritesheet from "../../assets/objects_icons/lever.png";
 // import animation effects
 import meleeSlashSpritesheet from "../../assets/animations/melee_slash_effect.png";
 // import town PNJ spritesheets here when available
@@ -2908,9 +2909,14 @@ const HERO_STATS_PROFILES = {
     visionRadius: 7,
     meleeRange: 40,
     rangedRange: 400,
-    startingItems: ["woodenDagger"],
+    startingItems: ["woodenDagger", "detectSecretsScroll"],
     startingAmmo: null,
-    startingAbilities: ["stealth", "scoutPulse", "detectTraps"],
+    startingAbilities: [
+      "stealth",
+      "scoutPulse",
+      "detectTraps",
+      "detectSecrets",
+    ],
   },
   warrior: {
     archetype: "guerrier",
@@ -3356,6 +3362,15 @@ export const ITEMS_1_SPRITESHEET = {
   frameHeight: 32,
   columns: 20,
   rows: 18,
+};
+
+export const LEVER_SPRITESHEET = {
+  key: "lever",
+  path: leverSpritesheet,
+  frameWidth: 16,
+  frameHeight: 16,
+  columns: 3,
+  rows: 1,
 };
 
 export const MONSTER_LOOTS_SPRITESHEET = {

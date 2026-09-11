@@ -39,6 +39,10 @@ const {
 } = require("../services/generation/bossRoom");
 const { generateChests } = require("../services/generation/chestGenerator");
 const { generateTraps } = require("../services/generation/trapGenerator");
+const {
+  generateSecretRoom,
+  secretRoomExists,
+} = require("../services/generation/secretRoomGenerator");
 const { generateShopStock } = require("../services/generation/shopGenerator");
 const {
   rollLoot,
@@ -199,6 +203,20 @@ async function getLevel(req, res) {
             exitTile,
           )
         : null;
+    // jamais sur un etage a boss - risquerait de creuser dans/pres de la
+    // salle du boss, jamais teste ensemble
+    let secretRoom = null;
+    if (!hasBoss) {
+      secretRoom = generateSecretRoom(
+        grid,
+        seed,
+        playerSpawn,
+        biome.secretRoomChance,
+        depth,
+        biome,
+      );
+      if (secretRoom) grid = secretRoom.grid;
+    }
 
     // PNJ de quete : pour l'instant, uniquement dans les villes -
     // plusieurs par ville desormais (1 a 3, comme les coffres), places de
@@ -473,6 +491,40 @@ async function getLevel(req, res) {
       }));
     }
 
+    // indice narratif pour un PNJ de ville - reference un etage PRECEDENT
+    // deja visite qui a une salle secrete, jamais encore trouvee (le
+    // client transmet la liste, seule source fiable de "quels etages
+    // existent avec quelle seed" - le serveur ne les persiste pas lui-meme)
+    let secretRoomHintDepth = null;
+    if (biome.id === "town" && req.query.previousFloors) {
+      try {
+        const previousFloors = JSON.parse(req.query.previousFloors);
+        const alreadyFound = req.query.discoveredSecretRoomDepths
+          ? JSON.parse(req.query.discoveredSecretRoomDepths)
+          : [];
+        const candidates = previousFloors.filter(
+          (f) => !alreadyFound.includes(f.depth),
+        );
+        const hintRng = createRng(`${seed}-secret-hint`);
+        const shuffled = [...candidates];
+        for (let i = shuffled.length - 1; i > 0; i--) {
+          const j = Math.floor(hintRng() * (i + 1));
+          [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        }
+        for (const candidate of shuffled) {
+          const candidateBiome = getBiomeForDepth(candidate.depth);
+          if (
+            secretRoomExists(candidate.seed, candidateBiome.secretRoomChance)
+          ) {
+            secretRoomHintDepth = candidate.depth;
+            break;
+          }
+        }
+      } catch {
+        secretRoomHintDepth = null;
+      }
+    }
+
     // Cases interdites au placement d'ennemis/coffres, PEU IMPORTE le
     // biome - correctif ajoute car allowedTiles ne valait jamais autre
     // chose que null en dehors d'un etage a boss : rien n'empechait
@@ -598,6 +650,18 @@ async function getLevel(req, res) {
       enemies,
       chests,
       traps,
+      secretRoom: secretRoom
+        ? {
+            triggerType: secretRoom.triggerType,
+            doorTile: secretRoom.doorTile,
+            roomCenter: secretRoom.roomCenter,
+            roomSize: secretRoom.roomSize,
+            rewardType: secretRoom.rewardType,
+            leverTiles: secretRoom.leverTiles || null,
+            enemySpawns: secretRoom.enemySpawns || null,
+          }
+        : null,
+      secretRoomHintDepth,
     });
   } catch (error) {
     console.error("[ArpgController.getLevel]", error);

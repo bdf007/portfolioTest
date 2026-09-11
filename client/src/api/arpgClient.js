@@ -16,11 +16,27 @@
  *   contrairement a `seed` (position/disposition, fixe pour toujours) -
  *   cf. MainScene.js, this.currentFloorLootSeed
  */
-export async function fetchLevel(depth, seed, lootSeed) {
+export async function fetchLevel(
+  depth,
+  seed,
+  lootSeed,
+  previousFloors,
+  discoveredSecretRoomDepths,
+) {
   const params = new URLSearchParams({
     depth,
     ...(seed ? { seed } : {}),
     ...(lootSeed ? { lootSeed } : {}),
+    ...(previousFloors && previousFloors.length > 0
+      ? { previousFloors: JSON.stringify(previousFloors) }
+      : {}),
+    ...(discoveredSecretRoomDepths && discoveredSecretRoomDepths.length > 0
+      ? {
+          discoveredSecretRoomDepths: JSON.stringify(
+            discoveredSecretRoomDepths,
+          ),
+        }
+      : {}),
   });
   const res = await fetch(`/api/arpg/level?${params}`, {
     credentials: "include",

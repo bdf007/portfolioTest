@@ -4,6 +4,8 @@ import {
   getTileImagesToLoad,
   CHEST_SPRITESHEET,
   ICON_SPRITESHEET,
+  ITEMS_1_SPRITESHEET,
+  LEVER_SPRITESHEET,
 } from "../spriteRegistry";
 import {
   DUNGEON_AUTOTILE_SPRITESHEET,
@@ -398,6 +400,14 @@ export default class BootScene extends Phaser.Scene {
     this.load.spritesheet(ICON_SPRITESHEET.key, ICON_SPRITESHEET.path, {
       frameWidth: ICON_SPRITESHEET.frameWidth,
       frameHeight: ICON_SPRITESHEET.frameHeight,
+    });
+    this.load.spritesheet(ITEMS_1_SPRITESHEET.key, ITEMS_1_SPRITESHEET.path, {
+      frameWidth: ITEMS_1_SPRITESHEET.frameWidth,
+      frameHeight: ITEMS_1_SPRITESHEET.frameHeight,
+    });
+    this.load.spritesheet(LEVER_SPRITESHEET.key, LEVER_SPRITESHEET.path, {
+      frameWidth: LEVER_SPRITESHEET.frameWidth,
+      frameHeight: LEVER_SPRITESHEET.frameHeight,
     });
   }
 

@@ -1357,13 +1357,23 @@ export const ITEM_DEFS = {
     price: 40, // optionnel - retire ce champ si tu veux qu'il ne soit JAMAIS achetable en boutique (cf. getPurchasableItemIds, base uniquement sur la presence de price)
   },
 
+  detectSecretsScroll: {
+    id: "detectSecretsScroll",
+    category: "abilityScroll",
+    name: "Parchemin : Détection des secrets",
+    description: "Apprend la compétence Détection des secrets.",
+    grantsAbility: "detectSecrets",
+    stackable: false,
+    price: 45,
+  },
+
   // recipes
   reinforcedSwordRecipe: {
     id: "reinforcedSwordRecipe",
     category: "recipeScroll",
     name: "Plan : Épée renforcée",
     description: "Apprend la recette de l'épée renforcée.",
-    grantsRecipe: "reinforcedSword",
+    grantsRecipe: "reinforcedSwordRecipe",
     stackable: true,
     price: 60,
   },
@@ -1372,7 +1382,7 @@ export const ITEM_DEFS = {
     category: "recipeScroll",
     name: "Plan : Épée enflammée",
     description: "Apprend la recette de l'épée enflammée.",
-    grantsRecipe: "flamingSword",
+    grantsRecipe: "flamingSwordRecipe",
     stackable: true,
     price: 70,
   },
@@ -1390,7 +1400,7 @@ export const ITEM_DEFS = {
     category: "recipeScroll",
     name: "Plan : Flèche en bois",
     description: "Apprend la recette de la flèche en bois.",
-    grantsRecipe: "woodenArrow",
+    grantsRecipe: "woodenArrowRecipe",
     stackable: true,
     price: 40,
   },
@@ -1399,7 +1409,7 @@ export const ITEM_DEFS = {
     category: "recipeScroll",
     name: "Plan : Flèche en bois géante",
     description: "Apprend la recette de la flèche en bois géante.",
-    grantsRecipe: "bigWoodenArrow",
+    grantsRecipe: "bigWoodenArrowRecipe",
     stackable: true,
     price: 80,
   },

@@ -30,8 +30,9 @@ import {
   TILE_IMAGE_REGISTRY,
   CHEST_SPRITESHEET,
   CHEST_VARIANTS,
+  LEVER_SPRITESHEET,
 } from "../spriteRegistry";
-import { resolveItemDef } from "../itemDefs";
+import { resolveItemDef, ITEM_DEFS } from "../itemDefs";
 import {
   computeEquipmentBonuses,
   computeEquipmentResistances,
@@ -558,6 +559,11 @@ export default class MainScene extends Phaser.Scene {
     this.floorTraps = [];
     this.currentFloorTriggeredTraps = [];
     this.currentFloorRevealedTraps = [];
+    this.secretRoomData = null;
+    this.secretDoorOpened = false;
+    this.secretLevers = [];
+    this.secretWallMarker = null;
+    this.discoveredSecretRoomDepths = []; // etages ou une salle secrete a DEJA ete ouverte - pour toujours, jamais retire
     this.quests = {};
     this.unlockedAbilities = [];
     this.unlockedRecipes = [];
@@ -683,6 +689,7 @@ export default class MainScene extends Phaser.Scene {
     this.playerMana = ps.mana ?? this.playerMaxMana;
 
     this.floorFogCache = ps.floorFogCache || {};
+    this.discoveredSecretRoomDepths = ps.discoveredSecretRoomDepths || [];
 
     await this.loadLevel(
       save.depth,
@@ -696,6 +703,7 @@ export default class MainScene extends Phaser.Scene {
       ps.currentFloorChestRemainingLoot || {},
       ps.currentFloorTriggeredTraps || [],
       ps.currentFloorRevealedTraps || [],
+      ps.currentFloorLeverActivations || [],
     );
     for (const savedSummon of ps.summons || []) {
       const sprite = this.spawnSummonSprite(
@@ -1184,6 +1192,10 @@ export default class MainScene extends Phaser.Scene {
           currentFloorOpenedChests: this.currentFloorOpenedChests,
           currentFloorTriggeredTraps: this.currentFloorTriggeredTraps,
           currentFloorRevealedTraps: this.currentFloorRevealedTraps,
+          discoveredSecretRoomDepths: this.discoveredSecretRoomDepths,
+          currentFloorLeverActivations: this.secretLevers
+            .filter((l) => l.activated)
+            .map((l) => `${l.x},${l.y}`),
           currentFloorChestRemainingLoot: this.currentFloorChestRemainingLoot,
           currentFloorLootSeed: this.currentFloorLootSeed,
           quests: this.quests,
@@ -1394,6 +1406,7 @@ export default class MainScene extends Phaser.Scene {
     savedChestRemainingLoot = {},
     savedTriggeredTraps = [],
     savedRevealedTraps = [],
+    savedLeverActivations = [],
   ) {
     this.currentFloorChestRemainingLoot = savedChestRemainingLoot || {};
     this.currentFloorTriggeredTraps = savedTriggeredTraps || [];
@@ -1416,7 +1429,16 @@ export default class MainScene extends Phaser.Scene {
 
     let data;
     try {
-      data = await fetchLevel(depth, seed, effectiveLootSeed);
+      const previousFloors = this.visitedFloors
+        .filter((f) => f.depth < depth)
+        .map((f) => ({ depth: f.depth, seed: f.seed }));
+      data = await fetchLevel(
+        depth,
+        seed,
+        effectiveLootSeed,
+        previousFloors,
+        this.discoveredSecretRoomDepths,
+      );
     } catch (err) {
       this.events.emit("level-load-error", { depth, error: err.message });
       return;
@@ -1536,6 +1558,14 @@ export default class MainScene extends Phaser.Scene {
       t.spikeSprite.destroy();
     });
     this.floorTraps = [];
+    this.secretLevers.forEach((l) => l.sprite.destroy());
+    this.secretLevers = [];
+    if (this.secretWallMarker) {
+      this.secretWallMarker.destroy();
+      this.secretWallMarker = null;
+    }
+    this.secretRoomData = null;
+    this.secretDoorOpened = false;
     this.dialogOpen = false;
     this.gamePaused = false;
     this.pauseReasons.clear();
@@ -1660,6 +1690,7 @@ export default class MainScene extends Phaser.Scene {
       phaserTilesetKey = result.phaserTilesetKey;
       renderGrid = result.renderGrid;
       composedFloorSlots = result.floorSlotIndices;
+      this.currentFloorTileIndex = composedFloorSlots[0];
       trapVisualConfig = TRAP_VISUALS_DESERT;
     } else if (tileset === "desertMountain2") {
       const result = this.composeCornerAutotileTexture(
@@ -1672,6 +1703,7 @@ export default class MainScene extends Phaser.Scene {
       phaserTilesetKey = result.phaserTilesetKey;
       renderGrid = result.renderGrid;
       composedFloorSlots = result.floorSlotIndices;
+      this.currentFloorTileIndex = composedFloorSlots[0];
       trapVisualConfig = TRAP_VISUALS_DESERT;
     } else if (tileset === "desertMountain3") {
       const result = this.composeCornerAutotileTexture(
@@ -1684,6 +1716,7 @@ export default class MainScene extends Phaser.Scene {
       phaserTilesetKey = result.phaserTilesetKey;
       renderGrid = result.renderGrid;
       composedFloorSlots = result.floorSlotIndices;
+      this.currentFloorTileIndex = composedFloorSlots[0];
       trapVisualConfig = TRAP_VISUALS_DESERT;
     } else if (tileset === "desert2") {
       const result = this.composeCornerAutotileTexture(
@@ -1696,6 +1729,7 @@ export default class MainScene extends Phaser.Scene {
       phaserTilesetKey = result.phaserTilesetKey;
       renderGrid = result.renderGrid;
       composedFloorSlots = result.floorSlotIndices;
+      this.currentFloorTileIndex = composedFloorSlots[0];
       trapVisualConfig = TRAP_VISUALS_DESERT;
     } else if (tileset === "hills1") {
       const result = this.composeCornerAutotileTexture(
@@ -1708,6 +1742,7 @@ export default class MainScene extends Phaser.Scene {
       phaserTilesetKey = result.phaserTilesetKey;
       renderGrid = result.renderGrid;
       composedFloorSlots = result.floorSlotIndices;
+      this.currentFloorTileIndex = composedFloorSlots[0];
       trapVisualConfig = TRAP_VISUALS_DESERT;
     } else if (tileset === "cityWalls1") {
       const result = this.composeCornerAutotileTexture(
@@ -1720,6 +1755,7 @@ export default class MainScene extends Phaser.Scene {
       phaserTilesetKey = result.phaserTilesetKey;
       renderGrid = result.renderGrid;
       composedFloorSlots = result.floorSlotIndices;
+      this.currentFloorTileIndex = composedFloorSlots[0];
       trapVisualConfig = TRAP_VISUALS_DESERT;
     } else if (tileset === "tower1") {
       const result = this.composeCornerAutotileTexture(
@@ -1732,6 +1768,7 @@ export default class MainScene extends Phaser.Scene {
       phaserTilesetKey = result.phaserTilesetKey;
       renderGrid = result.renderGrid;
       composedFloorSlots = result.floorSlotIndices;
+      this.currentFloorTileIndex = composedFloorSlots[0];
       trapVisualConfig = TRAP_VISUALS_DESERT;
     } else if (tileset === "hills2") {
       const result = this.composeCornerAutotileTexture(
@@ -1744,6 +1781,7 @@ export default class MainScene extends Phaser.Scene {
       phaserTilesetKey = result.phaserTilesetKey;
       renderGrid = result.renderGrid;
       composedFloorSlots = result.floorSlotIndices;
+      this.currentFloorTileIndex = composedFloorSlots[0];
       trapVisualConfig = TRAP_VISUALS_DESERT;
     } else if (tileset === "mines2") {
       const result = this.composeCornerAutotileTexture(
@@ -1756,6 +1794,7 @@ export default class MainScene extends Phaser.Scene {
       phaserTilesetKey = result.phaserTilesetKey;
       renderGrid = result.renderGrid;
       composedFloorSlots = result.floorSlotIndices;
+      this.currentFloorTileIndex = composedFloorSlots[0];
       trapVisualConfig = TRAP_VISUALS_DESERT;
     } else if (tileset === "hills3") {
       const result = this.composeCornerAutotileTexture(
@@ -1768,6 +1807,7 @@ export default class MainScene extends Phaser.Scene {
       phaserTilesetKey = result.phaserTilesetKey;
       renderGrid = result.renderGrid;
       composedFloorSlots = result.floorSlotIndices;
+      this.currentFloorTileIndex = composedFloorSlots[0];
       trapVisualConfig = TRAP_VISUALS_DESERT;
     } else if (tileset === "hills4") {
       const result = this.composeCornerAutotileTexture(
@@ -1780,6 +1820,7 @@ export default class MainScene extends Phaser.Scene {
       phaserTilesetKey = result.phaserTilesetKey;
       renderGrid = result.renderGrid;
       composedFloorSlots = result.floorSlotIndices;
+      this.currentFloorTileIndex = composedFloorSlots[0];
       trapVisualConfig = TRAP_VISUALS_DESERT;
     } else if (tileset === "hills5") {
       const result = this.composeCornerAutotileTexture(
@@ -1792,6 +1833,7 @@ export default class MainScene extends Phaser.Scene {
       phaserTilesetKey = result.phaserTilesetKey;
       renderGrid = result.renderGrid;
       composedFloorSlots = result.floorSlotIndices;
+      this.currentFloorTileIndex = composedFloorSlots[0];
       trapVisualConfig = TRAP_VISUALS_DESERT;
     } else if (tileset === "hills6") {
       const result = this.composeCornerAutotileTexture(
@@ -1804,6 +1846,7 @@ export default class MainScene extends Phaser.Scene {
       phaserTilesetKey = result.phaserTilesetKey;
       renderGrid = result.renderGrid;
       composedFloorSlots = result.floorSlotIndices;
+      this.currentFloorTileIndex = composedFloorSlots[0];
       trapVisualConfig = TRAP_VISUALS_DESERT;
     } else if (tileset === "hills7") {
       const result = this.composeCornerAutotileTexture(
@@ -1816,6 +1859,7 @@ export default class MainScene extends Phaser.Scene {
       phaserTilesetKey = result.phaserTilesetKey;
       renderGrid = result.renderGrid;
       composedFloorSlots = result.floorSlotIndices;
+      this.currentFloorTileIndex = composedFloorSlots[0];
       trapVisualConfig = TRAP_VISUALS_DESERT;
     } else if (tileset === "hills8") {
       const result = this.composeCornerAutotileTexture(
@@ -1828,6 +1872,7 @@ export default class MainScene extends Phaser.Scene {
       phaserTilesetKey = result.phaserTilesetKey;
       renderGrid = result.renderGrid;
       composedFloorSlots = result.floorSlotIndices;
+      this.currentFloorTileIndex = composedFloorSlots[0];
       trapVisualConfig = TRAP_VISUALS_DESERT;
     } else if (tileset === "hills9") {
       const result = this.composeCornerAutotileTexture(
@@ -1840,6 +1885,7 @@ export default class MainScene extends Phaser.Scene {
       phaserTilesetKey = result.phaserTilesetKey;
       renderGrid = result.renderGrid;
       composedFloorSlots = result.floorSlotIndices;
+      this.currentFloorTileIndex = composedFloorSlots[0];
       trapVisualConfig = TRAP_VISUALS_DESERT;
     } else if (tileset === "hills10") {
       const result = this.composeCornerAutotileTexture(
@@ -1852,6 +1898,7 @@ export default class MainScene extends Phaser.Scene {
       phaserTilesetKey = result.phaserTilesetKey;
       renderGrid = result.renderGrid;
       composedFloorSlots = result.floorSlotIndices;
+      this.currentFloorTileIndex = composedFloorSlots[0];
       trapVisualConfig = TRAP_VISUALS_DESERT;
     } else if (tileset === "hills11") {
       const result = this.composeCornerAutotileTexture(
@@ -1864,6 +1911,7 @@ export default class MainScene extends Phaser.Scene {
       phaserTilesetKey = result.phaserTilesetKey;
       renderGrid = result.renderGrid;
       composedFloorSlots = result.floorSlotIndices;
+      this.currentFloorTileIndex = composedFloorSlots[0];
       trapVisualConfig = TRAP_VISUALS_DESERT;
     } else if (tileset === "hills12") {
       const result = this.composeCornerAutotileTexture(
@@ -1876,6 +1924,7 @@ export default class MainScene extends Phaser.Scene {
       phaserTilesetKey = result.phaserTilesetKey;
       renderGrid = result.renderGrid;
       composedFloorSlots = result.floorSlotIndices;
+      this.currentFloorTileIndex = composedFloorSlots[0];
       trapVisualConfig = TRAP_VISUALS_DESERT;
     } else if (tileset === "snow") {
       const result = this.composeCornerAutotileTexture(
@@ -1888,6 +1937,7 @@ export default class MainScene extends Phaser.Scene {
       phaserTilesetKey = result.phaserTilesetKey;
       renderGrid = result.renderGrid;
       composedFloorSlots = result.floorSlotIndices;
+      this.currentFloorTileIndex = composedFloorSlots[0];
       trapVisualConfig = TRAP_VISUALS_DESERT;
     } else if (tileset === "darkwoods") {
       const result = this.composeCornerAutotileTexture(
@@ -1904,16 +1954,20 @@ export default class MainScene extends Phaser.Scene {
       phaserTilesetKey = result.phaserTilesetKey;
       renderGrid = result.renderGrid;
       composedFloorSlots = result.floorSlotIndices;
+      this.currentFloorTileIndex = composedFloorSlots[0];
       trapVisualConfig = TRAP_VISUALS_DESERT;
     } else if (tileset === "darkwoods2") {
       const result = this.composeCornerAutotileTexture(
         grid,
         DARKWOODS2_AUTOTILE_SPRITESHEET,
         "darkwoods2",
+        WALL_CORNER_INDEX_TO_FRAME_0_0,
+        17,
       );
       phaserTilesetKey = result.phaserTilesetKey;
       renderGrid = result.renderGrid;
       composedFloorSlots = result.floorSlotIndices;
+      this.currentFloorTileIndex = composedFloorSlots[0];
       trapVisualConfig = TRAP_VISUALS_DESERT;
     } else if (tileset === "standardFields2") {
       const result = this.composeCornerAutotileTexture(
@@ -1924,6 +1978,7 @@ export default class MainScene extends Phaser.Scene {
       phaserTilesetKey = result.phaserTilesetKey;
       renderGrid = result.renderGrid;
       composedFloorSlots = result.floorSlotIndices;
+      this.currentFloorTileIndex = composedFloorSlots[0];
       trapVisualConfig = TRAP_VISUALS_DESERT;
     } else {
       const colors = TILESET_COLORS[tileset] || TILESET_COLORS.cave;
@@ -2002,6 +2057,14 @@ export default class MainScene extends Phaser.Scene {
       this.layer.setCollision(WALL);
     }
     this.layer.setDepth(0);
+    if (
+      data.secretRoom &&
+      this.discoveredSecretRoomDepths.includes(depth) &&
+      data.secretRoom.triggerType !== "combat"
+    ) {
+      const door = data.secretRoom.doorTile;
+      this.layer.putTileAt(this.currentFloorTileIndex ?? 0, door.x, door.y);
+    }
 
     const startPosition = savedPlayerPosition || playerSpawn;
 
@@ -2307,6 +2370,119 @@ export default class MainScene extends Phaser.Scene {
       });
     });
 
+    this.secretRoomData = data.secretRoom || null;
+    this.secretRoomHintDepth = data.secretRoomHintDepth ?? null;
+    const alreadyDiscovered = this.discoveredSecretRoomDepths.includes(depth);
+
+    if (this.secretRoomData) {
+      if (alreadyDiscovered) {
+        // deja trouvee au moins une fois - la salle reste DEFINITIVEMENT
+        // ouverte, ne se referme jamais : ni levier ni combat a refaire,
+        // juste une partie normale de l'etage desormais
+        this.secretDoorOpened = true;
+      } else if (this.secretRoomData.triggerType === "lever") {
+        for (const leverTile of this.secretRoomData.leverTiles) {
+          const wasActivated = savedLeverActivations.includes(
+            `${leverTile.x},${leverTile.y}`,
+          );
+          const sprite = this.add.sprite(
+            leverTile.x * TILE_SIZE + TILE_SIZE / 2,
+            leverTile.y * TILE_SIZE + TILE_SIZE / 2,
+            LEVER_SPRITESHEET.key,
+            wasActivated ? 2 : 0, // 0 = position de repos, 2 = actionne (etat final apres animation)
+          );
+          sprite.setScale(TILE_SIZE / 16);
+          sprite.setDepth(4);
+          sprite.setVisible(true);
+          sprite.setAlpha(wasActivated ? 1 : 0.22);
+          this.secretLevers.push({
+            sprite,
+            x: leverTile.x,
+            y: leverTile.y,
+            activated: wasActivated,
+          });
+        }
+        if (
+          this.secretLevers.length > 0 &&
+          this.secretLevers.every((l) => l.activated)
+        ) {
+          this.secretDoorOpened = true;
+        }
+      } else if (this.secretRoomData.triggerType === "wall") {
+        const door = this.secretRoomData.doorTile;
+        const marker = this.add.circle(
+          door.x * TILE_SIZE + TILE_SIZE / 2,
+          door.y * TILE_SIZE + TILE_SIZE / 2,
+          5,
+          0xffcc00,
+        );
+        marker.setDepth(4);
+        marker.setAlpha(0.22); // meme discretion que les leviers - PLACEHOLDER, remplace par une texture de fissure sur le mur une fois identifiee sur une planche
+        this.secretWallMarker = marker;
+      } else if (this.secretRoomData.triggerType === "combat") {
+        const secretRoomEnemyRng = createRng(
+          `${this.currentSeed}-secret-room-enemies`,
+        );
+        for (const enemyData of this.secretRoomData.enemySpawns) {
+          const { entry: enemySprite, spriteKey } = resolveEnemySprite(
+            enemyData.type,
+          );
+          const sprite = this.enemyGroup.create(
+            enemyData.x * TILE_SIZE + TILE_SIZE / 2,
+            enemyData.y * TILE_SIZE + TILE_SIZE / 2,
+            enemySprite.key,
+            enemySprite.animations.idleDown,
+          );
+          sprite.setScale(enemySprite.scale);
+          const ehb = enemySprite.hitbox;
+          sprite.body
+            .setSize(ehb.width, ehb.height)
+            .setOffset(ehb.offsetX, ehb.offsetY);
+          sprite.setDepth(8);
+          sprite.anims.play(spriteKey + "-idle-down");
+
+          const behavior = createEnemyBehavior(
+            this.fogGrid,
+            { x: enemyData.x, y: enemyData.y },
+            secretRoomEnemyRng,
+            { guard: 1 },
+          );
+
+          this.enemies.push({
+            sprite,
+            spriteKey,
+            spawnIndex: -1,
+            archetype: enemyData.type,
+            type: behavior.type,
+            state: behavior.state,
+            home: behavior.home,
+            aggroRadius: behavior.aggroRadius,
+            patrolPath: null,
+            patrolIndex: 0,
+            patrolDirection: 1,
+            path: null,
+            pathIndex: 0,
+            lastDir: "down",
+            hp: enemyData.hp,
+            maxHp: enemyData.maxHp,
+            damage: enemyData.damage,
+            defense: enemyData.defense,
+            xpReward: enemyData.xpReward,
+            attackType: enemyData.attackType || "melee",
+            questLoot: null,
+            inflictsEffect: null,
+            resistances: enemyData.resistances || {},
+            damageType: enemyData.damageType || "physical",
+            statusEffects: [],
+            drops: [],
+            attackCooldown: createCooldown(ENEMY_ATTACK_COOLDOWN),
+            isSecretRoomGuard: true,
+          });
+        }
+        this.secretRewardLocked = true;
+      }
+    }
+
     if (data.questNpcs && data.questNpcs.length > 0) {
       this.createQuestNpcs(data.questNpcs);
     }
@@ -2407,7 +2583,16 @@ export default class MainScene extends Phaser.Scene {
 
   retryLevel() {
     this.playerHp = this.playerMaxHp;
-    this.loadLevel(this.currentDepth, "retry-" + Date.now());
+    delete this.floorFogCache[this.currentDepth];
+    const newLootSeed = "retry-" + Date.now();
+    this.loadLevel(
+      this.currentDepth,
+      this.currentSeed,
+      null,
+      [],
+      [],
+      newLootSeed,
+    );
   }
 
   descendStairs() {
@@ -2544,7 +2729,7 @@ export default class MainScene extends Phaser.Scene {
     this.bossRoomOpen = true;
 
     const { x, y } = this.bossDoorTile;
-    this.layer.putTileAt(0, x, y);
+    this.layer.putTileAt(this.currentFloorTileIndex ?? 0, x, y);
     this.fogGrid[y][x] = 0;
 
     if (this.bossDoorMarker) {
@@ -2938,6 +3123,22 @@ export default class MainScene extends Phaser.Scene {
     if (!qs) return;
     const custom = qs.dialogText || {};
     let text;
+
+    const secretHintSuffix = (() => {
+      if (
+        this.secretRoomData &&
+        !this.discoveredSecretRoomDepths.includes(this.currentDepth)
+      ) {
+        return " Au fait... on raconte qu'un passage secret se cache quelque part sur cet étage.";
+      }
+      if (
+        this.secretRoomHintDepth != null &&
+        !this.discoveredSecretRoomDepths.includes(this.secretRoomHintDepth)
+      ) {
+        return ` Au fait... on raconte qu'un passage secret se cache quelque part à l'étage ${this.secretRoomHintDepth}.`;
+      }
+      return "";
+    })();
     let canAccept = false;
     let canTurnIn = false;
 
@@ -3052,7 +3253,11 @@ export default class MainScene extends Phaser.Scene {
         custom.offer || `Peux-tu tuer ${qs.target} ${enemyName} pour toi ?`;
       canAccept = true;
     }
-    this.events.emit("npc-dialog", { text, canAccept, canTurnIn });
+    this.events.emit("npc-dialog", {
+      text: text + secretHintSuffix,
+      canAccept,
+      canTurnIn,
+    });
   }
 
   acceptQuest() {
@@ -3944,6 +4149,179 @@ export default class MainScene extends Phaser.Scene {
     boss.summonedMinions.push(minion);
   }
 
+  checkSecretWallInteraction() {
+    if (!this.secretRoomData || this.secretDoorOpened) return false;
+    if (this.secretRoomData.triggerType !== "wall") return false;
+
+    const door = this.secretRoomData.doorTile;
+    const doorPx = door.x * TILE_SIZE + TILE_SIZE / 2;
+    const doorPy = door.y * TILE_SIZE + TILE_SIZE / 2;
+    const dist = Math.hypot(
+      doorPx - this.hero.body.center.x,
+      doorPy - this.hero.body.center.y,
+    );
+    if (dist > this.playerMeleeRange) return false;
+
+    this.openSecretDoor();
+    return true;
+  }
+
+  activateLever(lever) {
+    if (lever.activated) return;
+    lever.activated = true;
+    lever.sprite.setAlpha(1);
+
+    const frames = [0, 1, 2];
+    let frameIndex = 0;
+    this.time.addEvent({
+      delay: 100,
+      repeat: frames.length - 2,
+      callback: () => {
+        frameIndex++;
+        lever.sprite.setFrame(frames[frameIndex]);
+      },
+    });
+
+    const activatedCount = this.secretLevers.filter((l) => l.activated).length;
+    const totalCount = this.secretLevers.length;
+    const allActivated = activatedCount === totalCount;
+
+    console.log(
+      `[secretLever] active=${activatedCount}/${totalCount} allActivated=${allActivated} secretDoorOpened=${this.secretDoorOpened} discoveredThisFloor=${this.discoveredSecretRoomDepths.includes(this.currentDepth)}`,
+    );
+
+    if (allActivated) {
+      console.log("[secretLever] appel de openSecretDoor()");
+      this.openSecretDoor();
+    } else {
+      this.showLootToast(`Levier actionné (${activatedCount}/${totalCount})`);
+    }
+  }
+  openSecretDoor() {
+    console.log(
+      `[secretLever] openSecretDoor appelee, secretDoorOpened avant = ${this.secretDoorOpened}`,
+    );
+    if (this.secretDoorOpened) {
+      console.log("[secretLever] BLOQUE - secretDoorOpened etait deja true");
+      return;
+    }
+    this.secretDoorOpened = true;
+
+    const door = this.secretRoomData.doorTile;
+    this.layer.putTileAt(this.currentFloorTileIndex ?? 0, door.x, door.y);
+    this.fogGrid[door.y][door.x] = 0;
+
+    if (this.secretWallMarker) {
+      this.secretWallMarker.destroy();
+      this.secretWallMarker = null;
+    }
+
+    this.showLootToast("Un passage secret s'ouvre...");
+    this.grantSecretRoomReward();
+    this.markSecretRoomDiscovered();
+  }
+
+  grantSecretRoomReward() {
+    const rewardType = this.secretRoomData.rewardType;
+    const center = this.secretRoomData.roomCenter;
+    const px = center.x * TILE_SIZE + TILE_SIZE / 2;
+    const py = center.y * TILE_SIZE + TILE_SIZE / 2;
+
+    let lootItems = [];
+    if (rewardType === "unique") {
+      const uniqueCandidates = Object.values(ITEM_DEFS).filter((d) => d.unique);
+      if (uniqueCandidates.length > 0) {
+        const picked =
+          uniqueCandidates[Math.floor(Math.random() * uniqueCandidates.length)];
+        lootItems.push({ itemId: picked.id, quantity: 1 });
+      }
+    } else if (rewardType === "recipe") {
+      const recipeScrolls = Object.values(ITEM_DEFS).filter(
+        (d) =>
+          d.category === "recipeScroll" &&
+          !resolveCraftingRecipe(d.grantsRecipe)?.discoveryOnly,
+      );
+      if (recipeScrolls.length > 0) {
+        const picked =
+          recipeScrolls[Math.floor(Math.random() * recipeScrolls.length)];
+        lootItems.push({ itemId: picked.id, quantity: 1 });
+      }
+    }
+    if (lootItems.length === 0) {
+      lootItems.push({
+        itemId: "gold",
+        quantity: 80 + Math.floor(Math.random() * 60),
+      });
+    }
+
+    this.spawnLootChest(px, py, lootItems);
+  }
+
+  markSecretRoomDiscovered() {
+    if (!this.discoveredSecretRoomDepths.includes(this.currentDepth)) {
+      this.discoveredSecretRoomDepths.push(this.currentDepth);
+    }
+    this.persistProgress();
+  }
+  performDetectSecretAbility(def) {
+    const radius = def.radius || this.playerVisionRadius;
+    const heroTileX = Math.floor(this.hero.x / TILE_SIZE);
+    const heroTileY = Math.floor(this.hero.y / TILE_SIZE);
+    const grid = this.fogGrid;
+    const width = grid[0].length;
+    const height = grid.length;
+
+    let anyRevealed = false;
+
+    for (const lever of this.secretLevers) {
+      if (lever.activated) continue;
+      const dist = Math.hypot(lever.x - heroTileX, lever.y - heroTileY);
+      if (dist > radius) continue;
+      if (
+        !hasClearLineOfSight(
+          grid,
+          width,
+          height,
+          heroTileX,
+          heroTileY,
+          lever.x,
+          lever.y,
+        )
+      )
+        continue;
+      lever.sprite.setAlpha(1);
+      anyRevealed = true;
+    }
+
+    if (
+      this.secretWallMarker &&
+      this.secretRoomData &&
+      !this.secretDoorOpened
+    ) {
+      const door = this.secretRoomData.doorTile;
+      const dist = Math.hypot(door.x - heroTileX, door.y - heroTileY);
+      if (
+        dist <= radius &&
+        hasClearLineOfSight(
+          grid,
+          width,
+          height,
+          heroTileX,
+          heroTileY,
+          door.x,
+          door.y,
+        )
+      ) {
+        this.secretWallMarker.setAlpha(1);
+        anyRevealed = true;
+      }
+    }
+
+    this.showLootToast(
+      anyRevealed ? "Quelque chose se révèle..." : "Rien de caché à proximité",
+    );
+  }
+
   checkFloorTraps() {
     const heroTileX = Math.floor(this.hero.x / TILE_SIZE);
     const heroTileY = Math.floor(this.hero.y / TILE_SIZE);
@@ -4018,10 +4396,28 @@ export default class MainScene extends Phaser.Scene {
   }
 
   performInteraction() {
+    const heroX = this.hero.body.center.x;
+    const heroY = this.hero.body.center.y;
+
+    if (this.checkSecretWallInteraction()) return;
+
+    if (this.secretLevers.length > 0) {
+      const nearbyLever = this.secretLevers.find(
+        (l) =>
+          !l.activated &&
+          Math.hypot(l.sprite.x - heroX, l.sprite.y - heroY) <=
+            this.playerMeleeRange,
+      );
+      if (nearbyLever) {
+        this.activateLever(nearbyLever);
+        return;
+      }
+    }
+
     if (!this.dialogOpen) {
       const npc = this.questNpcs.find(
         (n) =>
-          Math.hypot(n.sprite.x - this.hero.x, n.sprite.y - this.hero.y) <=
+          Math.hypot(n.sprite.x - heroX, n.sprite.y - heroY) <=
           this.playerMeleeRange,
       );
       if (npc) {
@@ -4033,7 +4429,7 @@ export default class MainScene extends Phaser.Scene {
     if (!this.dialogOpen) {
       const ambient = this.ambientNpcs.find(
         (n) =>
-          Math.hypot(n.sprite.x - this.hero.x, n.sprite.y - this.hero.y) <=
+          Math.hypot(n.sprite.x - heroX, n.sprite.y - heroY) <=
           this.playerMeleeRange,
       );
       if (ambient) {
@@ -4045,7 +4441,7 @@ export default class MainScene extends Phaser.Scene {
     if (this.travelHubTile && !this.dialogOpen) {
       const hubPx = this.travelHubTile.x * TILE_SIZE + TILE_SIZE / 2;
       const hubPy = this.travelHubTile.y * TILE_SIZE + TILE_SIZE / 2;
-      const distHub = Math.hypot(hubPx - this.hero.x, hubPy - this.hero.y);
+      const distHub = Math.hypot(hubPx - heroX, hubPy - heroY);
       if (distHub <= this.playerMeleeRange) {
         this.openTravelHub();
         return;
@@ -4055,7 +4451,7 @@ export default class MainScene extends Phaser.Scene {
     if (this.shopData && !this.dialogOpen) {
       const shopPx = this.shopData.x * TILE_SIZE + TILE_SIZE / 2;
       const shopPy = this.shopData.y * TILE_SIZE + TILE_SIZE / 2;
-      const distShop = Math.hypot(shopPx - this.hero.x, shopPy - this.hero.y);
+      const distShop = Math.hypot(shopPx - heroX, shopPy - heroY);
       if (distShop <= this.playerMeleeRange) {
         this.openShop();
         return;
@@ -4065,7 +4461,7 @@ export default class MainScene extends Phaser.Scene {
     if (this.bossDoorTile && !this.bossRoomOpen && !this.dialogOpen) {
       const doorPx = this.bossDoorTile.x * TILE_SIZE + TILE_SIZE / 2;
       const doorPy = this.bossDoorTile.y * TILE_SIZE + TILE_SIZE / 2;
-      const distDoor = Math.hypot(doorPx - this.hero.x, doorPy - this.hero.y);
+      const distDoor = Math.hypot(doorPx - heroX, doorPy - heroY);
       if (distDoor <= this.playerMeleeRange) {
         this.dialogOpen = true;
         this.events.emit("npc-dialog", {
@@ -4081,10 +4477,7 @@ export default class MainScene extends Phaser.Scene {
         if (c.lootItems.length === 0) return false; // deja entierement loote
         const cx = c.x * TILE_SIZE + TILE_SIZE / 2;
         const cy = c.y * TILE_SIZE + TILE_SIZE / 2;
-        return (
-          Math.hypot(cx - this.hero.x, cy - this.hero.y) <=
-          this.playerMeleeRange
-        );
+        return Math.hypot(cx - heroX, cy - heroY) <= this.playerMeleeRange;
       });
       if (chest) {
         this.openChestScreen(chest);
@@ -4738,6 +5131,8 @@ export default class MainScene extends Phaser.Scene {
       this.performConditionalBuffAbility(def);
     } else if (def.effectType === "detectTrap") {
       this.performDetectTrapAbility(def);
+    } else if (def.effectType === "detectSecret") {
+      this.performDetectSecretAbility(def);
     } else {
       this.showLootToast(`${def.name} : effet pas encore implémenté`);
       return;
@@ -6370,6 +6765,18 @@ export default class MainScene extends Phaser.Scene {
 
       if (lootItems.length > 0) {
         this.spawnLootChest(enemy.sprite.x, enemy.sprite.y, lootItems);
+      }
+
+      if (enemy.isSecretRoomGuard && this.secretRewardLocked) {
+        const anyGuardAlive = this.enemies.some(
+          (e) => e.isSecretRoomGuard && e !== enemy,
+        );
+        if (!anyGuardAlive) {
+          this.secretRewardLocked = false;
+          this.grantSecretRoomReward();
+          this.showLootToast("La voie est libre !");
+          this.markSecretRoomDiscovered();
+        }
       }
 
       if (enemy.isBoss) {
