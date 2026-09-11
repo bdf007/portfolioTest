@@ -38,6 +38,7 @@ const BIOMES = [
       damageAmount: [8, 15],
       inflictsEffect: null,
     },
+    secretRoomChance: 1, // 0.15 pour 15% de chances par etage - reste absent/0 sur un biome = jamais de salle secrete
     generatorParams: {
       width: 30,
       height: 30,

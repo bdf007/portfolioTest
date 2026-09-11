@@ -358,6 +358,17 @@ export const ABILITY_DEFS = {
     // performDetectTrapAbility) - ajoute radius: N ici si tu veux un
     // rayon fixe different de la vision du heros
   },
+  detectSecrets: {
+    id: "detectSecrets",
+    name: "Détection des secrets",
+    archetypes: [],
+    description:
+      "Révèle plus clairement les leviers et passages cachés à portée de vue. 12 stamina.",
+    effectType: "detectSecret",
+    cooldownMs: 100,
+    staminaCost: 1,
+    unlockLevel: null,
+  },
   treasureSense: {
     id: "treasureSense",
     name: "Instinct du trésor",
