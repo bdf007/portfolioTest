@@ -199,6 +199,7 @@ export default function Arpg() {
     ring2: null,
     necklace: null,
     quiver: null,
+    tool: null,
   });
   const [inventoryOpen, setInventoryOpen] = useState(false);
   const [fullMapOpen, setFullMapOpen] = useState(false);
@@ -913,6 +914,7 @@ export default function Arpg() {
       ring2: null,
       necklace: null,
       quiver: null,
+      tool: null,
     });
     setInventoryOpen(false);
     setTravelDestinations(null);

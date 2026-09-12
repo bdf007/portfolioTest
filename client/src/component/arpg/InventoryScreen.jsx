@@ -6,9 +6,11 @@ import {
   ICON_SPRITESHEET,
   ICON_SPRITESHEET_2,
   MONSTER_LOOTS_SPRITESHEET,
+  ITEMS_1_SPRITESHEET,
   ICON_SHEET_1_FRAMES,
   ICON_SHEET_2_FRAMES,
   MONSTER_LOOTS_FRAMES,
+  ITEMS_1_FRAMES,
 } from "./spriteRegistry";
 import bookPages from "../../assets/background/book_pages.png";
 
@@ -76,6 +78,9 @@ export function ItemIcon({ itemId, scale = 2 }) {
   } else if (MONSTER_LOOTS_FRAMES[itemId] !== undefined) {
     frameIndex = MONSTER_LOOTS_FRAMES[itemId];
     spriteSheet = MONSTER_LOOTS_SPRITESHEET;
+  } else if (ITEMS_1_FRAMES[itemId] !== undefined) {
+    frameIndex = ITEMS_1_FRAMES[itemId];
+    spriteSheet = ITEMS_1_SPRITESHEET; // Assuming ITEMS_1_FRAMES uses the same spritesheet as ICON_SPRITESHEET
   } else {
     return null;
   }
@@ -125,7 +130,9 @@ export function ItemIcon({ itemId, scale = 2 }) {
 export function hasIconFrame(id) {
   return (
     ICON_SHEET_1_FRAMES[id] !== undefined ||
-    ICON_SHEET_2_FRAMES[id] !== undefined
+    ICON_SHEET_2_FRAMES[id] !== undefined ||
+    MONSTER_LOOTS_FRAMES[id] !== undefined ||
+    ITEMS_1_FRAMES[id] !== undefined
   );
 }
 /**
@@ -542,6 +549,7 @@ export default function InventoryScreen({
                 "offHand",
                 "ring1",
                 "ring2",
+                "tool",
                 "armor",
                 "belt",
                 "pants",
@@ -595,6 +603,9 @@ export default function InventoryScreen({
               <div style={{ justifySelf: "end" }}>{renderSlot("ring1")}</div>
               <div />
               <div style={{ justifySelf: "start" }}>{renderSlot("ring2")}</div>
+              <div style={{ justifySelf: "end" }}>{renderSlot("tool")}</div>
+              <div />
+              <div />
 
               <div style={{ justifySelf: "end" }}>{renderSlot("armor")}</div>
               <div />

@@ -43,6 +43,9 @@ const {
   generateSecretRoom,
   secretRoomExists,
 } = require("../services/generation/secretRoomGenerator");
+const {
+  generateMiningRock,
+} = require("../services/generation/miningRockGenerator");
 const { generateShopStock } = require("../services/generation/shopGenerator");
 const {
   rollLoot,
@@ -512,6 +515,7 @@ async function getLevel(req, res) {
           [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
         }
         for (const candidate of shuffled) {
+          if (isBossDepth(candidate.depth)) continue; // jamais de salle secrete sur un etage a boss, cf. generateSecretRoom
           const candidateBiome = getBiomeForDepth(candidate.depth);
           if (
             secretRoomExists(candidate.seed, candidateBiome.secretRoomChance)
@@ -631,6 +635,13 @@ async function getLevel(req, res) {
       biome.trapConfig,
       allowedTiles,
     );
+    const miningRock = generateMiningRock(
+      grid,
+      lootSeed,
+      playerSpawn,
+      biome.miningConfig,
+      allowedTiles,
+    );
 
     res.json({
       depth,
@@ -650,6 +661,7 @@ async function getLevel(req, res) {
       enemies,
       chests,
       traps,
+      miningRock,
       secretRoom: secretRoom
         ? {
             triggerType: secretRoom.triggerType,
