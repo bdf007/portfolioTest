@@ -69,12 +69,28 @@ const BOSS_ASSIGNMENTS = [
     depth: 9,
     type: "maxibee1",
     stats: { hp: 200, damage: 20, defense: 4, speed: 62, xpReward: 70 },
+    summonAbility: {
+      summonTypes: ["bee1"], // liste fixe, propre a ce boss
+      cooldownMs: 15000,
+      maxActive: 4,
+      hpScale: 0.1,
+      damageScale: 0.1,
+      defenseScale: 0.1,
+    },
     // valeurs directement reprises de l'ancien calcul par formule a
   },
   {
     depth: 15,
     type: "BigBug",
     stats: { hp: 300, damage: 30, defense: 6, speed: 62, xpReward: 100 },
+    summonAbility: {
+      summonTypes: ["bug1a", "bug1b"], // liste fixe, propre a ce boss
+      cooldownMs: 2000,
+      maxActive: 4,
+      hpScale: 0.1,
+      damageScale: 0.1,
+      defenseScale: 0.1,
+    },
   },
   {
     depth: 19,

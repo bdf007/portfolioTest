@@ -76,6 +76,7 @@ export default class BootScene extends Phaser.Scene {
       this.load.spritesheet(entry.key, entry.path, {
         frameWidth: entry.frameWidth,
         frameHeight: entry.frameHeight,
+        spacing: entry.spacing || 0,
       });
     }
     for (const { key, path } of getTileImagesToLoad()) {

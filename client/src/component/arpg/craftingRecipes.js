@@ -431,6 +431,87 @@ export const CRAFTING_RECIPES = {
     // unlockLevel: 6,
     discoveryOnly: true,
   },
+
+  sharpIronDaggerRecipe: {
+    id: "sharpIronDaggerRecipe",
+    name: "Recette de dague en fer aiguisée",
+    resultItemId: "sharpIronDagger",
+    resultQuantity: 1,
+    ingredients: [
+      { itemId: "ironDagger", quantity: 1 },
+      { itemId: "whetstone", quantity: 1 },
+    ],
+    // unlockLevel: 3,
+    discoveryOnly: true,
+  },
+  sharpIronSwordRecipe: {
+    id: "sharpIronSwordRecipe",
+    name: "Recette d'épée en fer aiguisée",
+    resultItemId: "sharpIronSword",
+    resultQuantity: 1,
+    ingredients: [
+      { itemId: "ironSword", quantity: 1 },
+      { itemId: "whetstone", quantity: 1 },
+    ],
+    // unlockLevel: 3,
+    discoveryOnly: true,
+  },
+
+  // Minerai et lingots
+
+  ironIngotRecipe: {
+    id: "ironIngotRecipe",
+    name: "Recette de lingot de fer",
+    resultItemId: "ironIngot",
+    resultQuantity: 1,
+    ingredients: [{ itemId: "ironOre", quantity: 3 }],
+    // unlockLevel: 2,
+    discoveryOnly: true,
+  },
+  silverIngotRecipe: {
+    id: "silverIngotRecipe",
+    name: "Recette de lingot d'argent",
+    resultItemId: "silverIngot",
+    resultQuantity: 1,
+    ingredients: [{ itemId: "silverOre", quantity: 3 }],
+    // unlockLevel: 3,
+    discoveryOnly: true,
+  },
+  goldIngotRecipe: {
+    id: "goldIngotRecipe",
+    name: "Recette de lingot d'or",
+    resultItemId: "goldIngot",
+    resultQuantity: 1,
+    ingredients: [{ itemId: "goldOre", quantity: 3 }],
+    // unlockLevel: 4,
+    discoveryOnly: true,
+  },
+
+  // tool recipes
+  ironPickaxeRecipe: {
+    id: "ironPickaxeRecipe",
+    name: "Recette de pioche en fer",
+    resultItemId: "ironPickaxe",
+    resultQuantity: 1,
+    ingredients: [
+      { itemId: "ironIngot", quantity: 3 },
+      { itemId: "woodenPickaxe", quantity: 1 },
+    ],
+    // unlockLevel: 2,
+    discoveryOnly: true,
+  },
+  bronzePickaxeRecipe: {
+    id: "bronzePickaxeRecipe",
+    name: "Recette de pioche en bronze",
+    resultItemId: "bronzePickaxe",
+    resultQuantity: 1,
+    ingredients: [
+      { itemId: "silverIngot", quantity: 3 },
+      { itemId: "ironPickaxe", quantity: 1 },
+    ],
+    // unlockLevel: 3,
+    discoveryOnly: true,
+  },
 };
 
 /**

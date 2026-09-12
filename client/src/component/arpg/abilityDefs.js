@@ -351,8 +351,8 @@ export const ABILITY_DEFS = {
     archetypes: [],
     description: "Révèle les pièges cachés à portée de vue. 10 stamina.",
     effectType: "detectTrap",
-    cooldownMs: 8000,
-    staminaCost: 10,
+    cooldownMs: 100,
+    staminaCost: 1,
     unlockLevel: null,
     // radius absent -> utilise this.playerVisionRadius par defaut (cf.
     // performDetectTrapAbility) - ajoute radius: N ici si tu veux un

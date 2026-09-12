@@ -8,7 +8,7 @@ import bookPages from "../../assets/background/book_pages.png"; // ajuste le che
  * page de gauche = quetes EN COURS, page de droite = quetes TERMINEES.
  * Meme logique de filtrage qu'avant, seule la mise en page change.
  */
-export default function QuestsScreen({ quests, onClose }) {
+export default function QuestsScreen({ quests, inventory, onClose }) {
   // un destinataire de livraison (role 'receiver') existe des la
   // creation de sa ville, AVANT meme que le joueur ait accepte quoi que
   // ce soit du donneur (cf. MainScene.maybeInjectDeliveryQuest) - sans
@@ -34,7 +34,15 @@ export default function QuestsScreen({ quests, onClose }) {
 
   function describeProgress(q) {
     if (q.questId === "obtainItem") {
-      return resolveItemDef(q.targetItemId).name;
+      const itemName = resolveItemDef(q.targetItemId).name;
+      const target = q.targetQuantity || 1;
+      if (q.completed) {
+        return `${itemName} (${target}/${target})`;
+      }
+      const haveQty = inventory
+        .filter((i) => i.itemId === q.targetItemId)
+        .reduce((sum, i) => sum + i.quantity, 0);
+      return `${itemName} (${Math.min(haveQty, target)}/${target})`;
     }
     if (q.questId === "defeatBoss") {
       const bossName = resolveEnemyDisplayName(q.targetBossType);
@@ -47,7 +55,7 @@ export default function QuestsScreen({ quests, onClose }) {
       }
       return `${itemName} à remettre`;
     }
-    return `${q.killCount} / ${q.target} ${q.targetEnemyType}`;
+    return `${q.killCount} / ${q.target} ${resolveEnemyDisplayName(q.targetEnemyType)}`;
   }
 
   const containerRef = useRef(null);

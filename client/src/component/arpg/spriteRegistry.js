@@ -89,6 +89,13 @@ import colorBatSpritesheet from "../../assets/ennemies/color_bat.png";
 import forestMonsterSpritesheet from "../../assets/ennemies/forest_monster.png";
 import vampiresSpritesheet from "../../assets/ennemies/vampires.png";
 import gazerSpritesheet from "../../assets/ennemies/gazer.png";
+// ennemies with full animations
+import angryTrentSpritesheet from "../../assets/ennemies/angry_trent.png";
+import gnomeSpritesheet from "../../assets/ennemies/gnome.png";
+import knifedBatSpritesheet from "../../assets/ennemies/knifed_bat.png";
+import mudGolemSpritesheet from "../../assets/ennemies/mud_golem.png";
+import redBeetleSpritesheet from "../../assets/ennemies/red_beetle.png";
+import pinkOgreSpritesheet from "../../assets/ennemies/pink_ogre.png";
 //import boss
 import GhostskullSpritesheet from "../../assets/boss/$GhostSkull_1.png";
 import BigSpiderSpritesheet from "../../assets/boss/big_spider.png";
@@ -814,6 +821,66 @@ export const SPRITE_REGISTRY = {
     scale: 1,
     animations: FULL_ANIMATION_FRAMES,
     hitbox: computeSafeHitbox(48, 48, 1),
+  },
+  angryTrent: {
+    key: "angryTrent",
+    displayName: "Angry Trent",
+    path: angryTrentSpritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 0.7,
+    animations: FULL_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(48, 48, 0.7),
+  },
+  gnome: {
+    key: "gnome",
+    displayName: "Gnome",
+    path: gnomeSpritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 0.7,
+    animations: FULL_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(48, 48, 0.7),
+  },
+  knifedBat: {
+    key: "knifedBat",
+    displayName: "Knifed Bat",
+    path: knifedBatSpritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 0.7,
+    animations: FULL_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(48, 48, 0.7),
+  },
+  mudGolem: {
+    key: "mudGolem",
+    displayName: "Mud Golem",
+    path: mudGolemSpritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 0.7,
+    animations: FULL_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(48, 48, 0.7),
+  },
+  redBeetle: {
+    key: "redBeetle",
+    displayName: "Red Beetle",
+    path: redBeetleSpritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 0.7,
+    animations: FULL_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(48, 48, 0.7),
+  },
+  pinkOgre: {
+    key: "pinkOgre",
+    displayName: "Pink Ogre",
+    path: pinkOgreSpritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 0.7,
+    animations: FULL_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(48, 48, 0.7),
   },
 
   monks1: {
@@ -1682,11 +1749,12 @@ export const SPRITE_REGISTRY = {
     key: "fox2",
     displayName: "renard rouge",
     path: fox2Spritesheet,
-    frameWidth: 32,
-    frameHeight: 40,
+    frameWidth: 48,
+    frameHeight: 60,
+    spacing: 2,
     scale: 0.7,
     animations: STANDARD_ANIMATION_FRAMES,
-    hitbox: computeSafeHitbox(32, 40, 0.7),
+    hitbox: computeSafeHitbox(48, 60, 0.7),
   },
   lizard: {
     key: "lizard",
@@ -2176,9 +2244,9 @@ export const SPRITE_REGISTRY = {
     path: bat1aSpritesheet,
     frameWidth: 32,
     frameHeight: 40,
-    scale: 1,
+    scale: 4,
     animations: STANDARD_ANIMATION_FRAMES,
-    hitbox: computeSafeHitbox(32, 40, 1),
+    hitbox: computeSafeHitbox(32, 40, 4),
   },
   ghostskull: {
     key: "ghostskull",
@@ -2266,19 +2334,20 @@ export const SPRITE_REGISTRY = {
     path: bug1bSpritesheet,
     frameWidth: 32,
     frameHeight: 40,
-    scale: 1.5,
+    scale: 3,
     animations: STANDARD_ANIMATION_FRAMES,
-    hitbox: computeSafeHitbox(32, 40, 1.5),
+    hitbox: computeSafeHitbox(32, 40, 3),
   },
   GiantFox: {
     key: "GiantFox",
     displayName: "renard géant",
     path: fox2Spritesheet,
-    frameWidth: 32,
-    frameHeight: 40,
-    scale: 2,
+    frameWidth: 48,
+    frameHeight: 60,
+    spacing: 2,
+    scale: 4,
     animations: STANDARD_ANIMATION_FRAMES,
-    hitbox: computeSafeHitbox(32, 40, 2),
+    hitbox: computeSafeHitbox(48, 60, 4),
   },
   // NPCs de ville
   NPC_town1_F1: {
@@ -2856,7 +2925,7 @@ const HERO_STATS_PROFILES = {
     visionRadius: 8,
     meleeRange: 42,
     rangedRange: 440,
-    startingItems: ["woodenBow"],
+    startingItems: ["woodenBow", "woodenPickaxe"],
     startingAmmo: { itemId: "woodenArrow", quantity: 100 },
     startingAbilities: ["piercingArrow", "scoutPulse"],
     startingRecipes: ["bigWoodenArrowRecipe"],
@@ -2883,7 +2952,7 @@ const HERO_STATS_PROFILES = {
     visionRadius: 6,
     meleeRange: 60,
     rangedRange: 320,
-    startingItems: ["woodenMallet"],
+    startingItems: ["woodenMallet", "woodenPickaxe"],
     startingAmmo: null,
     startingAbilities: ["whirlwind"],
   },
@@ -2909,7 +2978,7 @@ const HERO_STATS_PROFILES = {
     visionRadius: 7,
     meleeRange: 40,
     rangedRange: 400,
-    startingItems: ["woodenDagger", "detectSecretsScroll"],
+    startingItems: ["woodenDagger", "woodenPickaxe"],
     startingAmmo: null,
     startingAbilities: [
       "stealth",
@@ -2940,7 +3009,7 @@ const HERO_STATS_PROFILES = {
     visionRadius: 7,
     meleeRange: 50,
     rangedRange: 320,
-    startingItems: ["woodenSword", "woodenShield"],
+    startingItems: ["woodenSword", "woodenShield", "woodenPickaxe"],
     startingAmmo: null,
     startingAbilities: ["shieldBash"],
     startingRecipes: ["reinforcedSwordRecipe"],
@@ -2967,7 +3036,11 @@ const HERO_STATS_PROFILES = {
     visionRadius: 7,
     meleeRange: 35,
     rangedRange: 450,
-    startingItems: ["woodenStaff", { itemId: "waterLily", quantity: 2 }],
+    startingItems: [
+      "woodenStaff",
+      { itemId: "waterLily", quantity: 2 },
+      "woodenPickaxe",
+    ],
     startingAmmo: null,
     startingAbilities: ["fireball"],
     startingRecipes: ["manaPotionRecipe"],
@@ -2996,7 +3069,7 @@ const HERO_STATS_PROFILES = {
     visionRadius: 7,
     meleeRange: 55,
     rangedRange: 300,
-    startingItems: ["woodenAxe"],
+    startingItems: ["woodenAxe", "woodenPickaxe"],
     startingAmmo: null,
     startingAbilities: ["taunt"],
   },
@@ -3022,7 +3095,7 @@ const HERO_STATS_PROFILES = {
     visionRadius: 7,
     meleeRange: 50,
     rangedRange: 320,
-    startingItems: ["woodenStaff"],
+    startingItems: ["woodenStaff", "woodenPickaxe"],
     startingAmmo: null,
     startingAbilities: ["curse"],
   },
@@ -3048,7 +3121,7 @@ const HERO_STATS_PROFILES = {
     visionRadius: 7,
     meleeRange: 45,
     rangedRange: 350,
-    startingItems: ["woodenStaff"],
+    startingItems: ["woodenStaff", "woodenPickaxe"],
     startingAmmo: null,
     startingAbilities: ["summonFamiliar"],
   },
@@ -3074,7 +3147,7 @@ const HERO_STATS_PROFILES = {
     visionRadius: 7,
     meleeRange: 40,
     rangedRange: 400,
-    startingItems: ["woodenStaff"],
+    startingItems: ["woodenStaff", "woodenPickaxe"],
     startingAmmo: null,
     startingAbilities: ["slow"],
   },
@@ -3608,6 +3681,8 @@ export const ICON_SHEET_1_FRAMES = {
 };
 
 export const ICON_SHEET_2_FRAMES = {
+  sharpIronDagger: 0,
+  sharpIronSword: 1,
   greenApple: 61,
 };
 
@@ -3707,6 +3782,15 @@ export const MONSTER_LOOTS_FRAMES = {
 export const ICON_SKILL_1_FRAMES = {
   fireballBook: 0,
   electricShockBook: 10,
+};
+
+export const ITEMS_1_FRAMES = {
+  ironOre: 60,
+  ironIngot: 61,
+  silverOre: 80,
+  silverIngot: 81,
+  goldOre: 120,
+  goldIngot: 121,
 };
 
 /**

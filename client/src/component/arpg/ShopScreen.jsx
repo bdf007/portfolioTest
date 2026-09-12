@@ -132,7 +132,32 @@ export default function ShopScreen({
                   {totalPrice} or {qty > 1 ? `(${shopItem.price}/u.)` : ""}
                 </div>
               </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                  flexWrap: "wrap",
+                }}
+              >
+                <button
+                  onClick={() =>
+                    adjustQty(setBuyQuantities, index, -10, maxQty)
+                  }
+                  disabled={qty <= 1}
+                  style={{
+                    width: 28,
+                    height: 24,
+                    borderRadius: 5,
+                    border: "1px solid #555",
+                    background: "#2a2a35",
+                    color: "#eee",
+                    cursor: qty <= 1 ? "not-allowed" : "pointer",
+                    fontSize: 11,
+                  }}
+                >
+                  −10
+                </button>
                 <button
                   onClick={() => adjustQty(setBuyQuantities, index, -1, maxQty)}
                   disabled={qty <= 1}
@@ -169,6 +194,46 @@ export default function ShopScreen({
                   }}
                 >
                   +
+                </button>
+                <button
+                  onClick={() => adjustQty(setBuyQuantities, index, 10, maxQty)}
+                  disabled={atMax}
+                  style={{
+                    width: 28,
+                    height: 24,
+                    borderRadius: 5,
+                    border: "1px solid #555",
+                    background: "#2a2a35",
+                    color: "#eee",
+                    cursor: atMax ? "not-allowed" : "pointer",
+                    fontSize: 11,
+                  }}
+                >
+                  +10
+                </button>
+                <button
+                  onClick={() => {
+                    const affordableQty =
+                      shopItem.price > 0
+                        ? Math.floor(currentGold / shopItem.price)
+                        : 9999;
+                    const effectiveMax =
+                      maxQty != null
+                        ? Math.min(maxQty, affordableQty)
+                        : affordableQty;
+                    adjustQty(setBuyQuantities, index, 9999, effectiveMax);
+                  }}
+                  style={{
+                    padding: "3px 8px",
+                    borderRadius: 5,
+                    border: "1px solid #555",
+                    background: "#2a2a35",
+                    color: "#eee",
+                    cursor: "pointer",
+                    fontSize: 11,
+                  }}
+                >
+                  Max
                 </button>
                 <button
                   onClick={() => onBuy(index, qty)}
@@ -230,7 +295,32 @@ export default function ShopScreen({
                   {totalPrice} or {qty > 1 ? `(${unitPrice}/u.)` : ""}
                 </div>
               </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                  flexWrap: "wrap",
+                }}
+              >
+                <button
+                  onClick={() =>
+                    adjustQty(setSellQuantities, group.itemId, -10, maxQty)
+                  }
+                  disabled={qty <= 1}
+                  style={{
+                    width: 28,
+                    height: 24,
+                    borderRadius: 5,
+                    border: "1px solid #555",
+                    background: "#2a2a35",
+                    color: "#eee",
+                    cursor: qty <= 1 ? "not-allowed" : "pointer",
+                    fontSize: 11,
+                  }}
+                >
+                  −10
+                </button>
                 <button
                   onClick={() =>
                     adjustQty(setSellQuantities, group.itemId, -1, maxQty)
@@ -271,6 +361,41 @@ export default function ShopScreen({
                   }}
                 >
                   +
+                </button>
+                <button
+                  onClick={() =>
+                    adjustQty(setSellQuantities, group.itemId, 10, maxQty)
+                  }
+                  disabled={atMax}
+                  style={{
+                    width: 28,
+                    height: 24,
+                    borderRadius: 5,
+                    border: "1px solid #555",
+                    background: "#2a2a35",
+                    color: "#eee",
+                    cursor: atMax ? "not-allowed" : "pointer",
+                    fontSize: 11,
+                  }}
+                >
+                  +10
+                </button>
+                <button
+                  onClick={() =>
+                    adjustQty(setSellQuantities, group.itemId, 9999, maxQty)
+                  }
+                  disabled={atMax}
+                  style={{
+                    padding: "3px 8px",
+                    borderRadius: 5,
+                    border: "1px solid #555",
+                    background: "#2a2a35",
+                    color: "#eee",
+                    cursor: atMax ? "not-allowed" : "pointer",
+                    fontSize: 11,
+                  }}
+                >
+                  Max
                 </button>
                 <button
                   onClick={() => onSell(group.itemId, qty)}
