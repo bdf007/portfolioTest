@@ -150,6 +150,8 @@ import dungeonsA21AutotileImg from "../../assets/tilesets/Set_A2_Dungeons1.png";
 import dungeonsA22AutotileImg from "../../assets/tilesets/Set_A2_Dungeons2.png";
 import standardFields2AutotileImg from "../../assets/tilesets/Set_A_StandardFields2.png";
 import greyCoastA51AutotileImg from "../../assets/tilesets/Set_A5_GreyCoast1.png";
+import deepCaveAutotileImg from "../../assets/tilesets/deep_cave.png";
+import cityTilesetAutotileImg from "../../assets/tilesets/city_tileset.png";
 // import objects
 import chestsSpritesheet from "../../assets/objects_icons/Chests.png";
 import iconSheet1 from "../../assets/objects_icons/icon_sheet1.png";
@@ -439,6 +441,60 @@ export const GREY_COASTA51_AUTOTILE_SPRITESHEET = {
   frameWidth: 16,
   frameHeight: 16,
 };
+
+export const DEEP_CAVE_AUTOTILE_SPRITESHEET = {
+  key: "deepCaveAutotile",
+  path: deepCaveAutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+
+export const CITY_TILES_AUTOTILE_SPRITESHEET = {
+  key: "cityTilesA1Autotile",
+  path: cityTilesetAutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+
+// coordonnees precises (pixels, sur city_tileset.png source 512x512) de
+// chaque maison - issu du decoupage fait precedemment
+export const CITY_HOUSES = {
+  house_small_red_1: { x: 151, y: 136, width: 66, height: 70 }, // ~4.1x4.4 tuiles
+  house_small_orange_2: { x: 231, y: 136, width: 66, height: 70 }, // ~4.1x4.4 tuiles
+  house_small_red_3: { x: 311, y: 136, width: 66, height: 70 }, // ~4.1x4.4 tuiles
+  house_small_red_4: { x: 391, y: 136, width: 66, height: 70 }, // ~4.1x4.4 tuiles
+  house_small_green_1: { x: 151, y: 216, width: 66, height: 70 }, // ~4.1x4.4 tuiles
+  house_small_teal_2: { x: 231, y: 216, width: 66, height: 70 }, // ~4.1x4.4 tuiles
+  house_small_teal_3: { x: 311, y: 216, width: 66, height: 70 }, // ~4.1x4.4 tuiles
+  house_small_blue_4: { x: 391, y: 216, width: 66, height: 70 }, // ~4.1x4.4 tuiles
+  house_row_red_A: { x: 0, y: 327, width: 80, height: 72 }, // ~5.0x4.5 tuiles
+  house_row_red_B: { x: 80, y: 327, width: 80, height: 72 }, // ~5.0x4.5 tuiles
+  house_row_green_A: { x: 0, y: 407, width: 80, height: 72 }, // ~5.0x4.5 tuiles
+  house_row_teal_B: { x: 80, y: 407, width: 80, height: 72 }, // ~5.0x4.5 tuiles
+  house_tall_red_A: { x: 160, y: 295, width: 112, height: 88 }, // ~7.0x5.5 tuiles
+  house_tall_orange_B: { x: 272, y: 295, width: 112, height: 88 }, // ~7.0x5.5 tuiles
+  house_tall_green_A: { x: 160, y: 391, width: 112, height: 88 }, // ~7.0x5.5 tuiles
+  house_tall_teal_B: { x: 272, y: 391, width: 112, height: 88 }, // ~7.0x5.5 tuiles
+};
+
+export const HOUSE_FOOTPRINTS = [
+  { key: "house_small_red_1", tileW: 5, tileH: 5 },
+  { key: "house_small_orange_2", tileW: 5, tileH: 5 },
+  { key: "house_small_red_3", tileW: 5, tileH: 5 },
+  { key: "house_small_red_4", tileW: 5, tileH: 5 },
+  { key: "house_small_green_1", tileW: 5, tileH: 5 },
+  { key: "house_small_teal_2", tileW: 5, tileH: 5 },
+  { key: "house_small_teal_3", tileW: 5, tileH: 5 },
+  { key: "house_small_blue_4", tileW: 5, tileH: 5 },
+  { key: "house_row_red_A", tileW: 5, tileH: 5 },
+  { key: "house_row_red_B", tileW: 5, tileH: 5 },
+  { key: "house_row_green_A", tileW: 5, tileH: 5 },
+  { key: "house_row_teal_B", tileW: 5, tileH: 5 },
+  { key: "house_tall_red_A", tileW: 7, tileH: 6 },
+  { key: "house_tall_orange_B", tileW: 7, tileH: 6 },
+  { key: "house_tall_green_A", tileW: 7, tileH: 6 },
+  { key: "house_tall_teal_B", tileW: 7, tileH: 6 },
+];
 
 export function computeSafeHitbox(frameWidth, frameHeight, scale) {
   let width = SAFE_WORLD_WIDTH / scale;
@@ -828,9 +884,9 @@ export const SPRITE_REGISTRY = {
     path: angryTrentSpritesheet,
     frameWidth: 48,
     frameHeight: 48,
-    scale: 0.7,
+    scale: 1.2,
     animations: FULL_ANIMATION_FRAMES,
-    hitbox: computeSafeHitbox(48, 48, 0.7),
+    hitbox: computeSafeHitbox(48, 48, 1.2),
   },
   gnome: {
     key: "gnome",
@@ -838,9 +894,9 @@ export const SPRITE_REGISTRY = {
     path: gnomeSpritesheet,
     frameWidth: 48,
     frameHeight: 48,
-    scale: 0.7,
+    scale: 0.8,
     animations: FULL_ANIMATION_FRAMES,
-    hitbox: computeSafeHitbox(48, 48, 0.7),
+    hitbox: computeSafeHitbox(48, 48, 0.8),
   },
   knifedBat: {
     key: "knifedBat",
@@ -848,9 +904,9 @@ export const SPRITE_REGISTRY = {
     path: knifedBatSpritesheet,
     frameWidth: 48,
     frameHeight: 48,
-    scale: 0.7,
+    scale: 0.8,
     animations: FULL_ANIMATION_FRAMES,
-    hitbox: computeSafeHitbox(48, 48, 0.7),
+    hitbox: computeSafeHitbox(48, 48, 0.8),
   },
   mudGolem: {
     key: "mudGolem",
@@ -858,9 +914,9 @@ export const SPRITE_REGISTRY = {
     path: mudGolemSpritesheet,
     frameWidth: 48,
     frameHeight: 48,
-    scale: 0.7,
+    scale: 1.7,
     animations: FULL_ANIMATION_FRAMES,
-    hitbox: computeSafeHitbox(48, 48, 0.7),
+    hitbox: computeSafeHitbox(48, 48, 1.7),
   },
   redBeetle: {
     key: "redBeetle",
@@ -868,9 +924,9 @@ export const SPRITE_REGISTRY = {
     path: redBeetleSpritesheet,
     frameWidth: 48,
     frameHeight: 48,
-    scale: 0.7,
+    scale: 1,
     animations: FULL_ANIMATION_FRAMES,
-    hitbox: computeSafeHitbox(48, 48, 0.7),
+    hitbox: computeSafeHitbox(48, 48, 1),
   },
   pinkOgre: {
     key: "pinkOgre",
@@ -878,9 +934,9 @@ export const SPRITE_REGISTRY = {
     path: pinkOgreSpritesheet,
     frameWidth: 48,
     frameHeight: 48,
-    scale: 0.7,
+    scale: 1.5,
     animations: FULL_ANIMATION_FRAMES,
-    hitbox: computeSafeHitbox(48, 48, 0.7),
+    hitbox: computeSafeHitbox(48, 48, 1.5),
   },
 
   monks1: {
@@ -3465,7 +3521,6 @@ export const ICON_SHEET_1_FRAMES = {
   woodenAxe: 4,
   woodenMallet: 5,
   woodenShovel: 6,
-  woodenPickaxe: 7,
   woodenHammer: 8,
   woodenSickle: 9,
   ironDagger: 10,
@@ -3475,7 +3530,6 @@ export const ICON_SHEET_1_FRAMES = {
   ironAxe: 14,
   ironMallet: 15,
   ironShovel: 16,
-  ironPickaxe: 17,
   ironHammer: 18,
   ironSickle: 19,
   bronzeDagger: 20,
@@ -3485,7 +3539,6 @@ export const ICON_SHEET_1_FRAMES = {
   bronzeAxe: 24,
   bronzeMallet: 25,
   bronzeShovel: 26,
-  bronzePickaxe: 27,
   bronzeHammer: 28,
   bronzeSickle: 29,
   woodenArrow: 30,
@@ -3785,12 +3838,92 @@ export const ICON_SKILL_1_FRAMES = {
 };
 
 export const ITEMS_1_FRAMES = {
+  throwableShank: 0,
+  throwableButterKnife: 1,
+  throwableKunai: 2,
+  throwableShuriken: 3,
+  throwableBoomerang: 9,
+  woodenPickaxe: 24,
+  woodenCrossbowBolt: 25,
+  copperOre: 40,
+  copperIngot: 41,
+  copperMetalChunk: 42,
+  copperDust: 43,
+  copperPickaxe: 44,
   ironOre: 60,
   ironIngot: 61,
+  ironMetalChunk: 62,
+  ironDust: 63,
+  ironPickaxe: 64,
   silverOre: 80,
   silverIngot: 81,
+  silverMetalChunk: 82,
+  silverDust: 83,
+  silverPickaxe: 84,
+  coalOre: 100,
+  steelIngot: 101,
+  steelMetalChunk: 102,
+  steelDust: 103,
+  steelPickaxe: 104,
   goldOre: 120,
   goldIngot: 121,
+  goldMetalChunk: 122,
+  goldDust: 123,
+  goldPickaxe: 124,
+  platinumOre: 140,
+  platinumIngot: 141,
+  platinumMetalChunk: 142,
+  platinumDust: 143,
+  platinumPickaxe: 144,
+  cobaltOre: 160,
+  cobaltIngot: 161,
+  cobaltMetalChunk: 162,
+  cobaltDust: 163,
+  cobaltPickaxe: 164,
+  adamantineOre: 180,
+  adamantineIngot: 181,
+  adamantineMetalChunk: 182,
+  adamantineDust: 183,
+  adamantinePickaxe: 184,
+  crimsonOre: 200,
+  crimsonIngot: 201,
+  crimsonMetalChunk: 202,
+  crimsonDust: 203,
+  crimsonPickaxe: 204,
+  angelicOre: 220,
+  angelicIngot: 221,
+  angelicMetalChunk: 222,
+  angelicDust: 223,
+  angelicPickaxe: 224,
+  fatefulOre: 240,
+  fatefulIngot: 241,
+  fatefulMetalChunk: 242,
+  fatefulDust: 243,
+  fatefulPickaxe: 244,
+  novaOre: 260,
+  novaIngot: 261,
+  novaMetalChunk: 262,
+  novaDust: 263,
+  novaPickaxe: 264,
+  whiteFeather: 300,
+  greyFeather: 302,
+  blackFeather: 304,
+  brownFeather: 306,
+  redFeather: 308,
+  lightPurpleFeather: 310,
+  purpleFeather: 312,
+  blueFeather: 314,
+  cyanFeather: 316,
+  greenFeather: 318,
+  yellowFeather: 320,
+  bigWhiteFeather: 322,
+  bigRedFeather: 323,
+  bigLightPurpleFeather: 324,
+  bigPurpleFeather: 325,
+  bigBlueFeather: 326,
+  bigCyanFeather: 329,
+  bigGreenFeather: 327,
+  bigYellowFeather: 328,
 };
 
 /**

@@ -227,16 +227,4 @@ function generateSecretRoom(
   return result;
 }
 
-/**
- * Verification LEGERE (aucune grille necessaire) - repond juste "cet
- * etage a-t-il une salle secrete", pour un PNJ de ville qui veut y
- * faire allusion sans avoir besoin de regenerer tout le donjon
- * correspondant.
- */
-function secretRoomExists(seed, secretRoomChance) {
-  if (!secretRoomChance) return false;
-  const rng = createRng(`${seed}-secret-room`);
-  return rng() < secretRoomChance;
-}
-
-module.exports = { generateSecretRoom, secretRoomExists };
+module.exports = { generateSecretRoom };

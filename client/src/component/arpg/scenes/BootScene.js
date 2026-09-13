@@ -47,6 +47,8 @@ import {
   DUNGEONS_A21_AUTOTILE_SPRITESHEET,
   DUNGEONS_A22_AUTOTILE_SPRITESHEET,
   GREY_COASTA51_AUTOTILE_SPRITESHEET,
+  DEEP_CAVE_AUTOTILE_SPRITESHEET,
+  CITY_TILES_AUTOTILE_SPRITESHEET,
 } from "../spriteRegistry";
 
 /**
@@ -104,6 +106,14 @@ export default class BootScene extends Phaser.Scene {
       {
         frameWidth: SNOW_AUTOTILE_SPRITESHEET.frameWidth,
         frameHeight: SNOW_AUTOTILE_SPRITESHEET.frameHeight,
+      },
+    );
+    this.load.spritesheet(
+      DEEP_CAVE_AUTOTILE_SPRITESHEET.key,
+      DEEP_CAVE_AUTOTILE_SPRITESHEET.path,
+      {
+        frameWidth: DEEP_CAVE_AUTOTILE_SPRITESHEET.frameWidth,
+        frameHeight: DEEP_CAVE_AUTOTILE_SPRITESHEET.frameHeight,
       },
     );
     this.load.spritesheet(
@@ -392,6 +402,14 @@ export default class BootScene extends Phaser.Scene {
       {
         frameWidth: DUNGEONS_A22_AUTOTILE_SPRITESHEET.frameWidth,
         frameHeight: DUNGEONS_A22_AUTOTILE_SPRITESHEET.frameHeight,
+      },
+    );
+    this.load.spritesheet(
+      CITY_TILES_AUTOTILE_SPRITESHEET.key,
+      CITY_TILES_AUTOTILE_SPRITESHEET.path,
+      {
+        frameWidth: CITY_TILES_AUTOTILE_SPRITESHEET.frameWidth,
+        frameHeight: CITY_TILES_AUTOTILE_SPRITESHEET.frameHeight,
       },
     );
     this.load.spritesheet(CHEST_SPRITESHEET.key, CHEST_SPRITESHEET.path, {

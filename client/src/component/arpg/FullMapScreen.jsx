@@ -1,6 +1,7 @@
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 
-const CELL_SIZE = 4;
+const MIN_cellSize = 4;
+const MAX_cellSize = 24;
 
 /**
  * Ecran de carte complete - overlay superpose au jeu, meme modele que
@@ -24,6 +25,34 @@ export default function FullMapScreen({
   onClose,
 }) {
   const canvasRef = useRef(null);
+  const wrapperRef = useRef(null);
+  const [cellSize, setCellSize] = useState(MIN_cellSize);
+
+  useEffect(() => {
+    if (!grid || !wrapperRef.current) return;
+
+    const gridWidth =
+      bossDoorTile && !bossRoomOpen
+        ? Math.min(grid[0].length, bossDoorTile.x)
+        : grid[0].length;
+    const gridHeight = grid.length;
+
+    function updateCellSize() {
+      const wrapper = wrapperRef.current;
+      if (!wrapper) return;
+      const availW = wrapper.clientWidth;
+      const availH = wrapper.clientHeight;
+      const bestFit = Math.floor(
+        Math.min(availW / gridWidth, availH / gridHeight),
+      );
+      setCellSize(Math.max(MIN_cellSize, Math.min(MAX_cellSize, bestFit)));
+    }
+
+    updateCellSize();
+    const observer = new ResizeObserver(updateCellSize);
+    observer.observe(wrapperRef.current);
+    return () => observer.disconnect();
+  }, [grid, bossDoorTile, bossRoomOpen]);
 
   useEffect(() => {
     if (!grid || !fogState || !canvasRef.current) return;
@@ -39,8 +68,8 @@ export default function FullMapScreen({
         : grid[0].length;
 
     const canvas = canvasRef.current;
-    canvas.width = width * CELL_SIZE;
-    canvas.height = height * CELL_SIZE;
+    canvas.width = width * cellSize;
+    canvas.height = height * cellSize;
 
     const ctx = canvas.getContext("2d");
 
@@ -60,7 +89,7 @@ export default function FullMapScreen({
           ctx.fillStyle =
             state === 2 ? "rgba(232,223,192,0.75)" : "rgba(122,114,96,0.75)";
         }
-        ctx.fillRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+        ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
       }
     }
 
@@ -72,10 +101,10 @@ export default function FullMapScreen({
       }
       ctx.fillStyle = color;
       ctx.fillRect(
-        tile.x * CELL_SIZE - 1,
-        tile.y * CELL_SIZE - 1,
-        CELL_SIZE + 2,
-        CELL_SIZE + 2,
+        tile.x * cellSize - 1,
+        tile.y * cellSize - 1,
+        cellSize + 2,
+        cellSize + 2,
       );
     }
 
@@ -92,10 +121,10 @@ export default function FullMapScreen({
     if (playerTile) {
       ctx.fillStyle = "#3498db";
       ctx.fillRect(
-        playerTile.x * CELL_SIZE - 1,
-        playerTile.y * CELL_SIZE - 1,
-        CELL_SIZE + 2,
-        CELL_SIZE + 2,
+        playerTile.x * cellSize - 1,
+        playerTile.y * cellSize - 1,
+        cellSize + 2,
+        cellSize + 2,
       );
     }
   }, [
@@ -108,6 +137,7 @@ export default function FullMapScreen({
     summons,
     bossDoorTile,
     bossRoomOpen,
+    cellSize,
   ]);
 
   return (
@@ -150,6 +180,7 @@ export default function FullMapScreen({
         </button>
       </div>
       <div
+        ref={wrapperRef}
         style={{
           flex: 1,
           overflow: "auto",

@@ -94,6 +94,10 @@ import {
   // DUNGEONS_A21_AUTOTILE_SPRITESHEET,
   // DUNGEONS_A22_AUTOTILE_SPRITESHEET,
   // GREY_COASTA51_AUTOTILE_SPRITESHEET,
+  DEEP_CAVE_AUTOTILE_SPRITESHEET,
+  CITY_TILES_AUTOTILE_SPRITESHEET,
+  CITY_HOUSES,
+  // HOUSE_FOOTPRINTS,
 } from "../spriteRegistry";
 
 const TILE_SIZE = 32;
@@ -185,7 +189,7 @@ const TILESET_COLORS = {
   voronoi: { wall: 0x3a2f3a, floor: 0xb090a0 },
   tree: { wall: 0x2e4a2a, floor: 0x5a7a4a },
   temple: { wall: 0x32303c, floor: 0xbec8d7 },
-  town: { wall: 0x5a4a3a, floor: 0xc8bfa0 },
+  town: { wall: 0xc8bfa0, floor: 0xc8bfa0 },
 };
 
 const WALL_CORNER_INDEX_TO_FRAME_0_0 = [
@@ -263,6 +267,60 @@ const WALL_CORNER_INDEX_TO_FRAME_0_0_CITY_WALLS1 = [
 const WALL_CORNER_INDEX_TO_FRAME_0_1 = [
   70, 35, 3, 19, 5, 35, 4, 20, 37, 36, 5, 39, 21, 38, 20, 20,
 ];
+const WALL_CORNER_INDEX_TO_FRAME_0_0_DEEP_CAVE = [
+  224,
+  75,
+  32,
+  146,
+  [72, 37],
+  [72, 37],
+  35,
+  72,
+  227,
+  110,
+  189,
+  640,
+  151,
+  303,
+  [72, 37],
+  72,
+];
+const WALL_CORNER_INDEX_TO_FRAME_CITY_TILE_0_3 = [
+  {
+    variants: [
+      { tiles: 7, weight: 5 }, // mur normal, le plus frequent
+      // { tiles: 71, weight: 1 }, // meme mur + déco superposee, plus rare
+      // { tiles: 86, weight: 1 }, // autre variante, encore plus rare
+      // { tiles: 87, weight: 1 },
+      // { tiles: 69, weight: 1 },
+      // { tiles: 85, weight: 1 },
+    ],
+  },
+  256,
+  192,
+  224,
+  194,
+  [224, 194],
+  193,
+  196,
+  258,
+  {
+    variants: [
+      { tiles: 257, weight: 5 }, // mur normal, le plus frequent
+      // { tiles: [257, 46], weight: 1 }, // meme mur + déco superposee, plus rare
+      // { tiles: [257, 183], weight: 1 }, // autre variante, encore plus rare
+      // { tiles: [257, 182], weight: 1 }, // autre variante, encore plus rare
+      // { tiles: [257, 181], weight: 1 }, // autre variante, encore plus rare
+      // { tiles: [257, 70], weight: 1 }, // autre variante, encore plus rare
+    ],
+  },
+  [258, 192],
+  164,
+  226,
+  163,
+  195,
+  225,
+];
 const WALL_CORNER_INDEX_TO_FRAME_0_1_MINES2 = [
   86,
   35,
@@ -281,6 +339,24 @@ const WALL_CORNER_INDEX_TO_FRAME_0_1_MINES2 = [
   4,
   20,
 ];
+const WALL_CORNER_INDEX_TO_FRAME_DARKWOODS_1_3 = [
+  86,
+  128,
+  96,
+  112,
+  98,
+  [128, 98],
+  97,
+  113,
+  130,
+  129,
+  [130, 96],
+  115,
+  114,
+  116,
+  113,
+  113,
+];
 const WALL_CORNER_INDEX_TO_FRAME_1_0 = [
   48, 80, 48, 64, 50, 80, 49, 68, 82, 81, 50, 52, 66, 51, 67, 65,
 ];
@@ -295,12 +371,10 @@ const WALL_CORNER_INDEX_TO_FRAME_2_0 = [
 //   32, 0, 32, 18, 34, 32, 33, 7, 2, 1, 34, 23, 16, 22, 6, 70,
 // ];
 
-const TRAP_VISUALS_DESERT = {
-  spritesheetKey: DESERT_AUTOTILE_SPRITESHEET.key,
-  hiddenFrames: [229],
-  baseFrame: 229, // le trou - couche de fond, ne change jamais une fois revele
-  spikeAnimFrames: [134, 150, 166, 214], // la couche du dessus, qui s'anime seule
-};
+const SHARED_HAZARD_SPRITESHEET_KEY = DARKWOODS_AUTOTILE_SPRITESHEET.key;
+const TRAP_HIDDEN_FRAMES = [229];
+const TRAP_SPIKE_ANIM_FRAMES = [166, 182, 198, 214];
+const MINING_ROCK_FRAME = 86;
 
 const ATTACK_ANIM_DURATION_MS = 400;
 
@@ -336,9 +410,18 @@ function resolveVisualEffect(enemyData) {
 }
 
 const MINING_RESOURCE_TINTS = {
+  copperOre: 0xb87333, // brun-rouge cuivre
+  coalOre: 0x333333, // noir charbon
   ironOre: 0x8899aa, // gris-bleu acier
   silverOre: 0xcfd8dc, // gris clair argente
   goldOre: 0xffd54f, // jaune dore
+  platinumOre: 0xe5e4e2, // gris clair platine
+  cobaltOre: 0x0047ab, // bleu cobalt
+  adamantineOre: 0x99ccff, // bleu clair adamantine
+  crimsonOre: 0xdc143c, // rouge cramoisi
+  angelicOre: 0xfff8e7, // blanc angélique
+  fatefulOre: 0xff0000, // rouge fateful
+  novaOre: 0xffa500, // orange nova
 };
 
 function resolveMiningRockTint(resourceItemId) {
@@ -555,6 +638,12 @@ export default class MainScene extends Phaser.Scene {
     this.activeChest = null;
     this.currentFloorChestRemainingLoot = {}; // { chestIndex: [{itemId, quantity}] } - ce qu'il reste a prendre dans un coffre partiellement loote, pour survivre a une sauvegarde+reprise SUR LE MEME etage
 
+    this.debugTileIndicesVisible = false;
+    this.debugTileIndexTexts = [];
+    this.currentRenderGrid = null;
+
+    this.input.keyboard.on("keydown-F3", () => this.toggleDebugTileIndices());
+
     const fogTilesetKey = "fog-tiles";
     const fogCanvasTex = this.textures.createCanvas(
       fogTilesetKey,
@@ -577,17 +666,16 @@ export default class MainScene extends Phaser.Scene {
     this.currentFloorKills = [];
     this.currentFloorOpenedChests = [];
     this.floorTraps = [];
+    this.townHouseSprites = [];
     this.currentFloorTriggeredTraps = [];
     this.currentFloorRevealedTraps = [];
     this.secretRoomData = null;
     this.secretDoorOpened = false;
     this.secretLevers = [];
     this.secretWallMarker = null;
-    this.miningRockData = null;
-    this.miningRockSprite = null;
-    this.miningRockHits = 0;
-    this.miningRockDepleted = false;
-    this.discoveredSecretRoomDepths = []; // etages ou une salle secrete a DEJA ete ouverte - pour toujours, jamais retire
+    this.miningRocks = []; // tableau de {index, data, sprite, hits, depleted}
+    this.discoveredSecretRoomDepths = [];
+    this.floorsWithSecretRoom = [];
     this.quests = {};
     this.unlockedAbilities = [];
     this.unlockedRecipes = [];
@@ -630,6 +718,56 @@ export default class MainScene extends Phaser.Scene {
     }
     this.giveStartingKit();
     this.loadLevel(this.currentDepth);
+  }
+
+  toggleDebugTileIndices() {
+    this.debugTileIndicesVisible = !this.debugTileIndicesVisible;
+    if (this.debugTileIndicesVisible) {
+      this.renderDebugTileIndices();
+    } else {
+      this.clearDebugTileIndices();
+    }
+  }
+
+  clearDebugTileIndices() {
+    for (const t of this.debugTileIndexTexts) t.destroy();
+    this.debugTileIndexTexts = [];
+  }
+
+  renderDebugTileIndices() {
+    this.clearDebugTileIndices();
+    if (!this.currentRenderGrid) return;
+
+    const grid = this.currentRenderGrid;
+    const sourceIds = this.currentSlotSourceTileIds;
+
+    for (let y = 0; y < grid.length; y++) {
+      for (let x = 0; x < grid[0].length; x++) {
+        const slotIndex = grid[y][x];
+        if (slotIndex === undefined || slotIndex === null) continue;
+
+        const sourceId = sourceIds ? sourceIds[slotIndex] : undefined;
+        const label =
+          sourceId === undefined || sourceId === null
+            ? String(slotIndex)
+            : Array.isArray(sourceId)
+              ? sourceId.join("+")
+              : String(sourceId);
+
+        const worldX = x * TILE_SIZE + TILE_SIZE / 2;
+        const worldY = y * TILE_SIZE + TILE_SIZE / 2;
+
+        const txt = this.add.text(worldX, worldY, label, {
+          fontSize: "10px",
+          color: "#ffff00",
+          stroke: "#000000",
+          strokeThickness: 2,
+        });
+        txt.setOrigin(0.5);
+        txt.setDepth(9999);
+        this.debugTileIndexTexts.push(txt);
+      }
+    }
   }
 
   giveStartingKit() {
@@ -717,6 +855,7 @@ export default class MainScene extends Phaser.Scene {
 
     this.floorFogCache = ps.floorFogCache || {};
     this.discoveredSecretRoomDepths = ps.discoveredSecretRoomDepths || [];
+    this.floorsWithSecretRoom = ps.floorsWithSecretRoom || [];
 
     await this.loadLevel(
       save.depth,
@@ -731,8 +870,7 @@ export default class MainScene extends Phaser.Scene {
       ps.currentFloorTriggeredTraps || [],
       ps.currentFloorRevealedTraps || [],
       ps.currentFloorLeverActivations || [],
-      ps.currentFloorMiningRockHits ?? null,
-      ps.currentFloorMiningRockDepleted || false,
+      ps.currentFloorMiningRocksState || [],
       ps.currentFloorEphemeralChests || [],
     );
     for (const savedSummon of ps.summons || []) {
@@ -1232,13 +1370,15 @@ export default class MainScene extends Phaser.Scene {
           currentFloorTriggeredTraps: this.currentFloorTriggeredTraps,
           currentFloorRevealedTraps: this.currentFloorRevealedTraps,
           discoveredSecretRoomDepths: this.discoveredSecretRoomDepths,
+          floorsWithSecretRoom: this.floorsWithSecretRoom,
           currentFloorLeverActivations: this.secretLevers
             .filter((l) => l.activated)
             .map((l) => `${l.x},${l.y}`),
-          currentFloorMiningRockHits: this.miningRockData
-            ? this.miningRockHits
-            : null,
-          currentFloorMiningRockDepleted: this.miningRockDepleted,
+          currentFloorMiningRocksState: this.miningRocks.map((r) => ({
+            index: r.index,
+            hits: r.hits,
+            depleted: r.depleted,
+          })),
           currentFloorEphemeralChests: this.chests
             .filter((c) => c.ephemeral)
             .map((c) => ({
@@ -1373,7 +1513,9 @@ export default class MainScene extends Phaser.Scene {
     const cctx = composedTex.getContext();
     cctx.imageSmoothingEnabled = false;
     const sourceImg = this.textures.get(sourceSpritesheet.key).getSourceImage();
-    const SOURCE_COLS = 16;
+    // const SOURCE_COLS = 16;
+    const SOURCE_COLS = sourceImg.width / 16; // au lieu de la constante figée à 16
+    const slotSourceTileIds = new Array(SLOT_COUNT).fill(null);
 
     const drawTileOnly = (tileid, slotIndex) => {
       const sx = (tileid % SOURCE_COLS) * 16;
@@ -1395,6 +1537,7 @@ export default class MainScene extends Phaser.Scene {
     };
 
     drawFloorAt(0, 0);
+    slotSourceTileIds[0] = floorVariants[0].tileId;
 
     normalizedCorners.forEach((variants, bitmask) => {
       const range = cornerSlotRanges[bitmask];
@@ -1405,12 +1548,14 @@ export default class MainScene extends Phaser.Scene {
           ? variant.tiles
           : [variant.tiles];
         for (const t of tiles) drawTileOnly(t, slotIndex);
+        slotSourceTileIds[slotIndex] = tiles.length === 1 ? tiles[0] : tiles;
       });
     });
 
     floorVariants.forEach((v, i) => {
       if (i === 0) return;
       drawFloorAt(floorExtraSlots[i - 1], i);
+      slotSourceTileIds[floorExtraSlots[i - 1]] = v.tileId;
     });
     composedTex.refresh();
 
@@ -1460,7 +1605,12 @@ export default class MainScene extends Phaser.Scene {
       }
     }
 
-    return { phaserTilesetKey, renderGrid, floorSlotIndices };
+    return {
+      phaserTilesetKey,
+      renderGrid,
+      floorSlotIndices,
+      slotSourceTileIds,
+    };
   }
 
   async loadLevel(
@@ -1476,8 +1626,7 @@ export default class MainScene extends Phaser.Scene {
     savedTriggeredTraps = [],
     savedRevealedTraps = [],
     savedLeverActivations = [],
-    savedMiningRockHits = null,
-    savedMiningRockDepleted = false,
+    savedMiningRocksState = [],
     savedEphemeralChests = [],
   ) {
     this.currentFloorChestRemainingLoot = savedChestRemainingLoot || {};
@@ -1630,19 +1779,18 @@ export default class MainScene extends Phaser.Scene {
       t.spikeSprite.destroy();
     });
     this.floorTraps = [];
+    this.townHouseSprites.forEach((s) => s.destroy());
+    this.townHouseSprites = [];
     this.secretLevers.forEach((l) => l.sprite.destroy());
     this.secretLevers = [];
     if (this.secretWallMarker) {
       this.secretWallMarker.destroy();
       this.secretWallMarker = null;
     }
-    if (this.miningRockSprite) {
-      this.miningRockSprite.destroy();
-      this.miningRockSprite = null;
-    }
-    this.miningRockData = null;
-    this.miningRockHits = 0;
-    this.miningRockDepleted = false;
+    this.miningRocks.forEach((r) => {
+      if (r.sprite) r.sprite.destroy();
+    });
+    this.miningRocks = [];
     this.secretRoomData = null;
     this.secretDoorOpened = false;
     this.dialogOpen = false;
@@ -1679,6 +1827,8 @@ export default class MainScene extends Phaser.Scene {
     this.parryUntil = 0;
     this.visionBonusUntil = 0;
 
+    this.clearDebugTileIndices();
+
     this.playerHp =
       typeof hpOverride === "number"
         ? Math.min(hpOverride, this.playerMaxHp)
@@ -1706,6 +1856,7 @@ export default class MainScene extends Phaser.Scene {
       tileset === "snow" ||
       tileset === "darkwoods_1_1" ||
       tileset === "darkwoods_1_2" ||
+      tileset === "darkwoods_1_3" ||
       tileset === "darkwoods2" ||
       tileset === "standardFields2" ||
       tileset === "desertMountain2" ||
@@ -1721,7 +1872,9 @@ export default class MainScene extends Phaser.Scene {
       tileset === "hills8" ||
       tileset === "mines2" || //WALL_CORNER_INDEX_TO_FRAME_0_1_MINES2
       tileset === "tower1" || // WALL_CORNER_INDEX_TO_FRAME_0_0_TOWER1
-      tileset === "cityWalls1"; // WALL_CORNER_INDEX_TO_FRAME_0_0_CITY_WALLS1
+      tileset === "deepCave1" || // WALL_CORNER_INDEX_TO_FRAME_0_0
+      tileset === "cityWalls1" ||
+      tileset === "cityTiles"; // WALL_CORNER_INDEX_TO_FRAME_0_0_CITY_WALLS1
     const useDungeon1Autotile = tileset === "dungeon1";
     const useFortress1Autotile = tileset === "fortress1";
 
@@ -1729,7 +1882,6 @@ export default class MainScene extends Phaser.Scene {
     let renderGrid;
     let dungeon1FloorFrameValue;
     let composedFloorSlots = [0];
-    let trapVisualConfig = null;
 
     if (useFortress1Autotile) {
       phaserTilesetKey = FORTRESS_AUTOTILE_SPRITESHEET.key;
@@ -1772,7 +1924,8 @@ export default class MainScene extends Phaser.Scene {
       composedFloorSlots = result.floorSlotIndices;
       this.currentFloorTileIndex = composedFloorSlots[0];
       this.currentRawTilesetKey = DESERT_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
-      trapVisualConfig = TRAP_VISUALS_DESERT;
+      this.currentRenderGrid = renderGrid;
+      this.currentSlotSourceTileIds = result.slotSourceTileIds;
     } else if (tileset === "desertMountain2") {
       const result = this.composeCornerAutotileTexture(
         grid,
@@ -1786,7 +1939,8 @@ export default class MainScene extends Phaser.Scene {
       composedFloorSlots = result.floorSlotIndices;
       this.currentFloorTileIndex = composedFloorSlots[0];
       this.currentRawTilesetKey = DESERT_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
-      trapVisualConfig = TRAP_VISUALS_DESERT;
+      this.currentRenderGrid = renderGrid;
+      this.currentSlotSourceTileIds = result.slotSourceTileIds;
     } else if (tileset === "desertMountain3") {
       const result = this.composeCornerAutotileTexture(
         grid,
@@ -1800,7 +1954,8 @@ export default class MainScene extends Phaser.Scene {
       composedFloorSlots = result.floorSlotIndices;
       this.currentFloorTileIndex = composedFloorSlots[0];
       this.currentRawTilesetKey = DESERT_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
-      trapVisualConfig = TRAP_VISUALS_DESERT;
+      this.currentRenderGrid = renderGrid;
+      this.currentSlotSourceTileIds = result.slotSourceTileIds;
     } else if (tileset === "desert2") {
       const result = this.composeCornerAutotileTexture(
         grid,
@@ -1814,7 +1969,8 @@ export default class MainScene extends Phaser.Scene {
       composedFloorSlots = result.floorSlotIndices;
       this.currentFloorTileIndex = composedFloorSlots[0];
       this.currentRawTilesetKey = DESERT_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
-      trapVisualConfig = TRAP_VISUALS_DESERT;
+      this.currentRenderGrid = renderGrid;
+      this.currentSlotSourceTileIds = result.slotSourceTileIds;
     } else if (tileset === "hills1") {
       const result = this.composeCornerAutotileTexture(
         grid,
@@ -1828,7 +1984,8 @@ export default class MainScene extends Phaser.Scene {
       composedFloorSlots = result.floorSlotIndices;
       this.currentFloorTileIndex = composedFloorSlots[0];
       this.currentRawTilesetKey = HILLS1_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
-      trapVisualConfig = TRAP_VISUALS_DESERT;
+      this.currentRenderGrid = renderGrid;
+      this.currentSlotSourceTileIds = result.slotSourceTileIds;
     } else if (tileset === "cityWalls1") {
       const result = this.composeCornerAutotileTexture(
         grid,
@@ -1842,7 +1999,8 @@ export default class MainScene extends Phaser.Scene {
       composedFloorSlots = result.floorSlotIndices;
       this.currentFloorTileIndex = composedFloorSlots[0];
       this.currentRawTilesetKey = CITY_WALLS1_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
-      trapVisualConfig = TRAP_VISUALS_DESERT;
+      this.currentRenderGrid = renderGrid;
+      this.currentSlotSourceTileIds = result.slotSourceTileIds;
     } else if (tileset === "tower1") {
       const result = this.composeCornerAutotileTexture(
         grid,
@@ -1856,7 +2014,8 @@ export default class MainScene extends Phaser.Scene {
       composedFloorSlots = result.floorSlotIndices;
       this.currentFloorTileIndex = composedFloorSlots[0];
       this.currentRawTilesetKey = TOWER1_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
-      trapVisualConfig = TRAP_VISUALS_DESERT;
+      this.currentRenderGrid = renderGrid;
+      this.currentSlotSourceTileIds = result.slotSourceTileIds;
     } else if (tileset === "hills2") {
       const result = this.composeCornerAutotileTexture(
         grid,
@@ -1869,8 +2028,9 @@ export default class MainScene extends Phaser.Scene {
       renderGrid = result.renderGrid;
       composedFloorSlots = result.floorSlotIndices;
       this.currentFloorTileIndex = composedFloorSlots[0];
-      this.currentRawTilesetKey = DARKWOODS_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
-      trapVisualConfig = TRAP_VISUALS_DESERT;
+      this.currentRawTilesetKey = HILLS1_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
+      this.currentRenderGrid = renderGrid;
+      this.currentSlotSourceTileIds = result.slotSourceTileIds;
     } else if (tileset === "mines2") {
       const result = this.composeCornerAutotileTexture(
         grid,
@@ -1884,7 +2044,8 @@ export default class MainScene extends Phaser.Scene {
       composedFloorSlots = result.floorSlotIndices;
       this.currentFloorTileIndex = composedFloorSlots[0];
       this.currentRawTilesetKey = MINES2_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
-      trapVisualConfig = TRAP_VISUALS_DESERT;
+      this.currentRenderGrid = renderGrid;
+      this.currentSlotSourceTileIds = result.slotSourceTileIds;
     } else if (tileset === "hills3") {
       const result = this.composeCornerAutotileTexture(
         grid,
@@ -1898,7 +2059,8 @@ export default class MainScene extends Phaser.Scene {
       composedFloorSlots = result.floorSlotIndices;
       this.currentFloorTileIndex = composedFloorSlots[0];
       this.currentRawTilesetKey = HILLS3_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
-      trapVisualConfig = TRAP_VISUALS_DESERT;
+      this.currentRenderGrid = renderGrid;
+      this.currentSlotSourceTileIds = result.slotSourceTileIds;
     } else if (tileset === "hills4") {
       const result = this.composeCornerAutotileTexture(
         grid,
@@ -1912,7 +2074,8 @@ export default class MainScene extends Phaser.Scene {
       composedFloorSlots = result.floorSlotIndices;
       this.currentFloorTileIndex = composedFloorSlots[0];
       this.currentRawTilesetKey = HILLS3_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
-      trapVisualConfig = TRAP_VISUALS_DESERT;
+      this.currentRenderGrid = renderGrid;
+      this.currentSlotSourceTileIds = result.slotSourceTileIds;
     } else if (tileset === "hills5") {
       const result = this.composeCornerAutotileTexture(
         grid,
@@ -1926,7 +2089,8 @@ export default class MainScene extends Phaser.Scene {
       composedFloorSlots = result.floorSlotIndices;
       this.currentFloorTileIndex = composedFloorSlots[0];
       this.currentRawTilesetKey = HILLS2_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
-      trapVisualConfig = TRAP_VISUALS_DESERT;
+      this.currentRenderGrid = renderGrid;
+      this.currentSlotSourceTileIds = result.slotSourceTileIds;
     } else if (tileset === "hills6") {
       const result = this.composeCornerAutotileTexture(
         grid,
@@ -1940,7 +2104,8 @@ export default class MainScene extends Phaser.Scene {
       composedFloorSlots = result.floorSlotIndices;
       this.currentFloorTileIndex = composedFloorSlots[0];
       this.currentRawTilesetKey = HILLS2_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
-      trapVisualConfig = TRAP_VISUALS_DESERT;
+      this.currentRenderGrid = renderGrid;
+      this.currentSlotSourceTileIds = result.slotSourceTileIds;
     } else if (tileset === "hills7") {
       const result = this.composeCornerAutotileTexture(
         grid,
@@ -1954,7 +2119,8 @@ export default class MainScene extends Phaser.Scene {
       composedFloorSlots = result.floorSlotIndices;
       this.currentFloorTileIndex = composedFloorSlots[0];
       this.currentRawTilesetKey = HILLS2_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
-      trapVisualConfig = TRAP_VISUALS_DESERT;
+      this.currentRenderGrid = renderGrid;
+      this.currentSlotSourceTileIds = result.slotSourceTileIds;
     } else if (tileset === "hills8") {
       const result = this.composeCornerAutotileTexture(
         grid,
@@ -1968,7 +2134,8 @@ export default class MainScene extends Phaser.Scene {
       composedFloorSlots = result.floorSlotIndices;
       this.currentFloorTileIndex = composedFloorSlots[0];
       this.currentRawTilesetKey = HILLS2_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
-      trapVisualConfig = TRAP_VISUALS_DESERT;
+      this.currentRenderGrid = renderGrid;
+      this.currentSlotSourceTileIds = result.slotSourceTileIds;
     } else if (tileset === "hills9") {
       const result = this.composeCornerAutotileTexture(
         grid,
@@ -1982,7 +2149,8 @@ export default class MainScene extends Phaser.Scene {
       composedFloorSlots = result.floorSlotIndices;
       this.currentFloorTileIndex = composedFloorSlots[0];
       this.currentRawTilesetKey = HILLS3_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
-      trapVisualConfig = TRAP_VISUALS_DESERT;
+      this.currentRenderGrid = renderGrid;
+      this.currentSlotSourceTileIds = result.slotSourceTileIds;
     } else if (tileset === "hills10") {
       const result = this.composeCornerAutotileTexture(
         grid,
@@ -1996,7 +2164,8 @@ export default class MainScene extends Phaser.Scene {
       composedFloorSlots = result.floorSlotIndices;
       this.currentFloorTileIndex = composedFloorSlots[0];
       this.currentRawTilesetKey = HILLS3_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
-      trapVisualConfig = TRAP_VISUALS_DESERT;
+      this.currentRenderGrid = renderGrid;
+      this.currentSlotSourceTileIds = result.slotSourceTileIds;
     } else if (tileset === "hills11") {
       const result = this.composeCornerAutotileTexture(
         grid,
@@ -2010,7 +2179,8 @@ export default class MainScene extends Phaser.Scene {
       composedFloorSlots = result.floorSlotIndices;
       this.currentFloorTileIndex = composedFloorSlots[0];
       this.currentRawTilesetKey = HILLS3_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
-      trapVisualConfig = TRAP_VISUALS_DESERT;
+      this.currentRenderGrid = renderGrid;
+      this.currentSlotSourceTileIds = result.slotSourceTileIds;
     } else if (tileset === "hills12") {
       const result = this.composeCornerAutotileTexture(
         grid,
@@ -2024,7 +2194,8 @@ export default class MainScene extends Phaser.Scene {
       composedFloorSlots = result.floorSlotIndices;
       this.currentFloorTileIndex = composedFloorSlots[0];
       this.currentRawTilesetKey = HILLS3_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
-      trapVisualConfig = TRAP_VISUALS_DESERT;
+      this.currentRenderGrid = renderGrid;
+      this.currentSlotSourceTileIds = result.slotSourceTileIds;
     } else if (tileset === "snow") {
       const result = this.composeCornerAutotileTexture(
         grid,
@@ -2038,7 +2209,8 @@ export default class MainScene extends Phaser.Scene {
       composedFloorSlots = result.floorSlotIndices;
       this.currentFloorTileIndex = composedFloorSlots[0];
       this.currentRawTilesetKey = SNOW_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
-      trapVisualConfig = TRAP_VISUALS_DESERT;
+      this.currentRenderGrid = renderGrid;
+      this.currentSlotSourceTileIds = result.slotSourceTileIds;
     } else if (tileset === "darkwoods_1_1") {
       const result = this.composeCornerAutotileTexture(
         grid,
@@ -2056,7 +2228,8 @@ export default class MainScene extends Phaser.Scene {
       composedFloorSlots = result.floorSlotIndices;
       this.currentFloorTileIndex = composedFloorSlots[0];
       this.currentRawTilesetKey = DARKWOODS_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
-      trapVisualConfig = TRAP_VISUALS_DESERT;
+      this.currentRenderGrid = renderGrid;
+      this.currentSlotSourceTileIds = result.slotSourceTileIds;
     } else if (tileset === "darkwoods_1_2") {
       const result = this.composeCornerAutotileTexture(
         grid,
@@ -2074,7 +2247,28 @@ export default class MainScene extends Phaser.Scene {
       composedFloorSlots = result.floorSlotIndices;
       this.currentFloorTileIndex = composedFloorSlots[0];
       this.currentRawTilesetKey = DARKWOODS_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
-      trapVisualConfig = TRAP_VISUALS_DESERT;
+      this.currentRenderGrid = renderGrid;
+      this.currentSlotSourceTileIds = result.slotSourceTileIds;
+    } else if (tileset === "darkwoods_1_3") {
+      const result = this.composeCornerAutotileTexture(
+        grid,
+        DARKWOODS_AUTOTILE_SPRITESHEET,
+        "darkwoods_1_3",
+        WALL_CORNER_INDEX_TO_FRAME_DARKWOODS_1_3,
+        // [
+        //   { tileId: 20, weight: 5 },
+        //   { tileId: 161, weight: 3 },
+        //   { tileId: 113, weight: 1 },
+        // ],
+        65,
+      );
+      phaserTilesetKey = result.phaserTilesetKey;
+      renderGrid = result.renderGrid;
+      composedFloorSlots = result.floorSlotIndices;
+      this.currentFloorTileIndex = composedFloorSlots[0];
+      this.currentRawTilesetKey = DARKWOODS_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
+      this.currentRenderGrid = renderGrid;
+      this.currentSlotSourceTileIds = result.slotSourceTileIds;
     } else if (tileset === "darkwoods2") {
       const result = this.composeCornerAutotileTexture(
         grid,
@@ -2088,7 +2282,38 @@ export default class MainScene extends Phaser.Scene {
       composedFloorSlots = result.floorSlotIndices;
       this.currentFloorTileIndex = composedFloorSlots[0];
       this.currentRawTilesetKey = DARKWOODS2_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
-      trapVisualConfig = TRAP_VISUALS_DESERT;
+      this.currentRenderGrid = renderGrid;
+      this.currentSlotSourceTileIds = result.slotSourceTileIds;
+    } else if (tileset === "deepCave1") {
+      const result = this.composeCornerAutotileTexture(
+        grid,
+        DEEP_CAVE_AUTOTILE_SPRITESHEET,
+        "deepCave1",
+        WALL_CORNER_INDEX_TO_FRAME_0_0_DEEP_CAVE,
+        72,
+      );
+      phaserTilesetKey = result.phaserTilesetKey;
+      renderGrid = result.renderGrid;
+      composedFloorSlots = result.floorSlotIndices;
+      this.currentFloorTileIndex = composedFloorSlots[0];
+      this.currentRawTilesetKey = DEEP_CAVE_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
+      this.currentRenderGrid = renderGrid;
+      this.currentSlotSourceTileIds = result.slotSourceTileIds;
+    } else if (tileset === "cityTiles") {
+      const result = this.composeCornerAutotileTexture(
+        grid,
+        CITY_TILES_AUTOTILE_SPRITESHEET,
+        "cityTiles3",
+        WALL_CORNER_INDEX_TO_FRAME_CITY_TILE_0_3,
+        225,
+      );
+      phaserTilesetKey = result.phaserTilesetKey;
+      renderGrid = result.renderGrid;
+      composedFloorSlots = result.floorSlotIndices;
+      this.currentFloorTileIndex = composedFloorSlots[0];
+      this.currentRawTilesetKey = CITY_TILES_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
+      this.currentRenderGrid = renderGrid;
+      this.currentSlotSourceTileIds = result.slotSourceTileIds;
     } else if (tileset === "standardFields2") {
       const result = this.composeCornerAutotileTexture(
         grid,
@@ -2100,7 +2325,8 @@ export default class MainScene extends Phaser.Scene {
       composedFloorSlots = result.floorSlotIndices;
       this.currentFloorTileIndex = composedFloorSlots[0];
       this.currentRawTilesetKey = STANDARD_FIELDS2_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
-      trapVisualConfig = TRAP_VISUALS_DESERT;
+      this.currentRenderGrid = renderGrid;
+      this.currentSlotSourceTileIds = result.slotSourceTileIds;
     } else {
       const colors = TILESET_COLORS[tileset] || TILESET_COLORS.cave;
       phaserTilesetKey = "tiles-" + tileset;
@@ -2150,6 +2376,50 @@ export default class MainScene extends Phaser.Scene {
       canvasTex.refresh();
 
       renderGrid = grid;
+
+      if (data.townBuildings && data.townBuildings.length > 0) {
+        for (const building of data.townBuildings) {
+          const houseDef = CITY_HOUSES[building.houseKey];
+          if (!houseDef) continue;
+
+          const houseTexKey = `house-${building.houseKey}`;
+          if (!this.textures.exists(houseTexKey)) {
+            const sourceImg = this.textures
+              .get(CITY_TILES_AUTOTILE_SPRITESHEET.key)
+              .getSourceImage();
+            const houseTex = this.textures.createCanvas(
+              houseTexKey,
+              houseDef.width,
+              houseDef.height,
+            );
+            const hctx = houseTex.getContext();
+            hctx.drawImage(
+              sourceImg,
+              houseDef.x,
+              houseDef.y,
+              houseDef.width,
+              houseDef.height,
+              0,
+              0,
+              houseDef.width,
+              houseDef.height,
+            );
+            houseTex.refresh();
+          }
+
+          const houseSprite = this.add.image(
+            building.x * TILE_SIZE,
+            building.y * TILE_SIZE,
+            houseTexKey,
+          );
+          houseSprite.setOrigin(0, 0);
+          const targetWidth = Math.ceil(houseDef.width / 16) * TILE_SIZE;
+          const targetHeight = Math.ceil(houseDef.height / 16) * TILE_SIZE;
+          houseSprite.setDisplaySize(targetWidth, targetHeight);
+          houseSprite.setDepth(6); // sous le heros (10) et les ennemis (8) - pas de tri dynamique par Y dans ce moteur, simplification volontaire
+          this.townHouseSprites.push(houseSprite);
+        }
+      }
     }
 
     this.map = this.make.tilemap({
@@ -2479,26 +2749,21 @@ export default class MainScene extends Phaser.Scene {
     const trapVariantRng = createRng(`${this.currentSeed}-traps-visual`);
 
     (traps || []).forEach((trapData, index) => {
-      if (!trapVisualConfig) {
-        console.warn(
-          `[MainScene] pas de visuel de piege configure pour le tileset "${tileset}" - piege ignore`,
-        );
-        return;
-      }
-
       const alreadyTriggered = this.currentFloorTriggeredTraps.includes(index);
       const alreadyRevealed =
         alreadyTriggered || this.currentFloorRevealedTraps.includes(index);
       const hiddenFrame =
-        trapVisualConfig.hiddenFrames[
-          Math.floor(trapVariantRng() * trapVisualConfig.hiddenFrames.length)
+        TRAP_HIDDEN_FRAMES[
+          Math.floor(trapVariantRng() * TRAP_HIDDEN_FRAMES.length)
         ];
 
       const sprite = this.add.sprite(
         trapData.x * TILE_SIZE + TILE_SIZE / 2,
         trapData.y * TILE_SIZE + TILE_SIZE / 2,
-        trapVisualConfig.spritesheetKey,
-        alreadyRevealed ? trapVisualConfig.baseFrame : hiddenFrame,
+        SHARED_HAZARD_SPRITESHEET_KEY,
+        alreadyRevealed
+          ? TRAP_SPIKE_ANIM_FRAMES[TRAP_SPIKE_ANIM_FRAMES.length - 1]
+          : hiddenFrame,
       );
       sprite.setScale(TILE_SIZE / 16);
       sprite.setDepth(3);
@@ -2507,10 +2772,8 @@ export default class MainScene extends Phaser.Scene {
       const spikeSprite = this.add.sprite(
         trapData.x * TILE_SIZE + TILE_SIZE / 2,
         trapData.y * TILE_SIZE + TILE_SIZE / 2,
-        trapVisualConfig.spritesheetKey,
-        trapVisualConfig.spikeAnimFrames[
-          trapVisualConfig.spikeAnimFrames.length - 1
-        ],
+        SHARED_HAZARD_SPRITESHEET_KEY,
+        TRAP_SPIKE_ANIM_FRAMES[TRAP_SPIKE_ANIM_FRAMES.length - 1],
       );
       spikeSprite.setScale(TILE_SIZE / 16);
       spikeSprite.setDepth(4);
@@ -2523,8 +2786,8 @@ export default class MainScene extends Phaser.Scene {
         x: trapData.x,
         y: trapData.y,
         hiddenFrame,
-        baseFrame: trapVisualConfig.baseFrame,
-        spikeAnimFrames: trapVisualConfig.spikeAnimFrames,
+        baseFrame: TRAP_HIDDEN_FRAMES[0],
+        spikeAnimFrames: TRAP_SPIKE_ANIM_FRAMES,
         damageType: trapData.damageType,
         damageAmount: trapData.damageAmount,
         inflictsEffect: trapData.inflictsEffect,
@@ -2532,30 +2795,38 @@ export default class MainScene extends Phaser.Scene {
         triggered: alreadyTriggered,
       });
     });
-    this.miningRockData = savedMiningRockDepleted
-      ? null
-      : data.miningRock || null;
-    if (this.miningRockData) {
-      this.miningRockHits =
-        savedMiningRockHits != null
-          ? savedMiningRockHits
-          : this.miningRockData.totalHits;
+    const rocksData = data.miningRocks || [];
+    rocksData.forEach((rockData, index) => {
+      const savedState = savedMiningRocksState.find((s) => s.index === index);
+      if (savedState && savedState.depleted) return; // ce gisement precis deja epuise - ne pas le recreer
+
+      const hits = savedState ? savedState.hits : rockData.totalHits;
 
       const sprite = this.add.sprite(
-        this.miningRockData.x * TILE_SIZE + TILE_SIZE / 2,
-        this.miningRockData.y * TILE_SIZE + TILE_SIZE / 2,
-        this.currentRawTilesetKey,
-        86,
+        rockData.x * TILE_SIZE + TILE_SIZE / 2,
+        rockData.y * TILE_SIZE + TILE_SIZE / 2,
+        SHARED_HAZARD_SPRITESHEET_KEY,
+        MINING_ROCK_FRAME,
       );
       sprite.setScale(TILE_SIZE / 16);
       sprite.setDepth(4);
-      sprite.setTint(resolveMiningRockTint(this.miningRockData.resourceItemId));
-      this.miningRockSprite = sprite;
-    }
+      sprite.setTint(resolveMiningRockTint(rockData.resourceItemId));
+
+      this.miningRocks.push({
+        index,
+        data: rockData,
+        sprite,
+        hits,
+        depleted: false,
+      });
+    });
 
     this.secretRoomData = data.secretRoom || null;
-    this.secretRoomHintDepth = data.secretRoomHintDepth ?? null;
     const alreadyDiscovered = this.discoveredSecretRoomDepths.includes(depth);
+
+    if (this.secretRoomData && !this.floorsWithSecretRoom.includes(depth)) {
+      this.floorsWithSecretRoom.push(depth);
+    }
 
     if (this.secretRoomData) {
       if (alreadyDiscovered) {
@@ -3334,11 +3605,16 @@ export default class MainScene extends Phaser.Scene {
       ) {
         return " Au fait... on raconte qu'un passage secret se cache quelque part sur cet étage.";
       }
-      if (
-        this.secretRoomHintDepth != null &&
-        !this.discoveredSecretRoomDepths.includes(this.secretRoomHintDepth)
-      ) {
-        return ` Au fait... on raconte qu'un passage secret se cache quelque part à l'étage ${this.secretRoomHintDepth}.`;
+      const knownUndiscovered = this.floorsWithSecretRoom.filter(
+        (d) =>
+          d !== this.currentDepth &&
+          !this.discoveredSecretRoomDepths.includes(d),
+      );
+      if (knownUndiscovered.length > 0) {
+        const hintRng = createRng(`${this.currentSeed}-town-secret-hint`);
+        const pickedDepth =
+          knownUndiscovered[Math.floor(hintRng() * knownUndiscovered.length)];
+        return ` Au fait... on raconte qu'un passage secret se cache quelque part à l'étage ${pickedDepth}.`;
       }
       return "";
     })();
@@ -4526,32 +4802,36 @@ export default class MainScene extends Phaser.Scene {
   }
 
   mineRock() {
-    if (!this.miningRockData || !this.miningRockSprite) return false;
-
-    const rockPx = this.miningRockData.x * TILE_SIZE + TILE_SIZE / 2;
-    const rockPy = this.miningRockData.y * TILE_SIZE + TILE_SIZE / 2;
     const heroX = this.hero.body.center.x;
     const heroY = this.hero.body.center.y;
-    const dist = Math.hypot(rockPx - heroX, rockPy - heroY);
-    if (dist > this.playerMeleeRange) return false;
+
+    const rock = this.miningRocks.find((r) => {
+      if (r.depleted) return false;
+      const rockPx = r.data.x * TILE_SIZE + TILE_SIZE / 2;
+      const rockPy = r.data.y * TILE_SIZE + TILE_SIZE / 2;
+      return (
+        Math.hypot(rockPx - heroX, rockPy - heroY) <= this.playerMeleeRange
+      );
+    });
+    if (!rock) return false;
 
     const toolId = this.equipped.tool;
     const toolDef = toolId ? resolveItemDef(toolId) : null;
     const toolTier = toolDef?.toolTier || 0;
 
-    if (toolTier < this.miningRockData.requiredTier) {
+    if (toolTier < rock.data.requiredTier) {
       this.showLootToast("Cet outil n'est pas assez puissant pour ce gisement");
       return true;
     }
 
-    this.miningRockHits -= 1;
+    rock.hits -= 1;
 
-    const gemChance = this.miningRockData.gemChance || 0;
-    const gemPool = this.miningRockData.gemPool || [];
+    const gemChance = rock.data.gemChance || 0;
+    const gemPool = rock.data.gemPool || [];
     const gotGem = gemPool.length > 0 && Math.random() < gemChance;
     const grantedItemId = gotGem
       ? pickWeightedGem(gemPool)
-      : this.miningRockData.resourceItemId;
+      : rock.data.resourceItemId;
 
     this.addItemToInventory(grantedItemId, 1);
     this.showLootToast(
@@ -4560,11 +4840,10 @@ export default class MainScene extends Phaser.Scene {
         : `${resolveItemDef(grantedItemId).name} obtenu !`,
     );
 
-    if (this.miningRockHits <= 0) {
-      this.miningRockSprite.destroy();
-      this.miningRockSprite = null;
-      this.miningRockData = null;
-      this.miningRockDepleted = true;
+    if (rock.hits <= 0) {
+      rock.sprite.destroy();
+      rock.sprite = null;
+      rock.depleted = true;
       this.showLootToast("Le gisement est épuisé");
     }
 
