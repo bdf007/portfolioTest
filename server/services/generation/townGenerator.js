@@ -44,13 +44,15 @@ function rectOverlapsWithMargin(a, b, margin) {
  * contrairement à une grotte trop pauvre en sol.
  */
 function placeBuildings(grid, width, height, buildingCount, rng, opts) {
-  const { minSize, maxSize, minSpacing, maxTriesPerBuilding } = opts;
+  const { minSpacing, maxTriesPerBuilding } = opts;
   const placed = [];
 
   for (let i = 0; i < buildingCount; i++) {
     for (let attempt = 0; attempt < maxTriesPerBuilding; attempt++) {
-      const w = minSize + Math.floor(rng() * (maxSize - minSize + 1));
-      const h = minSize + Math.floor(rng() * (maxSize - minSize + 1));
+      const footprint =
+        HOUSE_FOOTPRINTS[Math.floor(rng() * HOUSE_FOOTPRINTS.length)];
+      const w = footprint.tileW;
+      const h = footprint.tileH;
       const x = 2 + Math.floor(rng() * Math.max(1, width - w - 4));
       const y = 2 + Math.floor(rng() * Math.max(1, height - h - 4));
 
@@ -60,18 +62,42 @@ function placeBuildings(grid, width, height, buildingCount, rng, opts) {
       );
       if (overlaps) continue;
 
-      placed.push(rect);
+      placed.push({ ...rect, houseKey: footprint.key });
       for (let ty = y; ty < y + h; ty++) {
         for (let tx = x; tx < x + w; tx++) {
           grid[ty][tx] = WALL;
         }
       }
-      break; // batiment place, on passe au suivant
+      break;
     }
   }
 
   return placed;
 }
+
+// gabarits des maisons disponibles (cf. CITY_HOUSES cote client,
+// spriteRegistry.js) - tailles en TUILES, arrondies au superieur a
+// partir des dimensions pixel reelles (ceil(px/16)) pour que le
+// rectangle mural genere ici soit TOUJOURS au moins aussi grand que le
+// sprite reellement dessine cote client, jamais plus petit
+const HOUSE_FOOTPRINTS = [
+  { key: "house_small_red_1", tileW: 5, tileH: 5 },
+  { key: "house_small_orange_2", tileW: 5, tileH: 5 },
+  { key: "house_small_red_3", tileW: 5, tileH: 5 },
+  { key: "house_small_red_4", tileW: 5, tileH: 5 },
+  { key: "house_small_green_1", tileW: 5, tileH: 5 },
+  { key: "house_small_teal_2", tileW: 5, tileH: 5 },
+  { key: "house_small_teal_3", tileW: 5, tileH: 5 },
+  { key: "house_small_blue_4", tileW: 5, tileH: 5 },
+  { key: "house_row_red_A", tileW: 5, tileH: 5 },
+  { key: "house_row_red_B", tileW: 5, tileH: 5 },
+  { key: "house_row_green_A", tileW: 5, tileH: 5 },
+  { key: "house_row_teal_B", tileW: 5, tileH: 5 },
+  { key: "house_tall_red_A", tileW: 7, tileH: 6 },
+  { key: "house_tall_orange_B", tileW: 7, tileH: 6 },
+  { key: "house_tall_green_A", tileW: 7, tileH: 6 },
+  { key: "house_tall_teal_B", tileW: 7, tileH: 6 },
+];
 
 /**
  * @param {Object} options
@@ -90,8 +116,8 @@ function generateTown({
   height,
   seed,
   buildingCount = 8,
-  minBuildingSize = 4,
-  maxBuildingSize = 8,
+  // minBuildingSize = 4,
+  // maxBuildingSize = 8,
   minSpacing = 3,
   maxTriesPerBuilding = 20,
 }) {
@@ -113,11 +139,23 @@ function generateTown({
   }
 
   const buildings = placeBuildings(grid, width, height, buildingCount, rng, {
-    minSize: minBuildingSize,
-    maxSize: maxBuildingSize,
     minSpacing,
     maxTriesPerBuilding,
   });
+
+  // cases protegees = tout le pourtour mural des batiments - ne doivent
+  // JAMAIS etre converties en sol par ensureMinimumPassageWidth, sinon le
+  // rectangle mural retrecit d'un cote sans que building.x/y/w/h (utilisees
+  // pour positionner le SPRITE cote client) ne le sachent, causant un
+  // debordement visuel du sprite hors de son mur
+  const protectedCells = new Set();
+  for (const b of buildings) {
+    for (let ty = b.y; ty < b.y + b.h; ty++) {
+      for (let tx = b.x; tx < b.x + b.w; tx++) {
+        protectedCells.add(`${tx},${ty}`);
+      }
+    }
+  }
 
   // filet de securite : garantit la connexite meme si un placement
   // improbable de batiments avait scelle une poche (cf. commentaire en tete)
@@ -127,7 +165,7 @@ function generateTown({
   // hitbox du heros, pas besoin de la dilatation plus agressive utilisee
   // un temps a l'echelle 16px. N'ajoute que du sol, ne peut donc jamais
   // casser la connexite garantie juste au-dessus.
-  grid = ensureMinimumPassageWidth(grid);
+  grid = ensureMinimumPassageWidth(grid, 8, protectedCells);
 
   // renvoie aussi les rectangles de batiments (pas seulement la grille)
   // - sert par ex. a placer "l'entree" de la boutique juste devant un

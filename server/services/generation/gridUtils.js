@@ -27,13 +27,21 @@ const FLOOR = 0;
  * explicitement protégée - on ne l'ouvre jamais, même si un pincement
  * s'y trouve techniquement.
  */
-function removeDiagonalPinches(grid, maxIterations = 10) {
+function removeDiagonalPinches(
+  grid,
+  maxIterations = 10,
+  protectedCells = null,
+) {
   const height = grid.length;
   const width = grid[0].length;
   let result = grid.map((row) => row.slice());
 
   function isBorder(x, y) {
     return x === 0 || y === 0 || x === width - 1 || y === height - 1;
+  }
+
+  function isProtected(x, y) {
+    return protectedCells ? protectedCells.has(`${x},${y}`) : false;
   }
 
   for (let iter = 0; iter < maxIterations; iter++) {
@@ -48,11 +56,12 @@ function removeDiagonalPinches(grid, maxIterations = 10) {
 
         // diagonale \ en sol, diagonale / en mur -> ouvre un des deux murs
         if (a === FLOOR && d === FLOOR && b === WALL && c === WALL) {
-          if (!isBorder(x + 1, y)) additions.push([x + 1, y]);
+          if (!isBorder(x + 1, y) && !isProtected(x + 1, y))
+            additions.push([x + 1, y]);
         }
         // diagonale / en sol, diagonale \ en mur -> ouvre un des deux murs
         else if (b === FLOOR && c === FLOOR && a === WALL && d === WALL) {
-          if (!isBorder(x, y)) additions.push([x, y]);
+          if (!isBorder(x, y) && !isProtected(x, y)) additions.push([x, y]);
         }
       }
     }
@@ -153,13 +162,17 @@ function keepLargestRegion(grid, width, height) {
  * La bordure extérieure reste protégée : si le seul côté disponible pour
  * élargir un goulot est la bordure, on essaie le côté opposé à la place.
  */
-function widenNarrowPassages(grid, maxIterations = 10) {
+function widenNarrowPassages(grid, maxIterations = 10, protectedCells = null) {
   const height = grid.length;
   const width = grid[0].length;
   let result = grid.map((row) => row.slice());
 
   function isBorder(x, y) {
     return x <= 0 || y <= 0 || x >= width - 1 || y >= height - 1;
+  }
+
+  function isProtected(x, y) {
+    return protectedCells ? protectedCells.has(`${x},${y}`) : false;
   }
 
   for (let iter = 0; iter < maxIterations; iter++) {
@@ -175,8 +188,10 @@ function widenNarrowPassages(grid, maxIterations = 10) {
           result[y - 1][x] === WALL &&
           result[y + 1][x] === WALL;
         if (horizontalPinch) {
-          if (!isBorder(x, y - 1)) additions.push([x, y - 1]);
-          else if (!isBorder(x, y + 1)) additions.push([x, y + 1]);
+          if (!isBorder(x, y - 1) && !isProtected(x, y - 1))
+            additions.push([x, y - 1]);
+          else if (!isBorder(x, y + 1) && !isProtected(x, y + 1))
+            additions.push([x, y + 1]);
           continue;
         }
 
@@ -186,8 +201,10 @@ function widenNarrowPassages(grid, maxIterations = 10) {
           result[y][x - 1] === WALL &&
           result[y][x + 1] === WALL;
         if (verticalPinch) {
-          if (!isBorder(x - 1, y)) additions.push([x - 1, y]);
-          else if (!isBorder(x + 1, y)) additions.push([x + 1, y]);
+          if (!isBorder(x - 1, y) && !isProtected(x - 1, y))
+            additions.push([x - 1, y]);
+          else if (!isBorder(x + 1, y) && !isProtected(x + 1, y))
+            additions.push([x + 1, y]);
         }
       }
     }
@@ -219,12 +236,12 @@ function widenNarrowPassages(grid, maxIterations = 10) {
  * N'ajoute que du sol, ne peut donc jamais casser une connexité déjà
  * garantie par le générateur appelant.
  */
-function ensureMinimumPassageWidth(grid, maxRounds = 8) {
+function ensureMinimumPassageWidth(grid, maxRounds = 8, protectedCells = null) {
   let result = grid;
   for (let round = 0; round < maxRounds; round++) {
     const before = JSON.stringify(result);
-    result = removeDiagonalPinches(result);
-    result = widenNarrowPassages(result);
+    result = removeDiagonalPinches(result, 10, protectedCells);
+    result = widenNarrowPassages(result, 10, protectedCells);
     if (JSON.stringify(result) === before) break;
   }
   return result;
