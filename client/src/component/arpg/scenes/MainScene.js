@@ -873,31 +873,36 @@ export default class MainScene extends Phaser.Scene {
       ps.currentFloorMiningRocksState || [],
       ps.currentFloorEphemeralChests || [],
     );
-    for (const savedSummon of ps.summons || []) {
-      const sprite = this.spawnSummonSprite(
-        savedSummon.spriteKey,
-        this.hero.x + (Math.random() - 0.5) * 40,
-        this.hero.y + (Math.random() - 0.5) * 40,
-      );
-      this.summons.push({
-        sprite,
-        spriteKey: savedSummon.spriteKey,
-        sourceAbilityId: savedSummon.sourceAbilityId,
-        hp: savedSummon.hp,
-        maxHp: savedSummon.maxHp,
-        damage: savedSummon.damage,
-        defense: savedSummon.defense,
-        damageType: savedSummon.damageType,
-        resistances: savedSummon.resistances,
-        persistent: savedSummon.persistent,
-        attackCooldown: createCooldown(ENEMY_ATTACK_COOLDOWN),
-        expiresAt:
-          savedSummon.remainingMs != null
-            ? this.time.now + savedSummon.remainingMs
-            : null,
-        lastDir: "down",
-      });
-    }
+   for (const savedSummon of ps.summons || []) {
+  const sourceAbilityDef = ABILITY_DEFS[savedSummon.sourceAbilityId];
+  const growthConfig = sourceAbilityDef?.growthConfig || null;
+  const growthScale = this.computeFamiliarGrowthScale(growthConfig);
+  const sprite = this.spawnSummonSprite(
+    savedSummon.spriteKey,
+    this.hero.x + (Math.random() - 0.5) * 40,
+    this.hero.y + (Math.random() - 0.5) * 40,
+    growthScale,
+  );
+  this.summons.push({
+    sprite,
+    spriteKey: savedSummon.spriteKey,
+    sourceAbilityId: savedSummon.sourceAbilityId,
+    hp: savedSummon.hp,
+    maxHp: savedSummon.maxHp,
+    damage: savedSummon.damage,
+    defense: savedSummon.defense,
+    damageType: savedSummon.damageType,
+    resistances: savedSummon.resistances,
+    persistent: savedSummon.persistent,
+    attackCooldown: createCooldown(ENEMY_ATTACK_COOLDOWN),
+    expiresAt:
+      savedSummon.remainingMs != null
+        ? this.time.now + savedSummon.remainingMs
+        : null,
+    lastDir: "down",
+    growthConfig,
+  });
+}
     this.events.emit("xp-changed", { xp: this.xp });
     this.events.emit("player-mana-changed", {
       mana: this.playerMana,
@@ -5752,16 +5757,23 @@ export default class MainScene extends Phaser.Scene {
     });
   }
 
-  spawnSummonSprite(spriteKey, x, y) {
-    const summonSpriteInfo =
-      SPRITE_REGISTRY[spriteKey] || SPRITE_REGISTRY.enemyDefault;
-    const sprite = this.summonGroup.create(
-      x,
-      y,
-      summonSpriteInfo.key,
-      summonSpriteInfo.animations.idleDown,
-    );
-    sprite.setScale(summonSpriteInfo.scale);
+  computeFamiliarGrowthScale(growthConfig) {
+  if (!growthConfig) return 1;
+  const { maxLevel, minScaleMultiplier, maxScaleMultiplier } = growthConfig;
+  const progress = Math.min(1, Math.max(0, (this.playerLevel - 1) / (maxLevel - 1)));
+  return minScaleMultiplier + (maxScaleMultiplier - minScaleMultiplier) * progress;
+}
+
+spawnSummonSprite(spriteKey, x, y, scaleMultiplier = 1) {
+  const summonSpriteInfo =
+    SPRITE_REGISTRY[spriteKey] || SPRITE_REGISTRY.enemyDefault;
+  const sprite = this.summonGroup.create(
+    x,
+    y,
+    summonSpriteInfo.key,
+    summonSpriteInfo.animations.idleDown,
+  );
+  sprite.setScale(summonSpriteInfo.scale * scaleMultiplier);
     const hb = summonSpriteInfo.hitbox;
     sprite.body.setSize(hb.width, hb.height).setOffset(hb.offsetX, hb.offsetY);
     sprite.setDepth(8);
@@ -5792,25 +5804,27 @@ export default class MainScene extends Phaser.Scene {
     const summonDefense =
       def.defense ?? Math.round(this.playerDefense * (def.defenseScale || 0));
 
-    const spawnX = this.hero.x + (Math.random() - 0.5) * 40;
-    const spawnY = this.hero.y + (Math.random() - 0.5) * 40;
-    const sprite = this.spawnSummonSprite(def.summonType, spawnX, spawnY);
+const spawnX = this.hero.x + (Math.random() - 0.5) * 40;
+const spawnY = this.hero.y + (Math.random() - 0.5) * 40;
+const growthScale = this.computeFamiliarGrowthScale(def.growthConfig);
+const sprite = this.spawnSummonSprite(def.summonType, spawnX, spawnY, growthScale);
 
-    this.summons.push({
-      sprite,
-      spriteKey: def.summonType,
-      sourceAbilityId: def.id,
-      hp: summonHp,
-      maxHp: summonHp,
-      damage: summonDamage,
-      defense: summonDefense,
-      damageType: def.damageType || "physical",
-      resistances: def.resistances || {},
-      persistent: def.persistent || false,
-      attackCooldown: createCooldown(ENEMY_ATTACK_COOLDOWN),
-      expiresAt: def.durationMs ? this.time.now + def.durationMs : null,
-      lastDir: "down",
-    });
+this.summons.push({
+  sprite,
+  spriteKey: def.summonType,
+  sourceAbilityId: def.id,
+  hp: summonHp,
+  maxHp: summonHp,
+  damage: summonDamage,
+  defense: summonDefense,
+  damageType: def.damageType || "physical",
+  resistances: def.resistances || {},
+  persistent: def.persistent || false,
+  attackCooldown: createCooldown(ENEMY_ATTACK_COOLDOWN),
+  expiresAt: def.durationMs ? this.time.now + def.durationMs : null,
+  lastDir: "down",
+  growthConfig: def.growthConfig || null,
+});
 
     this.showLootToast(`${def.name} invoquée !`);
   }
@@ -7498,9 +7512,17 @@ export default class MainScene extends Phaser.Scene {
       stamina: this.playerStamina,
       maxStamina: this.playerMaxStamina,
     });
-    this.events.emit("level-up", { level });
-    this.events.emit("levelup-available", { available: false });
-    this.persistProgress();
+for (const summon of this.summons) {
+  if (summon.growthConfig) {
+    const growthScale = this.computeFamiliarGrowthScale(summon.growthConfig);
+    const baseSpriteInfo = SPRITE_REGISTRY[summon.spriteKey];
+    if (baseSpriteInfo) summon.sprite.setScale(baseSpriteInfo.scale * growthScale);
+  }
+}
+
+this.events.emit("level-up", { level });
+this.events.emit("levelup-available", { available: false });
+this.persistProgress();
   }
   /**
    * Debloque tout ce qui a unlockLevel <= niveau actuel - separee
