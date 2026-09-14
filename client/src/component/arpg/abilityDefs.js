@@ -508,22 +508,27 @@ export const ABILITY_DEFS = {
     resistances: { cold: 1, fire: -0.5 },
   },
   summonFamiliar: {
-    id: "summonFamiliar",
-    name: "Familier",
-    archetypes: ["mage"],
-    description:
-      "Invoque un familier qui te suit d'étage en étage, jusqu'à sa mort. 40 mana.",
-    manaCost: 1,
-    cooldownMs: 30000,
-    effectType: "summon",
-    summonType: "wolfFamiliar",
-    durationMs: null, // jamais d'expiration par duree - uniquement la mort le fait disparaitre
-    hpScale: 0.5,
-    damageScale: 0.6,
-    defenseScale: 0.5,
-    damageType: "physical",
-    persistent: true,
+  id: "summonFamiliar",
+  name: "Familier",
+  archetypes: ["mage"],
+  description:
+    "Invoque un familier qui te suit d'étage en étage, jusqu'à sa mort. Grandit avec ton niveau. 40 mana.",
+  manaCost: 1,
+  cooldownMs: 30000,
+  effectType: "summon",
+  summonType: "wolfFamiliar",
+  durationMs: null,
+  hpScale: 0.5,
+  damageScale: 0.6,
+  defenseScale: 0.5,
+  damageType: "physical",
+  persistent: true,
+  growthConfig: {
+    maxLevel: 20, // niveau du joueur au-dela duquel le familier arrete de grandir
+    minScaleMultiplier: 1, // taille normale au niveau 1
+    maxScaleMultiplier: 1.8, // taille au niveau maxLevel (et au-dela)
   },
+},
   shortDash: {
     id: "shortDash",
     name: "Ruée",
