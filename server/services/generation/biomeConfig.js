@@ -25,9 +25,9 @@ const BIOMES = [
   {
     id: "cave1",
     minDepth: 1,
-    maxDepth: 6,
+    maxDepth: 2,
     generator: "cavechain",
-    tileset: "cityTiles",
+    tileset: "mines2",
     enemyBaseCount: 3,
     bossRoomSize: 40,
     enemyTypes: ["deer1", "angryBrownMushroom", "gnome"],
@@ -40,7 +40,7 @@ const BIOMES = [
     },
     secretRoomChance: 1, // 0.15 pour 15% de chances par etage - reste absent/0 sur un biome = jamais de salle secrete
     miningConfig: {
-      rockChance: 0.3, // chance qu'AU MOINS un gisement apparaisse cet etage
+      rockChance: 0.7, // chance qu'AU MOINS un gisement apparaisse cet etage
       minRocks: 1,
       maxRocks: 3,
 
@@ -69,10 +69,97 @@ const BIOMES = [
   },
   {
     id: "cave2",
+    minDepth: 3,
+    maxDepth: 4,
+    generator: "cellular",
+    tileset: "mines2",
+    enemyBaseCount: 3,
+    bossRoomSize: 40,
+    enemyTypes: ["deer1", "angryBrownMushroom", "gnome"],
+    chestCount: [1, 3],
+    trapConfig: {
+      frequency: 0.006,
+      damageType: "physical",
+      damageAmount: [8, 15],
+      inflictsEffect: null,
+    },
+    secretRoomChance: 1, // 0.15 pour 15% de chances par etage - reste absent/0 sur un biome = jamais de salle secrete
+    miningConfig: {
+      rockChance: 0.7, // chance qu'AU MOINS un gisement apparaisse cet etage
+      minRocks: 1,
+      maxRocks: 3,
+
+      resourcePool: [
+        { itemId: "copperOre", weight: 5, requiredTier: 1 },
+        { itemId: "coalOre", weight: 1, requiredTier: 1 },
+        { itemId: "ironOre", weight: 1, requiredTier: 2 },
+      ],
+      totalHits: [1, 6], // nombre de coups avant epuisement
+      gemChance: 0.15, // 15% de chance PAR COUP d'obtenir une gemme a la place du metal
+      gemPool: [
+        { itemId: "smokyQuartz", weight: 5 },
+        { itemId: "ruby", weight: 2 },
+        { itemId: "aquaMarine", weight: 1 },
+        { itemId: "peridot", weight: 0.5 },
+        { itemId: "ironOre", weight: 0.5 },
+      ],
+    },
+    generatorParams: {
+      width: 40,
+      height: 40,
+      wallProbability: 0.45,
+      minFloorRatio: 0.3,
+    },
+  },
+  {
+    id: "cave3",
+    minDepth: 5,
+    maxDepth: 6,
+    generator: "bsp",
+    tileset: "mines2",
+    enemyBaseCount: 3,
+    bossRoomSize: 40,
+    enemyTypes: ["deer1", "angryBrownMushroom", "gnome"],
+    chestCount: [1, 3],
+    trapConfig: {
+      frequency: 0.006,
+      damageType: "physical",
+      damageAmount: [8, 15],
+      inflictsEffect: null,
+    },
+    secretRoomChance: 1, // 0.15 pour 15% de chances par etage - reste absent/0 sur un biome = jamais de salle secrete
+    miningConfig: {
+      rockChance: 0.7, // chance qu'AU MOINS un gisement apparaisse cet etage
+      minRocks: 1,
+      maxRocks: 3,
+
+      resourcePool: [
+        { itemId: "copperOre", weight: 4, requiredTier: 1 },
+        { itemId: "coalOre", weight: 1, requiredTier: 1 },
+        { itemId: "ironOre", weight: 3, requiredTier: 2 },
+      ],
+      totalHits: [1, 6], // nombre de coups avant epuisement
+      gemChance: 0.15, // 15% de chance PAR COUP d'obtenir une gemme a la place du metal
+      gemPool: [
+        { itemId: "smokyQuartz", weight: 5 },
+        { itemId: "ruby", weight: 2 },
+        { itemId: "aquaMarine", weight: 1 },
+        { itemId: "peridot", weight: 0.5 },
+        { itemId: "ironOre", weight: 0.5 },
+      ],
+    },
+    generatorParams: {
+      width: 40,
+      height: 40,
+      corridorWidth: 2,
+    },
+  },
+  {
+    id: "cave4",
     minDepth: 7,
     maxDepth: 7,
-    generator: "randomwalk",
-    tileset: "cityTiles",
+    generator: "drunkardwalk",
+    tileset: "mines2",
     enemyBaseCount: 3,
     bossRoomSize: 40,
     enemyTypes: ["angryTrent"],
@@ -85,7 +172,7 @@ const BIOMES = [
     },
     secretRoomChance: 1, // 0.15 pour 15% de chances par etage - reste absent/0 sur un biome = jamais de salle secrete
     miningConfig: {
-      rockChance: 0.3, // chance qu'AU MOINS un gisement apparaisse cet etage
+      rockChance: 0.7, // chance qu'AU MOINS un gisement apparaisse cet etage
       minRocks: 1,
       maxRocks: 3,
 
@@ -102,18 +189,17 @@ const BIOMES = [
     generatorParams: {
       width: 40,
       height: 40,
-      roomSize: 5,
-      roomCount: 10,
-      stratBias: 0.8,
-      doorWidth: 2,
+      targetFloorRatio: 0.4,
+      maxSteps: 50000,
+      walkerCount: 3,
     },
   },
   {
     id: "desert1",
     minDepth: 8,
     maxDepth: 8,
-    generator: "randomwalk",
-    tileset: "cityTiles",
+    generator: "noise",
+    tileset: "mines2",
     enemyBaseCount: 3,
     enemyTypes: ["gnome"],
     chestCount: [1, 3],
@@ -125,7 +211,7 @@ const BIOMES = [
     },
     secretRoomChance: 1,
     miningConfig: {
-      rockChance: 0.3, // chance qu'AU MOINS un gisement apparaisse cet etage
+      rockChance: 0.7, // chance qu'AU MOINS un gisement apparaisse cet etage
       minRocks: 1,
       maxRocks: 3,
       resourcePool: [{ itemId: "silverOre", weight: 1, requiredTier: 3 }], // objet obtenu a chaque coup
@@ -139,12 +225,10 @@ const BIOMES = [
       ],
     },
     generatorParams: {
-      width: 40,
-      height: 40,
-      roomSize: 5,
-      roomCount: 20,
-      stratBias: 0.8,
-      doorWidth: 2,
+      width: 80,
+      height: 80,
+      noiseScale: 5,
+      minFloorRatio: 0.3,
     },
   },
   {
@@ -152,8 +236,9 @@ const BIOMES = [
     minDepth: 9,
     maxDepth: 9,
     generator: "voronoi",
-    tileset: "cityTiles",
+    tileset: "mines2",
     enemyBaseCount: 3,
+    bossRoomSize: 40,
     enemyTypes: ["knifedBat"],
     chestCount: [2, 4],
     trapConfig: {
@@ -164,7 +249,7 @@ const BIOMES = [
     },
     secretRoomChance: 1,
     miningConfig: {
-      rockChance: 0.3, // chance qu'AU MOINS un gisement apparaisse cet etage
+      rockChance: 0.7, // chance qu'AU MOINS un gisement apparaisse cet etage
       minRocks: 1,
       maxRocks: 3,
       resourcePool: [{ itemId: "goldOre", weight: 5, requiredTier: 5 }], // objet obtenu a chaque coup
@@ -183,8 +268,8 @@ const BIOMES = [
     id: "cave4",
     minDepth: 10,
     maxDepth: 10,
-    generator: "noise",
-    tileset: "cityTiles",
+    generator: "voronoi",
+    tileset: "mines2",
     enemyBaseCount: 3,
     enemyTypes: ["mudGolem"],
     chestCount: [1, 3],
@@ -197,7 +282,7 @@ const BIOMES = [
     },
     secretRoomChance: 1,
     miningConfig: {
-      rockChance: 0.3, // chance qu'AU MOINS un gisement apparaisse cet etage
+      rockChance: 0.7, // chance qu'AU MOINS un gisement apparaisse cet etage
       minRocks: 1,
       maxRocks: 3,
       resourcePool: [{ itemId: "platinumOre", weight: 5, requiredTier: 6 }], // objet obtenu a chaque coup
@@ -211,10 +296,9 @@ const BIOMES = [
       ],
     },
     generatorParams: {
-      width: 40,
-      height: 40,
-      passageWidth: 2,
-      wallThickness: 1,
+      width: 80,
+      height: 80,
+      cellCount: 25,
     },
   },
   {
@@ -222,7 +306,7 @@ const BIOMES = [
     minDepth: 11,
     maxDepth: 11,
     generator: "randomwalk",
-    tileset: "cityTiles",
+    tileset: "mines2",
     enemyBaseCount: 3,
     enemyTypes: ["redBeetle"],
     chestCount: [1, 3],
@@ -234,7 +318,7 @@ const BIOMES = [
     },
     secretRoomChance: 1,
     miningConfig: {
-      rockChance: 0.3, // chance qu'AU MOINS un gisement apparaisse cet etage
+      rockChance: 0.7, // chance qu'AU MOINS un gisement apparaisse cet etage
       minRocks: 1,
       maxRocks: 3,
       resourcePool: [{ itemId: "cobaltOre", weight: 5, requiredTier: 7 }], // objet obtenu a chaque coup
@@ -261,7 +345,7 @@ const BIOMES = [
     minDepth: 12,
     maxDepth: 12,
     generator: "noise",
-    tileset: "cityTiles",
+    tileset: "cityTiles_0_2",
     enemyBaseCount: 3,
     enemyTypes: ["pinkOgre"],
     chestCount: [2, 4],
@@ -273,7 +357,7 @@ const BIOMES = [
     },
     secretRoomChance: 1,
     miningConfig: {
-      rockChance: 0.3, // chance qu'AU MOINS un gisement apparaisse cet etage
+      rockChance: 0.7, // chance qu'AU MOINS un gisement apparaisse cet etage
       minRocks: 1,
       maxRocks: 3,
       resourcePool: [{ itemId: "adamantineOre", weight: 5, requiredTier: 8 }],
@@ -293,7 +377,7 @@ const BIOMES = [
     minDepth: 13,
     maxDepth: 13,
     generator: "voronoi",
-    tileset: "cityTiles",
+    tileset: "cityTiles_0_2",
     enemyBaseCount: 3,
     enemyTypes: ["mudGolem"],
     chestCount: [2, 4],
@@ -305,7 +389,7 @@ const BIOMES = [
     },
     secretRoomChance: 1,
     miningConfig: {
-      rockChance: 0.3, // chance qu'AU MOINS un gisement apparaisse cet etage
+      rockChance: 0.7, // chance qu'AU MOINS un gisement apparaisse cet etage
       minRocks: 1,
       maxRocks: 3,
       resourcePool: [{ itemId: "crimsonOre", weight: 5, requiredTier: 9 }],
@@ -325,7 +409,7 @@ const BIOMES = [
     minDepth: 14,
     maxDepth: 14,
     generator: "maze",
-    tileset: "cityTiles",
+    tileset: "cityTiles_0_2",
     enemyBaseCount: 3,
     bossRoomSize: 40,
     enemyTypes: ["deer1"],
@@ -338,7 +422,7 @@ const BIOMES = [
     },
     secretRoomChance: 1,
     miningConfig: {
-      rockChance: 0.3, // chance qu'AU MOINS un gisement apparaisse cet etage
+      rockChance: 0.7, // chance qu'AU MOINS un gisement apparaisse cet etage
       minRocks: 1,
       maxRocks: 3,
       resourcePool: [{ itemId: "angelicOre", weight: 5, requiredTier: 10 }],
@@ -362,7 +446,7 @@ const BIOMES = [
     minDepth: 15,
     maxDepth: 16,
     generator: "maze",
-    tileset: "cityTiles",
+    tileset: "cityTiles_0_2",
     enemyBaseCount: 3,
     enemyTypes: ["deer1"],
     chestCount: [1, 3],
@@ -374,7 +458,7 @@ const BIOMES = [
     },
     secretRoomChance: 1,
     miningConfig: {
-      rockChance: 0.3, // chance qu'AU MOINS un gisement apparaisse cet etage
+      rockChance: 0.7, // chance qu'AU MOINS un gisement apparaisse cet etage
       minRocks: 1,
       maxRocks: 3,
       resourcePool: [{ itemId: "fatefulOre", weight: 5, requiredTier: 11 }],
@@ -394,7 +478,7 @@ const BIOMES = [
     minDepth: 17,
     maxDepth: 18,
     generator: "cellular",
-    tileset: "cityTiles",
+    tileset: "cityTiles_0_2",
     enemyBaseCount: 10,
     enemyTypes: [
       "redBeetle",
@@ -413,7 +497,7 @@ const BIOMES = [
     },
     secretRoomChance: 1,
     miningConfig: {
-      rockChance: 0.3, // chance qu'AU MOINS un gisement apparaisse cet etage
+      rockChance: 0.7, // chance qu'AU MOINS un gisement apparaisse cet etage
       minRocks: 1,
       maxRocks: 3,
       resourcePool: [{ itemId: "novaOre", weight: 5, requiredTier: 12 }],
@@ -434,7 +518,7 @@ const BIOMES = [
     minDepth: 19,
     maxDepth: MAX_DEPTH,
     generator: "bsp",
-    tileset: "cityTiles",
+    tileset: "cityTiles_0_2",
     enemyBaseCount: 10,
     bossRoomSize: 40,
     enemyTypes: [
@@ -454,7 +538,7 @@ const BIOMES = [
     },
     secretRoomChance: 1,
     miningConfig: {
-      rockChance: 0.3, // chance qu'AU MOINS un gisement apparaisse cet etage
+      rockChance: 0.7, // chance qu'AU MOINS un gisement apparaisse cet etage
       minRocks: 1,
       maxRocks: 3,
       resourcePool: [{ itemId: "novaOre", weight: 5, requiredTier: 12 }],
