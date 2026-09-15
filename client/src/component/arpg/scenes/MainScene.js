@@ -269,33 +269,66 @@ const WALL_CORNER_INDEX_TO_FRAME_0_1 = [
 ];
 const WALL_CORNER_INDEX_TO_FRAME_0_0_DEEP_CAVE = [
   224,
-  75,
-  32,
-  146,
-  [72, 37],
-  [72, 37],
-  35,
-  72,
+  152,
+  0,
+  108,
+  5,
+  [152, 5],
+  2,
   227,
-  110,
-  189,
+  157,
+  154,
+  [5, 152],
   640,
-  151,
-  303,
-  [72, 37],
-  72,
+  119,
+  111,
+  111,
+  528,
 ];
-const WALL_CORNER_INDEX_TO_FRAME_CITY_TILE_0_3 = [
+const WALL_CORNER_INDEX_TO_FRAME_CITY_TILE_0_1 = [
   {
     variants: [
       { tiles: 7, weight: 5 }, // mur normal, le plus frequent
-      // { tiles: 71, weight: 1 }, // meme mur + déco superposee, plus rare
-      // { tiles: 86, weight: 1 }, // autre variante, encore plus rare
-      // { tiles: 87, weight: 1 },
-      // { tiles: 69, weight: 1 },
-      // { tiles: 85, weight: 1 },
+      { tiles: 228, weight: 1 }, // meme mur + déco superposee, plus rare
+      { tiles: 260, weight: 1 }, // autre variante, encore plus rare
     ],
   },
+  64,
+  0,
+  32,
+  2,
+  [32, 2],
+  1,
+  68,
+  66,
+  65,
+  [66, 0],
+  36,
+  34,
+  35,
+  67,
+  4,
+];
+const WALL_CORNER_INDEX_TO_FRAME_CITY_TILE_0_2 = [
+  7,
+  160,
+  96,
+  128,
+  98,
+  [160, 129],
+  97,
+  132,
+  162,
+  161,
+  [162, 129],
+  100,
+  130,
+  99,
+  131,
+  129,
+];
+const WALL_CORNER_INDEX_TO_FRAME_CITY_TILE_0_3 = [
+  7,
   256,
   192,
   224,
@@ -304,19 +337,28 @@ const WALL_CORNER_INDEX_TO_FRAME_CITY_TILE_0_3 = [
   193,
   196,
   258,
-  {
-    variants: [
-      { tiles: 257, weight: 5 }, // mur normal, le plus frequent
-      // { tiles: [257, 46], weight: 1 }, // meme mur + déco superposee, plus rare
-      // { tiles: [257, 183], weight: 1 }, // autre variante, encore plus rare
-      // { tiles: [257, 182], weight: 1 }, // autre variante, encore plus rare
-      // { tiles: [257, 181], weight: 1 }, // autre variante, encore plus rare
-      // { tiles: [257, 70], weight: 1 }, // autre variante, encore plus rare
-    ],
-  },
+  257,
   [258, 192],
   164,
   226,
+  163,
+  195,
+  225,
+];
+const WALL_CORNER_INDEX_TO_FRAME_CITY_TILE_0_4 = [
+  7,
+  352,
+  288,
+  320,
+  290,
+  [320, 290],
+  289,
+  196,
+  354,
+  353,
+  [354, 288],
+  164,
+  322,
   163,
   195,
   225,
@@ -356,6 +398,52 @@ const WALL_CORNER_INDEX_TO_FRAME_DARKWOODS_1_3 = [
   116,
   113,
   113,
+];
+const WALL_CORNER_INDEX_TO_FRAME_STANDARD_FIELDS_0_1 = [
+  {
+    variants: [
+      { tiles: 0, weight: 5 },
+      { tiles: 1, weight: 1 },
+    ],
+  },
+  48,
+  16,
+  32,
+  18,
+  [48, 18],
+  17,
+  19,
+  50,
+  49,
+  [18, 35],
+  35,
+  34,
+  36,
+  20,
+  33,
+];
+const WALL_CORNER_INDEX_TO_FRAME_STANDARD_FIELDS_1_1 = [
+  {
+    variants: [
+      { tiles: 1, weight: 5 },
+      { tiles: 0, weight: 1 },
+    ],
+  },
+  53,
+  21,
+  37,
+  23,
+  [53, 23],
+  22,
+  19,
+  55,
+  54,
+  [23, 53],
+  35,
+  39,
+  36,
+  20,
+  33,
 ];
 const WALL_CORNER_INDEX_TO_FRAME_1_0 = [
   48, 80, 48, 64, 50, 80, 49, 68, 82, 81, 50, 52, 66, 51, 67, 65,
@@ -674,6 +762,8 @@ export default class MainScene extends Phaser.Scene {
     this.secretLevers = [];
     this.secretWallMarker = null;
     this.miningRocks = []; // tableau de {index, data, sprite, hits, depleted}
+    this.forageNodes = [];
+    this.decorationSprites = [];
     this.discoveredSecretRoomDepths = [];
     this.floorsWithSecretRoom = [];
     this.quests = {};
@@ -817,6 +907,15 @@ export default class MainScene extends Phaser.Scene {
     this.playerAttributes = ps.playerAttributes || { ...DEFAULT_ATTRIBUTES };
     this.unspentAttributePoints = ps.unspentAttributePoints || 0;
     this.quests = ps.quests || {};
+    for (const qs of Object.values(this.quests)) {
+      if (
+        qs.questId === "obtainItem" &&
+        qs.isBossItem === undefined &&
+        !qs.targetEnemyType
+      ) {
+        qs.isBossItem = true; // rattrape une quete acceptee avant l'ajout de ce champ
+      }
+    }
     this.inventory = ps.inventory || [];
     this.hotbarSlots = ps.hotbarSlots || new Array(9).fill(null);
     this.unlockedAbilities = ps.unlockedAbilities || [];
@@ -872,12 +971,17 @@ export default class MainScene extends Phaser.Scene {
       ps.currentFloorLeverActivations || [],
       ps.currentFloorMiningRocksState || [],
       ps.currentFloorEphemeralChests || [],
+      ps.currentFloorForageNodesState || [],
     );
     for (const savedSummon of ps.summons || []) {
+      const sourceAbilityDef = ABILITY_DEFS[savedSummon.sourceAbilityId];
+      const growthConfig = sourceAbilityDef?.growthConfig || null;
+      const growthScale = this.computeFamiliarGrowthScale(growthConfig);
       const sprite = this.spawnSummonSprite(
         savedSummon.spriteKey,
         this.hero.x + (Math.random() - 0.5) * 40,
         this.hero.y + (Math.random() - 0.5) * 40,
+        growthScale,
       );
       this.summons.push({
         sprite,
@@ -896,6 +1000,7 @@ export default class MainScene extends Phaser.Scene {
             ? this.time.now + savedSummon.remainingMs
             : null,
         lastDir: "down",
+        growthConfig,
       });
     }
     this.events.emit("xp-changed", { xp: this.xp });
@@ -1379,6 +1484,11 @@ export default class MainScene extends Phaser.Scene {
             hits: r.hits,
             depleted: r.depleted,
           })),
+          currentFloorForageNodesState: this.forageNodes.map((n) => ({
+            index: n.index,
+            hits: n.hits,
+            depleted: n.depleted,
+          })),
           currentFloorEphemeralChests: this.chests
             .filter((c) => c.ephemeral)
             .map((c) => ({
@@ -1628,7 +1738,8 @@ export default class MainScene extends Phaser.Scene {
     savedLeverActivations = [],
     savedMiningRocksState = [],
     savedEphemeralChests = [],
-  ) {
+    savedForageNodesState = [],
+    ) {
     this.currentFloorChestRemainingLoot = savedChestRemainingLoot || {};
     this.currentFloorTriggeredTraps = savedTriggeredTraps || [];
     this.currentFloorRevealedTraps = savedRevealedTraps || [];
@@ -1791,6 +1902,12 @@ export default class MainScene extends Phaser.Scene {
       if (r.sprite) r.sprite.destroy();
     });
     this.miningRocks = [];
+    this.forageNodes.forEach((n) => {
+      if (n.sprite) n.sprite.destroy();
+    });
+    this.forageNodes = [];
+    this.decorationSprites.forEach((s) => s.destroy());
+    this.decorationSprites = [];
     this.secretRoomData = null;
     this.secretDoorOpened = false;
     this.dialogOpen = false;
@@ -1858,7 +1975,8 @@ export default class MainScene extends Phaser.Scene {
       tileset === "darkwoods_1_2" ||
       tileset === "darkwoods_1_3" ||
       tileset === "darkwoods2" ||
-      tileset === "standardFields2" ||
+      tileset === "standarFields_0_1" ||
+      tileset === "standarFields_1_1" ||
       tileset === "desertMountain2" ||
       tileset === "desertMountain3" ||
       tileset === "desert2" ||
@@ -1874,7 +1992,10 @@ export default class MainScene extends Phaser.Scene {
       tileset === "tower1" || // WALL_CORNER_INDEX_TO_FRAME_0_0_TOWER1
       tileset === "deepCave1" || // WALL_CORNER_INDEX_TO_FRAME_0_0
       tileset === "cityWalls1" ||
-      tileset === "cityTiles"; // WALL_CORNER_INDEX_TO_FRAME_0_0_CITY_WALLS1
+      tileset === "cityTiles_0_1" ||
+      tileset === "cityTiles_0_2" ||
+      tileset === "cityTiles_0_3" ||
+      tileset === "cityTiles_0_4";
     const useDungeon1Autotile = tileset === "dungeon1";
     const useFortress1Autotile = tileset === "fortress1";
 
@@ -2299,11 +2420,41 @@ export default class MainScene extends Phaser.Scene {
       this.currentRawTilesetKey = DEEP_CAVE_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
       this.currentRenderGrid = renderGrid;
       this.currentSlotSourceTileIds = result.slotSourceTileIds;
-    } else if (tileset === "cityTiles") {
+    } else if (tileset === "cityTiles_0_1") {
       const result = this.composeCornerAutotileTexture(
         grid,
         CITY_TILES_AUTOTILE_SPRITESHEET,
-        "cityTiles3",
+        "cityTiles_0_1",
+        WALL_CORNER_INDEX_TO_FRAME_CITY_TILE_0_1,
+        225,
+      );
+      phaserTilesetKey = result.phaserTilesetKey;
+      renderGrid = result.renderGrid;
+      composedFloorSlots = result.floorSlotIndices;
+      this.currentFloorTileIndex = composedFloorSlots[0];
+      this.currentRawTilesetKey = CITY_TILES_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
+      this.currentRenderGrid = renderGrid;
+      this.currentSlotSourceTileIds = result.slotSourceTileIds;
+    } else if (tileset === "cityTiles_0_2") {
+      const result = this.composeCornerAutotileTexture(
+        grid,
+        CITY_TILES_AUTOTILE_SPRITESHEET,
+        "cityTiles_0_2",
+        WALL_CORNER_INDEX_TO_FRAME_CITY_TILE_0_2,
+        225,
+      );
+      phaserTilesetKey = result.phaserTilesetKey;
+      renderGrid = result.renderGrid;
+      composedFloorSlots = result.floorSlotIndices;
+      this.currentFloorTileIndex = composedFloorSlots[0];
+      this.currentRawTilesetKey = CITY_TILES_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
+      this.currentRenderGrid = renderGrid;
+      this.currentSlotSourceTileIds = result.slotSourceTileIds;
+    } else if (tileset === "cityTiles_0_3") {
+      const result = this.composeCornerAutotileTexture(
+        grid,
+        CITY_TILES_AUTOTILE_SPRITESHEET,
+        "cityTiles_0_3",
         WALL_CORNER_INDEX_TO_FRAME_CITY_TILE_0_3,
         225,
       );
@@ -2314,11 +2465,43 @@ export default class MainScene extends Phaser.Scene {
       this.currentRawTilesetKey = CITY_TILES_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
       this.currentRenderGrid = renderGrid;
       this.currentSlotSourceTileIds = result.slotSourceTileIds;
-    } else if (tileset === "standardFields2") {
+    } else if (tileset === "cityTiles_0_4") {
+      const result = this.composeCornerAutotileTexture(
+        grid,
+        CITY_TILES_AUTOTILE_SPRITESHEET,
+        "cityTiles_0_4",
+        WALL_CORNER_INDEX_TO_FRAME_CITY_TILE_0_4,
+        259,
+      );
+      phaserTilesetKey = result.phaserTilesetKey;
+      renderGrid = result.renderGrid;
+      composedFloorSlots = result.floorSlotIndices;
+      this.currentFloorTileIndex = composedFloorSlots[0];
+      this.currentRawTilesetKey = CITY_TILES_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
+      this.currentRenderGrid = renderGrid;
+      this.currentSlotSourceTileIds = result.slotSourceTileIds;
+    } else if (tileset === "standarFields_0_1") {
       const result = this.composeCornerAutotileTexture(
         grid,
         STANDARD_FIELDS2_AUTOTILE_SPRITESHEET,
-        "standardFields2",
+        "standarFields_0_1",
+        WALL_CORNER_INDEX_TO_FRAME_STANDARD_FIELDS_0_1,
+        81,
+      );
+      phaserTilesetKey = result.phaserTilesetKey;
+      renderGrid = result.renderGrid;
+      composedFloorSlots = result.floorSlotIndices;
+      this.currentFloorTileIndex = composedFloorSlots[0];
+      this.currentRawTilesetKey = STANDARD_FIELDS2_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
+      this.currentRenderGrid = renderGrid;
+      this.currentSlotSourceTileIds = result.slotSourceTileIds;
+    } else if (tileset === "standarFields_1_1") {
+      const result = this.composeCornerAutotileTexture(
+        grid,
+        STANDARD_FIELDS2_AUTOTILE_SPRITESHEET,
+        "standarFields_1_1",
+        WALL_CORNER_INDEX_TO_FRAME_STANDARD_FIELDS_1_1,
+        81,
       );
       phaserTilesetKey = result.phaserTilesetKey;
       renderGrid = result.renderGrid;
@@ -2688,6 +2871,9 @@ export default class MainScene extends Phaser.Scene {
         alreadyOpened ? variant.openFrame : variant.closedFrame,
       );
       sprite.setDepth(7);
+      if (chestData.propType === "crate") {
+        sprite.setTint(0x8d6e63); // PLACEHOLDER - teinte brune pour distinguer une caisse d'un vrai coffre, en attendant un vrai sprite
+      }
       // collision avec le héros (désactivée pour l'instant)
       // this.physics.add.existing(sprite, true);
       // this.levelColliders.push(this.physics.add.collider(this.hero, sprite));
@@ -2819,6 +3005,49 @@ export default class MainScene extends Phaser.Scene {
         hits,
         depleted: false,
       });
+    });
+
+    const forageData = data.forageNodes || [];
+    forageData.forEach((nodeData, index) => {
+      const savedState = savedForageNodesState.find((s) => s.index === index);
+      if (savedState && savedState.depleted) return;
+
+      const hits = savedState ? savedState.hits : nodeData.totalHits;
+
+      // PLACEHOLDER - remplace par un vrai sprite d'arbre/plante une fois
+      // une planche identifiee, meme demarche que pour les rochers
+      const sprite = this.add.circle(
+        nodeData.x * TILE_SIZE + TILE_SIZE / 2,
+        nodeData.y * TILE_SIZE + TILE_SIZE / 2,
+        TILE_SIZE * 0.35,
+        0x2e7d32,
+      );
+      sprite.setDepth(4);
+      sprite.setStrokeStyle(2, 0x1b5e20);
+
+      this.forageNodes.push({
+        index,
+        data: nodeData,
+        sprite,
+        hits,
+        depleted: false,
+      });
+    });
+
+    const DECOR_PLACEHOLDER_COLORS = {
+      rock_small: 0x757575,
+      bush: 0x388e3c,
+      flower_patch: 0xe91e63,
+    };
+    (data.decorations || []).forEach((decorData) => {
+      const sprite = this.add.circle(
+        decorData.x * TILE_SIZE + TILE_SIZE / 2,
+        decorData.y * TILE_SIZE + TILE_SIZE / 2,
+        TILE_SIZE * 0.25,
+        DECOR_PLACEHOLDER_COLORS[decorData.decorType] || 0x9e9e9e,
+      );
+      sprite.setDepth(4);
+      this.decorationSprites.push(sprite);
     });
 
     this.secretRoomData = data.secretRoom || null;
@@ -3472,14 +3701,24 @@ export default class MainScene extends Phaser.Scene {
   }
 
   maybeInjectDeliveryQuest(eligibleKeys) {
-    if (eligibleKeys.length === 0) return;
+    // jamais une quete liee a un boss (obtainItem garanti ou defeatBoss) -
+    // l'ecraser silencieusement briserait la garantie d'objet de boss
+    // (isBossItem, verifiee dans damageEnemy) avant meme que le joueur
+    // ait pu la voir
+    const safeKeys = eligibleKeys.filter((k) => {
+      const q = this.quests[k];
+      if (!q) return false;
+      if (q.questId === "defeatBoss") return false;
+      if (q.questId === "obtainItem" && q.isBossItem) return false;
+      return true;
+    });
+    if (safeKeys.length === 0) return;
     if (this.currentBiomeId !== "town") return;
 
     const injectRng = createRng(`${this.currentSeed}-delivery-inject`);
     if (injectRng() >= 0.2) return;
 
-    const giverKey =
-      eligibleKeys[Math.floor(injectRng() * eligibleKeys.length)];
+    const giverKey = safeKeys[Math.floor(injectRng() * safeKeys.length)];
 
     const firstFutureTown = Math.floor(this.currentDepth / 10) * 10 + 10;
     const futureCandidates = [];
@@ -3516,7 +3755,7 @@ export default class MainScene extends Phaser.Scene {
     giverQs.completed = false;
 
     if (style === "sameTown") {
-      const otherKeys = eligibleKeys.filter((k) => k !== giverKey);
+      const otherKeys = safeKeys.filter((k) => k !== giverKey);
       const receiverKey = otherKeys[Math.floor(injectRng() * otherKeys.length)];
       this.quests[receiverKey] = {
         questId: "delivery",
@@ -4001,6 +4240,69 @@ export default class MainScene extends Phaser.Scene {
         state[chestTileY][chestTileX] === 2;
       chest.sprite.setVisible(chestVisible);
     }
+    for (const rock of this.miningRocks) {
+      if (!rock.sprite) continue; // gisement deja epuise - plus de sprite a afficher
+      const rockTileX = Math.floor(rock.sprite.x / TILE_SIZE);
+      const rockTileY = Math.floor(rock.sprite.y / TILE_SIZE);
+      const state = this.fogState.state;
+      const rockVisible =
+        rockTileY >= 0 &&
+        rockTileX >= 0 &&
+        rockTileY < state.length &&
+        rockTileX < state[0].length &&
+        state[rockTileY][rockTileX] === 2;
+      rock.sprite.setVisible(rockVisible);
+    }
+    for (const node of this.forageNodes) {
+      if (!node.sprite) continue;
+      const nodeTileX = Math.floor(node.sprite.x / TILE_SIZE);
+      const nodeTileY = Math.floor(node.sprite.y / TILE_SIZE);
+      const state = this.fogState.state;
+      const nodeVisible =
+        nodeTileY >= 0 &&
+        nodeTileX >= 0 &&
+        nodeTileY < state.length &&
+        nodeTileX < state[0].length &&
+        state[nodeTileY][nodeTileX] === 2;
+      node.sprite.setVisible(nodeVisible);
+    }
+    for (const sprite of this.decorationSprites) {
+      const tileX = Math.floor(sprite.x / TILE_SIZE);
+      const tileY = Math.floor(sprite.y / TILE_SIZE);
+      const state = this.fogState.state;
+      const visible =
+        tileY >= 0 &&
+        tileX >= 0 &&
+        tileY < state.length &&
+        tileX < state[0].length &&
+        state[tileY][tileX] === 2;
+      sprite.setVisible(visible);
+    }
+    const fogStateForSecrets = this.fogState.state;
+    function isTileCurrentlyVisible(tileX, tileY) {
+      return (
+        tileY >= 0 &&
+        tileX >= 0 &&
+        tileY < fogStateForSecrets.length &&
+        tileX < fogStateForSecrets[0].length &&
+        fogStateForSecrets[tileY][tileX] === 2
+      );
+    }
+
+    for (const lever of this.secretLevers) {
+      if (lever.activated) continue; // deja actionne - reste visible en permanence, meme hors du champ de vision actuel
+      const visible = isTileCurrentlyVisible(lever.x, lever.y);
+      lever.sprite.setVisible(visible);
+    }
+
+    if (
+      this.secretWallMarker &&
+      this.secretRoomData &&
+      !this.secretDoorOpened
+    ) {
+      const door = this.secretRoomData.doorTile;
+      this.secretWallMarker.setVisible(isTileCurrentlyVisible(door.x, door.y));
+    }
     this.updateEnemyAttacks(now);
     this.updateBossSummons();
     this.updateProjectiles();
@@ -4155,6 +4457,13 @@ export default class MainScene extends Phaser.Scene {
 
       const ex = Math.floor(enemy.sprite.x / TILE_SIZE);
       const ey = Math.floor(enemy.sprite.y / TILE_SIZE);
+
+      if (ey < 0 || ey >= height || ex < 0 || ex >= width) {
+        console.error(
+          `[updateEnemyDecisions] ennemi hors limites ! isBoss=${enemy.isBoss} archetype=${enemy.archetype} ex=${ex} ey=${ey} (grille: ${width}x${height}) sprite.x=${enemy.sprite.x} sprite.y=${enemy.sprite.y}`,
+        );
+        continue; // evite le plantage en attendant le vrai correctif
+      }
 
       let targetTileX = playerTileX;
       let targetTileY = playerTileY;
@@ -4801,6 +5110,53 @@ export default class MainScene extends Phaser.Scene {
     );
   }
 
+  forageNode() {
+  const heroX = this.hero.body.center.x;
+  const heroY = this.hero.body.center.y;
+
+  const node = this.forageNodes.find((n) => {
+    if (n.depleted) return false;
+    const nodePx = n.data.x * TILE_SIZE + TILE_SIZE / 2;
+    const nodePy = n.data.y * TILE_SIZE + TILE_SIZE / 2;
+    return Math.hypot(nodePx - heroX, nodePy - heroY) <= this.playerMeleeRange;
+  });
+  if (!node) return false;
+
+  const toolId = this.equipped.tool;
+  const toolDef = toolId ? resolveItemDef(toolId) : null;
+  const toolTier = toolDef?.toolTier || 0;
+  const toolType = toolDef?.toolType || null;
+
+  if (toolType !== "axe" || toolTier < node.data.requiredTier) {
+    this.showLootToast("Il te faut une hache adaptée pour ça");
+    return true;
+  }
+
+  node.hits -= 1;
+
+  const bonusChance = node.data.bonusChance || 0;
+  const bonusPool = node.data.bonusPool || [];
+  const gotBonus = bonusPool.length > 0 && Math.random() < bonusChance;
+  const grantedItemId = gotBonus ? pickWeightedGem(bonusPool) : node.data.resourceItemId;
+
+  this.addItemToInventory(grantedItemId, 1);
+  this.showLootToast(
+    gotBonus
+      ? `Trouvaille : ${resolveItemDef(grantedItemId).name} !`
+      : `${resolveItemDef(grantedItemId).name} obtenu !`,
+  );
+
+  if (node.hits <= 0) {
+    node.sprite.destroy();
+    node.sprite = null;
+    node.depleted = true;
+    this.showLootToast("La ressource est épuisée");
+  }
+
+  this.persistProgress();
+  return true;
+}
+
   mineRock() {
     const heroX = this.hero.body.center.x;
     const heroY = this.hero.body.center.y;
@@ -4819,7 +5175,8 @@ export default class MainScene extends Phaser.Scene {
     const toolDef = toolId ? resolveItemDef(toolId) : null;
     const toolTier = toolDef?.toolTier || 0;
 
-    if (toolTier < rock.data.requiredTier) {
+    const toolType = toolDef?.toolType || null;
+    if (toolType !== "pickaxe" || toolTier < rock.data.requiredTier) {
       this.showLootToast("Cet outil n'est pas assez puissant pour ce gisement");
       return true;
     }
@@ -4930,6 +5287,7 @@ export default class MainScene extends Phaser.Scene {
 
     if (this.checkSecretWallInteraction()) return;
     if (this.mineRock()) return;
+    if (this.forageNode()) return;
 
     if (this.secretLevers.length > 0) {
       const nearbyLever = this.secretLevers.find(
@@ -5441,6 +5799,7 @@ export default class MainScene extends Phaser.Scene {
       y: Math.round(pixelY / TILE_SIZE - 0.5),
       variant,
       ephemeral: true,
+      propType: chestData.propType || "chest",
     });
     this.nextLootChestId++;
   }
@@ -5752,7 +6111,19 @@ export default class MainScene extends Phaser.Scene {
     });
   }
 
-  spawnSummonSprite(spriteKey, x, y) {
+  computeFamiliarGrowthScale(growthConfig) {
+    if (!growthConfig) return 1;
+    const { maxLevel, minScaleMultiplier, maxScaleMultiplier } = growthConfig;
+    const progress = Math.min(
+      1,
+      Math.max(0, (this.playerLevel - 1) / (maxLevel - 1)),
+    );
+    return (
+      minScaleMultiplier + (maxScaleMultiplier - minScaleMultiplier) * progress
+    );
+  }
+
+  spawnSummonSprite(spriteKey, x, y, scaleMultiplier = 1) {
     const summonSpriteInfo =
       SPRITE_REGISTRY[spriteKey] || SPRITE_REGISTRY.enemyDefault;
     const sprite = this.summonGroup.create(
@@ -5761,7 +6132,7 @@ export default class MainScene extends Phaser.Scene {
       summonSpriteInfo.key,
       summonSpriteInfo.animations.idleDown,
     );
-    sprite.setScale(summonSpriteInfo.scale);
+    sprite.setScale(summonSpriteInfo.scale * scaleMultiplier);
     const hb = summonSpriteInfo.hitbox;
     sprite.body.setSize(hb.width, hb.height).setOffset(hb.offsetX, hb.offsetY);
     sprite.setDepth(8);
@@ -5794,7 +6165,13 @@ export default class MainScene extends Phaser.Scene {
 
     const spawnX = this.hero.x + (Math.random() - 0.5) * 40;
     const spawnY = this.hero.y + (Math.random() - 0.5) * 40;
-    const sprite = this.spawnSummonSprite(def.summonType, spawnX, spawnY);
+    const growthScale = this.computeFamiliarGrowthScale(def.growthConfig);
+    const sprite = this.spawnSummonSprite(
+      def.summonType,
+      spawnX,
+      spawnY,
+      growthScale,
+    );
 
     this.summons.push({
       sprite,
@@ -5810,6 +6187,7 @@ export default class MainScene extends Phaser.Scene {
       attackCooldown: createCooldown(ENEMY_ATTACK_COOLDOWN),
       expiresAt: def.durationMs ? this.time.now + def.durationMs : null,
       lastDir: "down",
+      growthConfig: def.growthConfig || null,
     });
 
     this.showLootToast(`${def.name} invoquée !`);
@@ -7498,6 +7876,17 @@ export default class MainScene extends Phaser.Scene {
       stamina: this.playerStamina,
       maxStamina: this.playerMaxStamina,
     });
+    for (const summon of this.summons) {
+      if (summon.growthConfig) {
+        const growthScale = this.computeFamiliarGrowthScale(
+          summon.growthConfig,
+        );
+        const baseSpriteInfo = SPRITE_REGISTRY[summon.spriteKey];
+        if (baseSpriteInfo)
+          summon.sprite.setScale(baseSpriteInfo.scale * growthScale);
+      }
+    }
+
     this.events.emit("level-up", { level });
     this.events.emit("levelup-available", { available: false });
     this.persistProgress();

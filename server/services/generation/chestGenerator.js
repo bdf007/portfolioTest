@@ -40,32 +40,34 @@ function generateChests({
   playerSpawn,
   chestCount,
   allowedTiles = null,
+  lootTable = "chestStandard", // permet de reutiliser cette fonction pour les caisses/tonneaux, avec une table de butin plus modeste
+  seedSuffix = "chest", // distingue les positions/contenus des vrais coffres de ceux des caisses, meme etage
 }) {
   const [min, max] = Array.isArray(chestCount)
     ? chestCount
     : [chestCount, chestCount];
   if (max <= 0) return [];
 
-  const countRng = createRng(`${seed}-chest-count`);
+  const countRng = createRng(`${seed}-${seedSuffix}-count`);
   const count = min + Math.floor(countRng() * (max - min + 1));
   if (count <= 0) return [];
 
   const positions = generateEnemySpawns({
     grid,
-    seed: `${seed}-chest-positions`,
+    seed: `${seed}-${seedSuffix}-positions`,
     playerSpawn,
     enemyCount: count,
-    minDistanceFromPlayer: 3, // plus proche du spawn que les ennemis (pas dangereux, pas besoin de les eloigner)
-    minDistanceBetweenEnemies: 5, // plus espaces entre eux que les ennemis (pas de paquet de coffres cote a cote)
+    minDistanceFromPlayer: 3,
+    minDistanceBetweenEnemies: 5,
     allowedTiles,
   });
 
-  const lootRng = createRng(`${lootSeed || seed}-chest-loot`);
+  const lootRng = createRng(`${lootSeed || seed}-${seedSuffix}-loot`);
   return positions.map((pos) => ({
     x: pos.x,
     y: pos.y,
     opened: false,
-    loot: rollLoot("chestStandard", lootRng),
+    loot: rollLoot(lootTable, lootRng),
   }));
 }
 

@@ -45,6 +45,8 @@ const {
 const {
   generateMiningRocks,
 } = require("../services/generation/miningRockGenerator");
+const { generateForageNodes } = require("../services/generation/forageNodeGenerator");
+const { generateDecorations } = require("../services/generation/decorationGenerator");
 const { generateShopStock } = require("../services/generation/shopGenerator");
 const {
   rollLoot,
@@ -584,14 +586,29 @@ async function getLevel(req, res) {
     // contenu deja fixe a la generation) - exclut la salle de boss
     // scellee ET les cases-repere (sortie/escalier/boutique/hub) du
     // placement
-    const chests = generateChests({
+    const realChests = generateChests({
       grid,
-      seed: lootSeed, // <-- lootSeed au lieu de seed : position/nombre de coffres varient aussi desormais
+      seed: lootSeed,
       lootSeed,
       playerSpawn,
       chestCount: biome.chestCount,
       allowedTiles,
-    });
+    }).map((c) => ({ ...c, propType: "chest" }));
+
+    const crates = biome.crateConfig
+      ? generateChests({
+          grid,
+          seed: lootSeed,
+          lootSeed,
+          playerSpawn,
+          chestCount: biome.crateConfig.count,
+          allowedTiles,
+          lootTable: biome.crateConfig.lootTable || "chestStandard",
+          seedSuffix: "crate",
+        }).map((c) => ({ ...c, propType: "crate" }))
+      : [];
+
+    const chests = [...realChests, ...crates];
     const traps = generateTraps(
       grid,
       lootSeed,
@@ -606,6 +623,25 @@ async function getLevel(req, res) {
       biome.miningConfig,
       allowedTiles,
     );
+
+    const forageNodes = generateForageNodes(
+      grid,
+      lootSeed,
+      playerSpawn,
+      biome.forageConfig,
+      allowedTiles,
+    );
+
+    const decorations = biome.decorationConfig
+      ? generateDecorations({
+          grid,
+          lootSeed,
+          playerSpawn,
+          count: biome.decorationConfig.count,
+          decorTypes: biome.decorationConfig.decorTypes,
+          allowedTiles,
+        })
+      : [];
 
     res.json({
       depth,
@@ -626,6 +662,8 @@ async function getLevel(req, res) {
       chests,
       traps,
       miningRocks,
+      forageNodes,
+      decorations,
       townBuildings,
       secretRoom: secretRoom
         ? {
