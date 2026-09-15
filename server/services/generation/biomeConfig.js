@@ -31,6 +31,10 @@ const BIOMES = [
     enemyBaseCount: 3,
     bossRoomSize: 40,
     enemyTypes: ["deer1", "angryBrownMushroom", "gnome"],
+    decorationConfig: {
+      count: [8, 15], // genereux - c'est fait pour remplir le biome
+      decorTypes: ["rock_small", "bush", "flower_patch"], // cles arbitraires, a adapter
+    },
     chestCount: [1, 3],
     crateConfig: {
       count: [3, 6], // plus nombreuses que les vrais coffres
@@ -92,6 +96,10 @@ const BIOMES = [
     enemyBaseCount: 3,
     bossRoomSize: 40,
     enemyTypes: ["deer1", "angryBrownMushroom", "gnome"],
+    decorationConfig: {
+      count: [8, 15], // genereux - c'est fait pour remplir le biome
+      decorTypes: ["rock_small", "bush", "flower_patch"], // cles arbitraires, a adapter
+    },
     chestCount: [1, 3],
     crateConfig: {
       count: [3, 6], // plus nombreuses que les vrais coffres
@@ -152,6 +160,10 @@ const BIOMES = [
     enemyBaseCount: 3,
     bossRoomSize: 40,
     enemyTypes: ["deer1", "angryBrownMushroom", "gnome"],
+    decorationConfig: {
+      count: [8, 15], // genereux - c'est fait pour remplir le biome
+      decorTypes: ["rock_small", "bush", "flower_patch"], // cles arbitraires, a adapter
+    },
     chestCount: [1, 3],
     crateConfig: {
       count: [3, 6], // plus nombreuses que les vrais coffres
@@ -211,6 +223,10 @@ const BIOMES = [
     enemyBaseCount: 3,
     bossRoomSize: 40,
     enemyTypes: ["angryTrent"],
+    decorationConfig: {
+      count: [8, 15], // genereux - c'est fait pour remplir le biome
+      decorTypes: ["rock_small", "bush", "flower_patch"], // cles arbitraires, a adapter
+    },
     chestCount: [1, 3],
     crateConfig: {
       count: [3, 6], // plus nombreuses que les vrais coffres
@@ -266,6 +282,10 @@ const BIOMES = [
     tileset: "mines2",
     enemyBaseCount: 3,
     enemyTypes: ["gnome"],
+    decorationConfig: {
+      count: [8, 15], // genereux - c'est fait pour remplir le biome
+      decorTypes: ["rock_small", "bush", "flower_patch"], // cles arbitraires, a adapter
+    },
     chestCount: [1, 3],
     crateConfig: {
       count: [3, 6], // plus nombreuses que les vrais coffres
@@ -320,6 +340,10 @@ const BIOMES = [
     enemyBaseCount: 3,
     bossRoomSize: 40,
     enemyTypes: ["knifedBat"],
+    decorationConfig: {
+      count: [8, 15], // genereux - c'est fait pour remplir le biome
+      decorTypes: ["rock_small", "bush", "flower_patch"], // cles arbitraires, a adapter
+    },
     chestCount: [2, 4],
     trapConfig: {
       frequency: 0.006,
@@ -364,6 +388,10 @@ const BIOMES = [
     tileset: "mines2",
     enemyBaseCount: 3,
     enemyTypes: ["mudGolem"],
+    decorationConfig: {
+      count: [8, 15], // genereux - c'est fait pour remplir le biome
+      decorTypes: ["rock_small", "bush", "flower_patch"], // cles arbitraires, a adapter
+    },
     chestCount: [1, 3],
     crateConfig: {
       count: [3, 6], // plus nombreuses que les vrais coffres
@@ -417,6 +445,10 @@ const BIOMES = [
     tileset: "mines2",
     enemyBaseCount: 3,
     enemyTypes: ["redBeetle"],
+    decorationConfig: {
+      count: [8, 15], // genereux - c'est fait pour remplir le biome
+      decorTypes: ["rock_small", "bush", "flower_patch"], // cles arbitraires, a adapter
+    },
     chestCount: [1, 3],
     crateConfig: {
       count: [3, 6], // plus nombreuses que les vrais coffres
@@ -472,6 +504,10 @@ const BIOMES = [
     tileset: "cityTiles_0_2",
     enemyBaseCount: 3,
     enemyTypes: ["pinkOgre"],
+    decorationConfig: {
+      count: [8, 15], // genereux - c'est fait pour remplir le biome
+      decorTypes: ["rock_small", "bush", "flower_patch"], // cles arbitraires, a adapter
+    },
     chestCount: [2, 4],
     trapConfig: {
       frequency: 0.006,
@@ -516,6 +552,10 @@ const BIOMES = [
     tileset: "cityTiles_0_2",
     enemyBaseCount: 3,
     enemyTypes: ["mudGolem"],
+    decorationConfig: {
+      count: [8, 15], // genereux - c'est fait pour remplir le biome
+      decorTypes: ["rock_small", "bush", "flower_patch"], // cles arbitraires, a adapter
+    },
     chestCount: [2, 4],
     trapConfig: {
       frequency: 0.006,
@@ -561,6 +601,10 @@ const BIOMES = [
     enemyBaseCount: 3,
     bossRoomSize: 40,
     enemyTypes: ["deer1"],
+    decorationConfig: {
+      count: [8, 15], // genereux - c'est fait pour remplir le biome
+      decorTypes: ["rock_small", "bush", "flower_patch"], // cles arbitraires, a adapter
+    },
     chestCount: [2, 3],
     trapConfig: {
       frequency: 0.006,
@@ -609,6 +653,10 @@ const BIOMES = [
     tileset: "cityTiles_0_2",
     enemyBaseCount: 3,
     enemyTypes: ["deer1"],
+    decorationConfig: {
+      count: [8, 15], // genereux - c'est fait pour remplir le biome
+      decorTypes: ["rock_small", "bush", "flower_patch"], // cles arbitraires, a adapter
+    },
     chestCount: [1, 3],
     crateConfig: {
       count: [3, 6], // plus nombreuses que les vrais coffres
@@ -664,6 +712,10 @@ const BIOMES = [
       "gnome",
       "knifedBat",
     ],
+    decorationConfig: {
+      count: [8, 15], // genereux - c'est fait pour remplir le biome
+      decorTypes: ["rock_small", "bush", "flower_patch"], // cles arbitraires, a adapter
+    },
     chestCount: [1, 3],
     crateConfig: {
       count: [3, 6], // plus nombreuses que les vrais coffres
@@ -721,6 +773,10 @@ const BIOMES = [
       "gnome",
       "knifedBat",
     ],
+    decorationConfig: {
+      count: [8, 15], // genereux - c'est fait pour remplir le biome
+      decorTypes: ["rock_small", "bush", "flower_patch"], // cles arbitraires, a adapter
+    },
     chestCount: [2, 4],
     crateConfig: {
       count: [3, 6], // plus nombreuses que les vrais coffres
@@ -790,6 +846,10 @@ const TOWN_BIOME = {
   tileset: "town",
   enemyBaseCount: 0,
   enemyTypes: [],
+  decorationConfig: {
+     count: [8, 15], // genereux - c'est fait pour remplir le biome
+     decorTypes: ["rock_small", "bush", "flower_patch"], // cles arbitraires, a adapter
+  },
   chestCount: [0, 0], // zone sure, pas de butin de donjon (une boutique viendra separement)
 };
 
