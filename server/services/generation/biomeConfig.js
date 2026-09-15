@@ -58,6 +58,18 @@ const BIOMES = [
         { itemId: "ironOre", weight: 0.5 },
       ],
     },
+    forageConfig: {
+  nodeChance: 0.6, // plus frequent que le minage - remplir le biome
+  minNodes: 2,
+  maxNodes: 5,
+  resourcePool: [{ itemId: "wood", weight: 1, requiredTier: 1 }],
+  totalHits: [2, 5],
+  bonusChance: 0.15,
+  bonusPool: [
+    { itemId: "berry", weight: 3 },
+    { itemId: "resin", weight: 1 },
+  ],
+},
     generatorParams: {
       width: 40,
       height: 40,
@@ -104,6 +116,18 @@ const BIOMES = [
         { itemId: "ironOre", weight: 0.5 },
       ],
     },
+    forageConfig: {
+  nodeChance: 0.6, // plus frequent que le minage - remplir le biome
+  minNodes: 2,
+  maxNodes: 5,
+  resourcePool: [{ itemId: "wood", weight: 1, requiredTier: 1 }],
+  totalHits: [2, 5],
+  bonusChance: 0.15,
+  bonusPool: [
+    { itemId: "berry", weight: 3 },
+    { itemId: "resin", weight: 1 },
+  ],
+},
     generatorParams: {
       width: 40,
       height: 40,
@@ -148,6 +172,18 @@ const BIOMES = [
         { itemId: "ironOre", weight: 0.5 },
       ],
     },
+    forageConfig: {
+  nodeChance: 0.6, // plus frequent que le minage - remplir le biome
+  minNodes: 2,
+  maxNodes: 5,
+  resourcePool: [{ itemId: "wood", weight: 1, requiredTier: 1 }],
+  totalHits: [2, 5],
+  bonusChance: 0.15,
+  bonusPool: [
+    { itemId: "berry", weight: 3 },
+    { itemId: "resin", weight: 1 },
+  ],
+},
     generatorParams: {
       width: 40,
       height: 40,
@@ -186,6 +222,18 @@ const BIOMES = [
         { itemId: "peridot", weight: 0.5 },
       ],
     },
+    forageConfig: {
+  nodeChance: 0.6, // plus frequent que le minage - remplir le biome
+  minNodes: 2,
+  maxNodes: 5,
+  resourcePool: [{ itemId: "wood", weight: 1, requiredTier: 1 }],
+  totalHits: [2, 5],
+  bonusChance: 0.15,
+  bonusPool: [
+    { itemId: "berry", weight: 3 },
+    { itemId: "resin", weight: 1 },
+  ],
+},
     generatorParams: {
       width: 40,
       height: 40,
@@ -224,6 +272,18 @@ const BIOMES = [
         { itemId: "peridot", weight: 0.5 },
       ],
     },
+    forageConfig: {
+  nodeChance: 0.6, // plus frequent que le minage - remplir le biome
+  minNodes: 2,
+  maxNodes: 5,
+  resourcePool: [{ itemId: "wood", weight: 1, requiredTier: 1 }],
+  totalHits: [2, 5],
+  bonusChance: 0.15,
+  bonusPool: [
+    { itemId: "berry", weight: 3 },
+    { itemId: "resin", weight: 1 },
+  ],
+},
     generatorParams: {
       width: 80,
       height: 80,
@@ -262,6 +322,18 @@ const BIOMES = [
         { itemId: "peridot", weight: 0.5 },
       ],
     },
+    forageConfig: {
+  nodeChance: 0.6, // plus frequent que le minage - remplir le biome
+  minNodes: 2,
+  maxNodes: 5,
+  resourcePool: [{ itemId: "wood", weight: 1, requiredTier: 1 }],
+  totalHits: [2, 5],
+  bonusChance: 0.15,
+  bonusPool: [
+    { itemId: "berry", weight: 3 },
+    { itemId: "resin", weight: 1 },
+  ],
+},
     generatorParams: { cellCount: 25 },
   },
   {
@@ -295,6 +367,18 @@ const BIOMES = [
         { itemId: "peridot", weight: 0.5 },
       ],
     },
+    forageConfig: {
+  nodeChance: 0.6, // plus frequent que le minage - remplir le biome
+  minNodes: 2,
+  maxNodes: 5,
+  resourcePool: [{ itemId: "wood", weight: 1, requiredTier: 1 }],
+  totalHits: [2, 5],
+  bonusChance: 0.15,
+  bonusPool: [
+    { itemId: "berry", weight: 3 },
+    { itemId: "resin", weight: 1 },
+  ],
+},
     generatorParams: {
       width: 80,
       height: 80,
@@ -331,6 +415,18 @@ const BIOMES = [
         { itemId: "peridot", weight: 0.5 },
       ],
     },
+    forageConfig: {
+  nodeChance: 0.6, // plus frequent que le minage - remplir le biome
+  minNodes: 2,
+  maxNodes: 5,
+  resourcePool: [{ itemId: "wood", weight: 1, requiredTier: 1 }],
+  totalHits: [2, 5],
+  bonusChance: 0.15,
+  bonusPool: [
+    { itemId: "berry", weight: 3 },
+    { itemId: "resin", weight: 1 },
+  ],
+},
     generatorParams: {
       width: 40,
       height: 40,
@@ -370,6 +466,18 @@ const BIOMES = [
         { itemId: "peridot", weight: 0.5 },
       ],
     },
+    forageConfig: {
+  nodeChance: 0.6, // plus frequent que le minage - remplir le biome
+  minNodes: 2,
+  maxNodes: 5,
+  resourcePool: [{ itemId: "wood", weight: 1, requiredTier: 1 }],
+  totalHits: [2, 5],
+  bonusChance: 0.15,
+  bonusPool: [
+    { itemId: "berry", weight: 3 },
+    { itemId: "resin", weight: 1 },
+  ],
+},
     generatorParams: { noiseScale: 10 },
   },
   {
@@ -402,6 +510,18 @@ const BIOMES = [
         { itemId: "peridot", weight: 0.5 },
       ],
     },
+    forageConfig: {
+  nodeChance: 0.6, // plus frequent que le minage - remplir le biome
+  minNodes: 2,
+  maxNodes: 5,
+  resourcePool: [{ itemId: "wood", weight: 1, requiredTier: 1 }],
+  totalHits: [2, 5],
+  bonusChance: 0.15,
+  bonusPool: [
+    { itemId: "berry", weight: 3 },
+    { itemId: "resin", weight: 1 },
+  ],
+},
     generatorParams: { cellCount: 25 },
   },
   {
@@ -435,6 +555,18 @@ const BIOMES = [
         { itemId: "peridot", weight: 0.5 },
       ],
     },
+    forageConfig: {
+  nodeChance: 0.6, // plus frequent que le minage - remplir le biome
+  minNodes: 2,
+  maxNodes: 5,
+  resourcePool: [{ itemId: "wood", weight: 1, requiredTier: 1 }],
+  totalHits: [2, 5],
+  bonusChance: 0.15,
+  bonusPool: [
+    { itemId: "berry", weight: 3 },
+    { itemId: "resin", weight: 1 },
+  ],
+},
     // passageWidth:2 (pas le defaut 1 du generateur, "labyrinthe pur"
     // traditionnel) - un couloir d'une seule case serait tres
     // inconfortable pour l'esquive/les projectiles/le deplacement des
@@ -471,6 +603,18 @@ const BIOMES = [
         { itemId: "peridot", weight: 0.5 },
       ],
     },
+    forageConfig: {
+  nodeChance: 0.6, // plus frequent que le minage - remplir le biome
+  minNodes: 2,
+  maxNodes: 5,
+  resourcePool: [{ itemId: "wood", weight: 1, requiredTier: 1 }],
+  totalHits: [2, 5],
+  bonusChance: 0.15,
+  bonusPool: [
+    { itemId: "berry", weight: 3 },
+    { itemId: "resin", weight: 1 },
+  ],
+},
     generatorParams: { passageWidth: 5, wallThickness: 2 },
   },
   {
@@ -510,6 +654,18 @@ const BIOMES = [
         { itemId: "peridot", weight: 0.5 },
       ],
     },
+    forageConfig: {
+  nodeChance: 0.6, // plus frequent que le minage - remplir le biome
+  minNodes: 2,
+  maxNodes: 5,
+  resourcePool: [{ itemId: "wood", weight: 1, requiredTier: 1 }],
+  totalHits: [2, 5],
+  bonusChance: 0.15,
+  bonusPool: [
+    { itemId: "berry", weight: 3 },
+    { itemId: "resin", weight: 1 },
+  ],
+},
     generatorParams: { wallProbability: 0.35, minFloorRatio: 0.4 },
   },
 
@@ -551,6 +707,18 @@ const BIOMES = [
         { itemId: "peridot", weight: 0.5 },
       ],
     },
+    forageConfig: {
+  nodeChance: 0.6, // plus frequent que le minage - remplir le biome
+  minNodes: 2,
+  maxNodes: 5,
+  resourcePool: [{ itemId: "wood", weight: 1, requiredTier: 1 }],
+  totalHits: [2, 5],
+  bonusChance: 0.15,
+  bonusPool: [
+    { itemId: "berry", weight: 3 },
+    { itemId: "resin", weight: 1 },
+  ],
+},
     // niveaux plus grands et plus ouverts en fin de progression, cf.
     // /areas/phaser-arpg.md - d'ou une grille plus large que les autres
     // biomes
