@@ -32,6 +32,10 @@ const BIOMES = [
     bossRoomSize: 40,
     enemyTypes: ["deer1", "angryBrownMushroom", "gnome"],
     chestCount: [1, 3],
+    crateConfig: {
+      count: [3, 6], // plus nombreuses que les vrais coffres
+      lootTable: "chestStandard", // remplace par une table dediee plus modeste une fois que tu en crees une dans itemTypes.js
+    },
     trapConfig: {
       frequency: 0.006,
       damageType: "physical",
@@ -89,6 +93,10 @@ const BIOMES = [
     bossRoomSize: 40,
     enemyTypes: ["deer1", "angryBrownMushroom", "gnome"],
     chestCount: [1, 3],
+    crateConfig: {
+      count: [3, 6], // plus nombreuses que les vrais coffres
+      lootTable: "chestStandard", // remplace par une table dediee plus modeste une fois que tu en crees une dans itemTypes.js
+    },
     trapConfig: {
       frequency: 0.006,
       damageType: "physical",
@@ -145,6 +153,10 @@ const BIOMES = [
     bossRoomSize: 40,
     enemyTypes: ["deer1", "angryBrownMushroom", "gnome"],
     chestCount: [1, 3],
+    crateConfig: {
+      count: [3, 6], // plus nombreuses que les vrais coffres
+      lootTable: "chestStandard", // remplace par une table dediee plus modeste une fois que tu en crees une dans itemTypes.js
+    },
     trapConfig: {
       frequency: 0.006,
       damageType: "physical",
@@ -200,6 +212,10 @@ const BIOMES = [
     bossRoomSize: 40,
     enemyTypes: ["angryTrent"],
     chestCount: [1, 3],
+    crateConfig: {
+      count: [3, 6], // plus nombreuses que les vrais coffres
+      lootTable: "chestStandard", // remplace par une table dediee plus modeste une fois que tu en crees une dans itemTypes.js
+    },
     trapConfig: {
       frequency: 0.006,
       damageType: "physical",
@@ -251,6 +267,10 @@ const BIOMES = [
     enemyBaseCount: 3,
     enemyTypes: ["gnome"],
     chestCount: [1, 3],
+    crateConfig: {
+      count: [3, 6], // plus nombreuses que les vrais coffres
+      lootTable: "chestStandard", // remplace par une table dediee plus modeste une fois que tu en crees une dans itemTypes.js
+    },
     trapConfig: {
       frequency: 0.006,
       damageType: "physical",
@@ -345,6 +365,10 @@ const BIOMES = [
     enemyBaseCount: 3,
     enemyTypes: ["mudGolem"],
     chestCount: [1, 3],
+    crateConfig: {
+      count: [3, 6], // plus nombreuses que les vrais coffres
+      lootTable: "chestStandard", // remplace par une table dediee plus modeste une fois que tu en crees une dans itemTypes.js
+    },
     bossRoomSize: 40,
     trapConfig: {
       frequency: 0.006,
@@ -394,6 +418,10 @@ const BIOMES = [
     enemyBaseCount: 3,
     enemyTypes: ["redBeetle"],
     chestCount: [1, 3],
+    crateConfig: {
+      count: [3, 6], // plus nombreuses que les vrais coffres
+      lootTable: "chestStandard", // remplace par une table dediee plus modeste une fois que tu en crees une dans itemTypes.js
+    },
     trapConfig: {
       frequency: 0.006,
       damageType: "physical",
@@ -582,6 +610,10 @@ const BIOMES = [
     enemyBaseCount: 3,
     enemyTypes: ["deer1"],
     chestCount: [1, 3],
+    crateConfig: {
+      count: [3, 6], // plus nombreuses que les vrais coffres
+      lootTable: "chestStandard", // remplace par une table dediee plus modeste une fois que tu en crees une dans itemTypes.js
+    },
     trapConfig: {
       frequency: 0.006,
       damageType: "physical",
@@ -633,6 +665,10 @@ const BIOMES = [
       "knifedBat",
     ],
     chestCount: [1, 3],
+    crateConfig: {
+      count: [3, 6], // plus nombreuses que les vrais coffres
+      lootTable: "chestStandard", // remplace par une table dediee plus modeste une fois que tu en crees une dans itemTypes.js
+    },
     trapConfig: {
       frequency: 0.006,
       damageType: "physical",
@@ -686,6 +722,10 @@ const BIOMES = [
       "knifedBat",
     ],
     chestCount: [2, 4],
+    crateConfig: {
+      count: [3, 6], // plus nombreuses que les vrais coffres
+      lootTable: "chestStandard", // remplace par une table dediee plus modeste une fois que tu en crees une dans itemTypes.js
+    },
     trapConfig: {
       frequency: 0.006,
       damageType: "physical",
