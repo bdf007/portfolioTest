@@ -46,6 +46,7 @@ const {
   generateMiningRocks,
 } = require("../services/generation/miningRockGenerator");
 const { generateForageNodes } = require("../services/generation/forageNodeGenerator");
+const { generateDecorations } = require("../services/generation/decorationGenerator");
 const { generateShopStock } = require("../services/generation/shopGenerator");
 const {
   rollLoot,
@@ -631,6 +632,17 @@ async function getLevel(req, res) {
       allowedTiles,
     );
 
+    const decorations = biome.decorationConfig
+      ? generateDecorations({
+          grid,
+          lootSeed,
+          playerSpawn,
+          count: biome.decorationConfig.count,
+          decorTypes: biome.decorationConfig.decorTypes,
+          allowedTiles,
+        })
+      : [];
+
     res.json({
       depth,
       biome: biome.id,
@@ -651,6 +663,7 @@ async function getLevel(req, res) {
       traps,
       miningRocks,
       forageNodes,
+      decorations,
       townBuildings,
       secretRoom: secretRoom
         ? {
