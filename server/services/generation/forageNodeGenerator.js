@@ -26,7 +26,13 @@ function pickWeightedEntry(rng, entries) {
  *
  * @returns {{x:number,y:number,requiredTier:number,resourceItemId:string,totalHits:number,bonusChance:number,bonusPool:object[]}[]}
  */
-function generateForageNodes(grid, lootSeed, playerSpawn, forageConfig, allowedTiles) {
+function generateForageNodes(
+  grid,
+  lootSeed,
+  playerSpawn,
+  forageConfig,
+  allowedTiles,
+) {
   if (!forageConfig || !forageConfig.nodeChance) return [];
 
   const rng = createRng(`${lootSeed}-forage-node`);

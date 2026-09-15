@@ -47,8 +47,13 @@ import {
   DUNGEONS_A21_AUTOTILE_SPRITESHEET,
   DUNGEONS_A22_AUTOTILE_SPRITESHEET,
   GREY_COASTA51_AUTOTILE_SPRITESHEET,
-  DEEP_CAVE_AUTOTILE_SPRITESHEET,
   CITY_TILES_AUTOTILE_SPRITESHEET,
+  WORLD_B_AUTOTILE_SPRITESHEET,
+  BEIGE_COAST_A_AUTOTILE_SPRITESHEET,
+  BEIGE_FIELDS1_A_AUTOTILE_SPRITESHEET,
+  GREY_COAST_A_AUTOTILE_SPRITESHEET,
+  STANDARD_FIELDS1_A_AUTOTILE_SPRITESHEET,
+  STANDARD_FIELDS3_A_AUTOTILE_SPRITESHEET,
 } from "../spriteRegistry";
 
 /**
@@ -106,14 +111,6 @@ export default class BootScene extends Phaser.Scene {
       {
         frameWidth: SNOW_AUTOTILE_SPRITESHEET.frameWidth,
         frameHeight: SNOW_AUTOTILE_SPRITESHEET.frameHeight,
-      },
-    );
-    this.load.spritesheet(
-      DEEP_CAVE_AUTOTILE_SPRITESHEET.key,
-      DEEP_CAVE_AUTOTILE_SPRITESHEET.path,
-      {
-        frameWidth: DEEP_CAVE_AUTOTILE_SPRITESHEET.frameWidth,
-        frameHeight: DEEP_CAVE_AUTOTILE_SPRITESHEET.frameHeight,
       },
     );
     this.load.spritesheet(
@@ -410,6 +407,54 @@ export default class BootScene extends Phaser.Scene {
       {
         frameWidth: CITY_TILES_AUTOTILE_SPRITESHEET.frameWidth,
         frameHeight: CITY_TILES_AUTOTILE_SPRITESHEET.frameHeight,
+      },
+    );
+    this.load.spritesheet(
+      BEIGE_COAST_A_AUTOTILE_SPRITESHEET.key,
+      BEIGE_COAST_A_AUTOTILE_SPRITESHEET.path,
+      {
+        frameWidth: BEIGE_COAST_A_AUTOTILE_SPRITESHEET.frameWidth,
+        frameHeight: BEIGE_COAST_A_AUTOTILE_SPRITESHEET.frameHeight,
+      },
+    );
+    this.load.spritesheet(
+      BEIGE_FIELDS1_A_AUTOTILE_SPRITESHEET.key,
+      BEIGE_FIELDS1_A_AUTOTILE_SPRITESHEET.path,
+      {
+        frameWidth: BEIGE_FIELDS1_A_AUTOTILE_SPRITESHEET.frameWidth,
+        frameHeight: BEIGE_FIELDS1_A_AUTOTILE_SPRITESHEET.frameHeight,
+      },
+    );
+    this.load.spritesheet(
+      GREY_COAST_A_AUTOTILE_SPRITESHEET.key,
+      GREY_COAST_A_AUTOTILE_SPRITESHEET.path,
+      {
+        frameWidth: GREY_COAST_A_AUTOTILE_SPRITESHEET.frameWidth,
+        frameHeight: GREY_COAST_A_AUTOTILE_SPRITESHEET.frameHeight,
+      },
+    );
+    this.load.spritesheet(
+      STANDARD_FIELDS1_A_AUTOTILE_SPRITESHEET.key,
+      STANDARD_FIELDS1_A_AUTOTILE_SPRITESHEET.path,
+      {
+        frameWidth: STANDARD_FIELDS1_A_AUTOTILE_SPRITESHEET.frameWidth,
+        frameHeight: STANDARD_FIELDS1_A_AUTOTILE_SPRITESHEET.frameHeight,
+      },
+    );
+    this.load.spritesheet(
+      STANDARD_FIELDS3_A_AUTOTILE_SPRITESHEET.key,
+      STANDARD_FIELDS3_A_AUTOTILE_SPRITESHEET.path,
+      {
+        frameWidth: STANDARD_FIELDS3_A_AUTOTILE_SPRITESHEET.frameWidth,
+        frameHeight: STANDARD_FIELDS3_A_AUTOTILE_SPRITESHEET.frameHeight,
+      },
+    );
+    this.load.spritesheet(
+      WORLD_B_AUTOTILE_SPRITESHEET.key,
+      WORLD_B_AUTOTILE_SPRITESHEET.path,
+      {
+        frameWidth: WORLD_B_AUTOTILE_SPRITESHEET.frameWidth,
+        frameHeight: WORLD_B_AUTOTILE_SPRITESHEET.frameHeight,
       },
     );
     this.load.spritesheet(CHEST_SPRITESHEET.key, CHEST_SPRITESHEET.path, {

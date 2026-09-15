@@ -96,6 +96,84 @@ import knifedBatSpritesheet from "../../assets/ennemies/knifed_bat.png";
 import mudGolemSpritesheet from "../../assets/ennemies/mud_golem.png";
 import redBeetleSpritesheet from "../../assets/ennemies/red_beetle.png";
 import pinkOgreSpritesheet from "../../assets/ennemies/pink_ogre.png";
+import alien1Spritesheet from "../../assets/ennemies/alien-1.png";
+import alien2Spritesheet from "../../assets/ennemies/alien-2.png";
+import alien3Spritesheet from "../../assets/ennemies/alien-3.png";
+import alien4Spritesheet from "../../assets/ennemies/alien-4.png";
+import alien5Spritesheet from "../../assets/ennemies/alien-5.png";
+import alien6Spritesheet from "../../assets/ennemies/alien-6.png";
+import alien7Spritesheet from "../../assets/ennemies/alien-7.png";
+import alien8Spritesheet from "../../assets/ennemies/alien-8.png";
+import alien9Spritesheet from "../../assets/ennemies/alien-9.png";
+import alien10Spritesheet from "../../assets/ennemies/alien-10.png";
+import batSpritesheet from "../../assets/ennemies/bat.png";
+import bearSpritesheet from "../../assets/ennemies/bear.png";
+import beeSpritesheet from "../../assets/ennemies/bee.png";
+import bigtickSpritesheet from "../../assets/ennemies/bigtick.png";
+import blackDragonSpritesheet from "../../assets/ennemies/blackDragon.png";
+import darkelfSpritesheet from "../../assets/ennemies/darkelf.png";
+import demondragonSpritesheet from "../../assets/ennemies/demondragon.png";
+import dwarfSpritesheet from "../../assets/ennemies/dwarf.png";
+import fantasy1Spritesheet from "../../assets/ennemies/fantasy-1.png";
+import fantasy2Spritesheet from "../../assets/ennemies/fantasy-2.png";
+import fantasy3Spritesheet from "../../assets/ennemies/fantasy-3.png";
+import fantasy4Spritesheet from "../../assets/ennemies/fantasy-4.png";
+import fantasy5Spritesheet from "../../assets/ennemies/fantasy-5.png";
+import fantasy6Spritesheet from "../../assets/ennemies/fantasy-6.png";
+import fantasy7Spritesheet from "../../assets/ennemies/fantasy-7.png";
+import fantasy8Spritesheet from "../../assets/ennemies/fantasy-8.png";
+import fantasy9Spritesheet from "../../assets/ennemies/fantasy-9.png";
+import fantasy10Spritesheet from "../../assets/ennemies/fantasy-10.png";
+import gargoyleSpritesheet from "../../assets/ennemies/gargoyle.png";
+import ghostSpritesheet from "../../assets/ennemies/ghost.png";
+import gnomeFouSpritesheet from "../../assets/ennemies/gnomeFou.png";
+import golemSpritesheet from "../../assets/ennemies/golem.png";
+import gorillaSpritesheet from "../../assets/ennemies/gorilla.png";
+import greendragonSpritesheet from "../../assets/ennemies/greendragon.png";
+import ogreSpritesheet from "../../assets/ennemies/ogre.png";
+import redbeetleSpritesheet from "../../assets/ennemies/redbeetle.png";
+import robot1Spritesheet from "../../assets/ennemies/robot-1.png";
+import robot2Spritesheet from "../../assets/ennemies/robot-2.png";
+import robot3Spritesheet from "../../assets/ennemies/robot-3.png";
+import robot4Spritesheet from "../../assets/ennemies/robot-4.png";
+import robot5Spritesheet from "../../assets/ennemies/robot-5.png";
+import robot6Spritesheet from "../../assets/ennemies/robot-6.png";
+import robot7Spritesheet from "../../assets/ennemies/robot-7.png";
+import robot8Spritesheet from "../../assets/ennemies/robot-8.png";
+import robot9Spritesheet from "../../assets/ennemies/robot-9.png";
+import robot10Spritesheet from "../../assets/ennemies/robot-10.png";
+import skeletonSpritesheet from "../../assets/ennemies/skeleton.png";
+import skeletonkingSpritesheet from "../../assets/ennemies/skeletonking.png";
+import slimeSpritesheet from "../../assets/ennemies/slime.png";
+import spiderSpritesheet from "../../assets/ennemies/spider.png";
+import strongArcherSpritesheet from "../../assets/ennemies/strong_archer.png";
+import strongBatSpritesheet from "../../assets/ennemies/strong_bat.png";
+import strongDemonSpritesheet from "../../assets/ennemies/strong_demon.png";
+import strongDemondragonSpritesheet from "../../assets/ennemies/strong_demondragon.png";
+import strongDragonSpritesheet from "../../assets/ennemies/strong_dragon.png";
+import strongDragonbigSpritesheet from "../../assets/ennemies/strong_dragonbig.png";
+import strongDwarfSpritesheet from "../../assets/ennemies/strong_dwarf.png";
+import strongEagleSpritesheet from "../../assets/ennemies/strong_eagle.png";
+import strongGargoyleSpritesheet from "../../assets/ennemies/strong_gargoyle.png";
+import strongGnomeSpritesheet from "../../assets/ennemies/strong_gnome.png";
+import strongGolemSpritesheet from "../../assets/ennemies/strong_golem.png";
+import strongOgreSpritesheet from "../../assets/ennemies/strong_ogre.png";
+import strongRedbeetleSpritesheet from "../../assets/ennemies/strong_redbeetle.png";
+import strongSkeletonSpritesheet from "../../assets/ennemies/strong_skeleton.png";
+import strongSkeletonkingSpritesheet from "../../assets/ennemies/strong_skeletonking.png";
+import strongSlimeSpritesheet from "../../assets/ennemies/strong_slime.png";
+import strongSpiderSpritesheet from "../../assets/ennemies/strong_spider.png";
+import strongWarlockSpritesheet from "../../assets/ennemies/strong_warlock.png";
+import strongWormSpritesheet from "../../assets/ennemies/strong_worm.png";
+import strongZombieSpritesheet from "../../assets/ennemies/strong_zombie.png";
+import trollSpritesheet from "../../assets/ennemies/troll.png";
+import vampireSpritesheet from "../../assets/ennemies/vampire.png";
+import warlockSpritesheet from "../../assets/ennemies/warlock.png";
+import wormSpritesheet from "../../assets/ennemies/worm.png";
+import wormGiantSpritesheet from "../../assets/ennemies/wormGiant.png";
+import zombieSpritesheet from "../../assets/ennemies/zombie.png";
+import zombiequeenSpritesheet from "../../assets/ennemies/zombiequeen.png";
+
 //import boss
 import GhostskullSpritesheet from "../../assets/boss/$GhostSkull_1.png";
 import BigSpiderSpritesheet from "../../assets/boss/big_spider.png";
@@ -150,8 +228,14 @@ import dungeonsA21AutotileImg from "../../assets/tilesets/Set_A2_Dungeons1.png";
 import dungeonsA22AutotileImg from "../../assets/tilesets/Set_A2_Dungeons2.png";
 import standardFields2AutotileImg from "../../assets/tilesets/Set_A_StandardFields2.png";
 import greyCoastA51AutotileImg from "../../assets/tilesets/Set_A5_GreyCoast1.png";
-import deepCaveAutotileImg from "../../assets/tilesets/deep_cave.png";
 import cityTilesetAutotileImg from "../../assets/tilesets/city_tileset.png";
+import beigeCoastAAutotileImg from "../../assets/tilesets/Set_A_Beige_Coast.png";
+import beigeFieldsA1AutotileImg from "../../assets/tilesets/Set_A_Beige_Fields1.png";
+import greyCoastAAutotileImg from "../../assets/tilesets/Set_A_Grey_Coast.png";
+import standardCoastAAutotileImg from "../../assets/tilesets/Set_A_Standard_Coast.png";
+import standardFields1AutotileImg from "../../assets/tilesets/Set_A_Standard_Fields1.png";
+import standardFields3AutotileImg from "../../assets/tilesets/Set_A_Standard_Fields3.png";
+import worldBAutotileImg from "../../assets/tilesets/Set_B_World.png";
 // import objects
 import chestsSpritesheet from "../../assets/objects_icons/Chests.png";
 import iconSheet1 from "../../assets/objects_icons/icon_sheet1.png";
@@ -442,16 +526,56 @@ export const GREY_COASTA51_AUTOTILE_SPRITESHEET = {
   frameHeight: 16,
 };
 
-export const DEEP_CAVE_AUTOTILE_SPRITESHEET = {
-  key: "deepCaveAutotile",
-  path: deepCaveAutotileImg,
+export const CITY_TILES_AUTOTILE_SPRITESHEET = {
+  key: "cityTilesA1Autotile",
+  path: cityTilesetAutotileImg,
   frameWidth: 16,
   frameHeight: 16,
 };
 
-export const CITY_TILES_AUTOTILE_SPRITESHEET = {
-  key: "cityTilesA1Autotile",
-  path: cityTilesetAutotileImg,
+export const BEIGE_COAST_A_AUTOTILE_SPRITESHEET = {
+  key: "beigeCoastAAutotile",
+  path: beigeCoastAAutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+export const BEIGE_FIELDS1_A_AUTOTILE_SPRITESHEET = {
+  key: "beigeFields1AAutotile",
+  path: beigeFieldsA1AutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+
+export const GREY_COAST_A_AUTOTILE_SPRITESHEET = {
+  key: "greyCoastAAutotile",
+  path: greyCoastAAutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+export const STANDARD_COAST_A_AUTOTILE_SPRITESHEET = {
+  key: "standardCoast2AAutotile",
+  path: standardCoastAAutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+
+export const STANDARD_FIELDS1_A_AUTOTILE_SPRITESHEET = {
+  key: "standardFields1AAutotile",
+  path: standardFields1AutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+
+export const STANDARD_FIELDS3_A_AUTOTILE_SPRITESHEET = {
+  key: "standardFields3AAutotile",
+  path: standardFields3AutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+
+export const WORLD_B_AUTOTILE_SPRITESHEET = {
+  key: "worldBAutotile",
+  path: worldBAutotileImg,
   frameWidth: 16,
   frameHeight: 16,
 };
@@ -937,6 +1061,786 @@ export const SPRITE_REGISTRY = {
     scale: 1.5,
     animations: FULL_ANIMATION_FRAMES,
     hitbox: computeSafeHitbox(48, 48, 1.5),
+  },
+  alien1: {
+    key: "alien1",
+    displayName: "Alien 1",
+    path: alien1Spritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 1,
+    animations: FULL_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(48, 48, 1),
+  },
+  alien2: {
+    key: "alien2",
+    displayName: "Alien 2",
+    path: alien2Spritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 1,
+    animations: FULL_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(48, 48, 1),
+  },
+  alien3: {
+    key: "alien3",
+    displayName: "Alien 3",
+    path: alien3Spritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 1,
+    animations: FULL_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(48, 48, 1),
+  },
+  alien4: {
+    key: "alien4",
+    displayName: "Alien 4",
+    path: alien4Spritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 1,
+    animations: FULL_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(48, 48, 1),
+  },
+  alien5: {
+    key: "alien5",
+    displayName: "Alien 5",
+    path: alien5Spritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 1,
+    animations: FULL_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(48, 48, 1),
+  },
+  alien6: {
+    key: "alien6",
+    displayName: "Alien 6",
+    path: alien6Spritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 1,
+    animations: FULL_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(48, 48, 1),
+  },
+  alien7: {
+    key: "alien7",
+    displayName: "Alien 7",
+    path: alien7Spritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 1,
+    animations: FULL_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(48, 48, 1),
+  },
+  alien8: {
+    key: "alien8",
+    displayName: "Alien 8",
+    path: alien8Spritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 1,
+    animations: FULL_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(48, 48, 1),
+  },
+  alien9: {
+    key: "alien9",
+    displayName: "Alien 9",
+    path: alien9Spritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 1,
+    animations: FULL_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(48, 48, 1),
+  },
+  alien10: {
+    key: "alien10",
+    displayName: "Alien 10",
+    path: alien10Spritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 1,
+    animations: FULL_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(48, 48, 1),
+  },
+  bat: {
+    key: "bat",
+    displayName: "Bat",
+    path: batSpritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 1,
+    animations: FULL_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(48, 48, 1),
+  },
+  bear: {
+    key: "bear",
+    displayName: "Bear",
+    path: bearSpritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 1,
+    animations: FULL_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(48, 48, 1),
+  },
+  bee: {
+    key: "bee",
+    displayName: "Bee",
+    path: beeSpritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 1,
+    animations: FULL_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(48, 48, 1),
+  },
+
+  bigtick: {
+    key: "bigtick",
+    displayName: "Big Tick",
+    path: bigtickSpritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 1,
+    animations: FULL_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(48, 48, 1),
+  },
+  blackdragon: {
+    key: "blackdragon",
+    displayName: "Black Dragon",
+    path: blackDragonSpritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 1,
+    animations: FULL_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(48, 48, 1),
+  },
+  darkelf: {
+    key: "darkelf",
+    displayName: "Dark Elf",
+    path: darkelfSpritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 1,
+    animations: FULL_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(48, 48, 1),
+  },
+  demonDragon: {
+    key: "demonDragon",
+    displayName: "Demon Dragon",
+    path: demondragonSpritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 1,
+    animations: FULL_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(48, 48, 1),
+  },
+
+  dwarf: {
+    key: "dwarf",
+    displayName: "Dwarf",
+    path: dwarfSpritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 1,
+    animations: FULL_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(48, 48, 1),
+  },
+
+  fantasy1: {
+    key: "fantasy1",
+    displayName: "Fantasy 1",
+    path: fantasy1Spritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 1,
+    animations: FULL_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(48, 48, 1),
+  },
+
+  fantasy2: {
+    key: "fantasy2",
+    displayName: "Fantasy 2",
+    path: fantasy2Spritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 1,
+    animations: FULL_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(48, 48, 1),
+  },
+
+  fantasy3: {
+    key: "fantasy3",
+    displayName: "Fantasy 3",
+    path: fantasy3Spritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 1,
+    animations: FULL_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(48, 48, 1),
+  },
+
+  fantasy4: {
+    key: "fantasy4",
+    displayName: "Fantasy 4",
+    path: fantasy4Spritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 1,
+    animations: FULL_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(48, 48, 1),
+  },
+  fantasy5: {
+    key: "fantasy5",
+    displayName: "Fantasy 5",
+    path: fantasy5Spritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 1,
+    animations: FULL_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(48, 48, 1),
+  },
+  fantasy6: {
+    key: "fantasy6",
+    displayName: "Fantasy 6",
+    path: fantasy6Spritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 1,
+    animations: FULL_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(48, 48, 1),
+  },
+  fantasy7: {
+    key: "fantasy7",
+    displayName: "Fantasy 7",
+    path: fantasy7Spritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 1,
+    animations: FULL_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(48, 48, 1),
+  },
+  fantasy8: {
+    key: "fantasy8",
+    displayName: "Fantasy 8",
+    path: fantasy8Spritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 1,
+    animations: FULL_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(48, 48, 1),
+  },
+  fantasy9: {
+    key: "fantasy9",
+    displayName: "Fantasy 9",
+    path: fantasy9Spritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 1,
+    animations: FULL_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(48, 48, 1),
+  },
+  fantasy10: {
+    key: "fantasy10",
+    displayName: "Fantasy 10",
+    path: fantasy10Spritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 1,
+    animations: FULL_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(48, 48, 1),
+  },
+  gargoyle: {
+    key: "gargoyle",
+    displayName: "Gargoyle",
+    path: gargoyleSpritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 1,
+    animations: FULL_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(48, 48, 1),
+  },
+  ghost: {
+    key: "ghost",
+    displayName: "Ghost",
+    path: ghostSpritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 1,
+    animations: FULL_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(48, 48, 1),
+  },
+  gnomeFou: {
+    key: "gnomeFou",
+    displayName: "Gnome Fou",
+    path: gnomeFouSpritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 1,
+    animations: FULL_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(48, 48, 1),
+  },
+  golem: {
+    key: "golem",
+    displayName: "Golem",
+    path: golemSpritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 1,
+    animations: FULL_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(48, 48, 1),
+  },
+  gorilla: {
+    key: "gorilla",
+    displayName: "Gorilla",
+    path: gorillaSpritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 1,
+    animations: FULL_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(48, 48, 1),
+  },
+  greendragon: {
+    key: "greendragon",
+    displayName: "Green Dragon",
+    path: greendragonSpritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 1,
+    animations: FULL_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(48, 48, 1),
+  },
+
+  ogre: {
+    key: "ogre",
+    displayName: "Ogre",
+    path: ogreSpritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 1,
+    animations: FULL_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(48, 48, 1),
+  },
+
+  redbeetle: {
+    key: "redbeetle",
+    displayName: "Red Beetle",
+    path: redbeetleSpritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 1,
+    animations: FULL_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(48, 48, 1),
+  },
+  robot1: {
+    key: "robot1",
+    displayName: "Robot 1",
+    path: robot1Spritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 1,
+    animations: FULL_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(48, 48, 1),
+  },
+  robot2: {
+    key: "robot2",
+    displayName: "Robot 2",
+    path: robot2Spritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 1,
+    animations: FULL_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(48, 48, 1),
+  },
+  robot3: {
+    key: "robot3",
+    displayName: "Robot 3",
+    path: robot3Spritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 1,
+    animations: FULL_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(48, 48, 1),
+  },
+  robot4: {
+    key: "robot4",
+    displayName: "Robot 4",
+    path: robot4Spritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 1,
+    animations: FULL_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(48, 48, 1),
+  },
+  robot5: {
+    key: "robot5",
+    displayName: "Robot 5",
+    path: robot5Spritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 1,
+    animations: FULL_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(48, 48, 1),
+  },
+  robot6: {
+    key: "robot6",
+    displayName: "Robot 6",
+    path: robot6Spritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 1,
+    animations: FULL_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(48, 48, 1),
+  },
+  robot7: {
+    key: "robot7",
+    displayName: "Robot 7",
+    path: robot7Spritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 1,
+    animations: FULL_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(48, 48, 1),
+  },
+  robot8: {
+    key: "robot8",
+    displayName: "Robot 8",
+    path: robot8Spritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 1,
+    animations: FULL_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(48, 48, 1),
+  },
+  robot9: {
+    key: "robot9",
+    displayName: "Robot 9",
+    path: robot9Spritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 1,
+    animations: FULL_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(48, 48, 1),
+  },
+  robot10: {
+    key: "robot10",
+    displayName: "Robot 10",
+    path: robot10Spritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 1,
+    animations: FULL_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(48, 48, 1),
+  },
+  skeleton: {
+    key: "skeleton",
+    displayName: "Squelette",
+    path: skeletonSpritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 1,
+    animations: FULL_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(48, 48, 1),
+  },
+  skeletonking: {
+    key: "skeletonking",
+    displayName: "Squelette Roi",
+    path: skeletonkingSpritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 1,
+    animations: FULL_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(48, 48, 1),
+  },
+  slime: {
+    key: "slime",
+    displayName: "Slime",
+    path: slimeSpritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 1,
+    animations: FULL_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(48, 48, 1),
+  },
+  spider: {
+    key: "spider",
+    displayName: "Araignée",
+    path: spiderSpritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 1,
+    animations: FULL_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(48, 48, 1),
+  },
+  strongArcher: {
+    key: "strongArcher",
+    displayName: "Archer Fort",
+    path: strongArcherSpritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 1,
+    animations: FULL_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(48, 48, 1),
+  },
+  strongBat: {
+    key: "strongBat",
+    displayName: "Chauve-souris Forte",
+    path: strongBatSpritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 1,
+    animations: FULL_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(48, 48, 1),
+  },
+  strongDemon: {
+    key: "strongDemon",
+    displayName: "Démon Fort",
+    path: strongDemonSpritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 1,
+    animations: FULL_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(48, 48, 1),
+  },
+  strongDemondragon: {
+    key: "strongDemondragon",
+    displayName: "Dragon Démon Fort",
+    path: strongDemondragonSpritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 1,
+    animations: FULL_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(48, 48, 1),
+  },
+  strongDragon: {
+    key: "strongDragon",
+    displayName: "Dragon Fort",
+    path: strongDragonSpritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 1,
+    animations: FULL_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(48, 48, 1),
+  },
+  strongDragonbig: {
+    key: "strongDragonbig",
+    displayName: "Grand Dragon Fort",
+    path: strongDragonbigSpritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 1,
+    animations: FULL_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(48, 48, 1),
+  },
+  strongDwarf: {
+    key: "strongDwarf",
+    displayName: "Nain Fort",
+    path: strongDwarfSpritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 1,
+    animations: FULL_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(48, 48, 1),
+  },
+  strongEagle: {
+    key: "strongEagle",
+    displayName: "Aigle Fort",
+    path: strongEagleSpritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 1,
+    animations: FULL_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(48, 48, 1),
+  },
+  strongGargoyle: {
+    key: "strongGargoyle",
+    displayName: "Gargouille Forte",
+    path: strongGargoyleSpritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 1,
+    animations: FULL_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(48, 48, 1),
+  },
+  strongGnome: {
+    key: "strongGnome",
+    displayName: "Gnome Fort",
+    path: strongGnomeSpritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 1,
+    animations: FULL_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(48, 48, 1),
+  },
+  strongGolem: {
+    key: "strongGolem",
+    displayName: "Golem Fort",
+    path: strongGolemSpritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 1,
+    animations: FULL_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(48, 48, 1),
+  },
+  strongOgre: {
+    key: "strongOgre",
+    displayName: "Ogre Fort",
+    path: strongOgreSpritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 1,
+    animations: FULL_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(48, 48, 1),
+  },
+  strongRedbeetle: {
+    key: "strongRedbeetle",
+    displayName: "Scarabée Rouge Fort",
+    path: strongRedbeetleSpritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 1,
+    animations: FULL_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(48, 48, 1),
+  },
+  strongSkeleton: {
+    key: "strongSkeleton",
+    displayName: "Squelette Fort",
+    path: strongSkeletonSpritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 1,
+    animations: FULL_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(48, 48, 1),
+  },
+  strongSkeletonKing: {
+    key: "strongSkeletonKing",
+    displayName: "Roi Squelette Fort",
+    path: strongSkeletonkingSpritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 1,
+    animations: FULL_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(48, 48, 1),
+  },
+
+  strongSlime: {
+    key: "strongSlime",
+    displayName: "Slime Fort",
+    path: strongSlimeSpritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 1,
+    animations: FULL_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(48, 48, 1),
+  },
+  strongSpider: {
+    key: "strongSpider",
+    displayName: "Araignée Forte",
+    path: strongSpiderSpritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 1,
+    animations: FULL_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(48, 48, 1),
+  },
+  strongWarlock: {
+    key: "strongWarlock",
+    displayName: "Sorcier Fort",
+    path: strongWarlockSpritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 1,
+    animations: FULL_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(48, 48, 1),
+  },
+  strongWorm: {
+    key: "strongWorm",
+    displayName: "Ver Fort",
+    path: strongWormSpritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 1,
+    animations: FULL_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(48, 48, 1),
+  },
+  strongZombie: {
+    key: "strongZombie",
+    displayName: "Zombie Fort",
+    path: strongZombieSpritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 1,
+    animations: FULL_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(48, 48, 1),
+  },
+  troll: {
+    key: "troll",
+    displayName: "Troll",
+    path: trollSpritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 1,
+    animations: FULL_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(48, 48, 1),
+  },
+  vampire: {
+    key: "vampire",
+    displayName: "Vampire",
+    path: vampireSpritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 1,
+    animations: FULL_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(48, 48, 1),
+  },
+  warlock: {
+    key: "warlock",
+    displayName: "Sorcier",
+    path: warlockSpritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 1,
+    animations: FULL_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(48, 48, 1),
+  },
+
+  worm: {
+    key: "worm",
+    displayName: "Ver",
+    path: wormSpritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 1,
+    animations: FULL_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(48, 48, 1),
+  },
+  wormGiant: {
+    key: "wormGiant",
+    displayName: "Ver Géant",
+    path: wormGiantSpritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 1,
+    animations: FULL_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(48, 48, 1),
+  },
+  zombie: {
+    key: "zombie",
+    displayName: "Zombie",
+    path: zombieSpritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 1,
+    animations: FULL_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(48, 48, 1),
+  },
+  zombiequeen: {
+    key: "zombiequeen",
+    displayName: "Reine Zombie",
+    path: zombiequeenSpritesheet,
+    frameWidth: 48,
+    frameHeight: 48,
+    scale: 1,
+    animations: FULL_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(48, 48, 1),
   },
 
   monks1: {
@@ -2981,7 +3885,7 @@ const HERO_STATS_PROFILES = {
     visionRadius: 8,
     meleeRange: 42,
     rangedRange: 440,
-    startingItems: ["woodenBow", "woodenPickaxe"],
+    startingItems: ["woodenBow", "woodenPickaxe", "woodenAxe"],
     startingAmmo: { itemId: "woodenArrow", quantity: 100 },
     startingAbilities: ["piercingArrow", "scoutPulse"],
     startingRecipes: ["bigWoodenArrowRecipe"],
@@ -3008,7 +3912,7 @@ const HERO_STATS_PROFILES = {
     visionRadius: 6,
     meleeRange: 60,
     rangedRange: 320,
-    startingItems: ["woodenMallet", "woodenPickaxe"],
+    startingItems: ["woodenMallet", "woodenPickaxe", "woodenAxe"],
     startingAmmo: null,
     startingAbilities: ["whirlwind"],
   },
@@ -3034,7 +3938,7 @@ const HERO_STATS_PROFILES = {
     visionRadius: 7,
     meleeRange: 40,
     rangedRange: 400,
-    startingItems: ["woodenDagger", "woodenPickaxe"],
+    startingItems: ["woodenDagger", "woodenPickaxe", "woodenAxe"],
     startingAmmo: null,
     startingAbilities: [
       "stealth",
@@ -3065,7 +3969,12 @@ const HERO_STATS_PROFILES = {
     visionRadius: 7,
     meleeRange: 50,
     rangedRange: 320,
-    startingItems: ["woodenSword", "woodenShield", "woodenPickaxe"],
+    startingItems: [
+      "woodenSword",
+      "woodenShield",
+      "woodenPickaxe",
+      "woodenAxe",
+    ],
     startingAmmo: null,
     startingAbilities: ["shieldBash"],
     startingRecipes: ["reinforcedSwordRecipe"],
@@ -3096,6 +4005,7 @@ const HERO_STATS_PROFILES = {
       "woodenStaff",
       { itemId: "waterLily", quantity: 2 },
       "woodenPickaxe",
+      "woodenAxe",
     ],
     startingAmmo: null,
     startingAbilities: ["fireball"],
@@ -3125,7 +4035,7 @@ const HERO_STATS_PROFILES = {
     visionRadius: 7,
     meleeRange: 55,
     rangedRange: 300,
-    startingItems: ["woodenAxe", "woodenPickaxe"],
+    startingItems: ["woodenMallet", "woodenPickaxe", "woodenAxe"],
     startingAmmo: null,
     startingAbilities: ["taunt"],
   },
@@ -3151,7 +4061,7 @@ const HERO_STATS_PROFILES = {
     visionRadius: 7,
     meleeRange: 50,
     rangedRange: 320,
-    startingItems: ["woodenStaff", "woodenPickaxe"],
+    startingItems: ["woodenStaff", "woodenPickaxe", "woodenAxe"],
     startingAmmo: null,
     startingAbilities: ["curse"],
   },
@@ -3177,7 +4087,7 @@ const HERO_STATS_PROFILES = {
     visionRadius: 7,
     meleeRange: 45,
     rangedRange: 350,
-    startingItems: ["woodenStaff", "woodenPickaxe"],
+    startingItems: ["woodenStaff", "woodenPickaxe", "woodenAxe"],
     startingAmmo: null,
     startingAbilities: ["summonFamiliar"],
   },
@@ -3203,7 +4113,7 @@ const HERO_STATS_PROFILES = {
     visionRadius: 7,
     meleeRange: 40,
     rangedRange: 400,
-    startingItems: ["woodenStaff", "woodenPickaxe"],
+    startingItems: ["woodenStaff", "woodenPickaxe", "woodenAxe"],
     startingAmmo: null,
     startingAbilities: ["slow"],
   },
@@ -3843,6 +4753,7 @@ export const ITEMS_1_FRAMES = {
   throwableKunai: 2,
   throwableShuriken: 3,
   throwableBoomerang: 9,
+  branch: 20,
   woodenPickaxe: 24,
   woodenCrossbowBolt: 25,
   copperOre: 40,

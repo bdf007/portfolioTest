@@ -45,8 +45,12 @@ const {
 const {
   generateMiningRocks,
 } = require("../services/generation/miningRockGenerator");
-const { generateForageNodes } = require("../services/generation/forageNodeGenerator");
-const { generateDecorations } = require("../services/generation/decorationGenerator");
+const {
+  generateForageNodes,
+} = require("../services/generation/forageNodeGenerator");
+const {
+  generateDecorations,
+} = require("../services/generation/decorationGenerator");
 const { generateShopStock } = require("../services/generation/shopGenerator");
 const {
   rollLoot,
@@ -519,6 +523,25 @@ async function getLevel(req, res) {
       if (tile) allowedTiles.delete(`${tile.x},${tile.y}`);
     }
 
+    // ensemble ETENDU, incluant la salle du boss (si elle existe) - pour
+    // tout ce qui n'a pas besoin d'en etre exclu (ressources, decors,
+    // caisses), contrairement aux vrais coffres au tresor qui restent
+    // reserves au reste du donjon uniquement
+    let allowedTilesFull;
+    if (hasBoss) {
+      allowedTilesFull = new Set();
+      for (let y = 0; y < grid.length; y++) {
+        for (let x = 0; x < grid[0].length; x++) {
+          if (grid[y][x] === 0) allowedTilesFull.add(`${x},${y}`); // 0 = FLOOR
+        }
+      }
+      for (const tile of landmarkTiles) {
+        if (tile) allowedTilesFull.delete(`${tile.x},${tile.y}`);
+      }
+    } else {
+      allowedTilesFull = allowedTiles;
+    }
+
     // Pas de persistance de l'etat "tue/vivant" ici, volontairement : a
     // chaque appel (donc a chaque entree/retour sur cet etage), on
     // regenere une liste d'ennemis fraiche et entierement vivante. C'est
@@ -593,7 +616,9 @@ async function getLevel(req, res) {
       playerSpawn,
       chestCount: biome.chestCount,
       allowedTiles,
+      lootTable: biome.chestLootTable || "chestStandard",
     }).map((c) => ({ ...c, propType: "chest" }));
+    for (const c of realChests) allowedTilesFull.delete(`${c.x},${c.y}`);
 
     const crates = biome.crateConfig
       ? generateChests({
@@ -602,35 +627,41 @@ async function getLevel(req, res) {
           lootSeed,
           playerSpawn,
           chestCount: biome.crateConfig.count,
-          allowedTiles,
+          allowedTilesFull,
           lootTable: biome.crateConfig.lootTable || "chestStandard",
           seedSuffix: "crate",
         }).map((c) => ({ ...c, propType: "crate" }))
       : [];
+    for (const c of crates) allowedTilesFull.delete(`${c.x},${c.y}`);
 
     const chests = [...realChests, ...crates];
+
     const traps = generateTraps(
       grid,
       lootSeed,
       playerSpawn,
       biome.trapConfig,
-      allowedTiles,
+      allowedTilesFull,
     );
+    for (const t of traps) allowedTilesFull.delete(`${t.x},${t.y}`);
+
     const miningRocks = generateMiningRocks(
       grid,
       lootSeed,
       playerSpawn,
       biome.miningConfig,
-      allowedTiles,
+      allowedTilesFull,
     );
+    for (const r of miningRocks) allowedTilesFull.delete(`${r.x},${r.y}`);
 
     const forageNodes = generateForageNodes(
       grid,
       lootSeed,
       playerSpawn,
       biome.forageConfig,
-      allowedTiles,
+      allowedTilesFull,
     );
+    for (const n of forageNodes) allowedTilesFull.delete(`${n.x},${n.y}`);
 
     const decorations = biome.decorationConfig
       ? generateDecorations({
@@ -639,7 +670,7 @@ async function getLevel(req, res) {
           playerSpawn,
           count: biome.decorationConfig.count,
           decorTypes: biome.decorationConfig.decorTypes,
-          allowedTiles,
+          allowedTiles: allowedTilesFull,
         })
       : [];
 

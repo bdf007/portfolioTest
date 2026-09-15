@@ -94,8 +94,15 @@ import {
   // DUNGEONS_A21_AUTOTILE_SPRITESHEET,
   // DUNGEONS_A22_AUTOTILE_SPRITESHEET,
   // GREY_COASTA51_AUTOTILE_SPRITESHEET,
-  DEEP_CAVE_AUTOTILE_SPRITESHEET,
   CITY_TILES_AUTOTILE_SPRITESHEET,
+  // STANDARD_COAST_A_AUTOTILE_SPRITESHEET,
+  // STANDARD_FIELDS3_AUTOTILE_SPRITESHEET,
+  // STANDARD_FIELDS2_A_AUTOTILE_SPRITESHEET,
+  // STANDARD_COAST2_A_AUTOTILE_SPRITESHEET,
+  WORLD_B_AUTOTILE_SPRITESHEET,
+  // BEIGE_COAST_A_AUTOTILE_SPRITESHEET,
+  // BEIGE_FIELDS1_A_AUTOTILE_SPRITESHEET,
+  // GREY_COAST_A_AUTOTILE_SPRITESHEET,
   CITY_HOUSES,
   // HOUSE_FOOTPRINTS,
 } from "../spriteRegistry";
@@ -266,24 +273,6 @@ const WALL_CORNER_INDEX_TO_FRAME_0_0_CITY_WALLS1 = [
 ];
 const WALL_CORNER_INDEX_TO_FRAME_0_1 = [
   70, 35, 3, 19, 5, 35, 4, 20, 37, 36, 5, 39, 21, 38, 20, 20,
-];
-const WALL_CORNER_INDEX_TO_FRAME_0_0_DEEP_CAVE = [
-  224,
-  152,
-  0,
-  108,
-  5,
-  [152, 5],
-  2,
-  227,
-  157,
-  154,
-  [5, 152],
-  640,
-  119,
-  111,
-  111,
-  528,
 ];
 const WALL_CORNER_INDEX_TO_FRAME_CITY_TILE_0_1 = [
   {
@@ -1739,7 +1728,7 @@ export default class MainScene extends Phaser.Scene {
     savedMiningRocksState = [],
     savedEphemeralChests = [],
     savedForageNodesState = [],
-    ) {
+  ) {
     this.currentFloorChestRemainingLoot = savedChestRemainingLoot || {};
     this.currentFloorTriggeredTraps = savedTriggeredTraps || [];
     this.currentFloorRevealedTraps = savedRevealedTraps || [];
@@ -1880,7 +1869,9 @@ export default class MainScene extends Phaser.Scene {
     this.ambientNpcs = [];
     this.activeTalkingNpc = null;
     if (this.chests) {
-      this.chests.forEach((c) => c.sprite.destroy());
+      this.chests.forEach((c) => {
+        if (c.sprite) c.sprite.destroy();
+      });
     }
     this.chests = [];
     this.nextLootChestId = 0;
@@ -1975,8 +1966,8 @@ export default class MainScene extends Phaser.Scene {
       tileset === "darkwoods_1_2" ||
       tileset === "darkwoods_1_3" ||
       tileset === "darkwoods2" ||
-      tileset === "standarFields_0_1" ||
-      tileset === "standarFields_1_1" ||
+      tileset === "standardFields_0_1" ||
+      tileset === "standardFields_1_1" ||
       tileset === "desertMountain2" ||
       tileset === "desertMountain3" ||
       tileset === "desert2" ||
@@ -1990,7 +1981,6 @@ export default class MainScene extends Phaser.Scene {
       tileset === "hills8" ||
       tileset === "mines2" || //WALL_CORNER_INDEX_TO_FRAME_0_1_MINES2
       tileset === "tower1" || // WALL_CORNER_INDEX_TO_FRAME_0_0_TOWER1
-      tileset === "deepCave1" || // WALL_CORNER_INDEX_TO_FRAME_0_0
       tileset === "cityWalls1" ||
       tileset === "cityTiles_0_1" ||
       tileset === "cityTiles_0_2" ||
@@ -2405,21 +2395,6 @@ export default class MainScene extends Phaser.Scene {
       this.currentRawTilesetKey = DARKWOODS2_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
       this.currentRenderGrid = renderGrid;
       this.currentSlotSourceTileIds = result.slotSourceTileIds;
-    } else if (tileset === "deepCave1") {
-      const result = this.composeCornerAutotileTexture(
-        grid,
-        DEEP_CAVE_AUTOTILE_SPRITESHEET,
-        "deepCave1",
-        WALL_CORNER_INDEX_TO_FRAME_0_0_DEEP_CAVE,
-        72,
-      );
-      phaserTilesetKey = result.phaserTilesetKey;
-      renderGrid = result.renderGrid;
-      composedFloorSlots = result.floorSlotIndices;
-      this.currentFloorTileIndex = composedFloorSlots[0];
-      this.currentRawTilesetKey = DEEP_CAVE_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
-      this.currentRenderGrid = renderGrid;
-      this.currentSlotSourceTileIds = result.slotSourceTileIds;
     } else if (tileset === "cityTiles_0_1") {
       const result = this.composeCornerAutotileTexture(
         grid,
@@ -2480,11 +2455,11 @@ export default class MainScene extends Phaser.Scene {
       this.currentRawTilesetKey = CITY_TILES_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
       this.currentRenderGrid = renderGrid;
       this.currentSlotSourceTileIds = result.slotSourceTileIds;
-    } else if (tileset === "standarFields_0_1") {
+    } else if (tileset === "standardFields_0_1") {
       const result = this.composeCornerAutotileTexture(
         grid,
         STANDARD_FIELDS2_AUTOTILE_SPRITESHEET,
-        "standarFields_0_1",
+        "standardFields_0_1",
         WALL_CORNER_INDEX_TO_FRAME_STANDARD_FIELDS_0_1,
         81,
       );
@@ -2495,11 +2470,11 @@ export default class MainScene extends Phaser.Scene {
       this.currentRawTilesetKey = STANDARD_FIELDS2_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
       this.currentRenderGrid = renderGrid;
       this.currentSlotSourceTileIds = result.slotSourceTileIds;
-    } else if (tileset === "standarFields_1_1") {
+    } else if (tileset === "standardFields_1_1") {
       const result = this.composeCornerAutotileTexture(
         grid,
         STANDARD_FIELDS2_AUTOTILE_SPRITESHEET,
-        "standarFields_1_1",
+        "standardFields_1_1",
         WALL_CORNER_INDEX_TO_FRAME_STANDARD_FIELDS_1_1,
         81,
       );
@@ -2864,17 +2839,29 @@ export default class MainScene extends Phaser.Scene {
       const alreadyOpened = this.currentFloorOpenedChests.includes(index);
       const variant =
         CHEST_VARIANTS[Math.floor(chestVariantRng() * CHEST_VARIANTS.length)];
-      const sprite = this.add.sprite(
-        chestData.x * TILE_SIZE + TILE_SIZE / 2,
-        chestData.y * TILE_SIZE + TILE_SIZE / 2,
-        CHEST_SPRITESHEET.key,
-        alreadyOpened ? variant.openFrame : variant.closedFrame,
-      );
-      sprite.setDepth(7);
+      const CRATE_FRAMES = { barrel: 76, crate: 77 };
+      let sprite = null;
       if (chestData.propType === "crate") {
-        sprite.setTint(0x8d6e63); // PLACEHOLDER - teinte brune pour distinguer une caisse d'un vrai coffre, en attendant un vrai sprite
+        if (!alreadyOpened) {
+          const crateVariant = chestVariantRng() < 0.5 ? "barrel" : "crate";
+          sprite = this.add.sprite(
+            chestData.x * TILE_SIZE + TILE_SIZE / 2,
+            chestData.y * TILE_SIZE + TILE_SIZE / 2,
+            CITY_TILES_AUTOTILE_SPRITESHEET.key,
+            CRATE_FRAMES[crateVariant],
+          );
+          sprite.setScale(TILE_SIZE / 16);
+        }
+      } else {
+        sprite = this.add.sprite(
+          chestData.x * TILE_SIZE + TILE_SIZE / 2,
+          chestData.y * TILE_SIZE + TILE_SIZE / 2,
+          CHEST_SPRITESHEET.key,
+          alreadyOpened ? variant.openFrame : variant.closedFrame,
+        );
       }
-      // collision avec le héros (désactivée pour l'instant)
+      if (sprite) sprite.setDepth(7);
+      // collision avec le héros (désactivée pour l'instant)      // collision avec le héros (désactivée pour l'instant)
       // this.physics.add.existing(sprite, true);
       // this.levelColliders.push(this.physics.add.collider(this.hero, sprite));
       // if (alreadyOpened) sprite.body.checkCollision.none = true;
@@ -2927,7 +2914,7 @@ export default class MainScene extends Phaser.Scene {
         y: eph.y,
         variant,
         ephemeral: true,
-         propType: "chest",
+        propType: "chest",
       });
 
       if (-eph.index > this.nextLootChestId) {
@@ -3009,23 +2996,28 @@ export default class MainScene extends Phaser.Scene {
       });
     });
 
+    const TREE_FRAMES = [
+      136, 137, 138, 139, 140, 141, 142, 143, 152, 153, 154, 155, 156, 157, 158,
+      159,
+    ];
+    const forageVariantRng = createRng(`${this.currentSeed}-forage-variants`);
     const forageData = data.forageNodes || [];
     forageData.forEach((nodeData, index) => {
       const savedState = savedForageNodesState.find((s) => s.index === index);
       if (savedState && savedState.depleted) return;
 
       const hits = savedState ? savedState.hits : nodeData.totalHits;
+      const frame =
+        TREE_FRAMES[Math.floor(forageVariantRng() * TREE_FRAMES.length)];
 
-      // PLACEHOLDER - remplace par un vrai sprite d'arbre/plante une fois
-      // une planche identifiee, meme demarche que pour les rochers
-      const sprite = this.add.circle(
+      const sprite = this.add.sprite(
         nodeData.x * TILE_SIZE + TILE_SIZE / 2,
         nodeData.y * TILE_SIZE + TILE_SIZE / 2,
-        TILE_SIZE * 0.35,
-        0x2e7d32,
+        WORLD_B_AUTOTILE_SPRITESHEET.key,
+        frame,
       );
+      sprite.setScale(TILE_SIZE / 16, (TILE_SIZE / 16) * 1.5);
       sprite.setDepth(4);
-      sprite.setStrokeStyle(2, 0x1b5e20);
 
       this.forageNodes.push({
         index,
@@ -3036,18 +3028,24 @@ export default class MainScene extends Phaser.Scene {
       });
     });
 
-    const DECOR_PLACEHOLDER_COLORS = {
-      rock_small: 0x757575,
-      bush: 0x388e3c,
-      flower_patch: 0xe91e63,
+    const DECOR_FRAMES = {
+      rock_small: [5, 6],
+      bush: [101, 228],
+      flower_patch: [69, 70, 71, 102, 103],
     };
+    const decorVariantRng = createRng(`${this.currentSeed}-decor-variants`);
     (data.decorations || []).forEach((decorData) => {
-      const sprite = this.add.circle(
+      const frames =
+        DECOR_FRAMES[decorData.decorType] || DECOR_FRAMES.rock_small;
+      const frame = frames[Math.floor(decorVariantRng() * frames.length)];
+
+      const sprite = this.add.sprite(
         decorData.x * TILE_SIZE + TILE_SIZE / 2,
         decorData.y * TILE_SIZE + TILE_SIZE / 2,
-        TILE_SIZE * 0.25,
-        DECOR_PLACEHOLDER_COLORS[decorData.decorType] || 0x9e9e9e,
+        CITY_TILES_AUTOTILE_SPRITESHEET.key,
+        frame,
       );
+      sprite.setScale(TILE_SIZE / 16);
       sprite.setDepth(4);
       this.decorationSprites.push(sprite);
     });
@@ -4231,6 +4229,7 @@ export default class MainScene extends Phaser.Scene {
     this.updateEnemyMovement();
 
     for (const chest of this.chests) {
+      if (!chest.sprite) continue;
       const chestTileX = Math.floor(chest.sprite.x / TILE_SIZE);
       const chestTileY = Math.floor(chest.sprite.y / TILE_SIZE);
       const state = this.fogState.state;
@@ -5113,51 +5112,55 @@ export default class MainScene extends Phaser.Scene {
   }
 
   forageNode() {
-  const heroX = this.hero.body.center.x;
-  const heroY = this.hero.body.center.y;
+    const heroX = this.hero.body.center.x;
+    const heroY = this.hero.body.center.y;
 
-  const node = this.forageNodes.find((n) => {
-    if (n.depleted) return false;
-    const nodePx = n.data.x * TILE_SIZE + TILE_SIZE / 2;
-    const nodePy = n.data.y * TILE_SIZE + TILE_SIZE / 2;
-    return Math.hypot(nodePx - heroX, nodePy - heroY) <= this.playerMeleeRange;
-  });
-  if (!node) return false;
+    const node = this.forageNodes.find((n) => {
+      if (n.depleted) return false;
+      const nodePx = n.data.x * TILE_SIZE + TILE_SIZE / 2;
+      const nodePy = n.data.y * TILE_SIZE + TILE_SIZE / 2;
+      return (
+        Math.hypot(nodePx - heroX, nodePy - heroY) <= this.playerMeleeRange
+      );
+    });
+    if (!node) return false;
 
-  const toolId = this.equipped.tool;
-  const toolDef = toolId ? resolveItemDef(toolId) : null;
-  const toolTier = toolDef?.toolTier || 0;
-  const toolType = toolDef?.toolType || null;
+    const toolId = this.equipped.tool;
+    const toolDef = toolId ? resolveItemDef(toolId) : null;
+    const toolTier = toolDef?.toolTier || 0;
+    const toolType = toolDef?.toolType || null;
 
-  if (toolType !== "axe" || toolTier < node.data.requiredTier) {
-    this.showLootToast("Il te faut une hache adaptée pour ça");
+    if (toolType !== "axe" || toolTier < node.data.requiredTier) {
+      this.showLootToast("Il te faut une hache adaptée pour ça");
+      return true;
+    }
+
+    node.hits -= 1;
+
+    const bonusChance = node.data.bonusChance || 0;
+    const bonusPool = node.data.bonusPool || [];
+    const gotBonus = bonusPool.length > 0 && Math.random() < bonusChance;
+    const grantedItemId = gotBonus
+      ? pickWeightedGem(bonusPool)
+      : node.data.resourceItemId;
+
+    this.addItemToInventory(grantedItemId, 1);
+    this.showLootToast(
+      gotBonus
+        ? `Trouvaille : ${resolveItemDef(grantedItemId).name} !`
+        : `${resolveItemDef(grantedItemId).name} obtenu !`,
+    );
+
+    if (node.hits <= 0) {
+      node.sprite.destroy();
+      node.sprite = null;
+      node.depleted = true;
+      this.showLootToast("La ressource est épuisée");
+    }
+
+    this.persistProgress();
     return true;
   }
-
-  node.hits -= 1;
-
-  const bonusChance = node.data.bonusChance || 0;
-  const bonusPool = node.data.bonusPool || [];
-  const gotBonus = bonusPool.length > 0 && Math.random() < bonusChance;
-  const grantedItemId = gotBonus ? pickWeightedGem(bonusPool) : node.data.resourceItemId;
-
-  this.addItemToInventory(grantedItemId, 1);
-  this.showLootToast(
-    gotBonus
-      ? `Trouvaille : ${resolveItemDef(grantedItemId).name} !`
-      : `${resolveItemDef(grantedItemId).name} obtenu !`,
-  );
-
-  if (node.hits <= 0) {
-    node.sprite.destroy();
-    node.sprite = null;
-    node.depleted = true;
-    this.showLootToast("La ressource est épuisée");
-  }
-
-  this.persistProgress();
-  return true;
-}
 
   mineRock() {
     const heroX = this.hero.body.center.x;
@@ -5364,7 +5367,11 @@ export default class MainScene extends Phaser.Scene {
 
     if (!this.dialogOpen) {
       const chest = this.chests.find((c) => {
-        if (c.lootItems.length === 0) return false; // deja entierement loote
+        // vide uniquement APRES ouverture = plus rien a faire, on l'ignore.
+        // Jamais encore ouvert (meme s'il se revelera vide une fois ouvert,
+        // coffre normal comme caisse) = toujours interagissable, le joueur
+        // decouvre en l'ouvrant
+        if (c.opened && c.lootItems.length === 0) return false;
         const cx = c.x * TILE_SIZE + TILE_SIZE / 2;
         const cy = c.y * TILE_SIZE + TILE_SIZE / 2;
         return Math.hypot(cx - heroX, cy - heroY) <= this.playerMeleeRange;
@@ -5382,7 +5389,12 @@ export default class MainScene extends Phaser.Scene {
 
     if (!chest.opened) {
       chest.opened = true;
-      chest.sprite.setFrame(chest.variant.openFrame);
+      if (chest.propType === "crate") {
+        chest.sprite.destroy();
+        chest.sprite = null;
+      } else {
+        chest.sprite.setFrame(chest.variant.openFrame);
+      }
       if (!chest.ephemeral) this.currentFloorOpenedChests.push(chest.index);
     }
 
@@ -5792,17 +5804,17 @@ export default class MainScene extends Phaser.Scene {
     );
     sprite.setDepth(7);
 
- this.chests.push({
-  sprite,
-  index: -1 - this.nextLootChestId,
-  opened: false,
-  lootItems,
-  x: Math.round(pixelX / TILE_SIZE - 0.5),
-  y: Math.round(pixelY / TILE_SIZE - 0.5),
-  variant,
-  ephemeral: true,
-  propType: "chest",
-});
+    this.chests.push({
+      sprite,
+      index: -1 - this.nextLootChestId,
+      opened: false,
+      lootItems,
+      x: Math.round(pixelX / TILE_SIZE - 0.5),
+      y: Math.round(pixelY / TILE_SIZE - 0.5),
+      variant,
+      ephemeral: true,
+      propType: "chest",
+    });
     this.nextLootChestId++;
   }
 
