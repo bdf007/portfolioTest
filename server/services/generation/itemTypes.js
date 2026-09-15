@@ -1078,6 +1078,22 @@ const ITEM_TYPES = {
     stackable: true,
     price: 5,
   },
+  branch: {
+    id: "branch",
+    category: "craftingMaterial",
+    name: "Branche",
+    description: "Une branche solide, utilisée en artisanat.",
+    stackable: true,
+    price: 5,
+  },
+  berries: {
+    id: "berries",
+    category: "craftingMaterial",
+    name: "Baies",
+    description: "Des baies sauvages, utilisées en artisanat.",
+    stackable: true,
+    price: 5,
+  },
 
   // exemple d'objet de quete - existe dans le monde, mais aucune quete
   // de type "en rapporter N" ne sait encore l'exploiter (cf. commentaire
@@ -1134,6 +1150,11 @@ const LOOT_TABLES = {
     { itemId: "healthPotion", weight: 35 },
     { itemId: "manaPotion", weight: 35 },
     { itemId: "gold", weight: 40, quantityRange: [2, 10] },
+    { itemId: "woodenCrossbow", weight: 20 },
+  ],
+  crateStandard: [
+    { itemId: null, weight: 50 },
+    { itemId: "gold", weight: 30, quantityRange: [1, 2] },
   ],
 
   enemyDrop: [

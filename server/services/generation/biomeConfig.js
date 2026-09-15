@@ -33,12 +33,13 @@ const BIOMES = [
     enemyTypes: ["deer1", "angryBrownMushroom", "gnome"],
     decorationConfig: {
       count: [8, 15], // genereux - c'est fait pour remplir le biome
-      decorTypes: ["rock_small", "bush", "flower_patch"], // cles arbitraires, a adapter
+      decorTypes: ["rock_small"], // cles arbitraires, a adapter
     },
     chestCount: [1, 3],
+    chestLootTable: "chestStandard", // table de butin utilisée pour les coffres dans ce biome modifiable dans itemTypes.js
     crateConfig: {
       count: [3, 6], // plus nombreuses que les vrais coffres
-      lootTable: "chestStandard", // remplace par une table dediee plus modeste une fois que tu en crees une dans itemTypes.js
+      lootTable: "crateStandard", // remplace par une table dediee plus modeste une fois que tu en crees une dans itemTypes.js
     },
     trapConfig: {
       frequency: 0.006,
@@ -48,7 +49,7 @@ const BIOMES = [
     },
     secretRoomChance: 1, // 0.15 pour 15% de chances par etage - reste absent/0 sur un biome = jamais de salle secrete
     miningConfig: {
-      rockChance: 0.7, // chance qu'AU MOINS un gisement apparaisse cet etage
+      rockChance: 1, // chance qu'AU MOINS un gisement apparaisse cet etage
       minRocks: 1,
       maxRocks: 3,
 
@@ -67,17 +68,17 @@ const BIOMES = [
       ],
     },
     forageConfig: {
-  nodeChance: 0.6, // plus frequent que le minage - remplir le biome
-  minNodes: 2,
-  maxNodes: 5,
-  resourcePool: [{ itemId: "wood", weight: 1, requiredTier: 1 }],
-  totalHits: [2, 5],
-  bonusChance: 0.15,
-  bonusPool: [
-    { itemId: "berry", weight: 3 },
-    { itemId: "resin", weight: 1 },
-  ],
-},
+      nodeChance: 0.6, // plus frequent que le minage - remplir le biome
+      minNodes: 2,
+      maxNodes: 5,
+      resourcePool: [{ itemId: "branch", weight: 1, requiredTier: 1 }],
+      totalHits: [2, 5],
+      bonusChance: 0.15,
+      bonusPool: [
+        { itemId: "berries", weight: 3 },
+        { itemId: "resin", weight: 1 },
+      ],
+    },
     generatorParams: {
       width: 40,
       height: 40,
@@ -88,22 +89,23 @@ const BIOMES = [
     },
   },
   {
-    id: "cave2",
+    id: "fields1",
     minDepth: 3,
     maxDepth: 4,
     generator: "cellular",
-    tileset: "mines2",
+    tileset: "standardFields_0_1",
     enemyBaseCount: 3,
     bossRoomSize: 40,
     enemyTypes: ["deer1", "angryBrownMushroom", "gnome"],
     decorationConfig: {
-      count: [8, 15], // genereux - c'est fait pour remplir le biome
-      decorTypes: ["rock_small", "bush", "flower_patch"], // cles arbitraires, a adapter
+      count: [50, 100], // genereux - c'est fait pour remplir le biome
+      decorTypes: ["bush", "flower_patch"], // cles arbitraires, a adapter
     },
     chestCount: [1, 3],
+    chestLootTable: "chestStandard",
     crateConfig: {
       count: [3, 6], // plus nombreuses que les vrais coffres
-      lootTable: "chestStandard", // remplace par une table dediee plus modeste une fois que tu en crees une dans itemTypes.js
+      lootTable: "crateStandard", // remplace par une table dediee plus modeste une fois que tu en crees une dans itemTypes.js
     },
     trapConfig: {
       frequency: 0.006,
@@ -113,14 +115,14 @@ const BIOMES = [
     },
     secretRoomChance: 1, // 0.15 pour 15% de chances par etage - reste absent/0 sur un biome = jamais de salle secrete
     miningConfig: {
-      rockChance: 0.7, // chance qu'AU MOINS un gisement apparaisse cet etage
+      rockChance: 1, // chance qu'AU MOINS un gisement apparaisse cet etage
       minRocks: 1,
       maxRocks: 3,
 
       resourcePool: [
         { itemId: "copperOre", weight: 5, requiredTier: 1 },
         { itemId: "coalOre", weight: 1, requiredTier: 1 },
-        { itemId: "ironOre", weight: 1, requiredTier: 2 },
+        { itemId: "ironOre", weight: 2, requiredTier: 2 },
       ],
       totalHits: [1, 6], // nombre de coups avant epuisement
       gemChance: 0.15, // 15% de chance PAR COUP d'obtenir une gemme a la place du metal
@@ -133,17 +135,17 @@ const BIOMES = [
       ],
     },
     forageConfig: {
-  nodeChance: 0.6, // plus frequent que le minage - remplir le biome
-  minNodes: 2,
-  maxNodes: 5,
-  resourcePool: [{ itemId: "wood", weight: 1, requiredTier: 1 }],
-  totalHits: [2, 5],
-  bonusChance: 0.15,
-  bonusPool: [
-    { itemId: "berry", weight: 3 },
-    { itemId: "resin", weight: 1 },
-  ],
-},
+      nodeChance: 1, // plus frequent que le minage - remplir le biome
+      minNodes: 5,
+      maxNodes: 10,
+      resourcePool: [{ itemId: "branch", weight: 1, requiredTier: 1 }],
+      totalHits: [1, 3],
+      bonusChance: 0.05,
+      bonusPool: [
+        { itemId: "berries", weight: 3 },
+        { itemId: "resin", weight: 1 },
+      ],
+    },
     generatorParams: {
       width: 40,
       height: 40,
@@ -156,18 +158,19 @@ const BIOMES = [
     minDepth: 5,
     maxDepth: 6,
     generator: "bsp",
-    tileset: "mines2",
+    tileset: "standardFields_0_1",
     enemyBaseCount: 3,
     bossRoomSize: 40,
     enemyTypes: ["deer1", "angryBrownMushroom", "gnome"],
     decorationConfig: {
-      count: [8, 15], // genereux - c'est fait pour remplir le biome
+      count: [50, 100], // genereux - c'est fait pour remplir le biome
       decorTypes: ["rock_small", "bush", "flower_patch"], // cles arbitraires, a adapter
     },
     chestCount: [1, 3],
+    chestLootTable: "chestStandard",
     crateConfig: {
       count: [3, 6], // plus nombreuses que les vrais coffres
-      lootTable: "chestStandard", // remplace par une table dediee plus modeste une fois que tu en crees une dans itemTypes.js
+      lootTable: "crateStandard", // remplace par une table dediee plus modeste une fois que tu en crees une dans itemTypes.js
     },
     trapConfig: {
       frequency: 0.006,
@@ -177,7 +180,7 @@ const BIOMES = [
     },
     secretRoomChance: 1, // 0.15 pour 15% de chances par etage - reste absent/0 sur un biome = jamais de salle secrete
     miningConfig: {
-      rockChance: 0.7, // chance qu'AU MOINS un gisement apparaisse cet etage
+      rockChance: 1, // chance qu'AU MOINS un gisement apparaisse cet etage
       minRocks: 1,
       maxRocks: 3,
 
@@ -197,17 +200,17 @@ const BIOMES = [
       ],
     },
     forageConfig: {
-  nodeChance: 0.6, // plus frequent que le minage - remplir le biome
-  minNodes: 2,
-  maxNodes: 5,
-  resourcePool: [{ itemId: "wood", weight: 1, requiredTier: 1 }],
-  totalHits: [2, 5],
-  bonusChance: 0.15,
-  bonusPool: [
-    { itemId: "berry", weight: 3 },
-    { itemId: "resin", weight: 1 },
-  ],
-},
+      nodeChance: 1, // plus frequent que le minage - remplir le biome
+      minNodes: 10,
+      maxNodes: 15,
+      resourcePool: [{ itemId: "branch", weight: 1, requiredTier: 1 }],
+      totalHits: [2, 5],
+      bonusChance: 0.15,
+      bonusPool: [
+        { itemId: "berries", weight: 3 },
+        { itemId: "resin", weight: 1 },
+      ],
+    },
     generatorParams: {
       width: 40,
       height: 40,
@@ -228,9 +231,10 @@ const BIOMES = [
       decorTypes: ["rock_small", "bush", "flower_patch"], // cles arbitraires, a adapter
     },
     chestCount: [1, 3],
+    chestLootTable: "chestStandard",
     crateConfig: {
       count: [3, 6], // plus nombreuses que les vrais coffres
-      lootTable: "chestStandard", // remplace par une table dediee plus modeste une fois que tu en crees une dans itemTypes.js
+      lootTable: "crateStandard", // remplace par une table dediee plus modeste une fois que tu en crees une dans itemTypes.js
     },
     trapConfig: {
       frequency: 0.006,
@@ -255,17 +259,17 @@ const BIOMES = [
       ],
     },
     forageConfig: {
-  nodeChance: 0.6, // plus frequent que le minage - remplir le biome
-  minNodes: 2,
-  maxNodes: 5,
-  resourcePool: [{ itemId: "wood", weight: 1, requiredTier: 1 }],
-  totalHits: [2, 5],
-  bonusChance: 0.15,
-  bonusPool: [
-    { itemId: "berry", weight: 3 },
-    { itemId: "resin", weight: 1 },
-  ],
-},
+      nodeChance: 0.6, // plus frequent que le minage - remplir le biome
+      minNodes: 2,
+      maxNodes: 5,
+      resourcePool: [{ itemId: "branch", weight: 1, requiredTier: 1 }],
+      totalHits: [2, 5],
+      bonusChance: 0.15,
+      bonusPool: [
+        { itemId: "berries", weight: 3 },
+        { itemId: "resin", weight: 1 },
+      ],
+    },
     generatorParams: {
       width: 40,
       height: 40,
@@ -287,9 +291,10 @@ const BIOMES = [
       decorTypes: ["rock_small", "bush", "flower_patch"], // cles arbitraires, a adapter
     },
     chestCount: [1, 3],
+    chestLootTable: "chestStandard",
     crateConfig: {
       count: [3, 6], // plus nombreuses que les vrais coffres
-      lootTable: "chestStandard", // remplace par une table dediee plus modeste une fois que tu en crees une dans itemTypes.js
+      lootTable: "crateStandard", // remplace par une table dediee plus modeste une fois que tu en crees une dans itemTypes.js
     },
     trapConfig: {
       frequency: 0.006,
@@ -313,17 +318,17 @@ const BIOMES = [
       ],
     },
     forageConfig: {
-  nodeChance: 0.6, // plus frequent que le minage - remplir le biome
-  minNodes: 2,
-  maxNodes: 5,
-  resourcePool: [{ itemId: "wood", weight: 1, requiredTier: 1 }],
-  totalHits: [2, 5],
-  bonusChance: 0.15,
-  bonusPool: [
-    { itemId: "berry", weight: 3 },
-    { itemId: "resin", weight: 1 },
-  ],
-},
+      nodeChance: 0.6, // plus frequent que le minage - remplir le biome
+      minNodes: 2,
+      maxNodes: 5,
+      resourcePool: [{ itemId: "branch", weight: 1, requiredTier: 1 }],
+      totalHits: [2, 5],
+      bonusChance: 0.15,
+      bonusPool: [
+        { itemId: "berries", weight: 3 },
+        { itemId: "resin", weight: 1 },
+      ],
+    },
     generatorParams: {
       width: 80,
       height: 80,
@@ -345,6 +350,7 @@ const BIOMES = [
       decorTypes: ["rock_small", "bush", "flower_patch"], // cles arbitraires, a adapter
     },
     chestCount: [2, 4],
+    chestLootTable: "chestStandard",
     trapConfig: {
       frequency: 0.006,
       damageType: "physical",
@@ -367,17 +373,17 @@ const BIOMES = [
       ],
     },
     forageConfig: {
-  nodeChance: 0.6, // plus frequent que le minage - remplir le biome
-  minNodes: 2,
-  maxNodes: 5,
-  resourcePool: [{ itemId: "wood", weight: 1, requiredTier: 1 }],
-  totalHits: [2, 5],
-  bonusChance: 0.15,
-  bonusPool: [
-    { itemId: "berry", weight: 3 },
-    { itemId: "resin", weight: 1 },
-  ],
-},
+      nodeChance: 0.6, // plus frequent que le minage - remplir le biome
+      minNodes: 2,
+      maxNodes: 5,
+      resourcePool: [{ itemId: "branch", weight: 1, requiredTier: 1 }],
+      totalHits: [2, 5],
+      bonusChance: 0.15,
+      bonusPool: [
+        { itemId: "berries", weight: 3 },
+        { itemId: "resin", weight: 1 },
+      ],
+    },
     generatorParams: { cellCount: 25 },
   },
   {
@@ -393,9 +399,10 @@ const BIOMES = [
       decorTypes: ["rock_small", "bush", "flower_patch"], // cles arbitraires, a adapter
     },
     chestCount: [1, 3],
+    chestLootTable: "chestStandard",
     crateConfig: {
       count: [3, 6], // plus nombreuses que les vrais coffres
-      lootTable: "chestStandard", // remplace par une table dediee plus modeste une fois que tu en crees une dans itemTypes.js
+      lootTable: "crateStandard", // remplace par une table dediee plus modeste une fois que tu en crees une dans itemTypes.js
     },
     bossRoomSize: 40,
     trapConfig: {
@@ -420,17 +427,17 @@ const BIOMES = [
       ],
     },
     forageConfig: {
-  nodeChance: 0.6, // plus frequent que le minage - remplir le biome
-  minNodes: 2,
-  maxNodes: 5,
-  resourcePool: [{ itemId: "wood", weight: 1, requiredTier: 1 }],
-  totalHits: [2, 5],
-  bonusChance: 0.15,
-  bonusPool: [
-    { itemId: "berry", weight: 3 },
-    { itemId: "resin", weight: 1 },
-  ],
-},
+      nodeChance: 0.6, // plus frequent que le minage - remplir le biome
+      minNodes: 2,
+      maxNodes: 5,
+      resourcePool: [{ itemId: "branch", weight: 1, requiredTier: 1 }],
+      totalHits: [2, 5],
+      bonusChance: 0.15,
+      bonusPool: [
+        { itemId: "berries", weight: 3 },
+        { itemId: "resin", weight: 1 },
+      ],
+    },
     generatorParams: {
       width: 80,
       height: 80,
@@ -450,9 +457,10 @@ const BIOMES = [
       decorTypes: ["rock_small", "bush", "flower_patch"], // cles arbitraires, a adapter
     },
     chestCount: [1, 3],
+    chestLootTable: "chestStandard",
     crateConfig: {
       count: [3, 6], // plus nombreuses que les vrais coffres
-      lootTable: "chestStandard", // remplace par une table dediee plus modeste une fois que tu en crees une dans itemTypes.js
+      lootTable: "crateStandard", // remplace par une table dediee plus modeste une fois que tu en crees une dans itemTypes.js
     },
     trapConfig: {
       frequency: 0.006,
@@ -476,17 +484,17 @@ const BIOMES = [
       ],
     },
     forageConfig: {
-  nodeChance: 0.6, // plus frequent que le minage - remplir le biome
-  minNodes: 2,
-  maxNodes: 5,
-  resourcePool: [{ itemId: "wood", weight: 1, requiredTier: 1 }],
-  totalHits: [2, 5],
-  bonusChance: 0.15,
-  bonusPool: [
-    { itemId: "berry", weight: 3 },
-    { itemId: "resin", weight: 1 },
-  ],
-},
+      nodeChance: 0.6, // plus frequent que le minage - remplir le biome
+      minNodes: 2,
+      maxNodes: 5,
+      resourcePool: [{ itemId: "branch", weight: 1, requiredTier: 1 }],
+      totalHits: [2, 5],
+      bonusChance: 0.15,
+      bonusPool: [
+        { itemId: "berries", weight: 3 },
+        { itemId: "resin", weight: 1 },
+      ],
+    },
     generatorParams: {
       width: 40,
       height: 40,
@@ -509,6 +517,7 @@ const BIOMES = [
       decorTypes: ["rock_small", "bush", "flower_patch"], // cles arbitraires, a adapter
     },
     chestCount: [2, 4],
+    chestLootTable: "chestStandard",
     trapConfig: {
       frequency: 0.006,
       damageType: "physical",
@@ -531,17 +540,17 @@ const BIOMES = [
       ],
     },
     forageConfig: {
-  nodeChance: 0.6, // plus frequent que le minage - remplir le biome
-  minNodes: 2,
-  maxNodes: 5,
-  resourcePool: [{ itemId: "wood", weight: 1, requiredTier: 1 }],
-  totalHits: [2, 5],
-  bonusChance: 0.15,
-  bonusPool: [
-    { itemId: "berry", weight: 3 },
-    { itemId: "resin", weight: 1 },
-  ],
-},
+      nodeChance: 0.6, // plus frequent que le minage - remplir le biome
+      minNodes: 2,
+      maxNodes: 5,
+      resourcePool: [{ itemId: "branch", weight: 1, requiredTier: 1 }],
+      totalHits: [2, 5],
+      bonusChance: 0.15,
+      bonusPool: [
+        { itemId: "berries", weight: 3 },
+        { itemId: "resin", weight: 1 },
+      ],
+    },
     generatorParams: { noiseScale: 10 },
   },
   {
@@ -557,6 +566,7 @@ const BIOMES = [
       decorTypes: ["rock_small", "bush", "flower_patch"], // cles arbitraires, a adapter
     },
     chestCount: [2, 4],
+    chestLootTable: "chestStandard",
     trapConfig: {
       frequency: 0.006,
       damageType: "physical",
@@ -579,17 +589,17 @@ const BIOMES = [
       ],
     },
     forageConfig: {
-  nodeChance: 0.6, // plus frequent que le minage - remplir le biome
-  minNodes: 2,
-  maxNodes: 5,
-  resourcePool: [{ itemId: "wood", weight: 1, requiredTier: 1 }],
-  totalHits: [2, 5],
-  bonusChance: 0.15,
-  bonusPool: [
-    { itemId: "berry", weight: 3 },
-    { itemId: "resin", weight: 1 },
-  ],
-},
+      nodeChance: 0.6, // plus frequent que le minage - remplir le biome
+      minNodes: 2,
+      maxNodes: 5,
+      resourcePool: [{ itemId: "branch", weight: 1, requiredTier: 1 }],
+      totalHits: [2, 5],
+      bonusChance: 0.15,
+      bonusPool: [
+        { itemId: "berries", weight: 3 },
+        { itemId: "resin", weight: 1 },
+      ],
+    },
     generatorParams: { cellCount: 25 },
   },
   {
@@ -606,6 +616,7 @@ const BIOMES = [
       decorTypes: ["rock_small", "bush", "flower_patch"], // cles arbitraires, a adapter
     },
     chestCount: [2, 3],
+    chestLootTable: "chestStandard",
     trapConfig: {
       frequency: 0.006,
       damageType: "physical",
@@ -628,17 +639,17 @@ const BIOMES = [
       ],
     },
     forageConfig: {
-  nodeChance: 0.6, // plus frequent que le minage - remplir le biome
-  minNodes: 2,
-  maxNodes: 5,
-  resourcePool: [{ itemId: "wood", weight: 1, requiredTier: 1 }],
-  totalHits: [2, 5],
-  bonusChance: 0.15,
-  bonusPool: [
-    { itemId: "berry", weight: 3 },
-    { itemId: "resin", weight: 1 },
-  ],
-},
+      nodeChance: 0.6, // plus frequent que le minage - remplir le biome
+      minNodes: 2,
+      maxNodes: 5,
+      resourcePool: [{ itemId: "branch", weight: 1, requiredTier: 1 }],
+      totalHits: [2, 5],
+      bonusChance: 0.15,
+      bonusPool: [
+        { itemId: "berries", weight: 3 },
+        { itemId: "resin", weight: 1 },
+      ],
+    },
     // passageWidth:2 (pas le defaut 1 du generateur, "labyrinthe pur"
     // traditionnel) - un couloir d'une seule case serait tres
     // inconfortable pour l'esquive/les projectiles/le deplacement des
@@ -658,9 +669,10 @@ const BIOMES = [
       decorTypes: ["rock_small", "bush", "flower_patch"], // cles arbitraires, a adapter
     },
     chestCount: [1, 3],
+    chestLootTable: "chestStandard",
     crateConfig: {
       count: [3, 6], // plus nombreuses que les vrais coffres
-      lootTable: "chestStandard", // remplace par une table dediee plus modeste une fois que tu en crees une dans itemTypes.js
+      lootTable: "crateStandard", // remplace par une table dediee plus modeste une fois que tu en crees une dans itemTypes.js
     },
     trapConfig: {
       frequency: 0.006,
@@ -684,17 +696,17 @@ const BIOMES = [
       ],
     },
     forageConfig: {
-  nodeChance: 0.6, // plus frequent que le minage - remplir le biome
-  minNodes: 2,
-  maxNodes: 5,
-  resourcePool: [{ itemId: "wood", weight: 1, requiredTier: 1 }],
-  totalHits: [2, 5],
-  bonusChance: 0.15,
-  bonusPool: [
-    { itemId: "berry", weight: 3 },
-    { itemId: "resin", weight: 1 },
-  ],
-},
+      nodeChance: 0.6, // plus frequent que le minage - remplir le biome
+      minNodes: 2,
+      maxNodes: 5,
+      resourcePool: [{ itemId: "branch", weight: 1, requiredTier: 1 }],
+      totalHits: [2, 5],
+      bonusChance: 0.15,
+      bonusPool: [
+        { itemId: "berries", weight: 3 },
+        { itemId: "resin", weight: 1 },
+      ],
+    },
     generatorParams: { passageWidth: 5, wallThickness: 2 },
   },
   {
@@ -717,9 +729,10 @@ const BIOMES = [
       decorTypes: ["rock_small", "bush", "flower_patch"], // cles arbitraires, a adapter
     },
     chestCount: [1, 3],
+    chestLootTable: "chestStandard",
     crateConfig: {
       count: [3, 6], // plus nombreuses que les vrais coffres
-      lootTable: "chestStandard", // remplace par une table dediee plus modeste une fois que tu en crees une dans itemTypes.js
+      lootTable: "crateStandard", // remplace par une table dediee plus modeste une fois que tu en crees une dans itemTypes.js
     },
     trapConfig: {
       frequency: 0.006,
@@ -743,17 +756,17 @@ const BIOMES = [
       ],
     },
     forageConfig: {
-  nodeChance: 0.6, // plus frequent que le minage - remplir le biome
-  minNodes: 2,
-  maxNodes: 5,
-  resourcePool: [{ itemId: "wood", weight: 1, requiredTier: 1 }],
-  totalHits: [2, 5],
-  bonusChance: 0.15,
-  bonusPool: [
-    { itemId: "berry", weight: 3 },
-    { itemId: "resin", weight: 1 },
-  ],
-},
+      nodeChance: 0.6, // plus frequent que le minage - remplir le biome
+      minNodes: 2,
+      maxNodes: 5,
+      resourcePool: [{ itemId: "branch", weight: 1, requiredTier: 1 }],
+      totalHits: [2, 5],
+      bonusChance: 0.15,
+      bonusPool: [
+        { itemId: "berries", weight: 3 },
+        { itemId: "resin", weight: 1 },
+      ],
+    },
     generatorParams: { wallProbability: 0.35, minFloorRatio: 0.4 },
   },
 
@@ -778,9 +791,10 @@ const BIOMES = [
       decorTypes: ["rock_small", "bush", "flower_patch"], // cles arbitraires, a adapter
     },
     chestCount: [2, 4],
+    chestLootTable: "chestStandard",
     crateConfig: {
       count: [3, 6], // plus nombreuses que les vrais coffres
-      lootTable: "chestStandard", // remplace par une table dediee plus modeste une fois que tu en crees une dans itemTypes.js
+      lootTable: "crateStandard", // remplace par une table dediee plus modeste une fois que tu en crees une dans itemTypes.js
     },
     trapConfig: {
       frequency: 0.006,
@@ -804,17 +818,17 @@ const BIOMES = [
       ],
     },
     forageConfig: {
-  nodeChance: 0.6, // plus frequent que le minage - remplir le biome
-  minNodes: 2,
-  maxNodes: 5,
-  resourcePool: [{ itemId: "wood", weight: 1, requiredTier: 1 }],
-  totalHits: [2, 5],
-  bonusChance: 0.15,
-  bonusPool: [
-    { itemId: "berry", weight: 3 },
-    { itemId: "resin", weight: 1 },
-  ],
-},
+      nodeChance: 0.6, // plus frequent que le minage - remplir le biome
+      minNodes: 2,
+      maxNodes: 5,
+      resourcePool: [{ itemId: "branch", weight: 1, requiredTier: 1 }],
+      totalHits: [2, 5],
+      bonusChance: 0.15,
+      bonusPool: [
+        { itemId: "berries", weight: 3 },
+        { itemId: "resin", weight: 1 },
+      ],
+    },
     // niveaux plus grands et plus ouverts en fin de progression, cf.
     // /areas/phaser-arpg.md - d'ou une grille plus large que les autres
     // biomes
@@ -847,8 +861,8 @@ const TOWN_BIOME = {
   enemyBaseCount: 0,
   enemyTypes: [],
   decorationConfig: {
-     count: [8, 15], // genereux - c'est fait pour remplir le biome
-     decorTypes: ["rock_small", "bush", "flower_patch"], // cles arbitraires, a adapter
+    count: [8, 15], // genereux - c'est fait pour remplir le biome
+    decorTypes: ["rock_small", "bush", "flower_patch"], // cles arbitraires, a adapter
   },
   chestCount: [0, 0], // zone sure, pas de butin de donjon (une boutique viendra separement)
 };

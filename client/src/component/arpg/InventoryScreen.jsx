@@ -355,8 +355,8 @@ export default function InventoryScreen({
               Inventaire vide.
             </div>
           )}
-          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            {groupedItems.map((group) => {
+          {(() => {
+            function renderItemRow(group) {
               const def = resolveItemDef(group.itemId);
               return (
                 <div
@@ -393,11 +393,7 @@ export default function InventoryScreen({
                       </div>
 
                       <div
-                        style={{
-                          fontSize: 10,
-                          color: "#4a3a28",
-                          marginTop: 1,
-                        }}
+                        style={{ fontSize: 10, color: "#4a3a28", marginTop: 1 }}
                       >
                         {def.description}
                       </div>
@@ -462,8 +458,115 @@ export default function InventoryScreen({
                   )}
                 </div>
               );
-            })}
-          </div>
+            }
+
+            const CATEGORY_GROUPS = [
+              {
+                key: "tool",
+                label: "Outils",
+                test: (def) =>
+                  def.category === "equipment" && def.slot === "tool",
+              },
+              {
+                key: "equipment",
+                label: "Équipements",
+                test: (def) =>
+                  (def.category === "equipment" && def.slot !== "tool") ||
+                  def.category === "ammo",
+              },
+              {
+                key: "scroll",
+                label: "Parchemins & recettes",
+                test: (def) =>
+                  def.category === "abilityScroll" ||
+                  def.category === "recipeScroll",
+              },
+              {
+                key: "consumable",
+                label: "Potions",
+                test: (def) => def.category === "consumable",
+              },
+              {
+                key: "material",
+                label: "Craftable",
+                test: (def) => def.category === "craftingMaterial",
+              },
+            ];
+
+            const usedItemIds = new Set();
+            const sections = CATEGORY_GROUPS.map((cat) => {
+              const items = groupedItems.filter((g) => {
+                if (usedItemIds.has(g.itemId)) return false;
+                const matches = cat.test(resolveItemDef(g.itemId));
+                if (matches) usedItemIds.add(g.itemId);
+                return matches;
+              });
+              return { ...cat, items };
+            });
+            const otherItems = groupedItems.filter(
+              (g) => !usedItemIds.has(g.itemId),
+            );
+
+            return (
+              <div
+                style={{ display: "flex", flexDirection: "column", gap: 14 }}
+              >
+                {sections.map(
+                  (section) =>
+                    section.items.length > 0 && (
+                      <div key={section.key}>
+                        <div
+                          style={{
+                            fontSize: 11,
+                            fontWeight: "bold",
+                            color: "#5a4a35",
+                            textTransform: "uppercase",
+                            letterSpacing: 0.5,
+                            marginBottom: 6,
+                          }}
+                        >
+                          {section.label}
+                        </div>
+                        <div
+                          style={{
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: 6,
+                          }}
+                        >
+                          {section.items.map(renderItemRow)}
+                        </div>
+                      </div>
+                    ),
+                )}
+                {otherItems.length > 0 && (
+                  <div>
+                    <div
+                      style={{
+                        fontSize: 11,
+                        fontWeight: "bold",
+                        color: "#5a4a35",
+                        textTransform: "uppercase",
+                        letterSpacing: 0.5,
+                        marginBottom: 6,
+                      }}
+                    >
+                      Autres
+                    </div>
+                    <div
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 6,
+                      }}
+                    >
+                      {otherItems.map(renderItemRow)}
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
         </div>
 
         {/* Page droite - Personnage (mannequin d'equipement + stats) */}
