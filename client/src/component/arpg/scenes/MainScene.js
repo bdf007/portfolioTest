@@ -2901,6 +2901,7 @@ export default class MainScene extends Phaser.Scene {
         x: chestData.x,
         y: chestData.y,
         variant,
+        propType: chestData.propType || "chest",
       });
     });
     for (const eph of savedEphemeralChests) {
@@ -2926,6 +2927,7 @@ export default class MainScene extends Phaser.Scene {
         y: eph.y,
         variant,
         ephemeral: true,
+         propType: "chest",
       });
 
       if (-eph.index > this.nextLootChestId) {
@@ -5790,17 +5792,17 @@ export default class MainScene extends Phaser.Scene {
     );
     sprite.setDepth(7);
 
-    this.chests.push({
-      sprite,
-      index: -1 - this.nextLootChestId,
-      opened: false,
-      lootItems,
-      x: Math.round(pixelX / TILE_SIZE - 0.5),
-      y: Math.round(pixelY / TILE_SIZE - 0.5),
-      variant,
-      ephemeral: true,
-      propType: chestData.propType || "chest",
-    });
+ this.chests.push({
+  sprite,
+  index: -1 - this.nextLootChestId,
+  opened: false,
+  lootItems,
+  x: Math.round(pixelX / TILE_SIZE - 0.5),
+  y: Math.round(pixelY / TILE_SIZE - 0.5),
+  variant,
+  ephemeral: true,
+  propType: "chest",
+});
     this.nextLootChestId++;
   }
 
