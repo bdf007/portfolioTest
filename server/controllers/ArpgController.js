@@ -585,14 +585,29 @@ async function getLevel(req, res) {
     // contenu deja fixe a la generation) - exclut la salle de boss
     // scellee ET les cases-repere (sortie/escalier/boutique/hub) du
     // placement
-    const chests = generateChests({
+    const realChests = generateChests({
       grid,
-      seed: lootSeed, // <-- lootSeed au lieu de seed : position/nombre de coffres varient aussi desormais
+      seed: lootSeed,
       lootSeed,
       playerSpawn,
       chestCount: biome.chestCount,
       allowedTiles,
-    });
+    }).map((c) => ({ ...c, propType: "chest" }));
+
+    const crates = biome.crateConfig
+      ? generateChests({
+          grid,
+          seed: lootSeed,
+          lootSeed,
+          playerSpawn,
+          chestCount: biome.crateConfig.count,
+          allowedTiles,
+          lootTable: biome.crateConfig.lootTable || "chestStandard",
+          seedSuffix: "crate",
+        }).map((c) => ({ ...c, propType: "crate" }))
+      : [];
+
+    const chests = [...realChests, ...crates];
     const traps = generateTraps(
       grid,
       lootSeed,
