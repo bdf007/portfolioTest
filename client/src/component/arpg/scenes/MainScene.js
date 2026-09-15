@@ -762,6 +762,7 @@ export default class MainScene extends Phaser.Scene {
     this.secretLevers = [];
     this.secretWallMarker = null;
     this.miningRocks = []; // tableau de {index, data, sprite, hits, depleted}
+    this.forageNodes = [];
     this.discoveredSecretRoomDepths = [];
     this.floorsWithSecretRoom = [];
     this.quests = {};
@@ -969,6 +970,7 @@ export default class MainScene extends Phaser.Scene {
       ps.currentFloorLeverActivations || [],
       ps.currentFloorMiningRocksState || [],
       ps.currentFloorEphemeralChests || [],
+      ps.currentFloorForageNodesState || [],
     );
     for (const savedSummon of ps.summons || []) {
       const sourceAbilityDef = ABILITY_DEFS[savedSummon.sourceAbilityId];
@@ -1481,6 +1483,11 @@ export default class MainScene extends Phaser.Scene {
             hits: r.hits,
             depleted: r.depleted,
           })),
+          currentFloorForageNodesState: this.forageNodes.map((n) => ({
+            index: n.index,
+            hits: n.hits,
+            depleted: n.depleted,
+          })),
           currentFloorEphemeralChests: this.chests
             .filter((c) => c.ephemeral)
             .map((c) => ({
@@ -1730,7 +1737,8 @@ export default class MainScene extends Phaser.Scene {
     savedLeverActivations = [],
     savedMiningRocksState = [],
     savedEphemeralChests = [],
-  ) {
+    savedForageNodesState = [],
+    ) {
     this.currentFloorChestRemainingLoot = savedChestRemainingLoot || {};
     this.currentFloorTriggeredTraps = savedTriggeredTraps || [];
     this.currentFloorRevealedTraps = savedRevealedTraps || [];
@@ -1893,6 +1901,10 @@ export default class MainScene extends Phaser.Scene {
       if (r.sprite) r.sprite.destroy();
     });
     this.miningRocks = [];
+    this.forageNodes.forEach((n) => {
+      if (n.sprite) n.sprite.destroy();
+    });
+    this.forageNodes = [];
     this.secretRoomData = null;
     this.secretDoorOpened = false;
     this.dialogOpen = false;
@@ -2988,6 +3000,33 @@ export default class MainScene extends Phaser.Scene {
         depleted: false,
       });
     });
+
+    const forageData = data.forageNodes || [];
+forageData.forEach((nodeData, index) => {
+  const savedState = savedForageNodesState.find((s) => s.index === index);
+  if (savedState && savedState.depleted) return;
+
+  const hits = savedState ? savedState.hits : nodeData.totalHits;
+
+  // PLACEHOLDER - remplace par un vrai sprite d'arbre/plante une fois
+  // une planche identifiee, meme demarche que pour les rochers
+  const sprite = this.add.circle(
+    nodeData.x * TILE_SIZE + TILE_SIZE / 2,
+    nodeData.y * TILE_SIZE + TILE_SIZE / 2,
+    TILE_SIZE * 0.35,
+    0x2e7d32,
+  );
+  sprite.setDepth(4);
+  sprite.setStrokeStyle(2, 0x1b5e20);
+
+  this.forageNodes.push({
+    index,
+    data: nodeData,
+    sprite,
+    hits,
+    depleted: false,
+  });
+});
 
     this.secretRoomData = data.secretRoom || null;
     const alreadyDiscovered = this.discoveredSecretRoomDepths.includes(depth);
@@ -4192,6 +4231,19 @@ export default class MainScene extends Phaser.Scene {
         state[rockTileY][rockTileX] === 2;
       rock.sprite.setVisible(rockVisible);
     }
+    for (const node of this.forageNodes) {
+      if (!node.sprite) continue;
+      const nodeTileX = Math.floor(node.sprite.x / TILE_SIZE);
+      const nodeTileY = Math.floor(node.sprite.y / TILE_SIZE);
+      const state = this.fogState.state;
+      const nodeVisible =
+        nodeTileY >= 0 &&
+        nodeTileX >= 0 &&
+        nodeTileY < state.length &&
+        nodeTileX < state[0].length &&
+        state[nodeTileY][nodeTileX] === 2;
+      node.sprite.setVisible(nodeVisible);
+    }
     const fogStateForSecrets = this.fogState.state;
     function isTileCurrentlyVisible(tileX, tileY) {
       return (
@@ -5024,6 +5076,53 @@ export default class MainScene extends Phaser.Scene {
     );
   }
 
+  forageNode() {
+  const heroX = this.hero.body.center.x;
+  const heroY = this.hero.body.center.y;
+
+  const node = this.forageNodes.find((n) => {
+    if (n.depleted) return false;
+    const nodePx = n.data.x * TILE_SIZE + TILE_SIZE / 2;
+    const nodePy = n.data.y * TILE_SIZE + TILE_SIZE / 2;
+    return Math.hypot(nodePx - heroX, nodePy - heroY) <= this.playerMeleeRange;
+  });
+  if (!node) return false;
+
+  const toolId = this.equipped.tool;
+  const toolDef = toolId ? resolveItemDef(toolId) : null;
+  const toolTier = toolDef?.toolTier || 0;
+  const toolType = toolDef?.toolType || null;
+
+  if (toolType !== "axe" || toolTier < node.data.requiredTier) {
+    this.showLootToast("Il te faut une hache adaptée pour ça");
+    return true;
+  }
+
+  node.hits -= 1;
+
+  const bonusChance = node.data.bonusChance || 0;
+  const bonusPool = node.data.bonusPool || [];
+  const gotBonus = bonusPool.length > 0 && Math.random() < bonusChance;
+  const grantedItemId = gotBonus ? pickWeightedGem(bonusPool) : node.data.resourceItemId;
+
+  this.addItemToInventory(grantedItemId, 1);
+  this.showLootToast(
+    gotBonus
+      ? `Trouvaille : ${resolveItemDef(grantedItemId).name} !`
+      : `${resolveItemDef(grantedItemId).name} obtenu !`,
+  );
+
+  if (node.hits <= 0) {
+    node.sprite.destroy();
+    node.sprite = null;
+    node.depleted = true;
+    this.showLootToast("La ressource est épuisée");
+  }
+
+  this.persistProgress();
+  return true;
+}
+
   mineRock() {
     const heroX = this.hero.body.center.x;
     const heroY = this.hero.body.center.y;
@@ -5042,7 +5141,8 @@ export default class MainScene extends Phaser.Scene {
     const toolDef = toolId ? resolveItemDef(toolId) : null;
     const toolTier = toolDef?.toolTier || 0;
 
-    if (toolTier < rock.data.requiredTier) {
+    const toolType = toolDef?.toolType || null;
+    if (toolType !== "pickaxe" || toolTier < rock.data.requiredTier) {
       this.showLootToast("Cet outil n'est pas assez puissant pour ce gisement");
       return true;
     }
@@ -5153,6 +5253,7 @@ export default class MainScene extends Phaser.Scene {
 
     if (this.checkSecretWallInteraction()) return;
     if (this.mineRock()) return;
+    if (this.forageNode()) return;
 
     if (this.secretLevers.length > 0) {
       const nearbyLever = this.secretLevers.find(
