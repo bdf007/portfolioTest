@@ -763,6 +763,7 @@ export default class MainScene extends Phaser.Scene {
     this.secretWallMarker = null;
     this.miningRocks = []; // tableau de {index, data, sprite, hits, depleted}
     this.forageNodes = [];
+    this.decorationSprites = [];
     this.discoveredSecretRoomDepths = [];
     this.floorsWithSecretRoom = [];
     this.quests = {};
@@ -1905,6 +1906,8 @@ export default class MainScene extends Phaser.Scene {
       if (n.sprite) n.sprite.destroy();
     });
     this.forageNodes = [];
+    this.decorationSprites.forEach((s) => s.destroy());
+    this.decorationSprites = [];
     this.secretRoomData = null;
     this.secretDoorOpened = false;
     this.dialogOpen = false;
@@ -3005,31 +3008,47 @@ export default class MainScene extends Phaser.Scene {
     });
 
     const forageData = data.forageNodes || [];
-forageData.forEach((nodeData, index) => {
-  const savedState = savedForageNodesState.find((s) => s.index === index);
-  if (savedState && savedState.depleted) return;
+    forageData.forEach((nodeData, index) => {
+      const savedState = savedForageNodesState.find((s) => s.index === index);
+      if (savedState && savedState.depleted) return;
 
-  const hits = savedState ? savedState.hits : nodeData.totalHits;
+      const hits = savedState ? savedState.hits : nodeData.totalHits;
 
-  // PLACEHOLDER - remplace par un vrai sprite d'arbre/plante une fois
-  // une planche identifiee, meme demarche que pour les rochers
-  const sprite = this.add.circle(
-    nodeData.x * TILE_SIZE + TILE_SIZE / 2,
-    nodeData.y * TILE_SIZE + TILE_SIZE / 2,
-    TILE_SIZE * 0.35,
-    0x2e7d32,
-  );
-  sprite.setDepth(4);
-  sprite.setStrokeStyle(2, 0x1b5e20);
+      // PLACEHOLDER - remplace par un vrai sprite d'arbre/plante une fois
+      // une planche identifiee, meme demarche que pour les rochers
+      const sprite = this.add.circle(
+        nodeData.x * TILE_SIZE + TILE_SIZE / 2,
+        nodeData.y * TILE_SIZE + TILE_SIZE / 2,
+        TILE_SIZE * 0.35,
+        0x2e7d32,
+      );
+      sprite.setDepth(4);
+      sprite.setStrokeStyle(2, 0x1b5e20);
 
-  this.forageNodes.push({
-    index,
-    data: nodeData,
-    sprite,
-    hits,
-    depleted: false,
-  });
-});
+      this.forageNodes.push({
+        index,
+        data: nodeData,
+        sprite,
+        hits,
+        depleted: false,
+      });
+    });
+
+    const DECOR_PLACEHOLDER_COLORS = {
+      rock_small: 0x757575,
+      bush: 0x388e3c,
+      flower_patch: 0xe91e63,
+    };
+    (data.decorations || []).forEach((decorData) => {
+      const sprite = this.add.circle(
+        decorData.x * TILE_SIZE + TILE_SIZE / 2,
+        decorData.y * TILE_SIZE + TILE_SIZE / 2,
+        TILE_SIZE * 0.25,
+        DECOR_PLACEHOLDER_COLORS[decorData.decorType] || 0x9e9e9e,
+      );
+      sprite.setDepth(4);
+      this.decorationSprites.push(sprite);
+    });
 
     this.secretRoomData = data.secretRoom || null;
     const alreadyDiscovered = this.discoveredSecretRoomDepths.includes(depth);
@@ -4246,6 +4265,18 @@ forageData.forEach((nodeData, index) => {
         nodeTileX < state[0].length &&
         state[nodeTileY][nodeTileX] === 2;
       node.sprite.setVisible(nodeVisible);
+    }
+    for (const sprite of this.decorationSprites) {
+      const tileX = Math.floor(sprite.x / TILE_SIZE);
+      const tileY = Math.floor(sprite.y / TILE_SIZE);
+      const state = this.fogState.state;
+      const visible =
+        tileY >= 0 &&
+        tileX >= 0 &&
+        tileY < state.length &&
+        tileX < state[0].length &&
+        state[tileY][tileX] === 2;
+      sprite.setVisible(visible);
     }
     const fogStateForSecrets = this.fogState.state;
     function isTileCurrentlyVisible(tileX, tileY) {
