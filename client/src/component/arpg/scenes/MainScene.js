@@ -2868,6 +2868,9 @@ export default class MainScene extends Phaser.Scene {
         alreadyOpened ? variant.openFrame : variant.closedFrame,
       );
       sprite.setDepth(7);
+      if (chestData.propType === "crate") {
+        sprite.setTint(0x8d6e63); // PLACEHOLDER - teinte brune pour distinguer une caisse d'un vrai coffre, en attendant un vrai sprite
+      }
       // collision avec le héros (désactivée pour l'instant)
       // this.physics.add.existing(sprite, true);
       // this.levelColliders.push(this.physics.add.collider(this.hero, sprite));
@@ -5765,6 +5768,7 @@ forageData.forEach((nodeData, index) => {
       y: Math.round(pixelY / TILE_SIZE - 0.5),
       variant,
       ephemeral: true,
+      propType: chestData.propType || "chest",
     });
     this.nextLootChestId++;
   }
