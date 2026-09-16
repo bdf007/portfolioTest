@@ -285,7 +285,7 @@ export const ITEM_DEFS = {
     twoHanded: true,
     grantsRanged: true,
     requiresAmmo: ["woodenArrow", "ironArrow", "bronzeArrow", "bigWoodenArrow"],
-    name: "Arc de chasse",
+    name: "Arc de chasse (Unique)",
     description: "+4 dégâts à distance. +5 de distance d'attaque",
     unique: true,
     statBonus: { rangedDamage: 4, rangedRange: 5 },

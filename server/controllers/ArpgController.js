@@ -87,6 +87,10 @@ async function getLevel(req, res) {
     // pour ne jamais planter (retrocompatibilite, appel manuel...)
     const lootSeed = req.query.lootSeed || seed;
 
+    const obtainedUniqueItems = req.query.obtainedUniqueItems
+      ? JSON.parse(req.query.obtainedUniqueItems)
+      : [];
+
     const biome = getBiomeForDepth(depth);
 
     let grid;
@@ -187,11 +191,17 @@ async function getLevel(req, res) {
         defense: bossConfig.stats.defense,
         speed: bossConfig.stats.speed,
         xpReward: bossConfig.stats.xpReward,
-        attackType: bossConfig.stats.attackType || "melee", // pas encore defini dans BOSS_ASSIGNMENTS (cf. bossConfig.js) - repli explicite, prêt si un futur boss veut attaquer a distance
+        attackType: bossConfig.stats.attackType || "melee",
         inflictsEffect: bossConfig.stats.inflictsEffect || null,
         visualEffect: bossConfig.stats.visualEffect || null,
-        drop: rollLoot("bossDrop", bossLootRng, depth),
+        drop: rollLoot(
+          bossConfig.lootTable || "bossDrop",
+          bossLootRng,
+          depth,
+          obtainedUniqueItems,
+        ),
         summonAbility: bossConfig.summonAbility || null,
+        varianceDice: bossConfig.stats.varianceDice || null,
       };
     } else {
       exitTile = findExitTile(grid, playerSpawn);
@@ -601,6 +611,7 @@ async function getLevel(req, res) {
           enemyLootRng,
           2,
           depth,
+          obtainedUniqueItems,
         ),
       };
     });
@@ -617,6 +628,7 @@ async function getLevel(req, res) {
       chestCount: biome.chestCount,
       allowedTiles,
       lootTable: biome.chestLootTable || "chestStandard",
+      excludeItemIds: obtainedUniqueItems,
     }).map((c) => ({ ...c, propType: "chest" }));
     for (const c of realChests) allowedTilesFull.delete(`${c.x},${c.y}`);
 
@@ -630,6 +642,7 @@ async function getLevel(req, res) {
           allowedTilesFull,
           lootTable: biome.crateConfig.lootTable || "chestStandard",
           seedSuffix: "crate",
+          excludeItemIds: obtainedUniqueItems,
         }).map((c) => ({ ...c, propType: "crate" }))
       : [];
     for (const c of crates) allowedTilesFull.delete(`${c.x},${c.y}`);

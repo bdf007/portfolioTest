@@ -308,7 +308,7 @@ export const CRAFTING_RECIPES = {
   },
   woodenCrossbowBoltRecipe: {
     id: "woodenCrossbowBoltRecipe",
-    name: "Recette de Carreau de arbalète en bois",
+    name: "Carreau d'arbalète en bois",
     resultItemId: "woodenCrossbowBolt",
     resultQuantity: 5,
     ingredients: [{ itemId: "branch", quantity: 2 }],

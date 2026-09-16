@@ -559,14 +559,14 @@ export const STANDARD_COAST_A_AUTOTILE_SPRITESHEET = {
   frameHeight: 16,
 };
 
-export const STANDARD_FIELDS1_A_AUTOTILE_SPRITESHEET = {
+export const STANDARD_FIELDS1_AUTOTILE_SPRITESHEET = {
   key: "standardFields1AAutotile",
   path: standardFields1AutotileImg,
   frameWidth: 16,
   frameHeight: 16,
 };
 
-export const STANDARD_FIELDS3_A_AUTOTILE_SPRITESHEET = {
+export const STANDARD_FIELDS3_AUTOTILE_SPRITESHEET = {
   key: "standardFields3AAutotile",
   path: standardFields3AutotileImg,
   frameWidth: 16,

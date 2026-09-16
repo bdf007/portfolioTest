@@ -294,7 +294,7 @@ const ITEM_TYPES = {
     twoHanded: true,
     grantsRanged: true,
     requiresAmmo: ["woodenArrow", "ironArrow", "bronzeArrow", "bigWoodenArrow"],
-    name: "Arc de chasse",
+    name: "Arc de chasse (Unique)",
     description: "+4 dégâts à distance. +5 de distance d'attaque",
     unique: true,
     statBonus: { rangedDamage: 4, rangedRange: 5 },
@@ -1094,6 +1094,14 @@ const ITEM_TYPES = {
     stackable: true,
     price: 5,
   },
+  honeycomb: {
+    id: "honeycomb",
+    category: "craftingMaterial",
+    name: "Rayon de miel",
+    description: "Un rayon de miel, utilisé en artisanat.",
+    stackable: true,
+    price: 10,
+  },
 
   // exemple d'objet de quete - existe dans le monde, mais aucune quete
   // de type "en rapporter N" ne sait encore l'exploiter (cf. commentaire
@@ -1151,6 +1159,7 @@ const LOOT_TABLES = {
     { itemId: "manaPotion", weight: 35 },
     { itemId: "gold", weight: 40, quantityRange: [2, 10] },
     { itemId: "woodenCrossbow", weight: 20 },
+    { itemId: "huntingBow", weight: 100 },
   ],
   crateStandard: [
     { itemId: null, weight: 50 },
@@ -1192,6 +1201,11 @@ const LOOT_TABLES = {
     // d'attribution, conditionnee a l'etat des quetes du joueur.
   ],
 
+  bossDropMaxibee: [
+    { itemId: "honeycomb", weight: 15 },
+    { itemId: "gold", weight: 20, quantityRange: [40, 80] },
+  ],
+
   // recompense de quete : l'XP reste la recompense principale (deja geree
   // par questTypes.js), cette table n'ajoute qu'une CHANCE de bonus en
   // objet - poids "rien" tres majoritaire, pour ne pas transformer
@@ -1214,7 +1228,7 @@ const LOOT_TABLES = {
  * @param {Function} rng générateur seedé (cf. rng.js)
  * @returns {{itemId: string, quantity: number} | null}
  */
-function rollLoot(tableName, rng, depth = Infinity) {
+function rollLoot(tableName, rng, depth = Infinity, excludeItemIds = null) {
   const table = LOOT_TABLES[tableName];
   if (!table) return null;
 
@@ -1225,7 +1239,11 @@ function rollLoot(tableName, rng, depth = Infinity) {
   // absent = disponible des le debut (comportement inchange pour toute
   // entree qui ne definit pas ce champ).
   const eligibleTable = table.filter(
-    (entry) => !entry.minDepth || depth >= entry.minDepth,
+    (entry) =>
+      (!entry.minDepth || depth >= entry.minDepth) &&
+      (!excludeItemIds ||
+        !entry.itemId ||
+        !excludeItemIds.includes(entry.itemId)),
   );
   if (eligibleTable.length === 0) return null;
 
@@ -1277,13 +1295,19 @@ function rollLoot(tableName, rng, depth = Infinity) {
  * @returns {{itemId:string, quantity:number}[]} peut etre vide (tous les
  *   tirages ont donne "rien" ou un doublon), jamais null
  */
-function rollMultipleLoot(tableName, rng, rolls, depth = Infinity) {
+function rollMultipleLoot(
+  tableName,
+  rng,
+  rolls,
+  depth = Infinity,
+  excludeItemIds = null,
+) {
   const results = [];
   const usedItemIds = new Set();
   for (let i = 0; i < rolls; i++) {
-    let result = rollLoot(tableName, rng, depth);
+    let result = rollLoot(tableName, rng, depth, excludeItemIds);
     if (result && usedItemIds.has(result.itemId)) {
-      result = rollLoot(tableName, rng, depth);
+      result = rollLoot(tableName, rng, depth, excludeItemIds);
       if (result && usedItemIds.has(result.itemId)) result = null;
     }
     if (result) {

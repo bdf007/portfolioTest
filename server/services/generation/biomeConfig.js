@@ -27,7 +27,7 @@ const BIOMES = [
     minDepth: 1,
     maxDepth: 2,
     generator: "cavechain",
-    tileset: "mines2",
+    tileset: "standardFields_2_0_1",
     enemyBaseCount: 3,
     bossRoomSize: 40,
     enemyTypes: ["deer1", "angryBrownMushroom", "gnome"],
@@ -68,7 +68,7 @@ const BIOMES = [
       ],
     },
     forageConfig: {
-      nodeChance: 0.6, // plus frequent que le minage - remplir le biome
+      nodeChance: 1, // plus frequent que le minage - remplir le biome
       minNodes: 2,
       maxNodes: 5,
       resourcePool: [{ itemId: "branch", weight: 1, requiredTier: 1 }],
@@ -93,7 +93,7 @@ const BIOMES = [
     minDepth: 3,
     maxDepth: 4,
     generator: "cellular",
-    tileset: "standardFields_0_1",
+    tileset: "standardFields_1_0_1",
     enemyBaseCount: 3,
     bossRoomSize: 40,
     enemyTypes: ["deer1", "angryBrownMushroom", "gnome"],
@@ -122,7 +122,7 @@ const BIOMES = [
       resourcePool: [
         { itemId: "copperOre", weight: 5, requiredTier: 1 },
         { itemId: "coalOre", weight: 1, requiredTier: 1 },
-        { itemId: "ironOre", weight: 2, requiredTier: 2 },
+        { itemId: "ironOre", weight: 4, requiredTier: 2 },
       ],
       totalHits: [1, 6], // nombre de coups avant epuisement
       gemChance: 0.15, // 15% de chance PAR COUP d'obtenir une gemme a la place du metal
@@ -147,10 +147,10 @@ const BIOMES = [
       ],
     },
     generatorParams: {
-      width: 40,
-      height: 40,
-      wallProbability: 0.45,
-      minFloorRatio: 0.3,
+      width: 60,
+      height: 60,
+      wallProbability: 0.4,
+      minFloorRatio: 0.35,
     },
   },
   {
@@ -158,7 +158,7 @@ const BIOMES = [
     minDepth: 5,
     maxDepth: 6,
     generator: "bsp",
-    tileset: "standardFields_0_1",
+    tileset: "standardFields_1_1_1",
     enemyBaseCount: 3,
     bossRoomSize: 40,
     enemyTypes: ["deer1", "angryBrownMushroom", "gnome"],
@@ -244,7 +244,7 @@ const BIOMES = [
     },
     secretRoomChance: 1, // 0.15 pour 15% de chances par etage - reste absent/0 sur un biome = jamais de salle secrete
     miningConfig: {
-      rockChance: 0.7, // chance qu'AU MOINS un gisement apparaisse cet etage
+      rockChance: 1, // chance qu'AU MOINS un gisement apparaisse cet etage
       minRocks: 1,
       maxRocks: 3,
 
@@ -259,7 +259,7 @@ const BIOMES = [
       ],
     },
     forageConfig: {
-      nodeChance: 0.6, // plus frequent que le minage - remplir le biome
+      nodeChance: 1, // plus frequent que le minage - remplir le biome
       minNodes: 2,
       maxNodes: 5,
       resourcePool: [{ itemId: "branch", weight: 1, requiredTier: 1 }],
@@ -304,7 +304,7 @@ const BIOMES = [
     },
     secretRoomChance: 1,
     miningConfig: {
-      rockChance: 0.7, // chance qu'AU MOINS un gisement apparaisse cet etage
+      rockChance: 1, // chance qu'AU MOINS un gisement apparaisse cet etage
       minRocks: 1,
       maxRocks: 3,
       resourcePool: [{ itemId: "silverOre", weight: 1, requiredTier: 3 }], // objet obtenu a chaque coup
@@ -318,7 +318,7 @@ const BIOMES = [
       ],
     },
     forageConfig: {
-      nodeChance: 0.6, // plus frequent que le minage - remplir le biome
+      nodeChance: 1, // plus frequent que le minage - remplir le biome
       minNodes: 2,
       maxNodes: 5,
       resourcePool: [{ itemId: "branch", weight: 1, requiredTier: 1 }],
@@ -341,7 +341,7 @@ const BIOMES = [
     minDepth: 9,
     maxDepth: 9,
     generator: "voronoi",
-    tileset: "mines2",
+    tileset: "standardFields_3_1_1",
     enemyBaseCount: 3,
     bossRoomSize: 40,
     enemyTypes: ["knifedBat"],
@@ -359,7 +359,7 @@ const BIOMES = [
     },
     secretRoomChance: 1,
     miningConfig: {
-      rockChance: 0.7, // chance qu'AU MOINS un gisement apparaisse cet etage
+      rockChance: 1, // chance qu'AU MOINS un gisement apparaisse cet etage
       minRocks: 1,
       maxRocks: 3,
       resourcePool: [{ itemId: "goldOre", weight: 5, requiredTier: 5 }], // objet obtenu a chaque coup
@@ -373,7 +373,7 @@ const BIOMES = [
       ],
     },
     forageConfig: {
-      nodeChance: 0.6, // plus frequent que le minage - remplir le biome
+      nodeChance: 1, // plus frequent que le minage - remplir le biome
       minNodes: 2,
       maxNodes: 5,
       resourcePool: [{ itemId: "branch", weight: 1, requiredTier: 1 }],
@@ -413,7 +413,7 @@ const BIOMES = [
     },
     secretRoomChance: 1,
     miningConfig: {
-      rockChance: 0.7, // chance qu'AU MOINS un gisement apparaisse cet etage
+      rockChance: 1, // chance qu'AU MOINS un gisement apparaisse cet etage
       minRocks: 1,
       maxRocks: 3,
       resourcePool: [{ itemId: "platinumOre", weight: 5, requiredTier: 6 }], // objet obtenu a chaque coup
@@ -427,7 +427,7 @@ const BIOMES = [
       ],
     },
     forageConfig: {
-      nodeChance: 0.6, // plus frequent que le minage - remplir le biome
+      nodeChance: 1, // plus frequent que le minage - remplir le biome
       minNodes: 2,
       maxNodes: 5,
       resourcePool: [{ itemId: "branch", weight: 1, requiredTier: 1 }],
@@ -470,7 +470,7 @@ const BIOMES = [
     },
     secretRoomChance: 1,
     miningConfig: {
-      rockChance: 0.7, // chance qu'AU MOINS un gisement apparaisse cet etage
+      rockChance: 1, // chance qu'AU MOINS un gisement apparaisse cet etage
       minRocks: 1,
       maxRocks: 3,
       resourcePool: [{ itemId: "cobaltOre", weight: 5, requiredTier: 7 }], // objet obtenu a chaque coup
@@ -484,7 +484,7 @@ const BIOMES = [
       ],
     },
     forageConfig: {
-      nodeChance: 0.6, // plus frequent que le minage - remplir le biome
+      nodeChance: 1, // plus frequent que le minage - remplir le biome
       minNodes: 2,
       maxNodes: 5,
       resourcePool: [{ itemId: "branch", weight: 1, requiredTier: 1 }],
@@ -526,7 +526,7 @@ const BIOMES = [
     },
     secretRoomChance: 1,
     miningConfig: {
-      rockChance: 0.7, // chance qu'AU MOINS un gisement apparaisse cet etage
+      rockChance: 1, // chance qu'AU MOINS un gisement apparaisse cet etage
       minRocks: 1,
       maxRocks: 3,
       resourcePool: [{ itemId: "adamantineOre", weight: 5, requiredTier: 8 }],
@@ -540,7 +540,7 @@ const BIOMES = [
       ],
     },
     forageConfig: {
-      nodeChance: 0.6, // plus frequent que le minage - remplir le biome
+      nodeChance: 1, // plus frequent que le minage - remplir le biome
       minNodes: 2,
       maxNodes: 5,
       resourcePool: [{ itemId: "branch", weight: 1, requiredTier: 1 }],
@@ -589,7 +589,7 @@ const BIOMES = [
       ],
     },
     forageConfig: {
-      nodeChance: 0.6, // plus frequent que le minage - remplir le biome
+      nodeChance: 1, // plus frequent que le minage - remplir le biome
       minNodes: 2,
       maxNodes: 5,
       resourcePool: [{ itemId: "branch", weight: 1, requiredTier: 1 }],
@@ -639,7 +639,7 @@ const BIOMES = [
       ],
     },
     forageConfig: {
-      nodeChance: 0.6, // plus frequent que le minage - remplir le biome
+      nodeChance: 1, // plus frequent que le minage - remplir le biome
       minNodes: 2,
       maxNodes: 5,
       resourcePool: [{ itemId: "branch", weight: 1, requiredTier: 1 }],
@@ -696,7 +696,7 @@ const BIOMES = [
       ],
     },
     forageConfig: {
-      nodeChance: 0.6, // plus frequent que le minage - remplir le biome
+      nodeChance: 1, // plus frequent que le minage - remplir le biome
       minNodes: 2,
       maxNodes: 5,
       resourcePool: [{ itemId: "branch", weight: 1, requiredTier: 1 }],
@@ -742,7 +742,7 @@ const BIOMES = [
     },
     secretRoomChance: 1,
     miningConfig: {
-      rockChance: 0.7, // chance qu'AU MOINS un gisement apparaisse cet etage
+      rockChance: 1, // chance qu'AU MOINS un gisement apparaisse cet etage
       minRocks: 1,
       maxRocks: 3,
       resourcePool: [{ itemId: "novaOre", weight: 5, requiredTier: 12 }],
@@ -756,7 +756,7 @@ const BIOMES = [
       ],
     },
     forageConfig: {
-      nodeChance: 0.6, // plus frequent que le minage - remplir le biome
+      nodeChance: 1, // plus frequent que le minage - remplir le biome
       minNodes: 2,
       maxNodes: 5,
       resourcePool: [{ itemId: "branch", weight: 1, requiredTier: 1 }],
@@ -804,7 +804,7 @@ const BIOMES = [
     },
     secretRoomChance: 1,
     miningConfig: {
-      rockChance: 0.7, // chance qu'AU MOINS un gisement apparaisse cet etage
+      rockChance: 1, // chance qu'AU MOINS un gisement apparaisse cet etage
       minRocks: 1,
       maxRocks: 3,
       resourcePool: [{ itemId: "novaOre", weight: 5, requiredTier: 12 }],
@@ -818,7 +818,7 @@ const BIOMES = [
       ],
     },
     forageConfig: {
-      nodeChance: 0.6, // plus frequent que le minage - remplir le biome
+      nodeChance: 1, // plus frequent que le minage - remplir le biome
       minNodes: 2,
       maxNodes: 5,
       resourcePool: [{ itemId: "branch", weight: 1, requiredTier: 1 }],
