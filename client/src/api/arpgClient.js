@@ -22,6 +22,7 @@ export async function fetchLevel(
   lootSeed,
   previousFloors,
   discoveredSecretRoomDepths,
+  obtainedUniqueItems,
 ) {
   const params = new URLSearchParams({
     depth,
@@ -36,6 +37,9 @@ export async function fetchLevel(
             discoveredSecretRoomDepths,
           ),
         }
+      : {}),
+    ...(obtainedUniqueItems && obtainedUniqueItems.length > 0
+      ? { obtainedUniqueItems: JSON.stringify(obtainedUniqueItems) }
       : {}),
   });
   const res = await fetch(`/api/arpg/level?${params}`, {

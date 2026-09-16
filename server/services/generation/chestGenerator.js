@@ -42,6 +42,7 @@ function generateChests({
   allowedTiles = null,
   lootTable = "chestStandard", // permet de reutiliser cette fonction pour les caisses/tonneaux, avec une table de butin plus modeste
   seedSuffix = "chest", // distingue les positions/contenus des vrais coffres de ceux des caisses, meme etage
+  excludeItemIds = null,
 }) {
   const [min, max] = Array.isArray(chestCount)
     ? chestCount
@@ -67,7 +68,7 @@ function generateChests({
     x: pos.x,
     y: pos.y,
     opened: false,
-    loot: rollLoot(lootTable, lootRng),
+    loot: rollLoot(lootTable, lootRng, Infinity, excludeItemIds),
   }));
 }
 

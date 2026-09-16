@@ -51,11 +51,14 @@ const BOSS_ASSIGNMENTS = [
   {
     depth: 5,
     type: "bigbat",
-    // valeurs directement reprises de l'ancien calcul par formule a
-    // depth=5 (cf. l'historique de enemyStats.js) - preserve le
-    // comportement actuel a l'identique pour ce boss precis, seul a
-    // exister pour l'instant
-    stats: { hp: 100, damage: 10, defense: 2, speed: 62, xpReward: 50 },
+    stats: {
+      hp: 100,
+      damage: 10,
+      defense: 2,
+      speed: 62,
+      xpReward: 50,
+      varianceDice: "1d10",
+    },
     summonAbility: {
       summonTypes: ["colorBat1", "colorBat2"], // liste fixe, propre a ce boss
       cooldownMs: 15000,
@@ -68,7 +71,14 @@ const BOSS_ASSIGNMENTS = [
   {
     depth: 9,
     type: "maxibee1",
-    stats: { hp: 200, damage: 20, defense: 4, speed: 62, xpReward: 70 },
+    stats: {
+      hp: 200,
+      damage: 20,
+      defense: 4,
+      speed: 62,
+      xpReward: 70,
+      varianceDice: "1d10",
+    },
     summonAbility: {
       summonTypes: ["bee1"], // liste fixe, propre a ce boss
       cooldownMs: 15000,
@@ -77,12 +87,20 @@ const BOSS_ASSIGNMENTS = [
       damageScale: 0.1,
       defenseScale: 0.1,
     },
+    lootTable: "bossDropMaxibee",
     // valeurs directement reprises de l'ancien calcul par formule a
   },
   {
     depth: 15,
     type: "BigBug",
-    stats: { hp: 300, damage: 30, defense: 6, speed: 62, xpReward: 100 },
+    stats: {
+      hp: 300,
+      damage: 30,
+      defense: 6,
+      speed: 62,
+      xpReward: 100,
+      varianceDice: "1d10",
+    },
     summonAbility: {
       summonTypes: ["bug1a", "bug1b"], // liste fixe, propre a ce boss
       cooldownMs: 2000,
@@ -95,70 +113,147 @@ const BOSS_ASSIGNMENTS = [
   {
     depth: 19,
     type: "GiantFox",
-    stats: { hp: 400, damage: 40, defense: 8, speed: 62, xpReward: 150 },
+    stats: {
+      hp: 400,
+      damage: 40,
+      defense: 8,
+      speed: 62,
+      xpReward: 150,
+      varianceDice: "1d10",
+    },
   },
   {
     depth: 25,
     type: "maxibee1",
-    stats: { hp: 500, damage: 50, defense: 10, speed: 62, xpReward: 200 },
+    stats: {
+      hp: 500,
+      damage: 50,
+      defense: 10,
+      speed: 62,
+      xpReward: 200,
+      varianceDice: "1d10",
+    },
   },
   {
     depth: 29,
     type: "BigBug",
-    stats: { hp: 600, damage: 60, defense: 12, speed: 62, xpReward: 250 },
+    stats: {
+      hp: 600,
+      damage: 60,
+      defense: 12,
+      speed: 62,
+      xpReward: 250,
+      varianceDice: "1d10",
+    },
   },
   {
     depth: 35,
     type: "GiantFox",
-    stats: { hp: 700, damage: 70, defense: 14, speed: 62, xpReward: 300 },
+    stats: {
+      hp: 700,
+      damage: 70,
+      defense: 14,
+      speed: 62,
+      xpReward: 300,
+      varianceDice: "1d10",
+    },
   },
   {
     depth: 40,
     type: "MegaBat",
-    stats: { hp: 800, damage: 80, defense: 16, speed: 62, xpReward: 350 },
+    stats: {
+      hp: 800,
+      damage: 80,
+      defense: 16,
+      speed: 62,
+      xpReward: 350,
+      varianceDice: "1d10",
+    },
   },
   {
     depth: 45,
 
     type: "MaxiBee1",
-    stats: { hp: 900, damage: 90, defense: 18, speed: 62, xpReward: 400 },
+    stats: {
+      hp: 900,
+      damage: 90,
+      defense: 18,
+      speed: 62,
+      xpReward: 400,
+      varianceDice: "1d10",
+    },
   },
   {
     depth: 49,
     type: "BigBug",
-    stats: { hp: 1000, damage: 100, defense: 20, speed: 62, xpReward: 450 },
+    stats: {
+      hp: 1000,
+      damage: 100,
+      defense: 20,
+      speed: 62,
+      xpReward: 450,
+      varianceDice: "1d10",
+    },
   },
   {
     depth: 55,
     type: "GiantFox",
-    stats: { hp: 1100, damage: 110, defense: 22, speed: 62, xpReward: 500 },
+    stats: {
+      hp: 1100,
+      damage: 110,
+      defense: 22,
+      speed: 62,
+      xpReward: 500,
+      varianceDice: "1d10",
+    },
   },
   {
     depth: 59,
     type: "M",
-    stats: { hp: 1200, damage: 120, defense: 24, speed: 62, xpReward: 550 },
+    stats: {
+      hp: 1200,
+      damage: 120,
+      defense: 24,
+      speed: 62,
+      xpReward: 550,
+      varianceDice: "1d10",
+    },
   },
   {
     depth: 65,
     type: "MegaBat",
-    stats: { hp: 1300, damage: 130, defense: 26, speed: 62, xpReward: 600 },
+    stats: {
+      hp: 1300,
+      damage: 130,
+      defense: 26,
+      speed: 62,
+      xpReward: 600,
+      varianceDice: "1d10",
+    },
   },
   {
     depth: 69,
     type: "MaxiBee1",
-    stats: { hp: 1400, damage: 140, defense: 28, speed: 62, xpReward: 650 },
+    stats: {
+      hp: 1400,
+      damage: 140,
+      defense: 28,
+      speed: 62,
+      xpReward: 650,
+      varianceDice: "1d10",
+    },
   },
   // Exemple pour un futur boss, une fois son sprite + ses stats prets :
   // {
   //   depth: 9,
   //   type: "autreBoss",
-  //   stats: { hp: 450, damage: 30, defense: 3, speed: 70, xpReward: 220 },
+  //   stats: { hp: 450, damage: 30, defense: 3, speed: 70, xpReward: 220, varianceDice: "1d10" },
   // },
 ];
 
 /**
  * @param {number} depth
- * @returns {{depth:number, type:string, stats:{hp:number,damage:number,defense:number,speed:number,xpReward:number}}}
+ * @returns {{depth:number, type:string, stats:{hp:number,damage:number,defense:number,speed:number,xpReward:number,varianceDice:string}}}
  */
 function getBossConfigForDepth(depth) {
   const exact = BOSS_ASSIGNMENTS.find((a) => a.depth === depth);

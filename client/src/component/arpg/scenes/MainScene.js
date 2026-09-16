@@ -96,8 +96,8 @@ import {
   // GREY_COASTA51_AUTOTILE_SPRITESHEET,
   CITY_TILES_AUTOTILE_SPRITESHEET,
   // STANDARD_COAST_A_AUTOTILE_SPRITESHEET,
-  // STANDARD_FIELDS3_AUTOTILE_SPRITESHEET,
-  // STANDARD_FIELDS2_A_AUTOTILE_SPRITESHEET,
+  STANDARD_FIELDS3_AUTOTILE_SPRITESHEET,
+  STANDARD_FIELDS1_AUTOTILE_SPRITESHEET,
   // STANDARD_COAST2_A_AUTOTILE_SPRITESHEET,
   WORLD_B_AUTOTILE_SPRITESHEET,
   // BEIGE_COAST_A_AUTOTILE_SPRITESHEET,
@@ -1759,6 +1759,7 @@ export default class MainScene extends Phaser.Scene {
         effectiveLootSeed,
         previousFloors,
         this.discoveredSecretRoomDepths,
+        this.obtainedUniqueItems,
       );
     } catch (err) {
       this.events.emit("level-load-error", { depth, error: err.message });
@@ -1966,8 +1967,12 @@ export default class MainScene extends Phaser.Scene {
       tileset === "darkwoods_1_2" ||
       tileset === "darkwoods_1_3" ||
       tileset === "darkwoods2" ||
-      tileset === "standardFields_0_1" ||
-      tileset === "standardFields_1_1" ||
+      tileset === "standardFields_1_0_1" ||
+      tileset === "standardFields_1_1_1" ||
+      tileset === "standardFields_2_0_1" ||
+      tileset === "standardFields_2_1_1" ||
+      tileset === "standardFields_3_0_1" ||
+      tileset === "standardFields_3_1_1" ||
       tileset === "desertMountain2" ||
       tileset === "desertMountain3" ||
       tileset === "desert2" ||
@@ -2455,11 +2460,41 @@ export default class MainScene extends Phaser.Scene {
       this.currentRawTilesetKey = CITY_TILES_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
       this.currentRenderGrid = renderGrid;
       this.currentSlotSourceTileIds = result.slotSourceTileIds;
-    } else if (tileset === "standardFields_0_1") {
+    } else if (tileset === "standardFields_1_0_1") {
+      const result = this.composeCornerAutotileTexture(
+        grid,
+        STANDARD_FIELDS1_AUTOTILE_SPRITESHEET,
+        "standardFields_1_0_1",
+        WALL_CORNER_INDEX_TO_FRAME_STANDARD_FIELDS_0_1,
+        81,
+      );
+      phaserTilesetKey = result.phaserTilesetKey;
+      renderGrid = result.renderGrid;
+      composedFloorSlots = result.floorSlotIndices;
+      this.currentFloorTileIndex = composedFloorSlots[0];
+      this.currentRawTilesetKey = STANDARD_FIELDS1_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
+      this.currentRenderGrid = renderGrid;
+      this.currentSlotSourceTileIds = result.slotSourceTileIds;
+    } else if (tileset === "standardFields_1_1_1") {
+      const result = this.composeCornerAutotileTexture(
+        grid,
+        STANDARD_FIELDS1_AUTOTILE_SPRITESHEET,
+        "standardFields_1_1_1",
+        WALL_CORNER_INDEX_TO_FRAME_STANDARD_FIELDS_1_1,
+        81,
+      );
+      phaserTilesetKey = result.phaserTilesetKey;
+      renderGrid = result.renderGrid;
+      composedFloorSlots = result.floorSlotIndices;
+      this.currentFloorTileIndex = composedFloorSlots[0];
+      this.currentRawTilesetKey = STANDARD_FIELDS1_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
+      this.currentRenderGrid = renderGrid;
+      this.currentSlotSourceTileIds = result.slotSourceTileIds;
+    } else if (tileset === "standardFields_2_0_1") {
       const result = this.composeCornerAutotileTexture(
         grid,
         STANDARD_FIELDS2_AUTOTILE_SPRITESHEET,
-        "standardFields_0_1",
+        "standardFields_2_0_1",
         WALL_CORNER_INDEX_TO_FRAME_STANDARD_FIELDS_0_1,
         81,
       );
@@ -2470,11 +2505,11 @@ export default class MainScene extends Phaser.Scene {
       this.currentRawTilesetKey = STANDARD_FIELDS2_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
       this.currentRenderGrid = renderGrid;
       this.currentSlotSourceTileIds = result.slotSourceTileIds;
-    } else if (tileset === "standardFields_1_1") {
+    } else if (tileset === "standardFields_2_1_1") {
       const result = this.composeCornerAutotileTexture(
         grid,
         STANDARD_FIELDS2_AUTOTILE_SPRITESHEET,
-        "standardFields_1_1",
+        "standardFields_2_1_1",
         WALL_CORNER_INDEX_TO_FRAME_STANDARD_FIELDS_1_1,
         81,
       );
@@ -2483,6 +2518,36 @@ export default class MainScene extends Phaser.Scene {
       composedFloorSlots = result.floorSlotIndices;
       this.currentFloorTileIndex = composedFloorSlots[0];
       this.currentRawTilesetKey = STANDARD_FIELDS2_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
+      this.currentRenderGrid = renderGrid;
+      this.currentSlotSourceTileIds = result.slotSourceTileIds;
+    } else if (tileset === "standardFields_3_0_1") {
+      const result = this.composeCornerAutotileTexture(
+        grid,
+        STANDARD_FIELDS3_AUTOTILE_SPRITESHEET,
+        "standardFields_3_0_1",
+        WALL_CORNER_INDEX_TO_FRAME_STANDARD_FIELDS_0_1,
+        81,
+      );
+      phaserTilesetKey = result.phaserTilesetKey;
+      renderGrid = result.renderGrid;
+      composedFloorSlots = result.floorSlotIndices;
+      this.currentFloorTileIndex = composedFloorSlots[0];
+      this.currentRawTilesetKey = STANDARD_FIELDS3_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
+      this.currentRenderGrid = renderGrid;
+      this.currentSlotSourceTileIds = result.slotSourceTileIds;
+    } else if (tileset === "standardFields_3_1_1") {
+      const result = this.composeCornerAutotileTexture(
+        grid,
+        STANDARD_FIELDS3_AUTOTILE_SPRITESHEET,
+        "standardFields_3_1_1",
+        WALL_CORNER_INDEX_TO_FRAME_STANDARD_FIELDS_1_1,
+        81,
+      );
+      phaserTilesetKey = result.phaserTilesetKey;
+      renderGrid = result.renderGrid;
+      composedFloorSlots = result.floorSlotIndices;
+      this.currentFloorTileIndex = composedFloorSlots[0];
+      this.currentRawTilesetKey = STANDARD_FIELDS3_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
       this.currentRenderGrid = renderGrid;
       this.currentSlotSourceTileIds = result.slotSourceTileIds;
     } else {
@@ -3498,6 +3563,7 @@ export default class MainScene extends Phaser.Scene {
       summonAbility: this.bossData.summonAbility || null,
       summonCooldownReadyAt: 0,
       summonedMinions: [],
+      varianceDice: this.bossData.varianceDice || null,
     });
   }
 
@@ -5018,7 +5084,9 @@ export default class MainScene extends Phaser.Scene {
 
     let lootItems = [];
     if (rewardType === "unique") {
-      const uniqueCandidates = Object.values(ITEM_DEFS).filter((d) => d.unique);
+      const uniqueCandidates = Object.values(ITEM_DEFS).filter(
+        (d) => d.unique && !this.obtainedUniqueItems.includes(d.id),
+      );
       if (uniqueCandidates.length > 0) {
         const picked =
           uniqueCandidates[Math.floor(Math.random() * uniqueCandidates.length)];
@@ -5130,8 +5198,12 @@ export default class MainScene extends Phaser.Scene {
     const toolTier = toolDef?.toolTier || 0;
     const toolType = toolDef?.toolType || null;
 
-    if (toolType !== "axe" || toolTier < node.data.requiredTier) {
-      this.showLootToast("Il te faut une hache adaptée pour ça");
+    if (toolType !== "axe") {
+      this.showLootToast("Il te faut une hache pour récolter ça");
+      return true;
+    }
+    if (toolTier < node.data.requiredTier) {
+      this.showLootToast("Ta hache n'est pas assez puissante pour ce gisement");
       return true;
     }
 
@@ -5181,8 +5253,14 @@ export default class MainScene extends Phaser.Scene {
     const toolTier = toolDef?.toolTier || 0;
 
     const toolType = toolDef?.toolType || null;
-    if (toolType !== "pickaxe" || toolTier < rock.data.requiredTier) {
-      this.showLootToast("Cet outil n'est pas assez puissant pour ce gisement");
+    if (toolType !== "pickaxe") {
+      this.showLootToast("Il te faut une pioche pour miner ça");
+      return true;
+    }
+    if (toolTier < rock.data.requiredTier) {
+      this.showLootToast(
+        "Ta pioche n'est pas assez puissante pour ce gisement",
+      );
       return true;
     }
 
@@ -5412,6 +5490,14 @@ export default class MainScene extends Phaser.Scene {
     if (!chest) return;
     const item = chest.lootItems[itemIndex];
     if (!item) return;
+
+    const def = resolveItemDef(item.itemId);
+    if (def.unique && this.obtainedUniqueItems.includes(item.itemId)) {
+      this.showLootToast(
+        `Tu possèdes déjà ${def.name} - impossible d'en avoir un second`,
+      );
+      return; // reste dans le coffre, rien n'est perdu
+    }
 
     this.addItemToInventory(item.itemId, item.quantity);
     chest.lootItems.splice(itemIndex, 1);
@@ -8067,11 +8153,18 @@ export default class MainScene extends Phaser.Scene {
           vy * ENEMY_PROJECTILE_SPEED,
         );
 
+        let rangedRawDamage = this.getEffectiveEnemyDamage(enemy);
+        if (enemy.varianceDice) {
+          rangedRawDamage = applyDiceVariance(
+            rangedRawDamage,
+            enemy.varianceDice,
+          );
+        }
         this.enemyProjectiles.push({
           sprite,
           startX: enemy.sprite.x,
           startY: enemy.sprite.y,
-          damage: this.getEffectiveEnemyDamage(enemy),
+          damage: rangedRawDamage,
           damageType: enemy.damageType,
           inflictsEffect: enemy.inflictsEffect,
         });
@@ -8126,9 +8219,16 @@ export default class MainScene extends Phaser.Scene {
 
         this.showDamageNumber(target.summon.sprite, dmg, "#ff44c7");
       } else {
+        let rawEnemyDamage = this.getEffectiveEnemyDamage(enemy);
+        if (enemy.varianceDice) {
+          rawEnemyDamage = applyDiceVariance(
+            rawEnemyDamage,
+            enemy.varianceDice,
+          );
+        }
         let dmg = computeDamage(
           applyElementalResistance(
-            this.getEffectiveEnemyDamage(enemy),
+            rawEnemyDamage,
             enemy.damageType,
             this.playerResistances,
           ),
