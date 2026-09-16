@@ -18,7 +18,11 @@
  * totalement inoffensive, sinon certains combats deviennent infinis.
  */
 function computeDamage(attackerDamage, defenderDefense) {
-  return Math.max(1, Math.round(attackerDamage - defenderDefense));
+  const attack = Math.max(0, attackerDamage);
+  const defense = Math.max(0, defenderDefense);
+  if (attack + defense <= 0) return 1; // evite une division par zero si les deux valent 0
+  const raw = (attack * attack) / (attack + defense);
+  return Math.max(1, Math.round(raw));
 }
 
 const CRIT_CHANCE = 0.15; // 15% par defaut, contre un ennemi qui a deja repere le joueur (etat 'chase')
