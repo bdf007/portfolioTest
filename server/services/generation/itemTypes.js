@@ -1262,6 +1262,20 @@ function rollLoot(tableName, rng, depth = Infinity, excludeItemIds = null) {
             rng() * (entry.quantityRange[1] - entry.quantityRange[0] + 1),
           )
         : 1;
+
+      // objet unique tire - l'ajoute IMMEDIATEMENT a la liste d'exclusion
+      // partagee, pour empecher un DEUXIEME tirage du meme objet plus
+      // tard dans CETTE MEME generation (un autre coffre, un autre
+      // ennemi...) - pas seulement lors d'une visite future
+      const itemDef = ITEM_TYPES[entry.itemId];
+      if (
+        itemDef?.unique &&
+        excludeItemIds &&
+        !excludeItemIds.includes(entry.itemId)
+      ) {
+        excludeItemIds.push(entry.itemId);
+      }
+
       return { itemId: entry.itemId, quantity };
     }
     roll -= entry.weight;

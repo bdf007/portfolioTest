@@ -105,6 +105,8 @@ import {
   // GREY_COAST_A_AUTOTILE_SPRITESHEET,
   CITY_HOUSES,
   // HOUSE_FOOTPRINTS,
+  MUDDY_CAVE_AUTOTILE_SPRITESHEET,
+  SUMMER_FOREST_AUTOTILE_SPRITESHEET,
 } from "../spriteRegistry";
 
 const TILE_SIZE = 32;
@@ -442,6 +444,67 @@ const WALL_CORNER_INDEX_TO_FRAME_MOUNTAIN3B = [
 ];
 const WALL_CORNER_INDEX_TO_FRAME_2_0 = [
   96, 128, 96, 112, 98, 128, 97, 99, 130, 129, 98, 115, 114, 116, 100, 113,
+];
+
+const WALL_CORNER_INDEX_TO_FRAME_0_0_MUDDY_CAVE = [
+  {
+    variants: [
+      { tiles: 264, weight: 3 },
+      { tiles: 265, weight: 2 },
+      { tiles: 262, weight: 1 },
+    ],
+  },
+  60,
+  0,
+  40,
+  3,
+  [60, 3],
+  1,
+  32,
+  63,
+  {
+    variants: [
+      { tiles: 61, weight: 5 },
+      { tiles: [61, 252], weight: 3 },
+      { tiles: [61, 292], weight: 3 },
+    ],
+  },
+  [63, 0],
+  22,
+  43,
+  21,
+  41,
+  80,
+];
+
+const WALL_CORNER_INDEX_TO_FRAME_0_0_SUMMER_FOREST = [
+  266, 65, 1, 33, 3, 65, 2, 100, 67, 66, 3, 129, 35, 130, 132, 34,
+];
+const WALL_CORNER_INDEX_TO_FRAME_0_1_SUMMER_FOREST = [
+  555,
+  77,
+  13,
+  45,
+  15,
+  77,
+  14,
+  111,
+  79,
+  78,
+  15,
+  141,
+  47,
+  142,
+  46,
+  {
+    variants: [
+      { tiles: [34, 46], weight: 10 },
+      { tiles: [34, 144], weight: 2 },
+      { tiles: [34, 48], weight: 1 },
+      { tiles: [34, 80], weight: 1 },
+      { tiles: [34, 554], weight: 0.5 },
+    ],
+  },
 ];
 
 // const WALL_CORNER_INDEX_TO_FRAME_FORTRESS2 = [
@@ -1990,7 +2053,10 @@ export default class MainScene extends Phaser.Scene {
       tileset === "cityTiles_0_1" ||
       tileset === "cityTiles_0_2" ||
       tileset === "cityTiles_0_3" ||
-      tileset === "cityTiles_0_4";
+      tileset === "cityTiles_0_4" ||
+      tileset === "muddyCave_0_0" ||
+      tileset === "summerForest_0_0" ||
+      tileset === "summerForest_0_1";
     const useDungeon1Autotile = tileset === "dungeon1";
     const useFortress1Autotile = tileset === "fortress1";
 
@@ -2548,6 +2614,57 @@ export default class MainScene extends Phaser.Scene {
       composedFloorSlots = result.floorSlotIndices;
       this.currentFloorTileIndex = composedFloorSlots[0];
       this.currentRawTilesetKey = STANDARD_FIELDS3_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
+      this.currentRenderGrid = renderGrid;
+      this.currentSlotSourceTileIds = result.slotSourceTileIds;
+    } else if (tileset === "muddyCave_0_0") {
+      const result = this.composeCornerAutotileTexture(
+        grid,
+        MUDDY_CAVE_AUTOTILE_SPRITESHEET,
+        "muddyCave_0_0",
+        WALL_CORNER_INDEX_TO_FRAME_0_0_MUDDY_CAVE,
+        101,
+      );
+      phaserTilesetKey = result.phaserTilesetKey;
+      renderGrid = result.renderGrid;
+      composedFloorSlots = result.floorSlotIndices;
+      this.currentFloorTileIndex = composedFloorSlots[0];
+      this.currentRawTilesetKey = MUDDY_CAVE_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
+      this.currentRenderGrid = renderGrid;
+      this.currentSlotSourceTileIds = result.slotSourceTileIds;
+    } else if (tileset === "summerForest_0_0") {
+      const result = this.composeCornerAutotileTexture(
+        grid,
+        SUMMER_FOREST_AUTOTILE_SPRITESHEET,
+        "summerForest_0_0",
+        WALL_CORNER_INDEX_TO_FRAME_0_0_SUMMER_FOREST,
+        38,
+      );
+      phaserTilesetKey = result.phaserTilesetKey;
+      renderGrid = result.renderGrid;
+      composedFloorSlots = result.floorSlotIndices;
+      this.currentFloorTileIndex = composedFloorSlots[0];
+      this.currentRawTilesetKey = SUMMER_FOREST_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
+      this.currentRenderGrid = renderGrid;
+      this.currentSlotSourceTileIds = result.slotSourceTileIds;
+    } else if (tileset === "summerForest_0_1") {
+      const result = this.composeCornerAutotileTexture(
+        grid,
+        SUMMER_FOREST_AUTOTILE_SPRITESHEET,
+        "summerForest_0_1",
+        WALL_CORNER_INDEX_TO_FRAME_0_1_SUMMER_FOREST,
+        38,
+        // [
+        //   { tileId: 38, weight: 5 },
+        //   { tileId: [38, 516], weight: 1 },
+        //   { tileId: [38, 521], weight: 1 },
+        //   { tileId: [38, 524], weight: 1 },
+        // ],
+      );
+      phaserTilesetKey = result.phaserTilesetKey;
+      renderGrid = result.renderGrid;
+      composedFloorSlots = result.floorSlotIndices;
+      this.currentFloorTileIndex = composedFloorSlots[0];
+      this.currentRawTilesetKey = SUMMER_FOREST_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
       this.currentRenderGrid = renderGrid;
       this.currentSlotSourceTileIds = result.slotSourceTileIds;
     } else {

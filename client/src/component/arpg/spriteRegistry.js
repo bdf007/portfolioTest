@@ -236,6 +236,8 @@ import standardCoastAAutotileImg from "../../assets/tilesets/Set_A_Standard_Coas
 import standardFields1AutotileImg from "../../assets/tilesets/Set_A_Standard_Fields1.png";
 import standardFields3AutotileImg from "../../assets/tilesets/Set_A_Standard_Fields3.png";
 import worldBAutotileImg from "../../assets/tilesets/Set_B_World.png";
+import muddyCaveAutotileImg from "../../assets/tilesets/muddy_cave.png";
+import summerForestAutotileImg from "../../assets/tilesets/summer_forest.png";
 // import objects
 import chestsSpritesheet from "../../assets/objects_icons/Chests.png";
 import iconSheet1 from "../../assets/objects_icons/icon_sheet1.png";
@@ -576,6 +578,20 @@ export const STANDARD_FIELDS3_AUTOTILE_SPRITESHEET = {
 export const WORLD_B_AUTOTILE_SPRITESHEET = {
   key: "worldBAutotile",
   path: worldBAutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+
+export const MUDDY_CAVE_AUTOTILE_SPRITESHEET = {
+  key: "muddyCaveAutotile",
+  path: muddyCaveAutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+
+export const SUMMER_FOREST_AUTOTILE_SPRITESHEET = {
+  key: "summerForestAutotile",
+  path: summerForestAutotileImg,
   frameWidth: 16,
   frameHeight: 16,
 };
