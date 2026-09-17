@@ -27,12 +27,12 @@ const BIOMES = [
     minDepth: 1,
     maxDepth: 2,
     generator: "cavechain",
-    tileset: "standardFields_2_0_1",
-    enemyBaseCount: 3,
+    tileset: "muddyCave_0_0",
+    enemyBaseCount: 5,
     bossRoomSize: 40,
-    enemyTypes: ["deer1", "angryBrownMushroom", "gnome"],
+    enemyTypes: ["angryBrownMushroom", "gnome"],
     decorationConfig: {
-      count: [8, 15], // genereux - c'est fait pour remplir le biome
+      count: [25, 35], // genereux - c'est fait pour remplir le biome
       decorTypes: ["rock_small"], // cles arbitraires, a adapter
     },
     chestCount: [1, 3],
@@ -47,7 +47,7 @@ const BIOMES = [
       damageAmount: [8, 15],
       inflictsEffect: null,
     },
-    secretRoomChance: 1, // 0.15 pour 15% de chances par etage - reste absent/0 sur un biome = jamais de salle secrete
+    secretRoomChance: 0.15, // 0.15 pour 15% de chances par etage - reste absent/0 sur un biome = jamais de salle secrete
     miningConfig: {
       rockChance: 1, // chance qu'AU MOINS un gisement apparaisse cet etage
       minRocks: 1,
@@ -93,13 +93,13 @@ const BIOMES = [
     minDepth: 3,
     maxDepth: 4,
     generator: "cellular",
-    tileset: "standardFields_1_0_1",
-    enemyBaseCount: 3,
+    tileset: "mines2",
+    enemyBaseCount: 5,
     bossRoomSize: 40,
-    enemyTypes: ["deer1", "angryBrownMushroom", "gnome"],
+    enemyTypes: ["angryBrownMushroom", "gnome"],
     decorationConfig: {
       count: [50, 100], // genereux - c'est fait pour remplir le biome
-      decorTypes: ["bush", "flower_patch"], // cles arbitraires, a adapter
+      decorTypes: ["rock_small"], // cles arbitraires, a adapter
     },
     chestCount: [1, 3],
     chestLootTable: "chestStandard",
@@ -113,7 +113,7 @@ const BIOMES = [
       damageAmount: [8, 15],
       inflictsEffect: null,
     },
-    secretRoomChance: 1, // 0.15 pour 15% de chances par etage - reste absent/0 sur un biome = jamais de salle secrete
+    secretRoomChance: 0.15, // 0.15 pour 15% de chances par etage - reste absent/0 sur un biome = jamais de salle secrete
     miningConfig: {
       rockChance: 1, // chance qu'AU MOINS un gisement apparaisse cet etage
       minRocks: 1,
@@ -131,7 +131,6 @@ const BIOMES = [
         { itemId: "ruby", weight: 2 },
         { itemId: "aquaMarine", weight: 1 },
         { itemId: "peridot", weight: 0.5 },
-        { itemId: "ironOre", weight: 0.5 },
       ],
     },
     forageConfig: {
@@ -158,10 +157,10 @@ const BIOMES = [
     minDepth: 5,
     maxDepth: 6,
     generator: "bsp",
-    tileset: "standardFields_1_1_1",
-    enemyBaseCount: 3,
+    tileset: "mines2",
+    enemyBaseCount: 5,
     bossRoomSize: 40,
-    enemyTypes: ["deer1", "angryBrownMushroom", "gnome"],
+    enemyTypes: ["angryBrownMushroom", "gnome"],
     decorationConfig: {
       count: [50, 100], // genereux - c'est fait pour remplir le biome
       decorTypes: ["rock_small", "bush", "flower_patch"], // cles arbitraires, a adapter
@@ -196,7 +195,6 @@ const BIOMES = [
         { itemId: "ruby", weight: 2 },
         { itemId: "aquaMarine", weight: 1 },
         { itemId: "peridot", weight: 0.5 },
-        { itemId: "ironOre", weight: 0.5 },
       ],
     },
     forageConfig: {
@@ -212,8 +210,8 @@ const BIOMES = [
       ],
     },
     generatorParams: {
-      width: 40,
-      height: 40,
+      width: 80,
+      height: 80,
       corridorWidth: 2,
     },
   },
@@ -222,12 +220,12 @@ const BIOMES = [
     minDepth: 7,
     maxDepth: 7,
     generator: "drunkardwalk",
-    tileset: "mines2",
-    enemyBaseCount: 3,
+    tileset: "summerForest_0_1",
+    enemyBaseCount: 5,
     bossRoomSize: 40,
     enemyTypes: ["angryTrent"],
     decorationConfig: {
-      count: [8, 15], // genereux - c'est fait pour remplir le biome
+      count: [50, 70], // genereux - c'est fait pour remplir le biome
       decorTypes: ["rock_small", "bush", "flower_patch"], // cles arbitraires, a adapter
     },
     chestCount: [1, 3],
@@ -242,7 +240,7 @@ const BIOMES = [
       damageAmount: [8, 15],
       inflictsEffect: null,
     },
-    secretRoomChance: 1, // 0.15 pour 15% de chances par etage - reste absent/0 sur un biome = jamais de salle secrete
+    secretRoomChance: 0.15, // 0.15 pour 15% de chances par etage - reste absent/0 sur un biome = jamais de salle secrete
     miningConfig: {
       rockChance: 1, // chance qu'AU MOINS un gisement apparaisse cet etage
       minRocks: 1,
@@ -271,8 +269,8 @@ const BIOMES = [
       ],
     },
     generatorParams: {
-      width: 40,
-      height: 40,
+      width: 80,
+      height: 80,
       targetFloorRatio: 0.4,
       maxSteps: 50000,
       walkerCount: 3,
@@ -283,11 +281,11 @@ const BIOMES = [
     minDepth: 8,
     maxDepth: 8,
     generator: "noise",
-    tileset: "mines2",
-    enemyBaseCount: 3,
+    tileset: "hills1",
+    enemyBaseCount: 5,
     enemyTypes: ["gnome"],
     decorationConfig: {
-      count: [8, 15], // genereux - c'est fait pour remplir le biome
+      count: [50, 100], // genereux - c'est fait pour remplir le biome
       decorTypes: ["rock_small", "bush", "flower_patch"], // cles arbitraires, a adapter
     },
     chestCount: [1, 3],
@@ -341,12 +339,12 @@ const BIOMES = [
     minDepth: 9,
     maxDepth: 9,
     generator: "voronoi",
-    tileset: "standardFields_3_1_1",
-    enemyBaseCount: 3,
+    tileset: "summerForest_0_0",
+    enemyBaseCount: 10,
     bossRoomSize: 40,
     enemyTypes: ["knifedBat"],
     decorationConfig: {
-      count: [8, 15], // genereux - c'est fait pour remplir le biome
+      count: [50, 100], // genereux - c'est fait pour remplir le biome
       decorTypes: ["rock_small", "bush", "flower_patch"], // cles arbitraires, a adapter
     },
     chestCount: [2, 4],
@@ -384,18 +382,22 @@ const BIOMES = [
         { itemId: "resin", weight: 1 },
       ],
     },
-    generatorParams: { cellCount: 25 },
+    generatorParams: {
+      width: 100,
+      height: 100,
+      cellCount: 25,
+    },
   },
   {
     id: "cave4",
     minDepth: 10,
     maxDepth: 10,
     generator: "voronoi",
-    tileset: "mines2",
-    enemyBaseCount: 3,
+    tileset: "summerForest_0_1",
+    enemyBaseCount: 10,
     enemyTypes: ["mudGolem"],
     decorationConfig: {
-      count: [8, 15], // genereux - c'est fait pour remplir le biome
+      count: [50, 100], // genereux - c'est fait pour remplir le biome
       decorTypes: ["rock_small", "bush", "flower_patch"], // cles arbitraires, a adapter
     },
     chestCount: [1, 3],
@@ -439,8 +441,8 @@ const BIOMES = [
       ],
     },
     generatorParams: {
-      width: 80,
-      height: 80,
+      width: 100,
+      height: 100,
       cellCount: 25,
     },
   },
@@ -449,11 +451,11 @@ const BIOMES = [
     minDepth: 11,
     maxDepth: 11,
     generator: "randomwalk",
-    tileset: "mines2",
+    tileset: "summerForest_0_1",
     enemyBaseCount: 3,
     enemyTypes: ["redBeetle"],
     decorationConfig: {
-      count: [8, 15], // genereux - c'est fait pour remplir le biome
+      count: [50, 100], // genereux - c'est fait pour remplir le biome
       decorTypes: ["rock_small", "bush", "flower_patch"], // cles arbitraires, a adapter
     },
     chestCount: [1, 3],
@@ -496,8 +498,8 @@ const BIOMES = [
       ],
     },
     generatorParams: {
-      width: 40,
-      height: 40,
+      width: 100,
+      height: 100,
       roomSize: 5,
       roomCount: 20,
       stratBias: 0.8,
@@ -509,11 +511,11 @@ const BIOMES = [
     minDepth: 12,
     maxDepth: 12,
     generator: "noise",
-    tileset: "cityTiles_0_2",
-    enemyBaseCount: 3,
+    tileset: "desertMountain2",
+    enemyBaseCount: 10,
     enemyTypes: ["pinkOgre"],
     decorationConfig: {
-      count: [8, 15], // genereux - c'est fait pour remplir le biome
+      count: [50, 100], // genereux - c'est fait pour remplir le biome
       decorTypes: ["rock_small", "bush", "flower_patch"], // cles arbitraires, a adapter
     },
     chestCount: [2, 4],
@@ -551,18 +553,22 @@ const BIOMES = [
         { itemId: "resin", weight: 1 },
       ],
     },
-    generatorParams: { noiseScale: 10 },
+    generatorParams: {
+      width: 120,
+      height: 120,
+      noiseScale: 10,
+    },
   },
   {
     id: "forest2",
     minDepth: 13,
     maxDepth: 13,
     generator: "voronoi",
-    tileset: "cityTiles_0_2",
-    enemyBaseCount: 3,
+    tileset: "standardFields_1_0_1",
+    enemyBaseCount: 10,
     enemyTypes: ["mudGolem"],
     decorationConfig: {
-      count: [8, 15], // genereux - c'est fait pour remplir le biome
+      count: [50, 100], // genereux - c'est fait pour remplir le biome
       decorTypes: ["rock_small", "bush", "flower_patch"], // cles arbitraires, a adapter
     },
     chestCount: [2, 4],
@@ -600,19 +606,23 @@ const BIOMES = [
         { itemId: "resin", weight: 1 },
       ],
     },
-    generatorParams: { cellCount: 25 },
+    generatorParams: {
+      width: 100,
+      height: 100,
+      cellCount: 25,
+    },
   },
   {
     id: "maze2",
     minDepth: 14,
     maxDepth: 14,
     generator: "maze",
-    tileset: "cityTiles_0_2",
-    enemyBaseCount: 3,
+    tileset: "summerForest_0_1",
+    enemyBaseCount: 15,
     bossRoomSize: 40,
     enemyTypes: ["deer1"],
     decorationConfig: {
-      count: [8, 15], // genereux - c'est fait pour remplir le biome
+      count: [50, 100], // genereux - c'est fait pour remplir le biome
       decorTypes: ["rock_small", "bush", "flower_patch"], // cles arbitraires, a adapter
     },
     chestCount: [2, 3],
@@ -654,18 +664,23 @@ const BIOMES = [
     // traditionnel) - un couloir d'une seule case serait tres
     // inconfortable pour l'esquive/les projectiles/le deplacement des
     // ennemis une fois le niveau reellement jouable
-    generatorParams: { passageWidth: 2, wallThickness: 2 },
+    generatorParams: {
+      width: 150,
+      height: 150,
+      passageWidth: 2,
+      wallThickness: 2,
+    },
   },
   {
     id: "maze3",
     minDepth: 15,
     maxDepth: 16,
     generator: "maze",
-    tileset: "cityTiles_0_2",
-    enemyBaseCount: 3,
+    tileset: "darkwoods_1_1",
+    enemyBaseCount: 15,
     enemyTypes: ["deer1"],
     decorationConfig: {
-      count: [8, 15], // genereux - c'est fait pour remplir le biome
+      count: [50, 100], // genereux - c'est fait pour remplir le biome
       decorTypes: ["rock_small", "bush", "flower_patch"], // cles arbitraires, a adapter
     },
     chestCount: [1, 3],
@@ -707,15 +722,20 @@ const BIOMES = [
         { itemId: "resin", weight: 1 },
       ],
     },
-    generatorParams: { passageWidth: 5, wallThickness: 2 },
+    generatorParams: {
+      width: 150,
+      height: 150,
+      passageWidth: 5,
+      wallThickness: 2,
+    },
   },
   {
     id: "desert4",
     minDepth: 17,
     maxDepth: 18,
     generator: "cellular",
-    tileset: "cityTiles_0_2",
-    enemyBaseCount: 10,
+    tileset: "muddyCave_0_0",
+    enemyBaseCount: 20,
     enemyTypes: [
       "redBeetle",
       "pinkOgre",
@@ -725,7 +745,7 @@ const BIOMES = [
       "knifedBat",
     ],
     decorationConfig: {
-      count: [8, 15], // genereux - c'est fait pour remplir le biome
+      count: [50, 100], // genereux - c'est fait pour remplir le biome
       decorTypes: ["rock_small", "bush", "flower_patch"], // cles arbitraires, a adapter
     },
     chestCount: [1, 3],
@@ -767,7 +787,12 @@ const BIOMES = [
         { itemId: "resin", weight: 1 },
       ],
     },
-    generatorParams: { wallProbability: 0.35, minFloorRatio: 0.4 },
+    generatorParams: {
+      width: 150,
+      height: 150,
+      wallProbability: 0.35,
+      minFloorRatio: 0.4,
+    },
   },
 
   {
@@ -775,8 +800,8 @@ const BIOMES = [
     minDepth: 19,
     maxDepth: MAX_DEPTH,
     generator: "bsp",
-    tileset: "cityTiles_0_2",
-    enemyBaseCount: 10,
+    tileset: "summerForest_0_1",
+    enemyBaseCount: 20,
     bossRoomSize: 40,
     enemyTypes: [
       "redBeetle",
@@ -787,7 +812,7 @@ const BIOMES = [
       "knifedBat",
     ],
     decorationConfig: {
-      count: [8, 15], // genereux - c'est fait pour remplir le biome
+      count: [50, 100], // genereux - c'est fait pour remplir le biome
       decorTypes: ["rock_small", "bush", "flower_patch"], // cles arbitraires, a adapter
     },
     chestCount: [2, 4],

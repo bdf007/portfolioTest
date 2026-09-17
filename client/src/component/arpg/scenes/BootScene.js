@@ -54,6 +54,8 @@ import {
   GREY_COAST_A_AUTOTILE_SPRITESHEET,
   STANDARD_FIELDS1_AUTOTILE_SPRITESHEET,
   STANDARD_FIELDS3_AUTOTILE_SPRITESHEET,
+  MUDDY_CAVE_AUTOTILE_SPRITESHEET,
+  SUMMER_FOREST_AUTOTILE_SPRITESHEET,
 } from "../spriteRegistry";
 
 /**
@@ -455,6 +457,22 @@ export default class BootScene extends Phaser.Scene {
       {
         frameWidth: WORLD_B_AUTOTILE_SPRITESHEET.frameWidth,
         frameHeight: WORLD_B_AUTOTILE_SPRITESHEET.frameHeight,
+      },
+    );
+    this.load.spritesheet(
+      MUDDY_CAVE_AUTOTILE_SPRITESHEET.key,
+      MUDDY_CAVE_AUTOTILE_SPRITESHEET.path,
+      {
+        frameWidth: MUDDY_CAVE_AUTOTILE_SPRITESHEET.frameWidth,
+        frameHeight: MUDDY_CAVE_AUTOTILE_SPRITESHEET.frameHeight,
+      },
+    );
+    this.load.spritesheet(
+      SUMMER_FOREST_AUTOTILE_SPRITESHEET.key,
+      SUMMER_FOREST_AUTOTILE_SPRITESHEET.path,
+      {
+        frameWidth: SUMMER_FOREST_AUTOTILE_SPRITESHEET.frameWidth,
+        frameHeight: SUMMER_FOREST_AUTOTILE_SPRITESHEET.frameHeight,
       },
     );
     this.load.spritesheet(CHEST_SPRITESHEET.key, CHEST_SPRITESHEET.path, {
