@@ -1695,9 +1695,12 @@ export default class MainScene extends Phaser.Scene {
       );
     };
     const drawFloorAt = (slotIndex, variantIndex = 0) => {
-      drawTileOnly(floorVariants[variantIndex].tileId, slotIndex);
+      const variant = floorVariants[variantIndex];
+      const tiles = Array.isArray(variant.tileId)
+        ? variant.tileId
+        : [variant.tileId];
+      for (const t of tiles) drawTileOnly(t, slotIndex);
     };
-
     drawFloorAt(0, 0);
     slotSourceTileIds[0] = floorVariants[0].tileId;
 
@@ -2652,13 +2655,13 @@ export default class MainScene extends Phaser.Scene {
         SUMMER_FOREST_AUTOTILE_SPRITESHEET,
         "summerForest_0_1",
         WALL_CORNER_INDEX_TO_FRAME_0_1_SUMMER_FOREST,
-        38,
-        // [
-        //   { tileId: 38, weight: 5 },
-        //   { tileId: [38, 516], weight: 1 },
-        //   { tileId: [38, 521], weight: 1 },
-        //   { tileId: [38, 524], weight: 1 },
-        // ],
+        // 38,
+        [
+          { tileId: 38, weight: 5 },
+          { tileId: [38, 516], weight: 1 },
+          { tileId: [38, 521], weight: 1 },
+          { tileId: [38, 524], weight: 1 },
+        ],
       );
       phaserTilesetKey = result.phaserTilesetKey;
       renderGrid = result.renderGrid;
@@ -4328,6 +4331,14 @@ export default class MainScene extends Phaser.Scene {
       } else if (moving) {
         this.hero.anims.play(this.heroSpriteKey + "-walk-" + dir, true);
         this.lastDir = dir;
+        // en diagonale (haut/bas ET un mouvement horizontal significatif en
+        // meme temps), retourne le sprite selon vx - donne l'illusion d'une
+        // vraie 8e direction sans avoir besoin de dessiner des frames dediees
+        if ((dir === "up" || dir === "down") && Math.abs(vx) > 0.01) {
+          this.hero.setFlipX(vx < 0);
+        } else if (dir === "left" || dir === "right") {
+          this.hero.setFlipX(false); // walk-left/walk-right ont deja leurs propres frames, jamais besoin de retourner
+        }
       } else {
         this.hero.anims.play(
           this.heroSpriteKey + "-idle-" + this.lastDir,
