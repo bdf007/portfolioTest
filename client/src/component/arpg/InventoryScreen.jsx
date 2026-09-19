@@ -7,10 +7,24 @@ import {
   ICON_SPRITESHEET_2,
   MONSTER_LOOTS_SPRITESHEET,
   ITEMS_1_SPRITESHEET,
+  WEAPONS_TIERS_SPRITESHEET,
+  ARMOR_TIERS_SPRITESHEET,
+  STAFF_ALL_TIERS_SPRITESHEET,
+  ARMOR_TEXTILE_TIERS_SPRITESHEET,
+  PANTS_TIERS_SPRITESHEET,
+  BELT_ALL_TIERS_SPRITESHEET,
+  RING_NECKLACE_ALL_TIERS_SPRITESHEET,
   ICON_SHEET_1_FRAMES,
   ICON_SHEET_2_FRAMES,
   MONSTER_LOOTS_FRAMES,
   ITEMS_1_FRAMES,
+  WEAPON_TIERS_FRAMES,
+  ARMOR_TIERS_FRAMES,
+  STAFF_TIERS_FRAMES,
+  ARMOR_TEXTILE_TIERS_FRAMES,
+  PANTS_TIERS_FRAMES,
+  BELT_ALL_TIERS_FRAMES,
+  RING_NECKLACE_TIERS_FRAMES,
 } from "./spriteRegistry";
 import bookPages from "../../assets/background/book_pages.png";
 
@@ -65,6 +79,90 @@ export function groupInventory(inventory) {
   return [...groups.values()];
 }
 
+function TintedItemIcon({ itemId, scale, frameIndex, spriteSheet, tint }) {
+  const canvasRef = useRef(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    ctx.imageSmoothingEnabled = false;
+
+    const img = new Image();
+    img.src = spriteSheet.path;
+    img.onload = () => {
+      const w = spriteSheet.frameWidth * scale;
+      const h = spriteSheet.frameHeight * scale;
+      canvas.width = w;
+      canvas.height = h;
+
+      const col = frameIndex % spriteSheet.columns;
+      const row = Math.floor(frameIndex / spriteSheet.columns);
+      const sx = col * spriteSheet.frameWidth;
+      const sy = row * spriteSheet.frameHeight;
+
+      ctx.clearRect(0, 0, w, h);
+      // 1. dessine le sprite normalement
+      ctx.drawImage(
+        img,
+        sx,
+        sy,
+        spriteSheet.frameWidth,
+        spriteSheet.frameHeight,
+        0,
+        0,
+        w,
+        h,
+      );
+      // 2. applique la teinte en mode "multiply"
+      ctx.globalCompositeOperation = "multiply";
+      ctx.fillStyle = tint;
+      ctx.fillRect(0, 0, w, h);
+      // 3. redecoupe selon la silhouette d'origine - restaure la transparence
+      ctx.globalCompositeOperation = "destination-in";
+      ctx.drawImage(
+        img,
+        sx,
+        sy,
+        spriteSheet.frameWidth,
+        spriteSheet.frameHeight,
+        0,
+        0,
+        w,
+        h,
+      );
+      ctx.globalCompositeOperation = "source-over";
+    };
+  }, [itemId, scale, frameIndex, spriteSheet, tint]);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      style={{
+        width: spriteSheet.frameWidth * scale,
+        height: spriteSheet.frameHeight * scale,
+        imageRendering: "pixelated",
+        flexShrink: 0,
+      }}
+    />
+  );
+}
+
+const WOOD_ICON_TINTS = {
+  oakWood: null,
+  ashWood: "#c9b896",
+  yewWood: "#8a6d3b",
+  ebonyWood: "#120f0e",
+  petrifiedWood: "#8d8d84",
+  mistwood: "#d399f7",
+  runewood: "#4af2ed",
+  skywood: "#a8d8ff",
+  scarletwood: "#f90c0c",
+  sacredWood: "#bfc1c1",
+  eternalWood: "#4a7c59",
+  starwood: "#3851f3",
+};
+
 export function ItemIcon({ itemId, scale = 2 }) {
   let frameIndex;
   let spriteSheet;
@@ -80,7 +178,28 @@ export function ItemIcon({ itemId, scale = 2 }) {
     spriteSheet = MONSTER_LOOTS_SPRITESHEET;
   } else if (ITEMS_1_FRAMES[itemId] !== undefined) {
     frameIndex = ITEMS_1_FRAMES[itemId];
-    spriteSheet = ITEMS_1_SPRITESHEET; // Assuming ITEMS_1_FRAMES uses the same spritesheet as ICON_SPRITESHEET
+    spriteSheet = ITEMS_1_SPRITESHEET;
+  } else if (WEAPON_TIERS_FRAMES[itemId] !== undefined) {
+    frameIndex = WEAPON_TIERS_FRAMES[itemId];
+    spriteSheet = WEAPONS_TIERS_SPRITESHEET;
+  } else if (ARMOR_TIERS_FRAMES[itemId] !== undefined) {
+    frameIndex = ARMOR_TIERS_FRAMES[itemId];
+    spriteSheet = ARMOR_TIERS_SPRITESHEET;
+  } else if (STAFF_TIERS_FRAMES[itemId] !== undefined) {
+    frameIndex = STAFF_TIERS_FRAMES[itemId];
+    spriteSheet = STAFF_ALL_TIERS_SPRITESHEET;
+  } else if (ARMOR_TEXTILE_TIERS_FRAMES[itemId] !== undefined) {
+    frameIndex = ARMOR_TEXTILE_TIERS_FRAMES[itemId];
+    spriteSheet = ARMOR_TEXTILE_TIERS_SPRITESHEET;
+  } else if (PANTS_TIERS_FRAMES[itemId] !== undefined) {
+    frameIndex = PANTS_TIERS_FRAMES[itemId];
+    spriteSheet = PANTS_TIERS_SPRITESHEET;
+  } else if (BELT_ALL_TIERS_FRAMES[itemId] !== undefined) {
+    frameIndex = BELT_ALL_TIERS_FRAMES[itemId];
+    spriteSheet = BELT_ALL_TIERS_SPRITESHEET;
+  } else if (RING_NECKLACE_TIERS_FRAMES[itemId] !== undefined) {
+    frameIndex = RING_NECKLACE_TIERS_FRAMES[itemId];
+    spriteSheet = RING_NECKLACE_ALL_TIERS_SPRITESHEET;
   } else {
     return null;
   }
@@ -92,28 +211,36 @@ export function ItemIcon({ itemId, scale = 2 }) {
 
   const sheetH = spriteSheet.frameHeight * spriteSheet.rows;
 
+  const tint = WOOD_ICON_TINTS[itemId];
+
+  if (tint) {
+    return (
+      <TintedItemIcon
+        itemId={itemId}
+        scale={scale}
+        frameIndex={frameIndex}
+        spriteSheet={spriteSheet}
+        tint={tint}
+      />
+    );
+  }
+
   return (
     <div
       style={{
         width: spriteSheet.frameWidth * scale,
         height: spriteSheet.frameHeight * scale,
-
         backgroundImage: `url(${spriteSheet.path})`,
-
         backgroundPosition: `
           -${col * spriteSheet.frameWidth * scale}px
           -${row * spriteSheet.frameHeight * scale}px
         `,
-
         backgroundSize: `
           ${sheetW * scale}px
           ${sheetH * scale}px
         `,
-
         backgroundRepeat: "no-repeat",
-
         imageRendering: "pixelated",
-
         flexShrink: 0,
       }}
     />
@@ -132,7 +259,14 @@ export function hasIconFrame(id) {
     ICON_SHEET_1_FRAMES[id] !== undefined ||
     ICON_SHEET_2_FRAMES[id] !== undefined ||
     MONSTER_LOOTS_FRAMES[id] !== undefined ||
-    ITEMS_1_FRAMES[id] !== undefined
+    ITEMS_1_FRAMES[id] !== undefined ||
+    WEAPON_TIERS_FRAMES[id] !== undefined ||
+    ARMOR_TIERS_FRAMES[id] !== undefined ||
+    STAFF_TIERS_FRAMES[id] !== undefined ||
+    ARMOR_TEXTILE_TIERS_FRAMES[id] !== undefined ||
+    PANTS_TIERS_FRAMES[id] !== undefined ||
+    BELT_ALL_TIERS_FRAMES[id] !== undefined ||
+    RING_NECKLACE_TIERS_FRAMES[id] !== undefined
   );
 }
 /**
@@ -156,6 +290,7 @@ export default function InventoryScreen({
   onDecraft,
   onClose,
 }) {
+  console.log(stats);
   const heroEntry = SPRITE_REGISTRY[heroId] || SPRITE_REGISTRY.hero1;
   const sheetCols = heroEntry.sheetCols || 12;
   const sheetRows = heroEntry.sheetRows || 8;
@@ -170,23 +305,12 @@ export default function InventoryScreen({
     const itemId = equipped[slot];
     const def = itemId ? resolveItemDef(itemId) : null;
 
-    // main secondaire "verrouillee" par une arme a 2 mains en main
-    // principale (cf. MainScene.equipItem) - jamais un objet REELEMENT
-    // present dans offHand dans ce cas (equipped.offHand reste `null`,
-    // pas de reference dupliquee), donc rendu special plutot qu'un
-    // simple "Vide" qui laisserait croire a un emplacement disponible
     const mainHandDef =
       slot === "offHand" && equipped.mainHand
         ? resolveItemDef(equipped.mainHand)
         : null;
     const lockedByTwoHanded = mainHandDef && mainHandDef.twoHanded;
 
-    // carquois : contrairement a un objet d'equipement classique, les
-    // flèches restent COMPTEES dans l'inventaire meme une fois
-    // "equipees" (cf. MainScene.equipItem, categorie 'ammo' - jamais
-    // retirees de l'inventaire) - on affiche donc leur quantite REELLE
-    // ici, pas juste leur nom, sans quoi le joueur ne saurait jamais
-    // combien il lui en reste sans ouvrir l'inventaire
     const quiverQuantity =
       slot === "quiver" && itemId
         ? inventory.find((i) => i.itemId === itemId)?.quantity || 0
@@ -195,11 +319,11 @@ export default function InventoryScreen({
     return (
       <div
         style={{
-          padding: 6,
+          padding: 4,
           background: "rgba(120,100,70,0.12)",
           border: "1px solid rgba(90,74,53,0.3)",
           borderRadius: 6,
-          minHeight: 46,
+          minHeight: def ? 0 : 46,
           width: fullWidth ? "100%" : "100%",
           maxWidth: fullWidth ? "none" : 88,
           minWidth: 0,
@@ -207,48 +331,72 @@ export default function InventoryScreen({
           boxSizing: "border-box",
         }}
       >
-        <div style={{ fontSize: 9, color: "#4a3a28" }}>{SLOT_LABELS[slot]}</div>
         {def ? (
-          <>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 4,
-                marginTop: 2,
-              }}
-            >
+          // occupé : juste icône + bouton retirer, nom du slot et de
+          // l'objet masqués (visibles au survol via title) pour gagner
+          // de la place autour du sprite
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 4,
+              position: "relative",
+            }}
+            title={def.description}
+          >
+            <div style={{ position: "relative" }}>
               <ItemIcon itemId={itemId} scale={1.1} />
-
-              <div style={{ fontSize: 10 }}>
-                {def.name}
-                {quiverQuantity !== null ? ` x${quiverQuantity}` : ""}
-              </div>
+              {quiverQuantity !== null && (
+                <div
+                  style={{
+                    position: "absolute",
+                    bottom: -4,
+                    right: -4,
+                    fontSize: 8,
+                    background: "#eee2cc",
+                    border: "1px solid #8a7050",
+                    borderRadius: 3,
+                    padding: "0 2px",
+                    color: "#5a4a35",
+                  }}
+                >
+                  x{quiverQuantity}
+                </div>
+              )}
             </div>
             <button
               onClick={() => onUnequip(slot)}
+              title="Retirer"
               style={{
-                marginTop: 3,
-                padding: "2px 6px",
-                fontSize: 9,
+                padding: "1px 4px",
+                fontSize: 11,
+                lineHeight: 1,
                 borderRadius: 4,
                 border: "1px solid #8a7050",
-                background: "#eee2cc",
+                background: "none",
                 color: "#5a4a35",
                 cursor: "pointer",
               }}
             >
-              Retirer
+              ✕
             </button>
-          </>
-        ) : lockedByTwoHanded ? (
-          <div style={{ fontSize: 9, color: "#8a7050", marginTop: 2 }}>
-            Occupée (2 mains)
           </div>
         ) : (
-          <div style={{ fontSize: 9, color: "#6a5940", marginTop: 2 }}>
-            Vide
-          </div>
+          <>
+            <div style={{ fontSize: 9, color: "#4a3a28" }}>
+              {SLOT_LABELS[slot]}
+            </div>
+            <div
+              style={{
+                fontSize: 9,
+                color: lockedByTwoHanded ? "#8a7050" : "#6a5940",
+                marginTop: 2,
+              }}
+            >
+              {lockedByTwoHanded ? "Occupée (2 mains)" : "Vide"}
+            </div>
+          </>
         )}
       </div>
     );
@@ -606,6 +754,9 @@ export default function InventoryScreen({
                   ["Vitesse", stats.moveSpeed],
                   ["Distance de vue", stats.visionRadius],
                   ["Portée à distance", stats.rangedRange],
+                  ["Régén. PV", `${stats.hpRegen?.toFixed(1)}/s`],
+                  ["Régén. mana", `${stats.manaRegen?.toFixed(1)}/s`],
+                  ["Régén. stamina", `${stats.staminaRegen?.toFixed(1)}/s`],
                 ].map(([label, value]) => (
                   <div
                     key={label}
@@ -670,53 +821,61 @@ export default function InventoryScreen({
             // pour l'instant : aucun objet du jeu ne cible encore ces
             // emplacements (cf. itemDefs.js) - la mannequin est prete a les
             // recevoir des qu'ils existeront.
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns:
-                  "minmax(0, 88px) minmax(0, max-content) minmax(0, 88px)",
-                gridTemplateRows: "auto auto auto auto auto",
-                gap: 6,
-                justifyContent: "center",
-                alignItems: "center",
-              }}
-            >
-              <div style={{ justifySelf: "end" }}>{renderSlot("necklace")}</div>
-              <div style={{ justifySelf: "center" }}>
-                {renderSlot("helmet")}
-              </div>
-              <div style={{ justifySelf: "start" }}>{renderSlot("quiver")}</div>
-
-              <div style={{ justifySelf: "end" }}>{renderSlot("mainHand")}</div>
+            <div style={{ display: "flex", justifyContent: "center", gap: 10 }}>
+              {/* Colonne gauche */}
               <div
                 style={{
-                  width: heroEntry.frameWidth * PREVIEW_SCALE,
-                  height: heroEntry.frameHeight * PREVIEW_SCALE,
-                  backgroundImage: `url(${heroEntry.path})`,
-                  backgroundPosition: `-${col * heroEntry.frameWidth * PREVIEW_SCALE}px -${row * heroEntry.frameHeight * PREVIEW_SCALE}px`,
-                  backgroundSize: `${sheetW * PREVIEW_SCALE}px ${sheetH * PREVIEW_SCALE}px`,
-                  imageRendering: "pixelated",
-                  justifySelf: "center",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 6,
+                  alignItems: "flex-end",
                 }}
-              />
-              <div style={{ justifySelf: "start" }}>
-                {renderSlot("offHand")}
+              >
+                {renderSlot("necklace")}
+                {renderSlot("mainHand")}
+                {renderSlot("ring1")}
+                {renderSlot("armor")}
+                {renderSlot("boots")}
               </div>
 
-              <div style={{ justifySelf: "end" }}>{renderSlot("ring1")}</div>
-              <div />
-              <div style={{ justifySelf: "start" }}>{renderSlot("ring2")}</div>
-              <div style={{ justifySelf: "end" }}>{renderSlot("tool")}</div>
-              <div />
-              <div />
+              {/* Colonne centrale : casque + héros */}
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  gap: 6,
+                }}
+              >
+                {renderSlot("helmet")}
+                <div
+                  style={{
+                    width: heroEntry.frameWidth * PREVIEW_SCALE,
+                    height: heroEntry.frameHeight * PREVIEW_SCALE,
+                    backgroundImage: `url(${heroEntry.path})`,
+                    backgroundPosition: `-${col * heroEntry.frameWidth * PREVIEW_SCALE}px -${row * heroEntry.frameHeight * PREVIEW_SCALE}px`,
+                    backgroundSize: `${sheetW * PREVIEW_SCALE}px ${sheetH * PREVIEW_SCALE}px`,
+                    imageRendering: "pixelated",
+                  }}
+                />
+                {renderSlot("tool")}
+              </div>
 
-              <div style={{ justifySelf: "end" }}>{renderSlot("armor")}</div>
-              <div />
-              <div style={{ justifySelf: "start" }}>{renderSlot("belt")}</div>
-
-              <div style={{ justifySelf: "end" }}>{renderSlot("pants")}</div>
-              <div />
-              <div style={{ justifySelf: "start" }}>{renderSlot("boots")}</div>
+              {/* Colonne droite */}
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 6,
+                  alignItems: "flex-start",
+                }}
+              >
+                {renderSlot("quiver")}
+                {renderSlot("offHand")}
+                {renderSlot("ring2")}
+                {renderSlot("belt")}
+                {renderSlot("pants")}
+              </div>
             </div>
           )}
         </div>

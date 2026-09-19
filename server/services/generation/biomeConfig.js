@@ -50,15 +50,15 @@ const BIOMES = [
     secretRoomChance: 0.15, // 0.15 pour 15% de chances par etage - reste absent/0 sur un biome = jamais de salle secrete
     miningConfig: {
       rockChance: 1, // chance qu'AU MOINS un gisement apparaisse cet etage
-      minRocks: 1,
-      maxRocks: 3,
+      minRocks: 5,
+      maxRocks: 10,
 
       resourcePool: [
         { itemId: "copperOre", weight: 5, requiredTier: 1 },
         { itemId: "coalOre", weight: 1, requiredTier: 1 },
       ],
       totalHits: [1, 6], // nombre de coups avant epuisement
-      gemChance: 0.15, // 15% de chance PAR COUP d'obtenir une gemme a la place du metal
+      gemChance: 0.05, // 5% de chance PAR COUP d'obtenir une gemme a la place du metal
       gemPool: [
         { itemId: "smokyQuartz", weight: 5 },
         { itemId: "ruby", weight: 2 },
@@ -68,12 +68,12 @@ const BIOMES = [
       ],
     },
     forageConfig: {
-      nodeChance: 1, // plus frequent que le minage - remplir le biome
-      minNodes: 2,
-      maxNodes: 5,
-      resourcePool: [{ itemId: "branch", weight: 1, requiredTier: 1 }],
+      nodeChance: 1,
+      minNodes: 5,
+      maxNodes: 10,
+      resourcePool: [{ itemId: "oakWood", weight: 1, requiredTier: 1 }],
       totalHits: [2, 5],
-      bonusChance: 0.15,
+      bonusChance: 0.02,
       bonusPool: [
         { itemId: "berries", weight: 3 },
         { itemId: "resin", weight: 1 },
@@ -137,7 +137,7 @@ const BIOMES = [
       nodeChance: 1, // plus frequent que le minage - remplir le biome
       minNodes: 5,
       maxNodes: 10,
-      resourcePool: [{ itemId: "branch", weight: 1, requiredTier: 1 }],
+      resourcePool: [{ itemId: "oakWood", weight: 1, requiredTier: 1 }],
       totalHits: [1, 3],
       bonusChance: 0.05,
       bonusPool: [
@@ -201,7 +201,7 @@ const BIOMES = [
       nodeChance: 1, // plus frequent que le minage - remplir le biome
       minNodes: 10,
       maxNodes: 15,
-      resourcePool: [{ itemId: "branch", weight: 1, requiredTier: 1 }],
+      resourcePool: [{ itemId: "oakWood", weight: 1, requiredTier: 1 }],
       totalHits: [2, 5],
       bonusChance: 0.15,
       bonusPool: [
@@ -260,7 +260,7 @@ const BIOMES = [
       nodeChance: 1, // plus frequent que le minage - remplir le biome
       minNodes: 2,
       maxNodes: 5,
-      resourcePool: [{ itemId: "branch", weight: 1, requiredTier: 1 }],
+      resourcePool: [{ itemId: "oakWood", weight: 1, requiredTier: 1 }],
       totalHits: [2, 5],
       bonusChance: 0.15,
       bonusPool: [
@@ -319,7 +319,7 @@ const BIOMES = [
       nodeChance: 1, // plus frequent que le minage - remplir le biome
       minNodes: 2,
       maxNodes: 5,
-      resourcePool: [{ itemId: "branch", weight: 1, requiredTier: 1 }],
+      resourcePool: [{ itemId: "oakWood", weight: 1, requiredTier: 1 }],
       totalHits: [2, 5],
       bonusChance: 0.15,
       bonusPool: [
@@ -374,7 +374,7 @@ const BIOMES = [
       nodeChance: 1, // plus frequent que le minage - remplir le biome
       minNodes: 2,
       maxNodes: 5,
-      resourcePool: [{ itemId: "branch", weight: 1, requiredTier: 1 }],
+      resourcePool: [{ itemId: "oakWood", weight: 1, requiredTier: 1 }],
       totalHits: [2, 5],
       bonusChance: 0.15,
       bonusPool: [
@@ -418,7 +418,7 @@ const BIOMES = [
       rockChance: 1, // chance qu'AU MOINS un gisement apparaisse cet etage
       minRocks: 1,
       maxRocks: 3,
-      resourcePool: [{ itemId: "platinumOre", weight: 5, requiredTier: 6 }], // objet obtenu a chaque coup
+      resourcePool: [{ itemId: "platiniumOre", weight: 5, requiredTier: 6 }], // objet obtenu a chaque coup
       totalHits: [1, 6], // nombre de coups avant epuisement
       gemChance: 0.15, // 15% de chance PAR COUP d'obtenir une gemme a la place du metal
       gemPool: [
@@ -432,7 +432,7 @@ const BIOMES = [
       nodeChance: 1, // plus frequent que le minage - remplir le biome
       minNodes: 2,
       maxNodes: 5,
-      resourcePool: [{ itemId: "branch", weight: 1, requiredTier: 1 }],
+      resourcePool: [{ itemId: "oakWood", weight: 1, requiredTier: 1 }],
       totalHits: [2, 5],
       bonusChance: 0.15,
       bonusPool: [
@@ -489,7 +489,7 @@ const BIOMES = [
       nodeChance: 1, // plus frequent que le minage - remplir le biome
       minNodes: 2,
       maxNodes: 5,
-      resourcePool: [{ itemId: "branch", weight: 1, requiredTier: 1 }],
+      resourcePool: [{ itemId: "oakWood", weight: 1, requiredTier: 1 }],
       totalHits: [2, 5],
       bonusChance: 0.15,
       bonusPool: [
@@ -545,7 +545,7 @@ const BIOMES = [
       nodeChance: 1, // plus frequent que le minage - remplir le biome
       minNodes: 2,
       maxNodes: 5,
-      resourcePool: [{ itemId: "branch", weight: 1, requiredTier: 1 }],
+      resourcePool: [{ itemId: "oakWood", weight: 1, requiredTier: 1 }],
       totalHits: [2, 5],
       bonusChance: 0.15,
       bonusPool: [
@@ -598,7 +598,7 @@ const BIOMES = [
       nodeChance: 1, // plus frequent que le minage - remplir le biome
       minNodes: 2,
       maxNodes: 5,
-      resourcePool: [{ itemId: "branch", weight: 1, requiredTier: 1 }],
+      resourcePool: [{ itemId: "oakWood", weight: 1, requiredTier: 1 }],
       totalHits: [2, 5],
       bonusChance: 0.15,
       bonusPool: [
@@ -652,7 +652,7 @@ const BIOMES = [
       nodeChance: 1, // plus frequent que le minage - remplir le biome
       minNodes: 2,
       maxNodes: 5,
-      resourcePool: [{ itemId: "branch", weight: 1, requiredTier: 1 }],
+      resourcePool: [{ itemId: "oakWood", weight: 1, requiredTier: 1 }],
       totalHits: [2, 5],
       bonusChance: 0.15,
       bonusPool: [
@@ -714,7 +714,7 @@ const BIOMES = [
       nodeChance: 1, // plus frequent que le minage - remplir le biome
       minNodes: 2,
       maxNodes: 5,
-      resourcePool: [{ itemId: "branch", weight: 1, requiredTier: 1 }],
+      resourcePool: [{ itemId: "oakWood", weight: 1, requiredTier: 1 }],
       totalHits: [2, 5],
       bonusChance: 0.15,
       bonusPool: [
@@ -779,7 +779,7 @@ const BIOMES = [
       nodeChance: 1, // plus frequent que le minage - remplir le biome
       minNodes: 2,
       maxNodes: 5,
-      resourcePool: [{ itemId: "branch", weight: 1, requiredTier: 1 }],
+      resourcePool: [{ itemId: "oakWood", weight: 1, requiredTier: 1 }],
       totalHits: [2, 5],
       bonusChance: 0.15,
       bonusPool: [
@@ -846,7 +846,7 @@ const BIOMES = [
       nodeChance: 1, // plus frequent que le minage - remplir le biome
       minNodes: 2,
       maxNodes: 5,
-      resourcePool: [{ itemId: "branch", weight: 1, requiredTier: 1 }],
+      resourcePool: [{ itemId: "oakWood", weight: 1, requiredTier: 1 }],
       totalHits: [2, 5],
       bonusChance: 0.15,
       bonusPool: [

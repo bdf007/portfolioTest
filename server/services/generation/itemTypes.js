@@ -39,7 +39,6 @@ const ITEM_TYPES = {
     statBonus: { meleeDamage: 1, meleeRange: -2 },
     stackable: false,
     archetypes: ["voleur"],
-    price: 2,
   },
   woodenSword: {
     id: "woodenSword",
@@ -107,19 +106,7 @@ const ITEM_TYPES = {
     archetypes: ["guerrier", "voleur"],
     price: 2,
   },
-  woodenAxe: {
-    id: "woodenAxe",
-    category: "equipment",
-    slot: "mainHand",
-    twoHanded: true,
-    grantsRanged: false,
-    name: "Hache de guerre en bois",
-    description: "+1 dégât au corps à corps. Arme d'entraînement de départ.",
-    statBonus: { meleeDamage: 1 },
-    stackable: false,
-    archetypes: ["guerrier"],
-    price: 2,
-  },
+
   woodenMallet: {
     id: "woodenMallet",
     category: "equipment",
@@ -131,7 +118,6 @@ const ITEM_TYPES = {
     statBonus: { meleeDamage: 1 },
     stackable: false,
     archetypes: ["guerrier"],
-    price: 2,
   },
   woodenShovel: {
     id: "woodenShovel",
@@ -819,6 +805,28 @@ const ITEM_TYPES = {
     price: 500,
   },
 
+  woodenAxe: {
+    id: "woodenAxe",
+    category: "equipment",
+    slot: "tool",
+    name: "Hache en bois",
+    description: "Outil de coupe basique. Niveau 1.",
+    toolType: "axe",
+    toolTier: 1,
+    stackable: false,
+  },
+  novaAxe: {
+    id: "novaAxe",
+    category: "equipment",
+    slot: "tool",
+    name: "Hache nova",
+    description: "Outil de coupe cosmique. Niveau 13.",
+    toolType: "axe",
+    toolTier: 13,
+    stackable: false,
+    price: 500,
+  },
+
   /** Potions **/
   healthPotion: {
     id: "healthPotion",
@@ -894,18 +902,6 @@ const ITEM_TYPES = {
     stackable: false,
     unlockLevel: 1,
     price: 45,
-  },
-
-  vitalityCharm: {
-    id: "vitalityCharm",
-    category: "equipment",
-    slot: "necklace",
-    name: "Charme de vitalité",
-    description: "+20 PV maximum.",
-    statBonus: { maxHp: 20 },
-    stackable: false,
-    unlockLevel: 1,
-    price: 70,
   },
 
   gold: {
@@ -1023,15 +1019,6 @@ const ITEM_TYPES = {
   },
 
   // recipes
-  reinforcedSwordRecipe: {
-    id: "reinforcedSwordRecipe",
-    category: "recipeScroll",
-    name: "Plan : Épée renforcée",
-    description: "Apprend la recette de l'épée renforcée.",
-    grantsRecipe: "reinforcedSword",
-    stackable: true,
-    price: 60,
-  },
   flamingSwordRecipe: {
     id: "flamingSwordRecipe",
     category: "recipeScroll",
@@ -1158,8 +1145,6 @@ const LOOT_TABLES = {
     { itemId: "healthPotion", weight: 35 },
     { itemId: "manaPotion", weight: 35 },
     { itemId: "gold", weight: 40, quantityRange: [2, 10] },
-    { itemId: "woodenCrossbow", weight: 20 },
-    { itemId: "huntingBow", weight: 100 },
   ],
   crateStandard: [
     { itemId: null, weight: 50 },
@@ -1178,7 +1163,6 @@ const LOOT_TABLES = {
     { itemId: null, weight: 50 }, // la plupart des cerfs ne laissent rien
     { itemId: "gold", weight: 50, quantityRange: [1, 3] },
     { itemId: "fireballScroll", weight: 2 },
-    { itemId: "reinforcedSwordRecipe", weight: 2 },
     { itemId: "deerAntler", weight: 40 },
   ],
   angryBrownMushroomDrop: [
@@ -1190,7 +1174,6 @@ const LOOT_TABLES = {
   ],
 
   bossDrop: [
-    { itemId: "vitalityCharm", weight: 10 },
     { itemId: "gold", weight: 20, quantityRange: [50, 100] },
     // PAS d'objet de quete (ancientRelic) ici - contrairement au reste
     // de cette table (tirage aleatoire), un objet de quete ne doit

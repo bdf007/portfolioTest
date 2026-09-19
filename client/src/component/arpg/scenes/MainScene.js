@@ -156,6 +156,7 @@ const ENEMY_DIR_VECTORS = {
   right: { x: 1, y: 0 },
 };
 const PLAYER_MELEE_COOLDOWN = 420;
+const PLAYER_HARVEST_COOLDOWN = 600; // exemple de valeur, ajustable selon le design
 const PLAYER_RANGED_COOLDOWN = 650;
 const PROJECTILE_SPEED = 320;
 const PROJECTILE_MAX_DISTANCE_DEFAULT = 380; // repli si le profil d'archetype ne definit pas rangedRange
@@ -555,7 +556,7 @@ const MINING_RESOURCE_TINTS = {
   ironOre: 0x8899aa, // gris-bleu acier
   silverOre: 0xcfd8dc, // gris clair argente
   goldOre: 0xffd54f, // jaune dore
-  platinumOre: 0xe5e4e2, // gris clair platine
+  platiniumOre: 0xe5e4e2, // gris clair platine
   cobaltOre: 0x0047ab, // bleu cobalt
   adamantineOre: 0x99ccff, // bleu clair adamantine
   crimsonOre: 0xdc143c, // rouge cramoisi
@@ -759,6 +760,7 @@ export default class MainScene extends Phaser.Scene {
     this.playerStamina = this.playerMaxStamina;
     this.playerStatusEffects = [];
     this.meleeCooldown = createCooldown(PLAYER_MELEE_COOLDOWN);
+    this.harvestCooldown = createCooldown(PLAYER_HARVEST_COOLDOWN);
     this.rangedCooldown = createCooldown(PLAYER_RANGED_COOLDOWN);
     this.isDead = false;
     this.currentDepth = 1;
@@ -930,6 +932,7 @@ export default class MainScene extends Phaser.Scene {
         profile.startingAmmo.quantity,
       );
       this.equipped.quiver = profile.startingAmmo.itemId;
+      this.recalculatePlayerStats();
       this.events.emit("equipment-updated", { ...this.equipped });
     }
     if (profile.startingAbilities) {
@@ -1156,6 +1159,7 @@ export default class MainScene extends Phaser.Scene {
     const base = getPlayerStatsForLevel(this.playerLevel, heroProfile);
 
     const bonus = computeEquipmentBonuses(this.equipped);
+    this.equipmentBonuses = bonus;
     const attrBonus = this.computeAttributeBonuses();
 
     this.playerMaxHp = base.maxHp + bonus.maxHp + attrBonus.maxHp;
@@ -1185,6 +1189,23 @@ export default class MainScene extends Phaser.Scene {
     this.playerMoveSpeed =
       (heroProfile?.moveSpeed ?? PLAYER_MOVE_SPEED_DEFAULT) +
       (bonus.moveSpeed ?? 0);
+    const n = this.playerLevel - 1;
+    this.playerHpRegen =
+      HP_REGEN_PER_SEC_BASE +
+      HP_REGEN_PER_SEC_GROWTH * n +
+      attrBonus.hpRegenBonus +
+      (bonus.hpRegen ?? 0);
+    this.playerManaRegen =
+      MANA_REGEN_PER_SEC_BASE +
+      MANA_REGEN_PER_SEC_GROWTH * n +
+      attrBonus.manaRegenBonus +
+      (bonus.manaRegen ?? 0);
+    this.playerStaminaRegen =
+      STAMINA_REGEN_PER_SEC_BASE +
+      STAMINA_REGEN_PER_SEC_GROWTH * n +
+      attrBonus.staminaRegenBonus +
+      (bonus.staminaRegen ?? 0);
+
     this.events.emit("player-stats-changed", {
       level: this.playerLevel,
       maxHp: this.playerMaxHp,
@@ -1196,6 +1217,9 @@ export default class MainScene extends Phaser.Scene {
       moveSpeed: this.playerMoveSpeed,
       visionRadius: this.playerVisionRadius,
       rangedRange: this.playerRangedRange,
+      hpRegen: this.playerHpRegen,
+      manaRegen: this.playerManaRegen,
+      staminaRegen: this.playerStaminaRegen,
     });
   }
 
@@ -3181,10 +3205,21 @@ export default class MainScene extends Phaser.Scene {
       });
     });
 
-    const TREE_FRAMES = [
-      136, 137, 138, 139, 140, 141, 142, 143, 152, 153, 154, 155, 156, 157, 158,
-      159,
-    ];
+    const WOOD_TREE_FRAMES = {
+      oakWood: [136],
+      ashWood: [137],
+      yewWood: [138],
+      ebonyWood: [155],
+      petrifiedWood: [159],
+      mistwood: [141],
+      runewood: [157],
+      skywood: [143],
+      scarletwood: [140],
+      sacredWood: [142],
+      eternalWood: [158],
+      starwood: [156],
+    };
+
     const forageVariantRng = createRng(`${this.currentSeed}-forage-variants`);
     const forageData = data.forageNodes || [];
     forageData.forEach((nodeData, index) => {
@@ -3192,8 +3227,15 @@ export default class MainScene extends Phaser.Scene {
       if (savedState && savedState.depleted) return;
 
       const hits = savedState ? savedState.hits : nodeData.totalHits;
+
+      // le type de ressource est DEJA determine cote serveur
+      // (nodeData.resourceItemId, tire a la generation) - on l'utilise
+      // directement, jamais un second tirage independant qui
+      // desynchroniserait le sprite affiche et la ressource reellement recoltee
+      const framePool =
+        WOOD_TREE_FRAMES[nodeData.resourceItemId] || WOOD_TREE_FRAMES.oakWood;
       const frame =
-        TREE_FRAMES[Math.floor(forageVariantRng() * TREE_FRAMES.length)];
+        framePool[Math.floor(forageVariantRng() * framePool.length)];
 
       const sprite = this.add.sprite(
         nodeData.x * TILE_SIZE + TILE_SIZE / 2,
@@ -4916,18 +4958,12 @@ export default class MainScene extends Phaser.Scene {
   }
 
   updateRegen(deltaMs) {
-    const n = this.playerLevel - 1;
     const deltaSec = deltaMs / 1000;
-    const attrBonus = this.computeAttributeBonuses();
 
     if (this.playerHp < this.playerMaxHp) {
-      const rate =
-        HP_REGEN_PER_SEC_BASE +
-        HP_REGEN_PER_SEC_GROWTH * n +
-        attrBonus.hpRegenBonus;
       this.playerHp = Math.min(
         this.playerMaxHp,
-        this.playerHp + rate * deltaSec,
+        this.playerHp + this.playerHpRegen * deltaSec,
       );
       this.events.emit("player-hp-changed", {
         hp: this.playerHp,
@@ -4936,13 +4972,9 @@ export default class MainScene extends Phaser.Scene {
     }
 
     if (this.playerMana < this.playerMaxMana) {
-      const rate =
-        MANA_REGEN_PER_SEC_BASE +
-        MANA_REGEN_PER_SEC_GROWTH * n +
-        attrBonus.manaRegenBonus;
       this.playerMana = Math.min(
         this.playerMaxMana,
-        this.playerMana + rate * deltaSec,
+        this.playerMana + this.playerManaRegen * deltaSec,
       );
       this.events.emit("player-mana-changed", {
         mana: this.playerMana,
@@ -4951,13 +4983,9 @@ export default class MainScene extends Phaser.Scene {
     }
 
     if (this.playerStamina < this.playerMaxStamina) {
-      const rate =
-        STAMINA_REGEN_PER_SEC_BASE +
-        STAMINA_REGEN_PER_SEC_GROWTH * n +
-        attrBonus.staminaRegenBonus;
       this.playerStamina = Math.min(
         this.playerMaxStamina,
-        this.playerStamina + rate * deltaSec,
+        this.playerStamina + this.playerStaminaRegen * deltaSec,
       );
       this.events.emit("player-stamina-changed", {
         stamina: this.playerStamina,
@@ -5335,6 +5363,11 @@ export default class MainScene extends Phaser.Scene {
       return true;
     }
 
+    if (!this.harvestCooldown.isReady(this.time.now)) return true;
+    this.harvestCooldown.trigger(this.time.now);
+
+    this.playSlashEffect();
+
     node.hits -= 1;
 
     const bonusChance = node.data.bonusChance || 0;
@@ -5391,6 +5424,11 @@ export default class MainScene extends Phaser.Scene {
       );
       return true;
     }
+
+    if (!this.harvestCooldown.isReady(this.time.now)) return true;
+    this.harvestCooldown.trigger(this.time.now);
+
+    this.playSlashEffect();
 
     rock.hits -= 1;
 
@@ -5672,6 +5710,35 @@ export default class MainScene extends Phaser.Scene {
     }
   }
 
+  playAttackAnim(now) {
+    const key = this.heroSpriteKey + "-attack-" + this.lastDir;
+    if (this.anims.exists(key)) {
+      this.hero.anims.play(key, true);
+      this.attackAnimUntil = now + ATTACK_ANIM_DURATION_MS;
+    }
+  }
+
+  playSlashEffect() {
+    const aimDir =
+      Math.abs(this.lastAimVector.x) > Math.abs(this.lastAimVector.y)
+        ? this.lastAimVector.x > 0
+          ? "right"
+          : "left"
+        : this.lastAimVector.y > 0
+          ? "down"
+          : "up";
+    const slashOffset = 22;
+    const slash = this.add.sprite(
+      this.hero.x + this.lastAimVector.x * slashOffset,
+      this.hero.y + this.lastAimVector.y * slashOffset,
+      SPRITE_REGISTRY.meleeSlashEffect.key,
+    );
+    slash.setScale(SPRITE_REGISTRY.meleeSlashEffect.scale);
+    slash.setDepth(15);
+    slash.play("meleeSlashEffect-walk-" + aimDir);
+    slash.once("animationcomplete", () => slash.destroy());
+  }
+
   performMeleeAttack(now) {
     if (!this.meleeCooldown.isReady(now)) return;
     this.meleeCooldown.trigger(now);
@@ -5680,16 +5747,7 @@ export default class MainScene extends Phaser.Scene {
       ? resolveItemDef(this.equipped.mainHand)
       : null;
 
-    const hasAttackAnim = this.anims.exists(
-      this.heroSpriteKey + "-attack-" + this.lastDir,
-    );
-    if (hasAttackAnim) {
-      this.hero.anims.play(
-        this.heroSpriteKey + "-attack-" + this.lastDir,
-        true,
-      );
-      this.attackAnimUntil = now + ATTACK_ANIM_DURATION_MS;
-    }
+    this.playAttackAnim(now);
 
     const imbue = this.pendingWeaponImbue;
     this.pendingWeaponImbue = null;
@@ -5763,25 +5821,6 @@ export default class MainScene extends Phaser.Scene {
     if (imbue && !anyHit) {
       this.pendingWeaponImbue = imbue;
     }
-
-    const aimDir =
-      Math.abs(this.lastAimVector.x) > Math.abs(this.lastAimVector.y)
-        ? this.lastAimVector.x > 0
-          ? "right"
-          : "left"
-        : this.lastAimVector.y > 0
-          ? "down"
-          : "up";
-    const slashOffset = 22;
-    const slash = this.add.sprite(
-      this.hero.x + this.lastAimVector.x * slashOffset,
-      this.hero.y + this.lastAimVector.y * slashOffset,
-      SPRITE_REGISTRY.meleeSlashEffect.key,
-    );
-    slash.setScale(SPRITE_REGISTRY.meleeSlashEffect.scale);
-    slash.setDepth(15);
-    slash.play("meleeSlashEffect-walk-" + aimDir);
-    slash.once("animationcomplete", () => slash.destroy());
   }
 
   getActiveRangedWeaponDef() {
