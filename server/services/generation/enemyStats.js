@@ -36,14 +36,7 @@ const ENEMY_TYPES = {
     speedGrowthPerDepth: 2,
     defenseGrowthEveryNDepths: 3, // +1 defense tous les 3 etages
   },
-  goblin: {
-    base: { hp: 10, damage: 3, xpReward: 8 },
-    growthRate: { hp: 1.15, damage: 1.12, xpReward: 1.1 },
-    speedBase: 100,
-    speedMax: 160,
-    speedGrowthPerDepth: 3,
-    defenseGrowthEveryNDepths: 4,
-  },
+
   goblin2: {
     base: { hp: 12, damage: 2, xpReward: 9 },
     growthRate: { hp: 1.14, damage: 1.11, xpReward: 1.09 },
@@ -547,7 +540,7 @@ const ENEMY_TYPES = {
   // verifiant la coherence entre les deux fichiers). Meme famille que
   // enemy1 (courbe de croissance proche), legerement au-dessus en base
   // pour rester la deuxieme variante du temple.
-  enemy2: {
+  goblin: {
     base: { hp: 41, damage: 8, xpReward: 21 },
     growthRate: { hp: 1.19, damage: 1.16, xpReward: 1.13 },
     speedBase: 80,
@@ -931,6 +924,7 @@ const ENEMY_TYPES = {
     speedMax: 180,
     speedGrowthPerDepth: 4,
     defenseGrowthEveryNDepths: 5,
+    lootTable: "gnomeDrop",
   },
   angryTrent: {
     attackType: "ranged",
@@ -940,6 +934,7 @@ const ENEMY_TYPES = {
     speedMax: 180,
     speedGrowthPerDepth: 4,
     defenseGrowthEveryNDepths: 5,
+    lootTable: "angryTrentDrop",
   },
   knifedBat: {
     attackType: "melee",
@@ -949,6 +944,7 @@ const ENEMY_TYPES = {
     speedMax: 180,
     speedGrowthPerDepth: 4,
     defenseGrowthEveryNDepths: 5,
+    lootTable: "knifedBatDrop",
   },
   mudGolem: {
     attackType: "melee",
@@ -958,6 +954,7 @@ const ENEMY_TYPES = {
     speedMax: 180,
     speedGrowthPerDepth: 4,
     defenseGrowthEveryNDepths: 5,
+    lootTable: "mudGolemDrop",
   },
   redBeetle: {
     attackType: "melee",
@@ -967,6 +964,7 @@ const ENEMY_TYPES = {
     speedMax: 180,
     speedGrowthPerDepth: 4,
     defenseGrowthEveryNDepths: 5,
+    lootTable: "redBeetleDrop",
   },
   pinkOgre: {
     attackType: "melee",
@@ -976,6 +974,7 @@ const ENEMY_TYPES = {
     speedMax: 180,
     speedGrowthPerDepth: 4,
     defenseGrowthEveryNDepths: 5,
+    lootTable: "pinkOgreDrop",
   },
   // bosses
 
@@ -986,6 +985,7 @@ const ENEMY_TYPES = {
     speedMax: 180,
     speedGrowthPerDepth: 4,
     defenseGrowthEveryNDepths: 5,
+    lootTable: "maxibee1Drop",
   },
   BigBug: {
     base: { hp: 8, damage: 2, xpReward: 7 },
@@ -994,6 +994,7 @@ const ENEMY_TYPES = {
     speedMax: 180,
     speedGrowthPerDepth: 4,
     defenseGrowthEveryNDepths: 5,
+    lootTable: "BigBugDrop",
   },
   GiantFox: {
     base: { hp: 8, damage: 2, xpReward: 7 },
@@ -1002,6 +1003,1450 @@ const ENEMY_TYPES = {
     speedMax: 180,
     speedGrowthPerDepth: 4,
     defenseGrowthEveryNDepths: 5,
+    lootTable: "GiantFoxDrop",
+  },
+  alien1: {
+    attackType: "ranged",
+    base: { hp: 12, damage: 3, xpReward: 8 },
+    growthRate: { hp: 1.17, damage: 1.14, xpReward: 1.11 },
+    speedBase: 95,
+    speedMax: 150,
+    speedGrowthPerDepth: 3,
+    defenseGrowthEveryNDepths: 3,
+    lootTable: "alien1Drop",
+  },
+
+  alien2: {
+    attackType: "ranged",
+    base: { hp: 14, damage: 4, xpReward: 10 },
+    growthRate: { hp: 1.18, damage: 1.15, xpReward: 1.12 },
+    speedBase: 95,
+    speedMax: 150,
+    speedGrowthPerDepth: 3,
+    defenseGrowthEveryNDepths: 3,
+    lootTable: "alien2Drop",
+  },
+
+  alien3: {
+    attackType: "ranged",
+    base: { hp: 16, damage: 5, xpReward: 12 },
+    growthRate: { hp: 1.18, damage: 1.15, xpReward: 1.12 },
+    speedBase: 95,
+    speedMax: 150,
+    speedGrowthPerDepth: 3,
+    defenseGrowthEveryNDepths: 3,
+    lootTable: "alien3Drop",
+  },
+
+  alien4: {
+    attackType: "ranged",
+    base: { hp: 18, damage: 6, xpReward: 14 },
+    growthRate: { hp: 1.19, damage: 1.16, xpReward: 1.13 },
+    speedBase: 95,
+    speedMax: 150,
+    speedGrowthPerDepth: 3,
+    defenseGrowthEveryNDepths: 3,
+    lootTable: "alien4Drop",
+  },
+
+  alien5: {
+    attackType: "ranged",
+    base: { hp: 20, damage: 7, xpReward: 16 },
+    growthRate: { hp: 1.19, damage: 1.16, xpReward: 1.13 },
+    speedBase: 95,
+    speedMax: 150,
+    speedGrowthPerDepth: 3,
+    defenseGrowthEveryNDepths: 3,
+    lootTable: "alien5Drop",
+  },
+
+  alien6: {
+    attackType: "ranged",
+    base: { hp: 22, damage: 8, xpReward: 18 },
+    growthRate: { hp: 1.2, damage: 1.17, xpReward: 1.14 },
+    speedBase: 95,
+    speedMax: 150,
+    speedGrowthPerDepth: 3,
+    defenseGrowthEveryNDepths: 3,
+    lootTable: "alien6Drop",
+  },
+
+  alien7: {
+    attackType: "ranged",
+    base: { hp: 24, damage: 9, xpReward: 20 },
+    growthRate: { hp: 1.21, damage: 1.18, xpReward: 1.15 },
+    speedBase: 95,
+    speedMax: 150,
+    speedGrowthPerDepth: 3,
+    defenseGrowthEveryNDepths: 3,
+    lootTable: "alien7Drop",
+  },
+
+  alien8: {
+    attackType: "ranged",
+    base: { hp: 26, damage: 10, xpReward: 22 },
+    growthRate: { hp: 1.21, damage: 1.18, xpReward: 1.15 },
+    speedBase: 95,
+    speedMax: 150,
+    speedGrowthPerDepth: 3,
+    defenseGrowthEveryNDepths: 3,
+    lootTable: "alien8Drop",
+  },
+
+  alien9: {
+    attackType: "ranged",
+    base: { hp: 28, damage: 11, xpReward: 24 },
+    growthRate: { hp: 1.22, damage: 1.19, xpReward: 1.16 },
+    speedBase: 95,
+    speedMax: 150,
+    speedGrowthPerDepth: 3,
+    defenseGrowthEveryNDepths: 3,
+    lootTable: "alien9Drop",
+  },
+
+  alien10: {
+    attackType: "ranged",
+    base: { hp: 30, damage: 12, xpReward: 26 },
+    growthRate: { hp: 1.22, damage: 1.19, xpReward: 1.16 },
+    speedBase: 95,
+    speedMax: 150,
+    speedGrowthPerDepth: 3,
+    defenseGrowthEveryNDepths: 3,
+    lootTable: "alien10Drop",
+  },
+
+  // ===== Fantasy (humanoides varies, melee standard) - fantasy1..fantasy10 =====
+
+  fantasy1: {
+    base: { hp: 20, damage: 4, xpReward: 10 },
+    lootTable: "fantasy1Drop",
+    growthRate: { hp: 1.18, damage: 1.15, xpReward: 1.12 },
+    speedBase: 90,
+    speedMax: 140,
+    speedGrowthPerDepth: 2,
+    defenseGrowthEveryNDepths: 3,
+  },
+
+  fantasy2: {
+    base: { hp: 22, damage: 5, xpReward: 12 },
+    lootTable: "fantasy2Drop",
+    growthRate: { hp: 1.19, damage: 1.16, xpReward: 1.12 },
+    speedBase: 90,
+    speedMax: 140,
+    speedGrowthPerDepth: 2,
+    defenseGrowthEveryNDepths: 3,
+  },
+
+  fantasy3: {
+    base: { hp: 24, damage: 6, xpReward: 14 },
+    lootTable: "fantasy3Drop",
+    growthRate: { hp: 1.19, damage: 1.16, xpReward: 1.13 },
+    speedBase: 90,
+    speedMax: 140,
+    speedGrowthPerDepth: 2,
+    defenseGrowthEveryNDepths: 3,
+  },
+
+  fantasy4: {
+    base: { hp: 26, damage: 7, xpReward: 16 },
+    lootTable: "fantasy4Drop",
+    growthRate: { hp: 1.2, damage: 1.17, xpReward: 1.14 },
+    speedBase: 90,
+    speedMax: 140,
+    speedGrowthPerDepth: 2,
+    defenseGrowthEveryNDepths: 3,
+  },
+
+  orqueGreen: {
+    base: { hp: 28, damage: 8, xpReward: 18 },
+    lootTable: "orqueGreenDrop",
+    growthRate: { hp: 1.2, damage: 1.17, xpReward: 1.14 },
+    speedBase: 90,
+    speedMax: 140,
+    speedGrowthPerDepth: 2,
+    defenseGrowthEveryNDepths: 3,
+  },
+  orqueYellow: {
+    base: { hp: 28, damage: 8, xpReward: 18 },
+    lootTable: "orqueYellowDrop",
+    growthRate: { hp: 1.2, damage: 1.17, xpReward: 1.14 },
+    speedBase: 90,
+    speedMax: 140,
+    speedGrowthPerDepth: 2,
+    defenseGrowthEveryNDepths: 3,
+  },
+  orqueBlue: {
+    base: { hp: 28, damage: 8, xpReward: 18 },
+    lootTable: "orqueBlueDrop",
+    growthRate: { hp: 1.2, damage: 1.17, xpReward: 1.14 },
+    speedBase: 90,
+    speedMax: 140,
+    speedGrowthPerDepth: 2,
+    defenseGrowthEveryNDepths: 3,
+  },
+  orqueRed: {
+    base: { hp: 28, damage: 8, xpReward: 18 },
+    lootTable: "orqueRedDrop",
+    growthRate: { hp: 1.2, damage: 1.17, xpReward: 1.14 },
+    speedBase: 90,
+    speedMax: 140,
+    speedGrowthPerDepth: 2,
+    defenseGrowthEveryNDepths: 3,
+  },
+  orquePurple: {
+    base: { hp: 28, damage: 8, xpReward: 18 },
+    lootTable: "orquePurpleDrop",
+    growthRate: { hp: 1.2, damage: 1.17, xpReward: 1.14 },
+    speedBase: 90,
+    speedMax: 140,
+    speedGrowthPerDepth: 2,
+    defenseGrowthEveryNDepths: 3,
+  },
+  orqueGrey: {
+    base: { hp: 28, damage: 8, xpReward: 18 },
+    lootTable: "orqueGreyDrop",
+    growthRate: { hp: 1.2, damage: 1.17, xpReward: 1.14 },
+    speedBase: 90,
+    speedMax: 140,
+    speedGrowthPerDepth: 2,
+    defenseGrowthEveryNDepths: 3,
+  },
+  orqueBlack: {
+    base: { hp: 28, damage: 8, xpReward: 18 },
+    lootTable: "orqueBlackDrop",
+    growthRate: { hp: 1.2, damage: 1.17, xpReward: 1.14 },
+    speedBase: 90,
+    speedMax: 140,
+    speedGrowthPerDepth: 2,
+    defenseGrowthEveryNDepths: 3,
+  },
+
+  redWarriorMushroom: {
+    base: { hp: 30, damage: 9, xpReward: 20 },
+    lootTable: "redWarriorMushroomDrop",
+    growthRate: { hp: 1.21, damage: 1.18, xpReward: 1.15 },
+    speedBase: 90,
+    speedMax: 140,
+    speedGrowthPerDepth: 2,
+    defenseGrowthEveryNDepths: 3,
+  },
+
+  yellowWarriorMushroom: {
+    base: { hp: 30, damage: 9, xpReward: 20 },
+    lootTable: "yellowWarriorMushroomDrop",
+    growthRate: { hp: 1.21, damage: 1.18, xpReward: 1.15 },
+    speedBase: 90,
+    speedMax: 140,
+    speedGrowthPerDepth: 2,
+    defenseGrowthEveryNDepths: 3,
+  },
+  blueWarriorMushroom: {
+    base: { hp: 30, damage: 9, xpReward: 20 },
+    lootTable: "blueWarriorMushroomDrop",
+    growthRate: { hp: 1.21, damage: 1.18, xpReward: 1.15 },
+    speedBase: 90,
+    speedMax: 140,
+    speedGrowthPerDepth: 2,
+    defenseGrowthEveryNDepths: 3,
+  },
+  greenWarriorMushroom: {
+    base: { hp: 30, damage: 9, xpReward: 20 },
+    lootTable: "greenWarriorMushroomDrop",
+    growthRate: { hp: 1.21, damage: 1.18, xpReward: 1.15 },
+    speedBase: 90,
+    speedMax: 140,
+    speedGrowthPerDepth: 2,
+    defenseGrowthEveryNDepths: 3,
+  },
+  purpleWarriorMushroom: {
+    base: { hp: 30, damage: 9, xpReward: 20 },
+    lootTable: "purpleWarriorMushroomDrop",
+    growthRate: { hp: 1.21, damage: 1.18, xpReward: 1.15 },
+    speedBase: 90,
+    speedMax: 140,
+    speedGrowthPerDepth: 2,
+    defenseGrowthEveryNDepths: 3,
+  },
+
+  fantasy7: {
+    base: { hp: 32, damage: 10, xpReward: 22 },
+    lootTable: "fantasy7Drop",
+    growthRate: { hp: 1.21, damage: 1.18, xpReward: 1.15 },
+    speedBase: 90,
+    speedMax: 140,
+    speedGrowthPerDepth: 2,
+    defenseGrowthEveryNDepths: 3,
+  },
+
+  massecailleBlue: {
+    base: { hp: 34, damage: 11, xpReward: 24 },
+    lootTable: "massecailleBlueDrop",
+    growthRate: { hp: 1.22, damage: 1.19, xpReward: 1.16 },
+    speedBase: 90,
+    speedMax: 140,
+    speedGrowthPerDepth: 2,
+    defenseGrowthEveryNDepths: 3,
+  },
+  massecailleGreen: {
+    base: { hp: 34, damage: 11, xpReward: 24 },
+    lootTable: "massecailleGreenDrop",
+    growthRate: { hp: 1.22, damage: 1.19, xpReward: 1.16 },
+    speedBase: 90,
+    speedMax: 140,
+    speedGrowthPerDepth: 2,
+    defenseGrowthEveryNDepths: 3,
+  },
+  massecaillePurple: {
+    base: { hp: 34, damage: 11, xpReward: 24 },
+    lootTable: "massecaillePurpleDrop",
+    growthRate: { hp: 1.22, damage: 1.19, xpReward: 1.16 },
+    speedBase: 90,
+    speedMax: 140,
+    speedGrowthPerDepth: 2,
+    defenseGrowthEveryNDepths: 3,
+  },
+  massecailleRed: {
+    base: { hp: 34, damage: 11, xpReward: 24 },
+    lootTable: "massecailleRedDrop",
+    growthRate: { hp: 1.22, damage: 1.19, xpReward: 1.16 },
+    speedBase: 90,
+    speedMax: 140,
+    speedGrowthPerDepth: 2,
+    defenseGrowthEveryNDepths: 3,
+  },
+  massecailleYellow: {
+    base: { hp: 34, damage: 11, xpReward: 24 },
+    lootTable: "massecailleYellowDrop",
+    growthRate: { hp: 1.22, damage: 1.19, xpReward: 1.16 },
+    speedBase: 90,
+    speedMax: 140,
+    speedGrowthPerDepth: 2,
+    defenseGrowthEveryNDepths: 3,
+  },
+
+  fantasy9: {
+    base: { hp: 36, damage: 12, xpReward: 26 },
+    lootTable: "fantasy9Drop",
+    growthRate: { hp: 1.22, damage: 1.19, xpReward: 1.16 },
+    speedBase: 90,
+    speedMax: 140,
+    speedGrowthPerDepth: 2,
+    defenseGrowthEveryNDepths: 3,
+  },
+
+  knightJauneRouge: {
+    base: { hp: 38, damage: 13, xpReward: 28 },
+    lootTable: "knightJauneRougeDrop",
+    growthRate: { hp: 1.23, damage: 1.2, xpReward: 1.17 },
+    speedBase: 90,
+    speedMax: 140,
+    speedGrowthPerDepth: 2,
+    defenseGrowthEveryNDepths: 3,
+  },
+
+  knightBleuArgent: {
+    base: { hp: 40, damage: 14, xpReward: 30 },
+    lootTable: "knightBleuArgentDrop",
+    growthRate: { hp: 1.23, damage: 1.2, xpReward: 1.17 },
+    speedBase: 90,
+    speedMax: 140,
+    speedGrowthPerDepth: 2,
+    defenseGrowthEveryNDepths: 3,
+  },
+  knightNoirCramoisi: {
+    base: { hp: 42, damage: 15, xpReward: 32 },
+    lootTable: "knightNoirCramoisiDrop",
+    growthRate: { hp: 1.23, damage: 1.2, xpReward: 1.17 },
+    speedBase: 90,
+    speedMax: 140,
+    speedGrowthPerDepth: 2,
+    defenseGrowthEveryNDepths: 3,
+  },
+  knightVertOr: {
+    base: { hp: 44, damage: 16, xpReward: 34 },
+    lootTable: "knightVertOrDrop",
+    growthRate: { hp: 1.23, damage: 1.2, xpReward: 1.17 },
+    speedBase: 90,
+    speedMax: 140,
+    speedGrowthPerDepth: 2,
+    defenseGrowthEveryNDepths: 3,
+  },
+  knightVioletArgent: {
+    base: { hp: 46, damage: 17, xpReward: 36 },
+    lootTable: "knightVioletArgentDrop",
+    growthRate: { hp: 1.23, damage: 1.2, xpReward: 1.17 },
+    speedBase: 90,
+    speedMax: 140,
+    speedGrowthPerDepth: 2,
+    defenseGrowthEveryNDepths: 3,
+  },
+
+  // ===== Robots (tenues, plus lents et resistants) - robot1..robot10 =====
+
+  robot1: {
+    base: { hp: 30, damage: 6, xpReward: 15 },
+    lootTable: "robot1Drop",
+    growthRate: { hp: 1.16, damage: 1.13, xpReward: 1.11 },
+    speedBase: 80,
+    speedMax: 130,
+    speedGrowthPerDepth: 2,
+    defenseGrowthEveryNDepths: 3,
+  },
+
+  robot2: {
+    attackType: "ranged",
+    base: { hp: 32, damage: 7, xpReward: 17 },
+    lootTable: "robot2Drop",
+    growthRate: { hp: 1.16, damage: 1.13, xpReward: 1.11 },
+    speedBase: 80,
+    speedMax: 130,
+    speedGrowthPerDepth: 2,
+    defenseGrowthEveryNDepths: 3,
+  },
+
+  robot3: {
+    base: { hp: 34, damage: 8, xpReward: 19 },
+    lootTable: "robot3Drop",
+    growthRate: { hp: 1.17, damage: 1.14, xpReward: 1.12 },
+    speedBase: 80,
+    speedMax: 130,
+    speedGrowthPerDepth: 2,
+    defenseGrowthEveryNDepths: 3,
+  },
+
+  robot4: {
+    attackType: "ranged",
+    base: { hp: 36, damage: 9, xpReward: 21 },
+    lootTable: "robot4Drop",
+    growthRate: { hp: 1.17, damage: 1.14, xpReward: 1.12 },
+    speedBase: 80,
+    speedMax: 130,
+    speedGrowthPerDepth: 2,
+    defenseGrowthEveryNDepths: 3,
+  },
+
+  robot5: {
+    base: { hp: 38, damage: 10, xpReward: 23 },
+    lootTable: "robot5Drop",
+    growthRate: { hp: 1.18, damage: 1.15, xpReward: 1.13 },
+    speedBase: 80,
+    speedMax: 130,
+    speedGrowthPerDepth: 2,
+    defenseGrowthEveryNDepths: 3,
+  },
+
+  robot6: {
+    attackType: "ranged",
+    base: { hp: 40, damage: 11, xpReward: 25 },
+    lootTable: "robot6Drop",
+    growthRate: { hp: 1.18, damage: 1.15, xpReward: 1.13 },
+    speedBase: 80,
+    speedMax: 130,
+    speedGrowthPerDepth: 2,
+    defenseGrowthEveryNDepths: 3,
+  },
+
+  robot7: {
+    base: { hp: 42, damage: 12, xpReward: 27 },
+    lootTable: "robot7Drop",
+    growthRate: { hp: 1.18, damage: 1.15, xpReward: 1.13 },
+    speedBase: 80,
+    speedMax: 130,
+    speedGrowthPerDepth: 2,
+    defenseGrowthEveryNDepths: 3,
+  },
+
+  robot8: {
+    attackType: "ranged",
+    base: { hp: 44, damage: 13, xpReward: 29 },
+    lootTable: "robot8Drop",
+    growthRate: { hp: 1.19, damage: 1.16, xpReward: 1.14 },
+    speedBase: 80,
+    speedMax: 130,
+    speedGrowthPerDepth: 2,
+    defenseGrowthEveryNDepths: 3,
+  },
+
+  robot9: {
+    base: { hp: 46, damage: 14, xpReward: 31 },
+    lootTable: "robot9Drop",
+    growthRate: { hp: 1.19, damage: 1.16, xpReward: 1.14 },
+    speedBase: 80,
+    speedMax: 130,
+    speedGrowthPerDepth: 2,
+    defenseGrowthEveryNDepths: 3,
+  },
+
+  robot10: {
+    attackType: "ranged",
+    base: { hp: 48, damage: 15, xpReward: 33 },
+    lootTable: "robot10Drop",
+    growthRate: { hp: 1.2, damage: 1.17, xpReward: 1.15 },
+    speedBase: 80,
+    speedMax: 130,
+    speedGrowthPerDepth: 2,
+    defenseGrowthEveryNDepths: 3,
+  },
+
+  // ===== Bestiaire generique nomme (creatures uniques, pas de tiers numerotes) =====
+
+  bat: {
+    base: { hp: 10, damage: 2, xpReward: 8 },
+    growthRate: { hp: 1.13, damage: 1.1, xpReward: 1.08 },
+    speedBase: 120,
+    speedMax: 180,
+    speedGrowthPerDepth: 4,
+    defenseGrowthEveryNDepths: 5,
+    lootTable: "batDrop",
+  },
+
+  bee: {
+    base: { hp: 8, damage: 2, xpReward: 7 },
+    growthRate: { hp: 1.13, damage: 1.1, xpReward: 1.08 },
+    speedBase: 130,
+    speedMax: 190,
+    speedGrowthPerDepth: 4,
+    defenseGrowthEveryNDepths: 5,
+    lootTable: "beeDrop",
+  },
+
+  worm: {
+    base: { hp: 10, damage: 2, xpReward: 8 },
+    growthRate: { hp: 1.13, damage: 1.1, xpReward: 1.08 },
+    speedBase: 70,
+    speedMax: 110,
+    speedGrowthPerDepth: 2,
+    defenseGrowthEveryNDepths: 5,
+    lootTable: "wormDrop",
+  },
+
+  bigtick: {
+    base: { hp: 12, damage: 3, xpReward: 9 },
+    growthRate: { hp: 1.14, damage: 1.11, xpReward: 1.09 },
+    speedBase: 110,
+    speedMax: 170,
+    speedGrowthPerDepth: 3,
+    defenseGrowthEveryNDepths: 5,
+    lootTable: "bigtickDrop",
+  },
+
+  ghost: {
+    attackType: "ranged",
+    base: { hp: 12, damage: 3, xpReward: 9 },
+    growthRate: { hp: 1.14, damage: 1.11, xpReward: 1.09 },
+    speedBase: 100,
+    speedMax: 160,
+    speedGrowthPerDepth: 3,
+    defenseGrowthEveryNDepths: 4,
+    lootTable: "ghostDrop",
+  },
+
+  brownBear: {
+    base: { hp: 26, damage: 6, xpReward: 14 },
+    growthRate: { hp: 1.19, damage: 1.16, xpReward: 1.13 },
+    speedBase: 80,
+    speedMax: 130,
+    speedGrowthPerDepth: 2,
+    defenseGrowthEveryNDepths: 3,
+    lootTable: "brownBearDrop",
+  },
+  whiteBear: {
+    base: { hp: 26, damage: 6, xpReward: 14 },
+    growthRate: { hp: 1.19, damage: 1.16, xpReward: 1.13 },
+    speedBase: 80,
+    speedMax: 130,
+    speedGrowthPerDepth: 2,
+    defenseGrowthEveryNDepths: 3,
+    lootTable: "whiteBearDrop",
+  },
+  blackBear: {
+    base: { hp: 26, damage: 6, xpReward: 14 },
+    growthRate: { hp: 1.19, damage: 1.16, xpReward: 1.13 },
+    speedBase: 80,
+    speedMax: 130,
+    speedGrowthPerDepth: 2,
+    defenseGrowthEveryNDepths: 3,
+    lootTable: "blackBearDrop",
+  },
+
+  dwarf: {
+    base: { hp: 22, damage: 5, xpReward: 13 },
+    growthRate: { hp: 1.18, damage: 1.15, xpReward: 1.13 },
+    speedBase: 85,
+    speedMax: 135,
+    speedGrowthPerDepth: 2,
+    defenseGrowthEveryNDepths: 3,
+    lootTable: "dwarfDrop",
+  },
+
+  gargoyle: {
+    base: { hp: 24, damage: 5, xpReward: 13 },
+    growthRate: { hp: 1.19, damage: 1.16, xpReward: 1.13 },
+    speedBase: 75,
+    speedMax: 125,
+    speedGrowthPerDepth: 2,
+    defenseGrowthEveryNDepths: 3,
+    lootTable: "gargoyleDrop",
+  },
+
+  gnomeFou: {
+    base: { hp: 18, damage: 5, xpReward: 12 },
+    growthRate: { hp: 1.18, damage: 1.15, xpReward: 1.12 },
+    speedBase: 95,
+    speedMax: 150,
+    speedGrowthPerDepth: 3,
+    defenseGrowthEveryNDepths: 3,
+    lootTable: "gnomeFouDrop",
+  },
+
+  spider: {
+    base: { hp: 20, damage: 5, xpReward: 12 },
+    growthRate: { hp: 1.18, damage: 1.15, xpReward: 1.12 },
+    speedBase: 100,
+    speedMax: 155,
+    speedGrowthPerDepth: 3,
+    defenseGrowthEveryNDepths: 4,
+    lootTable: "spiderDrop",
+  },
+
+  vampire: {
+    attackType: "ranged",
+    base: { hp: 22, damage: 6, xpReward: 14 },
+    growthRate: { hp: 1.19, damage: 1.16, xpReward: 1.14 },
+    speedBase: 95,
+    speedMax: 150,
+    speedGrowthPerDepth: 2,
+    defenseGrowthEveryNDepths: 3,
+    lootTable: "vampireDrop",
+  },
+
+  warlockRed: {
+    attackType: "ranged",
+    base: { hp: 18, damage: 6, xpReward: 14 },
+    growthRate: { hp: 1.19, damage: 1.16, xpReward: 1.14 },
+    speedBase: 85,
+    speedMax: 140,
+    speedGrowthPerDepth: 2,
+    defenseGrowthEveryNDepths: 3,
+    lootTable: "warlockRedDrop",
+  },
+  warlockWhite: {
+    attackType: "ranged",
+    base: { hp: 18, damage: 6, xpReward: 14 },
+    growthRate: { hp: 1.19, damage: 1.16, xpReward: 1.14 },
+    speedBase: 85,
+    speedMax: 140,
+    speedGrowthPerDepth: 2,
+    defenseGrowthEveryNDepths: 3,
+    lootTable: "warlockWhiteDrop",
+  },
+  warlockGreen: {
+    attackType: "ranged",
+    base: { hp: 18, damage: 6, xpReward: 14 },
+    growthRate: { hp: 1.19, damage: 1.16, xpReward: 1.14 },
+    speedBase: 85,
+    speedMax: 140,
+    speedGrowthPerDepth: 2,
+    defenseGrowthEveryNDepths: 3,
+    lootTable: "warlockGreenDrop",
+  },
+  warlockBlue: {
+    attackType: "ranged",
+    base: { hp: 18, damage: 6, xpReward: 14 },
+    growthRate: { hp: 1.19, damage: 1.16, xpReward: 1.14 },
+    speedBase: 85,
+    speedMax: 140,
+    speedGrowthPerDepth: 2,
+    defenseGrowthEveryNDepths: 3,
+    lootTable: "warlockBlueDrop",
+  },
+  warlockBlack: {
+    attackType: "ranged",
+    base: { hp: 18, damage: 6, xpReward: 14 },
+    growthRate: { hp: 1.19, damage: 1.16, xpReward: 1.14 },
+    speedBase: 85,
+    speedMax: 140,
+    speedGrowthPerDepth: 2,
+    defenseGrowthEveryNDepths: 3,
+    lootTable: "warlockBlackDrop",
+  },
+  warlockPurple: {
+    attackType: "ranged",
+    base: { hp: 18, damage: 6, xpReward: 14 },
+    growthRate: { hp: 1.19, damage: 1.16, xpReward: 1.14 },
+    speedBase: 85,
+    speedMax: 140,
+    speedGrowthPerDepth: 2,
+    defenseGrowthEveryNDepths: 3,
+    lootTable: "warlockPurpleDrop",
+  },
+
+  zombie: {
+    base: { hp: 24, damage: 4, xpReward: 12 },
+    growthRate: { hp: 1.17, damage: 1.14, xpReward: 1.11 },
+    speedBase: 55,
+    speedMax: 95,
+    speedGrowthPerDepth: 1,
+    defenseGrowthEveryNDepths: 3,
+    lootTable: "zombieDrop",
+  },
+
+  greenSlime: {
+    base: { hp: 20, damage: 4, xpReward: 11 },
+    growthRate: { hp: 1.17, damage: 1.14, xpReward: 1.11 },
+    speedBase: 60,
+    speedMax: 100,
+    speedGrowthPerDepth: 1,
+    defenseGrowthEveryNDepths: 3,
+    lootTable: "greenSlimeDrop",
+  },
+  yellowSlime: {
+    base: { hp: 20, damage: 4, xpReward: 11 },
+    growthRate: { hp: 1.17, damage: 1.14, xpReward: 1.11 },
+    speedBase: 60,
+    speedMax: 100,
+    speedGrowthPerDepth: 1,
+    defenseGrowthEveryNDepths: 3,
+    lootTable: "yellowSlimeDrop",
+  },
+  blueSlime: {
+    base: { hp: 20, damage: 4, xpReward: 11 },
+    growthRate: { hp: 1.17, damage: 1.14, xpReward: 1.11 },
+    speedBase: 60,
+    speedMax: 100,
+    speedGrowthPerDepth: 1,
+    defenseGrowthEveryNDepths: 3,
+    lootTable: "blueSlimeDrop",
+  },
+  purpleSlime: {
+    base: { hp: 20, damage: 4, xpReward: 11 },
+    growthRate: { hp: 1.17, damage: 1.14, xpReward: 1.11 },
+    speedBase: 60,
+    speedMax: 100,
+    speedGrowthPerDepth: 1,
+    defenseGrowthEveryNDepths: 3,
+    lootTable: "purpleSlimeDrop",
+  },
+
+  darkelf: {
+    attackType: "ranged",
+    base: { hp: 20, damage: 6, xpReward: 14 },
+    growthRate: { hp: 1.2, damage: 1.17, xpReward: 1.14 },
+    speedBase: 100,
+    speedMax: 155,
+    speedGrowthPerDepth: 3,
+    defenseGrowthEveryNDepths: 3,
+    lootTable: "darkelfDrop",
+  },
+
+  golem: {
+    base: { hp: 40, damage: 7, xpReward: 18 },
+    growthRate: { hp: 1.17, damage: 1.14, xpReward: 1.12 },
+    speedBase: 55,
+    speedMax: 95,
+    speedGrowthPerDepth: 1,
+    defenseGrowthEveryNDepths: 3,
+    lootTable: "golemDrop",
+  },
+  golemEau: {
+    base: { hp: 40, damage: 7, xpReward: 18 },
+    growthRate: { hp: 1.17, damage: 1.14, xpReward: 1.12 },
+    speedBase: 55,
+    speedMax: 95,
+    speedGrowthPerDepth: 1,
+    defenseGrowthEveryNDepths: 3,
+    lootTable: "golemEauDrop",
+  },
+  golemFeu: {
+    base: { hp: 40, damage: 7, xpReward: 18 },
+    growthRate: { hp: 1.17, damage: 1.14, xpReward: 1.12 },
+    speedBase: 55,
+    speedMax: 95,
+    speedGrowthPerDepth: 1,
+    defenseGrowthEveryNDepths: 3,
+    lootTable: "golemFeuDrop",
+  },
+  golemFoudre: {
+    base: { hp: 40, damage: 7, xpReward: 18 },
+    growthRate: { hp: 1.17, damage: 1.14, xpReward: 1.12 },
+    speedBase: 55,
+    speedMax: 95,
+    speedGrowthPerDepth: 1,
+    defenseGrowthEveryNDepths: 3,
+    lootTable: "golemFoudreDrop",
+  },
+  golemGlace: {
+    base: { hp: 40, damage: 7, xpReward: 18 },
+    growthRate: { hp: 1.17, damage: 1.14, xpReward: 1.12 },
+    speedBase: 55,
+    speedMax: 95,
+    speedGrowthPerDepth: 1,
+    defenseGrowthEveryNDepths: 3,
+    lootTable: "golemGlaceDrop",
+  },
+  golemOmbre: {
+    base: { hp: 40, damage: 7, xpReward: 18 },
+    growthRate: { hp: 1.17, damage: 1.14, xpReward: 1.12 },
+    speedBase: 55,
+    speedMax: 95,
+    speedGrowthPerDepth: 1,
+    defenseGrowthEveryNDepths: 3,
+    lootTable: "golemOmbreDrop",
+  },
+
+  gorilla: {
+    base: { hp: 32, damage: 8, xpReward: 17 },
+    growthRate: { hp: 1.19, damage: 1.16, xpReward: 1.14 },
+    speedBase: 90,
+    speedMax: 140,
+    speedGrowthPerDepth: 2,
+    defenseGrowthEveryNDepths: 3,
+    lootTable: "gorillaDrop",
+  },
+
+  ogre: {
+    base: { hp: 36, damage: 9, xpReward: 19 },
+    growthRate: { hp: 1.2, damage: 1.17, xpReward: 1.15 },
+    speedBase: 65,
+    speedMax: 110,
+    speedGrowthPerDepth: 2,
+    defenseGrowthEveryNDepths: 3,
+    lootTable: "ogreDrop",
+  },
+
+  trollBlue: {
+    attackType: "ranged",
+    base: { hp: 38, damage: 8, xpReward: 18 },
+    growthRate: { hp: 1.19, damage: 1.16, xpReward: 1.14 },
+    speedBase: 60,
+    speedMax: 105,
+    speedGrowthPerDepth: 1,
+    defenseGrowthEveryNDepths: 3,
+    lootTable: "trollDrop",
+  },
+  trollGris: {
+    attackType: "ranged",
+    base: { hp: 38, damage: 8, xpReward: 18 },
+    growthRate: { hp: 1.19, damage: 1.16, xpReward: 1.14 },
+    speedBase: 60,
+    speedMax: 105,
+    speedGrowthPerDepth: 1,
+    defenseGrowthEveryNDepths: 3,
+    lootTable: "trollGrisDrop",
+  },
+  trollRose: {
+    attackType: "ranged",
+    base: { hp: 38, damage: 8, xpReward: 18 },
+    growthRate: { hp: 1.19, damage: 1.16, xpReward: 1.14 },
+    speedBase: 60,
+    speedMax: 105,
+    speedGrowthPerDepth: 1,
+    defenseGrowthEveryNDepths: 3,
+    lootTable: "trollRoseDrop",
+  },
+  trollRouge: {
+    attackType: "ranged",
+    base: { hp: 38, damage: 8, xpReward: 18 },
+    growthRate: { hp: 1.19, damage: 1.16, xpReward: 1.14 },
+    speedBase: 60,
+    speedMax: 105,
+    speedGrowthPerDepth: 1,
+    defenseGrowthEveryNDepths: 3,
+    lootTable: "trollRougeDrop",
+  },
+  trollVert: {
+    attackType: "ranged",
+    base: { hp: 38, damage: 8, xpReward: 18 },
+    growthRate: { hp: 1.19, damage: 1.16, xpReward: 1.14 },
+    speedBase: 60,
+    speedMax: 105,
+    speedGrowthPerDepth: 1,
+    defenseGrowthEveryNDepths: 3,
+    lootTable: "trollVertDrop",
+  },
+  trollViolet: {
+    attackType: "ranged",
+    base: { hp: 38, damage: 8, xpReward: 18 },
+    growthRate: { hp: 1.19, damage: 1.16, xpReward: 1.14 },
+    speedBase: 60,
+    speedMax: 105,
+    speedGrowthPerDepth: 1,
+    defenseGrowthEveryNDepths: 3,
+    lootTable: "trollVioletDrop",
+  },
+
+  redbeetle: {
+    base: { hp: 30, damage: 7, xpReward: 16 },
+    growthRate: { hp: 1.18, damage: 1.15, xpReward: 1.13 },
+    speedBase: 85,
+    speedMax: 135,
+    speedGrowthPerDepth: 2,
+    defenseGrowthEveryNDepths: 3,
+    lootTable: "redbeetleDrop",
+  },
+
+  skeleton: {
+    base: { hp: 26, damage: 6, xpReward: 15 },
+    growthRate: { hp: 1.18, damage: 1.15, xpReward: 1.13 },
+    speedBase: 90,
+    speedMax: 140,
+    speedGrowthPerDepth: 2,
+    defenseGrowthEveryNDepths: 3,
+    lootTable: "skeletonDrop",
+  },
+
+  blackdragon: {
+    attackType: "ranged",
+    base: { hp: 48, damage: 12, xpReward: 28 },
+    growthRate: { hp: 1.21, damage: 1.18, xpReward: 1.16 },
+    speedBase: 75,
+    speedMax: 125,
+    speedGrowthPerDepth: 2,
+    defenseGrowthEveryNDepths: 2,
+    lootTable: "blackdragonDrop",
+  },
+
+  demonDragon: {
+    attackType: "ranged",
+    base: { hp: 50, damage: 13, xpReward: 29 },
+    growthRate: { hp: 1.21, damage: 1.18, xpReward: 1.16 },
+    speedBase: 75,
+    speedMax: 125,
+    speedGrowthPerDepth: 2,
+    defenseGrowthEveryNDepths: 2,
+    lootTable: "demonDragonDrop",
+  },
+
+  greendragon: {
+    attackType: "ranged",
+    base: { hp: 46, damage: 11, xpReward: 27 },
+    growthRate: { hp: 1.2, damage: 1.17, xpReward: 1.15 },
+    speedBase: 75,
+    speedMax: 125,
+    speedGrowthPerDepth: 2,
+    defenseGrowthEveryNDepths: 2,
+    lootTable: "greendragonDrop",
+  },
+
+  skeletonking: {
+    base: { hp: 44, damage: 11, xpReward: 26 },
+    growthRate: { hp: 1.2, damage: 1.17, xpReward: 1.15 },
+    speedBase: 70,
+    speedMax: 120,
+    speedGrowthPerDepth: 2,
+    defenseGrowthEveryNDepths: 2,
+    lootTable: "skeletonkingDrop",
+  },
+
+  wormGiant: {
+    base: { hp: 42, damage: 10, xpReward: 24 },
+    growthRate: { hp: 1.19, damage: 1.16, xpReward: 1.14 },
+    speedBase: 55,
+    speedMax: 95,
+    speedGrowthPerDepth: 1,
+    defenseGrowthEveryNDepths: 2,
+    lootTable: "wormGiantDrop",
+  },
+
+  zombiequeen: {
+    base: { hp: 44, damage: 10, xpReward: 25 },
+    growthRate: { hp: 1.19, damage: 1.16, xpReward: 1.14 },
+    speedBase: 60,
+    speedMax: 100,
+    speedGrowthPerDepth: 1,
+    defenseGrowthEveryNDepths: 2,
+    lootTable: "zombiequeenDrop",
+  },
+
+  // ===== Variantes 'Strong' - environ x1.75 les stats de leur equivalent de base =====
+
+  // profil autonome (pas d'equivalent de base direct)
+  strongArcher: {
+    attackType: "ranged",
+    base: { hp: 34, damage: 11, xpReward: 26 },
+    growthRate: { hp: 1.2, damage: 1.17, xpReward: 1.15 },
+    speedBase: 90,
+    speedMax: 145,
+    speedGrowthPerDepth: 2,
+    defenseGrowthEveryNDepths: 2,
+    lootTable: "strongArcherDrop",
+  },
+
+  // ~x1.75 de 'bat'
+  strongBat: {
+    base: { hp: 18, damage: 3, xpReward: 14 },
+    growthRate: { hp: 1.15, damage: 1.12, xpReward: 1.1 },
+    speedBase: 120,
+    speedMax: 180,
+    speedGrowthPerDepth: 4,
+    defenseGrowthEveryNDepths: 4,
+    lootTable: "strongBatDrop",
+  },
+
+  // profil autonome (pas d'equivalent de base direct)
+  strongDemon: {
+    base: { hp: 46, damage: 13, xpReward: 28 },
+    growthRate: { hp: 1.21, damage: 1.18, xpReward: 1.16 },
+    speedBase: 75,
+    speedMax: 125,
+    speedGrowthPerDepth: 2,
+    defenseGrowthEveryNDepths: 2,
+    lootTable: "strongDemonDrop",
+  },
+
+  // ~x1.75 de 'demonDragon'
+  strongDemondragon: {
+    attackType: "ranged",
+    base: { hp: 88, damage: 22, xpReward: 52 },
+    growthRate: { hp: 1.23, damage: 1.2, xpReward: 1.18 },
+    speedBase: 75,
+    speedMax: 125,
+    speedGrowthPerDepth: 2,
+    defenseGrowthEveryNDepths: 2,
+    lootTable: "strongDemondragonDrop",
+  },
+
+  // profil autonome (pas d'equivalent de base direct)
+  strongDragon: {
+    attackType: "ranged",
+    base: { hp: 60, damage: 15, xpReward: 34 },
+    growthRate: { hp: 1.21, damage: 1.18, xpReward: 1.16 },
+    speedBase: 70,
+    speedMax: 120,
+    speedGrowthPerDepth: 2,
+    defenseGrowthEveryNDepths: 2,
+    lootTable: "strongDragonDrop",
+  },
+
+  // profil autonome (pas d'equivalent de base direct)
+  strongDragonbig: {
+    attackType: "ranged",
+    base: { hp: 75, damage: 18, xpReward: 40 },
+    growthRate: { hp: 1.22, damage: 1.19, xpReward: 1.17 },
+    speedBase: 55,
+    speedMax: 100,
+    speedGrowthPerDepth: 1,
+    defenseGrowthEveryNDepths: 2,
+    lootTable: "strongDragonbigDrop",
+  },
+
+  // ~x1.75 de 'dwarf'
+  strongDwarf: {
+    base: { hp: 38, damage: 8, xpReward: 23 },
+    growthRate: { hp: 1.2, damage: 1.17, xpReward: 1.15 },
+    speedBase: 85,
+    speedMax: 135,
+    speedGrowthPerDepth: 2,
+    defenseGrowthEveryNDepths: 2,
+    lootTable: "strongDwarfDrop",
+  },
+
+  // profil autonome (pas d'equivalent de base direct)
+  strongEagle: {
+    attackType: "ranged",
+    base: { hp: 26, damage: 9, xpReward: 20 },
+    growthRate: { hp: 1.19, damage: 1.16, xpReward: 1.14 },
+    speedBase: 130,
+    speedMax: 195,
+    speedGrowthPerDepth: 4,
+    defenseGrowthEveryNDepths: 3,
+    lootTable: "strongEagleDrop",
+  },
+
+  // ~x1.75 de 'gargoyle'
+  strongGargoyle: {
+    base: { hp: 42, damage: 8, xpReward: 23 },
+    growthRate: { hp: 1.21, damage: 1.18, xpReward: 1.15 },
+    speedBase: 75,
+    speedMax: 125,
+    speedGrowthPerDepth: 2,
+    defenseGrowthEveryNDepths: 2,
+    lootTable: "strongGargoyleDrop",
+  },
+
+  // ~x1.75 de 'gnomeFou'
+  strongGnome: {
+    base: { hp: 32, damage: 8, xpReward: 22 },
+    growthRate: { hp: 1.2, damage: 1.17, xpReward: 1.14 },
+    speedBase: 95,
+    speedMax: 150,
+    speedGrowthPerDepth: 3,
+    defenseGrowthEveryNDepths: 2,
+    lootTable: "strongGnomeDrop",
+  },
+
+  // ~x1.75 de 'golem'
+  strongGolem: {
+    base: { hp: 70, damage: 12, xpReward: 32 },
+    growthRate: { hp: 1.19, damage: 1.16, xpReward: 1.14 },
+    speedBase: 55,
+    speedMax: 95,
+    speedGrowthPerDepth: 1,
+    defenseGrowthEveryNDepths: 2,
+    lootTable: "strongGolemDrop",
+  },
+
+  // ~x1.75 de 'ogre'
+  strongOgre: {
+    base: { hp: 63, damage: 15, xpReward: 34 },
+    growthRate: { hp: 1.22, damage: 1.19, xpReward: 1.17 },
+    speedBase: 65,
+    speedMax: 110,
+    speedGrowthPerDepth: 2,
+    defenseGrowthEveryNDepths: 2,
+    lootTable: "strongOgreDrop",
+  },
+
+  // ~x1.75 de 'redbeetle'
+  strongRedbeetle: {
+    base: { hp: 52, damage: 12, xpReward: 29 },
+    growthRate: { hp: 1.2, damage: 1.17, xpReward: 1.15 },
+    speedBase: 85,
+    speedMax: 135,
+    speedGrowthPerDepth: 2,
+    defenseGrowthEveryNDepths: 2,
+    lootTable: "strongRedbeetleDrop",
+  },
+
+  // ~x1.75 de 'skeleton'
+  strongSkeleton: {
+    base: { hp: 46, damage: 10, xpReward: 27 },
+    growthRate: { hp: 1.2, damage: 1.17, xpReward: 1.15 },
+    speedBase: 90,
+    speedMax: 140,
+    speedGrowthPerDepth: 2,
+    defenseGrowthEveryNDepths: 2,
+    lootTable: "strongSkeletonDrop",
+  },
+
+  // ~x1.75 de 'skeletonking'
+  strongSkeletonKing: {
+    base: { hp: 77, damage: 19, xpReward: 47 },
+    growthRate: { hp: 1.22, damage: 1.19, xpReward: 1.17 },
+    speedBase: 70,
+    speedMax: 120,
+    speedGrowthPerDepth: 2,
+    defenseGrowthEveryNDepths: 2,
+    lootTable: "strongSkeletonKingDrop",
+  },
+
+  // ~x1.75 de 'slime'
+  strongSlime: {
+    base: { hp: 35, damage: 7, xpReward: 20 },
+    growthRate: { hp: 1.19, damage: 1.16, xpReward: 1.13 },
+    speedBase: 60,
+    speedMax: 100,
+    speedGrowthPerDepth: 1,
+    defenseGrowthEveryNDepths: 2,
+    lootTable: "strongSlimeDrop",
+  },
+
+  // ~x1.75 de 'spider'
+  strongSpider: {
+    base: { hp: 35, damage: 8, xpReward: 22 },
+    growthRate: { hp: 1.2, damage: 1.17, xpReward: 1.14 },
+    speedBase: 100,
+    speedMax: 155,
+    speedGrowthPerDepth: 3,
+    defenseGrowthEveryNDepths: 3,
+    lootTable: "strongSpiderDrop",
+  },
+
+  // ~x1.75 de 'warlock'
+  strongWarlock: {
+    attackType: "ranged",
+    base: { hp: 32, damage: 10, xpReward: 25 },
+    growthRate: { hp: 1.21, damage: 1.18, xpReward: 1.16 },
+    speedBase: 85,
+    speedMax: 140,
+    speedGrowthPerDepth: 2,
+    defenseGrowthEveryNDepths: 2,
+    lootTable: "strongWarlockDrop",
+  },
+
+  // ~x1.75 de 'worm'
+  strongWorm: {
+    base: { hp: 18, damage: 3, xpReward: 14 },
+    growthRate: { hp: 1.15, damage: 1.12, xpReward: 1.1 },
+    speedBase: 70,
+    speedMax: 110,
+    speedGrowthPerDepth: 2,
+    defenseGrowthEveryNDepths: 4,
+    lootTable: "strongWormDrop",
+  },
+
+  // ~x1.75 de 'zombie'
+  strongZombie: {
+    base: { hp: 42, damage: 7, xpReward: 22 },
+    growthRate: { hp: 1.19, damage: 1.16, xpReward: 1.13 },
+    speedBase: 55,
+    speedMax: 95,
+    speedGrowthPerDepth: 1,
+    defenseGrowthEveryNDepths: 2,
+    lootTable: "strongZombieDrop",
+  },
+
+  // ===== Petites familles numerotees (snake/spider/worm) - meme profil que bat1a/bee1 =====
+
+  snake1: {
+    base: { hp: 8, damage: 2, xpReward: 7 },
+    growthRate: { hp: 1.13, damage: 1.1, xpReward: 1.08 },
+    speedBase: 120,
+    speedMax: 180,
+    speedGrowthPerDepth: 4,
+    defenseGrowthEveryNDepths: 5,
+    lootTable: "snake1Drop",
+  },
+
+  snake2: {
+    base: { hp: 10, damage: 3, xpReward: 9 },
+    growthRate: { hp: 1.14, damage: 1.11, xpReward: 1.09 },
+    speedBase: 120,
+    speedMax: 180,
+    speedGrowthPerDepth: 4,
+    defenseGrowthEveryNDepths: 5,
+    lootTable: "snake2Drop",
+  },
+
+  snake3: {
+    base: { hp: 12, damage: 4, xpReward: 11 },
+    growthRate: { hp: 1.15, damage: 1.12, xpReward: 1.1 },
+    speedBase: 120,
+    speedMax: 180,
+    speedGrowthPerDepth: 4,
+    defenseGrowthEveryNDepths: 5,
+    lootTable: "snake3Drop",
+  },
+
+  snake4: {
+    base: { hp: 14, damage: 5, xpReward: 13 },
+    growthRate: { hp: 1.16, damage: 1.13, xpReward: 1.11 },
+    speedBase: 120,
+    speedMax: 180,
+    speedGrowthPerDepth: 4,
+    defenseGrowthEveryNDepths: 5,
+    lootTable: "snake4Drop",
+  },
+
+  spider1: {
+    base: { hp: 8, damage: 2, xpReward: 7 },
+    growthRate: { hp: 1.13, damage: 1.1, xpReward: 1.08 },
+    speedBase: 120,
+    speedMax: 180,
+    speedGrowthPerDepth: 4,
+    defenseGrowthEveryNDepths: 5,
+    lootTable: "spider1Drop",
+  },
+
+  spider2: {
+    base: { hp: 10, damage: 3, xpReward: 9 },
+    growthRate: { hp: 1.14, damage: 1.11, xpReward: 1.09 },
+    speedBase: 120,
+    speedMax: 180,
+    speedGrowthPerDepth: 4,
+    defenseGrowthEveryNDepths: 5,
+    lootTable: "spider2Drop",
+  },
+
+  spider3: {
+    base: { hp: 12, damage: 4, xpReward: 11 },
+    growthRate: { hp: 1.15, damage: 1.12, xpReward: 1.1 },
+    speedBase: 120,
+    speedMax: 180,
+    speedGrowthPerDepth: 4,
+    defenseGrowthEveryNDepths: 5,
+    lootTable: "spider3Drop",
+  },
+
+  worm1: {
+    base: { hp: 10, damage: 3, xpReward: 8 },
+    growthRate: { hp: 1.14, damage: 1.11, xpReward: 1.09 },
+    speedBase: 70,
+    speedMax: 110,
+    speedGrowthPerDepth: 2,
+    defenseGrowthEveryNDepths: 5,
+    lootTable: "worm1Drop",
+  },
+
+  // ===== miniDragon1..6 - petits dragons a distance, en famille croissante =====
+
+  miniDragon1: {
+    attackType: "ranged",
+    base: { hp: 20, damage: 6, xpReward: 14 },
+    growthRate: { hp: 1.19, damage: 1.16, xpReward: 1.14 },
+    speedBase: 80,
+    speedMax: 130,
+    speedGrowthPerDepth: 2,
+    defenseGrowthEveryNDepths: 4,
+    lootTable: "miniDragon1Drop",
+  },
+
+  miniDragon2: {
+    attackType: "ranged",
+    base: { hp: 25, damage: 8, xpReward: 17 },
+    growthRate: { hp: 1.2, damage: 1.17, xpReward: 1.15 },
+    speedBase: 75,
+    speedMax: 125,
+    speedGrowthPerDepth: 2,
+    defenseGrowthEveryNDepths: 4,
+    lootTable: "miniDragon2Drop",
+  },
+
+  miniDragon3: {
+    attackType: "ranged",
+    base: { hp: 30, damage: 10, xpReward: 20 },
+    growthRate: { hp: 1.21, damage: 1.18, xpReward: 1.16 },
+    speedBase: 70,
+    speedMax: 120,
+    speedGrowthPerDepth: 2,
+    defenseGrowthEveryNDepths: 4,
+    lootTable: "miniDragon3Drop",
+  },
+
+  miniDragon4: {
+    attackType: "ranged",
+    base: { hp: 35, damage: 12, xpReward: 23 },
+    growthRate: { hp: 1.21, damage: 1.18, xpReward: 1.16 },
+    speedBase: 65,
+    speedMax: 115,
+    speedGrowthPerDepth: 2,
+    defenseGrowthEveryNDepths: 4,
+    lootTable: "miniDragon4Drop",
+  },
+
+  miniDragon5: {
+    attackType: "ranged",
+    base: { hp: 40, damage: 14, xpReward: 26 },
+    growthRate: { hp: 1.22, damage: 1.19, xpReward: 1.17 },
+    speedBase: 60,
+    speedMax: 110,
+    speedGrowthPerDepth: 2,
+    defenseGrowthEveryNDepths: 4,
+    lootTable: "miniDragon5Drop",
+  },
+
+  miniDragon6: {
+    attackType: "ranged",
+    base: { hp: 45, damage: 16, xpReward: 29 },
+    growthRate: { hp: 1.23, damage: 1.2, xpReward: 1.18 },
+    speedBase: 55,
+    speedMax: 105,
+    speedGrowthPerDepth: 2,
+    defenseGrowthEveryNDepths: 4,
+    lootTable: "miniDragon6Drop",
+  },
+
+  // ===== plantMonster1..2 - stationnaires, lentes =====
+
+  plantMonster1: {
+    base: { hp: 10, damage: 3, xpReward: 8 },
+    growthRate: { hp: 1.15, damage: 1.12, xpReward: 1.1 },
+    speedBase: 70,
+    speedMax: 100,
+    speedGrowthPerDepth: 1,
+    defenseGrowthEveryNDepths: 4,
+    lootTable: "plantMonster1Drop",
+  },
+
+  plantMonster2: {
+    base: { hp: 14, damage: 4, xpReward: 10 },
+    growthRate: { hp: 1.17, damage: 1.14, xpReward: 1.12 },
+    speedBase: 70,
+    speedMax: 100,
+    speedGrowthPerDepth: 1,
+    defenseGrowthEveryNDepths: 4,
+    lootTable: "plantMonster2Drop",
+  },
+
+  // ===== Boss (etage complet dedie, bien au-dessus des mobs standards) =====
+
+  // boss volant rapide, degats moderes compenses par la vitesse
+  bigbat: {
+    base: { hp: 130, damage: 18, xpReward: 90 },
+    growthRate: { hp: 1.16, damage: 1.13, xpReward: 1.11 },
+    speedBase: 100,
+    speedMax: 160,
+    speedGrowthPerDepth: 3,
+    defenseGrowthEveryNDepths: 2,
+    lootTable: "bigbatDrop",
+  },
+
+  // boss spectral, attaques a distance
+  ghostskull: {
+    attackType: "ranged",
+    base: { hp: 140, damage: 20, xpReward: 95 },
+    growthRate: { hp: 1.16, damage: 1.13, xpReward: 1.11 },
+    speedBase: 85,
+    speedMax: 135,
+    speedGrowthPerDepth: 2,
+    defenseGrowthEveryNDepths: 2,
+    lootTable: "ghostskullDrop",
+  },
+
+  // boss tanky, empoisonnement possible a ajouter via inflictsEffect plus tard
+  bigspider: {
+    base: { hp: 150, damage: 22, xpReward: 100 },
+    growthRate: { hp: 1.16, damage: 1.13, xpReward: 1.11 },
+    speedBase: 80,
+    speedMax: 130,
+    speedGrowthPerDepth: 2,
+    defenseGrowthEveryNDepths: 2,
+    lootTable: "bigspiderDrop",
+  },
+
+  boneking1: {
+    base: { hp: 160, damage: 24, xpReward: 105 },
+    growthRate: { hp: 1.16, damage: 1.13, xpReward: 1.11 },
+    speedBase: 70,
+    speedMax: 115,
+    speedGrowthPerDepth: 2,
+    defenseGrowthEveryNDepths: 2,
+    lootTable: "boneking1Drop",
+  },
+
+  // evolution de boneking1, legerement plus fort
+  boneking2: {
+    base: { hp: 175, damage: 26, xpReward: 115 },
+    growthRate: { hp: 1.17, damage: 1.14, xpReward: 1.12 },
+    speedBase: 70,
+    speedMax: 115,
+    speedGrowthPerDepth: 2,
+    defenseGrowthEveryNDepths: 2,
+    lootTable: "boneking2Drop",
+  },
+
+  // boss final de la lignee dragon, le plus puissant du lot
+  dragon: {
+    attackType: "ranged",
+    base: { hp: 200, damage: 30, xpReward: 140 },
+    growthRate: { hp: 1.17, damage: 1.14, xpReward: 1.12 },
+    speedBase: 65,
+    speedMax: 110,
+    speedGrowthPerDepth: 2,
+    defenseGrowthEveryNDepths: 2,
+    lootTable: "dragonDrop",
+  },
+
+  giantant: {
+    base: { hp: 145, damage: 21, xpReward: 98 },
+    growthRate: { hp: 1.16, damage: 1.13, xpReward: 1.11 },
+    speedBase: 90,
+    speedMax: 140,
+    speedGrowthPerDepth: 3,
+    defenseGrowthEveryNDepths: 2,
+    lootTable: "giantantDrop",
+  },
+
+  // attaque a distance (regard petrifiant a thematiser plus tard)
+  medusa: {
+    attackType: "ranged",
+    base: { hp: 155, damage: 22, xpReward: 100 },
+    growthRate: { hp: 1.16, damage: 1.13, xpReward: 1.11 },
+    speedBase: 75,
+    speedMax: 120,
+    speedGrowthPerDepth: 2,
+    defenseGrowthEveryNDepths: 2,
+    lootTable: "medusaDrop",
   },
 };
 

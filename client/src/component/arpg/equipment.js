@@ -16,11 +16,15 @@ export function computeEquipmentBonuses(equipped) {
     rangedDamage: 0,
     defense: 0,
     maxHp: 0,
+    hpRegen: 0,
     meleeRange: 0,
     rangedRange: 0,
     visionRadius: 0,
     moveSpeed: 0,
     mana: 0,
+    manaRegen: 0,
+    stamina: 0,
+    staminaRegen: 0,
   };
 
   for (const itemId of Object.values(equipped || {})) {
