@@ -186,6 +186,7 @@ export default function Arpg() {
   const [upstairsPrompt, setUpstairsPrompt] = useState(null);
   const [exitPrompt, setExitPrompt] = useState(null);
   const [resummonPrompt, setResummonPrompt] = useState(null);
+  const [summonReplacePrompt, setSummonReplacePrompt] = useState(null);
   const [inventory, setInventory] = useState([]);
   const [equipped, setEquipped] = useState({
     mainHand: null,
@@ -393,6 +394,9 @@ export default function Arpg() {
       scene.events.on("upstairs-prompt", (data) => setUpstairsPrompt(data));
       scene.events.on("exit-prompt", (data) => setExitPrompt(data));
       scene.events.on("resummon-prompt", (data) => setResummonPrompt(data));
+      scene.events.on("summon-replace-prompt", (data) =>
+        setSummonReplacePrompt(data),
+      );
       scene.events.on("inventory-updated", (inv) => setInventory(inv));
       scene.events.on("chest-screen", (data) => setChestScreenData(data));
       scene.events.on("travel-hub", (destinations) =>
@@ -500,6 +504,16 @@ export default function Arpg() {
   const handleCancelResummon = useCallback(() => {
     const scene = gameRef.current?.scene.getScene("MainScene");
     if (scene) scene.cancelResummon();
+  }, []);
+
+  const handleConfirmSummonReplace = useCallback(() => {
+    const scene = gameRef.current?.scene.getScene("MainScene");
+    if (scene) scene.confirmSummonReplace();
+  }, []);
+
+  const handleCancelSummonReplace = useCallback(() => {
+    const scene = gameRef.current?.scene.getScene("MainScene");
+    if (scene) scene.cancelSummonReplace();
   }, []);
 
   const handleEquip = (index) => {
@@ -709,6 +723,12 @@ export default function Arpg() {
         { label: "Non", onClick: handleCancelResummon },
       ];
     }
+    if (summonReplacePrompt) {
+      return [
+        { label: "Oui", onClick: handleConfirmSummonReplace },
+        { label: "Non", onClick: handleCancelSummonReplace },
+      ];
+    }
     if (npcDialog) {
       const actions = [];
       if (npcDialog.canAccept)
@@ -723,6 +743,7 @@ export default function Arpg() {
     exitPrompt,
     upstairsPrompt,
     resummonPrompt,
+    summonReplacePrompt,
     npcDialog,
     chestScreenData,
     levelUpScreenOpen,
@@ -732,6 +753,8 @@ export default function Arpg() {
     handleCancelUpstairs,
     handleConfirmResummon,
     handleCancelResummon,
+    handleConfirmSummonReplace,
+    handleCancelSummonReplace,
     handleAcceptQuest,
     handleTurnInQuest,
     handleCloseDialog,
@@ -1750,7 +1773,7 @@ export default function Arpg() {
             </div>
           </div>
         )}
-        {resummonPrompt && (
+        {summonReplacePrompt && (
           <div
             style={{
               position: "absolute",
@@ -1767,11 +1790,12 @@ export default function Arpg() {
             }}
           >
             <div>
-              {resummonPrompt.name} est déjà invoquée. Renouveler ses stats ?
+              {summonReplacePrompt.victimName} va disparaître pour laisser la
+              place à {summonReplacePrompt.newName}. Continuer ?
             </div>
             <div style={{ display: "flex", gap: 12 }}>
               <button
-                onClick={handleConfirmResummon}
+                onClick={handleConfirmSummonReplace}
                 style={{
                   padding: "8px 20px",
                   fontSize: 14,
@@ -1786,7 +1810,7 @@ export default function Arpg() {
                 Oui
               </button>
               <button
-                onClick={handleCancelResummon}
+                onClick={handleCancelSummonReplace}
                 style={{
                   padding: "8px 20px",
                   fontSize: 14,

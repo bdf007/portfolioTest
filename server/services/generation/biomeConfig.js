@@ -28,9 +28,9 @@ const BIOMES = [
     maxDepth: 2,
     generator: "cavechain",
     tileset: "muddyCave_0_0",
-    enemyBaseCount: 5,
+    enemyBaseCount: 10,
     bossRoomSize: 40,
-    enemyTypes: ["angryBrownMushroom", "gnome"],
+    enemyTypes: ["angryBrownMushroom", "gnome", "angryTrent", "yellowSlime"],
     decorationConfig: {
       count: [25, 35], // genereux - c'est fait pour remplir le biome
       decorTypes: ["rock_small"], // cles arbitraires, a adapter
@@ -82,7 +82,7 @@ const BIOMES = [
     generatorParams: {
       width: 40,
       height: 40,
-      roomSize: 5,
+      roomSize: 8,
       roomCount: 10,
       stratBias: 0.8,
       doorWidth: 2,
@@ -94,9 +94,15 @@ const BIOMES = [
     maxDepth: 4,
     generator: "cellular",
     tileset: "mines2",
-    enemyBaseCount: 5,
+    enemyBaseCount: 15,
     bossRoomSize: 40,
-    enemyTypes: ["angryBrownMushroom", "gnome"],
+    enemyTypes: [
+      "angryBrownMushroom",
+      "gnome",
+      "bat",
+      "warlockRed",
+      "golemEau",
+    ],
     decorationConfig: {
       count: [50, 100], // genereux - c'est fait pour remplir le biome
       decorTypes: ["rock_small"], // cles arbitraires, a adapter
@@ -158,9 +164,15 @@ const BIOMES = [
     maxDepth: 6,
     generator: "bsp",
     tileset: "mines2",
-    enemyBaseCount: 5,
+    enemyBaseCount: 15,
     bossRoomSize: 40,
-    enemyTypes: ["angryBrownMushroom", "gnome"],
+    enemyTypes: [
+      "angryBrownMushroom",
+      "gnome",
+      "trollBlue",
+      "orqueGrey",
+      "massecailleBlue",
+    ],
     decorationConfig: {
       count: [50, 100], // genereux - c'est fait pour remplir le biome
       decorTypes: ["rock_small", "bush", "flower_patch"], // cles arbitraires, a adapter
@@ -221,9 +233,9 @@ const BIOMES = [
     maxDepth: 7,
     generator: "drunkardwalk",
     tileset: "summerForest_0_1",
-    enemyBaseCount: 5,
+    enemyBaseCount: 20,
     bossRoomSize: 40,
-    enemyTypes: ["angryTrent"],
+    enemyTypes: ["angryTrent", "knightBleuArgent", "blueWarriorMushroom"],
     decorationConfig: {
       count: [50, 70], // genereux - c'est fait pour remplir le biome
       decorTypes: ["rock_small", "bush", "flower_patch"], // cles arbitraires, a adapter
@@ -282,8 +294,8 @@ const BIOMES = [
     maxDepth: 8,
     generator: "noise",
     tileset: "hills1",
-    enemyBaseCount: 5,
-    enemyTypes: ["gnome"],
+    enemyBaseCount: 20,
+    enemyTypes: ["gnome", "blueSlime", "warlockBlack", "blackBear"],
     decorationConfig: {
       count: [50, 100], // genereux - c'est fait pour remplir le biome
       decorTypes: ["rock_small", "bush", "flower_patch"], // cles arbitraires, a adapter

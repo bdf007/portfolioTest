@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { resolveItemDef } from "./itemDefs";
+import { resolveAbilityDef } from "./abilityDefs";
 import { CRAFTING_RECIPES } from "./craftingRecipes";
 import {
   SPRITE_REGISTRY,
@@ -79,7 +80,14 @@ export function groupInventory(inventory) {
   return [...groups.values()];
 }
 
-function TintedItemIcon({ itemId, scale, frameIndex, spriteSheet, tint }) {
+function TintedItemIcon({
+  itemId,
+  scale,
+  frameIndex,
+  spriteSheet,
+  tint,
+  extraFilter,
+}) {
   const canvasRef = useRef(null);
 
   useEffect(() => {
@@ -134,7 +142,6 @@ function TintedItemIcon({ itemId, scale, frameIndex, spriteSheet, tint }) {
       ctx.globalCompositeOperation = "source-over";
     };
   }, [itemId, scale, frameIndex, spriteSheet, tint]);
-
   return (
     <canvas
       ref={canvasRef}
@@ -143,12 +150,14 @@ function TintedItemIcon({ itemId, scale, frameIndex, spriteSheet, tint }) {
         height: spriteSheet.frameHeight * scale,
         imageRendering: "pixelated",
         flexShrink: 0,
+        filter: extraFilter || "none",
       }}
     />
   );
 }
 
-const WOOD_ICON_TINTS = {
+const ICON_TINTS = {
+  // teintes pour les différentes essences de bois
   oakWood: null,
   ashWood: "#c9b896",
   yewWood: "#8a6d3b",
@@ -161,9 +170,288 @@ const WOOD_ICON_TINTS = {
   sacredWood: "#bfc1c1",
   eternalWood: "#4a7c59",
   starwood: "#3851f3",
+
+  // teintes pour les différents monterCore unique.
+  monsterCore: null,
+  angryBrownMushroomCore: "#8b4513",
+  summonAngryBrownMushroomScroll: "#8b4513",
+  gnomeCore: "#80ee6f",
+  summonGnomeScroll: "#80ee6f",
+  gnomeClaw: "#80ee6f",
+  gnomeFurTuft: "#80ee6f",
+  angryTrentCore: "#4a7c59",
+  summonAngryTrentScroll: "#4a7c59",
+  woodAngryTrent: "#4a7c59",
+  knifedBatCore: "#140953",
+  summonKnifedBatScroll: "#140953",
+  batFur: "#140953",
+  batEye: "#140953",
+  deer1Core: "#8b4513",
+  summonDeer1Scroll: "#8b4513",
+  deerHoof: "#8b4513",
+  deerMeat: "#8b4513",
+  deerBone: "#8b4513",
+  mudGolemCore: "#60410f",
+  summonMudGolemScroll: "#60410f",
+  redBeetleCore: "#cccccc",
+  summonRedBeetleScroll: "#cccccc",
+  pinkOgreCore: "#cccccc",
+  summonPinkOgreScroll: "#cccccc",
+  alien1Core: "#cccccc",
+  summonAlien1Scroll: "#cccccc",
+  alien2Core: "#cccccc",
+  summonAlien2Scroll: "#cccccc",
+  alien3Core: "#cccccc",
+  summonAlien3Scroll: "#cccccc",
+  alien4Core: "#cccccc",
+  summonAlien4Scroll: "#cccccc",
+  alien5Core: "#cccccc",
+  summonAlien5Scroll: "#cccccc",
+  alien6Core: "#cccccc",
+  summonAlien6Scroll: "#cccccc",
+  alien7Core: "#cccccc",
+  summonAlien7Scroll: "#cccccc",
+  alien8Core: "#cccccc",
+  summonAlien8Scroll: "#cccccc",
+  alien9Core: "#cccccc",
+  summonAlien9Scroll: "#cccccc",
+  alien10Core: "#cccccc",
+  summonAlien10Scroll: "#cccccc",
+  batCore: "#cccccc",
+  summonBatScroll: "#cccccc",
+  brownBearCore: "#cccccc",
+  summonBearScroll: "#cccccc",
+  beeCore: "#cccccc",
+  summonBeeScroll: "#cccccc",
+  bigtickCore: "#cccccc",
+  summonBigtickScroll: "#cccccc",
+  blackdragonCore: "#cccccc",
+  summonBlackdragonScroll: "#cccccc",
+  darkelfCore: "#cccccc",
+  summonDarkelfScroll: "#cccccc",
+  demonDragonCore: "#cccccc",
+  summonDemonDragonScroll: "#cccccc",
+  dwarfCore: "#cccccc",
+  summonDwarfScroll: "#cccccc",
+  fantasy1Core: "#cccccc",
+  summonFantasy1Scroll: "#cccccc",
+  fantasy2Core: "#cccccc",
+  summonFantasy2Scroll: "#cccccc",
+  fantasy3Core: "#cccccc",
+  summonFantasy3Scroll: "#cccccc",
+  fantasy4Core: "#cccccc",
+  summonFantasy4Scroll: "#cccccc",
+  orqueGreenCore: "#cccccc",
+  summonOrqueGreenScroll: "#cccccc",
+  redWarriorMushroomCore: "#cccccc",
+  summonRedWarriorMushroomScroll: "#cccccc",
+  fantasy7Core: "#cccccc",
+  summonFantasy7Scroll: "#cccccc",
+  massecailleBlueCore: "#cccccc",
+  summonMassecailleBlueScroll: "#cccccc",
+  fantasy9Core: "#cccccc",
+  summonFantasy9Scroll: "#cccccc",
+  knightJauneRougeCore: "#cccccc",
+  summonKnightJauneRougeScroll: "#cccccc",
+  gargoyleCore: "#cccccc",
+  summonGargoyleScroll: "#cccccc",
+  ghostCore: "#cccccc",
+  summonGhostScroll: "#cccccc",
+  gnomeFouCore: "#cccccc",
+  summonGnomeFouScroll: "#cccccc",
+  golemCore: "#cccccc",
+  summonGolemScroll: "#cccccc",
+  gorillaCore: "#cccccc",
+  summonGorillaScroll: "#cccccc",
+  greendragonCore: "#cccccc",
+  summonGreendragonScroll: "#cccccc",
+  ogreCore: "#cccccc",
+  summonOgreScroll: "#cccccc",
+  redbeetleCore: "#cccccc",
+  summonRedbeetleScroll: "#cccccc",
+  robot1Core: "#cccccc",
+  summonRobot1Scroll: "#cccccc",
+  robot2Core: "#cccccc",
+  summonRobot2Scroll: "#cccccc",
+  robot3Core: "#cccccc",
+  summonRobot3Scroll: "#cccccc",
+  robot4Core: "#cccccc",
+  summonRobot4Scroll: "#cccccc",
+  robot5Core: "#cccccc",
+  summonRobot5Scroll: "#cccccc",
+  robot6Core: "#cccccc",
+  summonRobot6Scroll: "#cccccc",
+  robot7Core: "#cccccc",
+  summonRobot7Scroll: "#cccccc",
+  robot8Core: "#cccccc",
+  summonRobot8Scroll: "#cccccc",
+  robot9Core: "#cccccc",
+  summonRobot9Scroll: "#cccccc",
+  robot10Core: "#cccccc",
+  summonRobot10Scroll: "#cccccc",
+  skeletonCore: "#cccccc",
+  summonSkeletonScroll: "#cccccc",
+  skeletonkingCore: "#cccccc",
+  summonSkeletonkingScroll: "#cccccc",
+  greenSlimeCore: "#077e0f",
+  summonGreenSlimeScroll: "#077e0f",
+  spiderCore: "#cccccc",
+  summonSpiderScroll: "#cccccc",
+  yellowSlimeCore: "#f2ee0d",
+  summonYellowSlimeScroll: "#f2ee0d",
+  blueSlimeCore: "#0d4df2",
+  summonBlueSlimeScroll: "#0d4df2",
+  purpleSlimeCore: "#89065b",
+  summonPurpleSlimeScroll: "#89065b",
+  yellowWarriorMushroomCore: "#f6f608",
+  summonYellowWarriorMushroomScroll: "#f6f608",
+  blueWarriorMushroomCore: "#0e25d4",
+  summonBlueWarriorMushroomScroll: "#0e25d4",
+  greenWarriorMushroomCore: "#0d6b07",
+  summonGreenWarriorMushroomScroll: "#0d6b07",
+  purpleWarriorMushroomCore: "#52044c",
+  summonPurpleWarriorMushroomScroll: "#52044c",
+  blackBearCore: "#0500008d",
+  summonBlackBearScroll: "#0500008d",
+  blackBearFurTuft: "#0500008d",
+  whiteBearCore: "#fbf9f99b",
+  summonWhiteBearScroll: "#fbf9f99b",
+  knightBleuArgentCore: "#cccccc",
+  summonKnightBleuArgentScroll: "#cccccc",
+  knightNoirCramoisiCore: "#cccccc",
+  summonKnightNoirCramoisiScroll: "#cccccc",
+  knightVertOrCore: "#cccccc",
+  summonKnightVertOrScroll: "#cccccc",
+  knightVioletArgentCore: "#cccccc",
+  summonKnightVioletArgentScroll: "#cccccc",
+  massecaillePurpleCore: "#cccccc",
+  summonMassecaillePurpleScroll: "#cccccc",
+  massecailleGreenCore: "#cccccc",
+  summonMassecailleGreenScroll: "#cccccc",
+  massecailleRedCore: "#cccccc",
+  summonMassecailleRedScroll: "#cccccc",
+  massecailleYellowCore: "#cccccc",
+  summonMassecailleYellowScroll: "#cccccc",
+  orqueBlackCore: "#cccccc",
+  summonOrqueBlackScroll: "#cccccc",
+  orqueYellowCore: "#cccccc",
+  summonOrqueYellowScroll: "#cccccc",
+  orqueBlueCore: "#cccccc",
+  summonOrqueBlueScroll: "#cccccc",
+  orqueRedCore: "#cccccc",
+  summonOrqueRedScroll: "#cccccc",
+  orquePurpleCore: "#cccccc",
+  summonOrquePurpleScroll: "#cccccc",
+  orqueGreyCore: "#cccccc",
+  summonOrqueGreyScroll: "#cccccc",
+  orqueGreyFurTuft: "#cccccc",
+  trollBlueCore: "#cccccc",
+  summonTrollBlueScroll: "#cccccc",
+  trollBlueFurTuft: "#cccccc",
+  trollGrisCore: "#cccccc",
+  summonTrollGrisScroll: "#cccccc",
+  trollGrisFurTuft: "#cccccc",
+  trollRoseCore: "#cccccc",
+  summonTrollRoseScroll: "#cccccc",
+  trollRoseFurTuft: "#cccccc",
+  trollRougeCore: "#cccccc",
+  summonTrollRougeScroll: "#cccccc",
+  trollRougeFurTuft: "#cccccc",
+  trollVertCore: "#cccccc",
+  summonTrollVertScroll: "#cccccc",
+  trollVertFurTuft: "#cccccc",
+  trollVioletCore: "#cccccc",
+  summonTrollVioletScroll: "#cccccc",
+  trollVioletFurTuft: "#cccccc",
+  warlockRedCore: "#cccccc",
+  summonWarlockRedScroll: "#cccccc",
+  warlockWhiteCore: "#cccccc",
+  summonWarlockWhiteScroll: "#cccccc",
+  warlockGreenCore: "#cccccc",
+  summonWarlockGreenScroll: "#cccccc",
+  warlockBlueCore: "#cccccc",
+  summonWarlockBlueScroll: "#cccccc",
+  warlockBlackCore: "#cccccc",
+  summonWarlockBlackScroll: "#cccccc",
+  warlockPurpleCore: "#cccccc",
+  summonWarlockPurpleScroll: "#cccccc",
+
+  golemEauCore: "#cccccc",
+  summonGolemEauScroll: "#cccccc",
+  golemFeuCore: "#cccccc",
+  summonGolemFeuScroll: "#cccccc",
+  golemFoudreCore: "#cccccc",
+  summonGolemFoudreScroll: "#cccccc",
+  golemGlaceCore: "#cccccc",
+  summonGolemGlaceScroll: "#cccccc",
+  golemOmbreCore: "#cccccc",
+  summonGolemOmbreScroll: "#cccccc",
 };
 
+/**
+ * Pour une capacite d'invocation (effectType: "summon"), resout l'entree
+ * SPRITE_REGISTRY du monstre invoque - a condition qu'elle declare
+ * sheetCols/sheetRows explicites. Pas de valeur par defaut : chaque
+ * spritesheet de monstre a une disposition differente (certains avec
+ * attaque, d'autres non, certains partages entre plusieurs monstres), donc
+ * deviner une valeur reproduirait le bug des ceintures (rows errone).
+ */
+function resolveSummonIconEntry(id) {
+  const abilityDef = resolveAbilityDef(id);
+  if (abilityDef.effectType !== "summon" || !abilityDef.summonType) {
+    return null;
+  }
+  const entry = SPRITE_REGISTRY[abilityDef.summonType];
+  if (
+    !entry ||
+    entry.sheetCols === undefined ||
+    entry.sheetRows === undefined
+  ) {
+    return null;
+  }
+  return entry;
+}
+
 export function ItemIcon({ itemId, scale = 2 }) {
+  const summonEntry = resolveSummonIconEntry(itemId);
+  if (summonEntry) {
+    // Les spritesheets de monstres (48x48 ou plus) sont bien plus grandes
+    // que la feuille d'icones standard (32x32) - sans normalisation, une
+    // invocation s'afficherait beaucoup plus grande que les autres icones
+    // au meme "scale" et deborderait des emplacements a taille fixe (ex :
+    // la barre de raccourcis en jeu, 42x42 avec overflow: hidden)
+    const ICON_BASE_SIZE = 32;
+    const normalizedScale =
+      (ICON_BASE_SIZE /
+        Math.max(summonEntry.frameWidth, summonEntry.frameHeight)) *
+      scale;
+    const idleFrameIndex = summonEntry.animations.idleDown;
+    const col = idleFrameIndex % summonEntry.sheetCols;
+    const row = Math.floor(idleFrameIndex / summonEntry.sheetCols);
+    const sheetW = summonEntry.frameWidth * summonEntry.sheetCols;
+    const sheetH = summonEntry.frameHeight * summonEntry.sheetRows;
+    return (
+      <div
+        style={{
+          width: summonEntry.frameWidth * normalizedScale,
+          height: summonEntry.frameHeight * normalizedScale,
+          backgroundImage: `url(${summonEntry.path})`,
+          backgroundPosition: `
+            -${col * summonEntry.frameWidth * normalizedScale}px
+            -${row * summonEntry.frameHeight * normalizedScale}px
+          `,
+          backgroundSize: `
+            ${sheetW * normalizedScale}px
+            ${sheetH * normalizedScale}px
+          `,
+          backgroundRepeat: "no-repeat",
+          imageRendering: "pixelated",
+          flexShrink: 0,
+        }}
+      />
+    );
+  }
+
   let frameIndex;
   let spriteSheet;
 
@@ -211,7 +499,12 @@ export function ItemIcon({ itemId, scale = 2 }) {
 
   const sheetH = spriteSheet.frameHeight * spriteSheet.rows;
 
-  const tint = WOOD_ICON_TINTS[itemId];
+  const tint = ICON_TINTS[itemId];
+  const def = resolveItemDef(itemId);
+  const isUnique = def?.unique === true;
+  const uniqueGlow = isUnique
+    ? "drop-shadow(0 0 3px #ffd700) drop-shadow(0 0 5px #ffd700)"
+    : "none";
 
   if (tint) {
     return (
@@ -221,6 +514,7 @@ export function ItemIcon({ itemId, scale = 2 }) {
         frameIndex={frameIndex}
         spriteSheet={spriteSheet}
         tint={tint}
+        extraFilter={uniqueGlow}
       />
     );
   }
@@ -242,6 +536,7 @@ export function ItemIcon({ itemId, scale = 2 }) {
         backgroundRepeat: "no-repeat",
         imageRendering: "pixelated",
         flexShrink: 0,
+        filter: uniqueGlow,
       }}
     />
   );
@@ -256,6 +551,7 @@ export function ItemIcon({ itemId, scale = 2 }) {
  */
 export function hasIconFrame(id) {
   return (
+    resolveSummonIconEntry(id) !== null ||
     ICON_SHEET_1_FRAMES[id] !== undefined ||
     ICON_SHEET_2_FRAMES[id] !== undefined ||
     MONSTER_LOOTS_FRAMES[id] !== undefined ||

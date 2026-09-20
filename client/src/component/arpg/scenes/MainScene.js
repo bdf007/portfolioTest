@@ -1,4 +1,5 @@
 import Phaser from "phaser";
+import EasyStar from "easystarjs";
 import { fetchLevel, saveProgress } from "../../../api/arpgClient";
 import { createRng } from "../rng";
 import {
@@ -6,7 +7,6 @@ import {
   createFogState,
   computeVisibleTiles,
 } from "../fogOfWar";
-import { findPath } from "../pathfinding";
 import {
   createEnemyBehavior,
   decideNextState,
@@ -676,6 +676,68 @@ export default class MainScene extends Phaser.Scene {
     }
   }
 
+  buildPathfindingGrid() {
+    const width = this.map.width;
+    const height = this.map.height;
+    const grid = [];
+    for (let y = 0; y < height; y++) {
+      const row = [];
+      for (let x = 0; x < width; x++) {
+        const tile = this.layer.getTileAt(x, y);
+        row.push(tile && tile.collides ? 1 : 0);
+      }
+      grid.push(row);
+    }
+    this.easystar.setGrid(grid);
+  }
+
+  requestPath(fromX, fromY, toX, toY, callback) {
+    const fromTileX = Math.floor(fromX / TILE_SIZE);
+    const fromTileY = Math.floor(fromY / TILE_SIZE);
+    const toTileX = Math.floor(toX / TILE_SIZE);
+    const toTileY = Math.floor(toY / TILE_SIZE);
+
+    if (fromTileX === toTileX && fromTileY === toTileY) {
+      callback([{ x: toX, y: toY }]);
+      return;
+    }
+
+    this.easystar.findPath(fromTileX, fromTileY, toTileX, toTileY, (path) => {
+      if (!path || path.length === 0) {
+        callback(null);
+        return;
+      }
+      callback(
+        path.map((p) => ({
+          x: p.x * TILE_SIZE + TILE_SIZE / 2,
+          y: p.y * TILE_SIZE + TILE_SIZE / 2,
+        })),
+      );
+    });
+  }
+
+  followPathStep(entity, speed) {
+    if (!entity.path || entity.pathIndex >= entity.path.length) return null;
+
+    const wp = entity.path[entity.pathIndex];
+    const dx = wp.x - entity.sprite.x;
+    const dy = wp.y - entity.sprite.y;
+    const dist = Math.hypot(dx, dy);
+
+    if (dist < 6) {
+      entity.pathIndex += 1;
+      if (entity.pathIndex >= entity.path.length) {
+        entity.path = null;
+        return null;
+      }
+      return this.followPathStep(entity, speed);
+    }
+
+    const nx = dx / dist;
+    const ny = dy / dist;
+    return { vx: nx * speed, vy: ny * speed, nx, ny };
+  }
+
   create() {
     createParticleTexture(this, "particle-fire", 0xff6600);
     createParticleTexture(this, "particle-ice", 0x99ddff);
@@ -711,6 +773,11 @@ export default class MainScene extends Phaser.Scene {
 
     this.hero = null;
     this.layer = null;
+    this.easystar = new EasyStar.js();
+    this.easystar.setAcceptableTiles([0]);
+    this.easystar.enableDiagonals();
+    this.easystar.disableCornerCutting();
+    this.easystar.setIterationsPerCalculation(1000);
     this.fogLayer = null;
     this.fogState = null;
     this.fogGrid = null;
@@ -725,6 +792,7 @@ export default class MainScene extends Phaser.Scene {
     this.projectiles = [];
     this.enemyProjectiles = [];
     this.abilityProjectiles = [];
+    this.summonProjectiles = [];
     this.zones = [];
     this.traps = [];
     this.boomerangs = [];
@@ -2007,6 +2075,8 @@ export default class MainScene extends Phaser.Scene {
     this.enemyProjectiles = [];
     this.abilityProjectiles.forEach((p) => p.sprite.destroy());
     this.abilityProjectiles = [];
+    this.summonProjectiles.forEach((p) => p.sprite.destroy());
+    this.summonProjectiles = [];
     if (this.summonGroup) this.summonGroup.clear(false, false);
     const persistentSummons = this.summons.filter((s) => s.persistent);
     this.summons.forEach((s) => {
@@ -2944,6 +3014,8 @@ export default class MainScene extends Phaser.Scene {
     this.pendingBossPosition = null;
     this.pendingBossState = null;
 
+    this.buildPathfindingGrid();
+
     if (this.travelHubTile) {
       this.travelHubMarker = this.add.circle(
         this.travelHubTile.x * TILE_SIZE + TILE_SIZE / 2,
@@ -3641,6 +3713,7 @@ export default class MainScene extends Phaser.Scene {
     const { x, y } = this.bossDoorTile;
     this.layer.putTileAt(this.currentFloorTileIndex ?? 0, x, y);
     this.fogGrid[y][x] = 0;
+    this.buildPathfindingGrid();
 
     if (this.bossDoorMarker) {
       this.bossDoorMarker.destroy();
@@ -4544,11 +4617,13 @@ export default class MainScene extends Phaser.Scene {
     this.updateBossSummons();
     this.updateProjectiles();
     this.updateEnemyProjectiles();
+    this.updateSummonProjectiles();
     this.updateAbilityProjectiles();
     this.updateStatusEffects(now);
     this.updateNpcMovement(this.questNpcs);
     this.updateNpcMovement(this.ambientNpcs);
     this.updateSummons(this.time.now);
+    this.easystar.calculate();
     this.checkFloorTraps();
     if (this.wasStealthed && this.time.now >= this.stealthUntil) {
       this.tweens.add({
@@ -4760,17 +4835,27 @@ export default class MainScene extends Phaser.Scene {
       enemy.state = nextState;
 
       if (nextState === "chase") {
-        const path = findPath(
-          grid,
-          { x: ex, y: ey },
-          { x: targetTileX, y: targetTileY },
+        this.requestPath(
+          enemy.sprite.x,
+          enemy.sprite.y,
+          targetTileX * TILE_SIZE + TILE_SIZE / 2,
+          targetTileY * TILE_SIZE + TILE_SIZE / 2,
+          (path) => {
+            enemy.path = path;
+            enemy.pathIndex = 0;
+          },
         );
-        enemy.path = path;
-        enemy.pathIndex = path ? 1 : 0;
       } else if (nextState === "returning") {
-        const path = findPath(grid, { x: ex, y: ey }, enemy.home);
-        enemy.path = path;
-        enemy.pathIndex = path ? 1 : 0;
+        this.requestPath(
+          enemy.sprite.x,
+          enemy.sprite.y,
+          enemy.home.x * TILE_SIZE + TILE_SIZE / 2,
+          enemy.home.y * TILE_SIZE + TILE_SIZE / 2,
+          (path) => {
+            enemy.path = path;
+            enemy.pathIndex = 0;
+          },
+        );
       }
     }
   }
@@ -4847,11 +4932,7 @@ export default class MainScene extends Phaser.Scene {
           continue;
         }
 
-        if (
-          !enemy.path ||
-          enemy.pathIndex >= enemy.path.length ||
-          stopForMelee
-        ) {
+        if (stopForMelee) {
           enemy.sprite.setVelocity(0, 0);
           enemy.sprite.anims.play(
             enemy.spriteKey + "-idle-" + enemy.lastDir,
@@ -4859,12 +4940,31 @@ export default class MainScene extends Phaser.Scene {
           );
           continue;
         }
-        this.moveEnemyToward(
+        const step = this.followPathStep(
           enemy,
-          enemy.path[enemy.pathIndex],
           this.getEffectiveEnemySpeed(enemy),
-          () => enemy.pathIndex++,
         );
+        if (step) {
+          enemy.sprite.setVelocity(step.vx, step.vy);
+          enemy.lastDir =
+            Math.abs(step.nx) > Math.abs(step.ny)
+              ? step.nx > 0
+                ? "right"
+                : "left"
+              : step.ny > 0
+                ? "down"
+                : "up";
+          enemy.sprite.anims.play(
+            enemy.spriteKey + "-walk-" + enemy.lastDir,
+            true,
+          );
+        } else {
+          enemy.sprite.setVelocity(0, 0);
+          enemy.sprite.anims.play(
+            enemy.spriteKey + "-idle-" + enemy.lastDir,
+            true,
+          );
+        }
         continue;
       }
 
@@ -5221,6 +5321,7 @@ export default class MainScene extends Phaser.Scene {
     const door = this.secretRoomData.doorTile;
     this.layer.putTileAt(this.currentFloorTileIndex ?? 0, door.x, door.y);
     this.fogGrid[door.y][door.x] = 0;
+    this.buildPathfindingGrid();
 
     if (this.secretWallMarker) {
       this.secretWallMarker.destroy();
@@ -5241,7 +5342,10 @@ export default class MainScene extends Phaser.Scene {
     let lootItems = [];
     if (rewardType === "unique") {
       const uniqueCandidates = Object.values(ITEM_DEFS).filter(
-        (d) => d.unique && !this.obtainedUniqueItems.includes(d.id),
+        (d) =>
+          d.unique &&
+          d.category !== "craftingMaterial" &&
+          !this.obtainedUniqueItems.includes(d.id),
       );
       if (uniqueCandidates.length > 0) {
         const picked =
@@ -6439,11 +6543,17 @@ export default class MainScene extends Phaser.Scene {
       spawnY,
       growthScale,
     );
-
+    this.summonIdCounter = (this.summonIdCounter || 0) + 1;
     this.summons.push({
+      id: this.summonIdCounter,
       sprite,
       spriteKey: def.summonType,
       sourceAbilityId: def.id,
+      path: null,
+      pathIndex: 0,
+      nextPathRequestAt: 0,
+      pathDestX: null,
+      pathDestY: null,
       hp: summonHp,
       maxHp: summonHp,
       damage: summonDamage,
@@ -6455,6 +6565,11 @@ export default class MainScene extends Phaser.Scene {
       expiresAt: def.durationMs ? this.time.now + def.durationMs : null,
       lastDir: "down",
       growthConfig: def.growthConfig || null,
+      stuckCheckPos: { x: spawnX, y: spawnY },
+      stuckCheckAt: this.time.now,
+      stuckJitterUntil: 0,
+      stuckStreak: 0,
+      attackType: def.attackType || "melee",
     });
 
     this.showLootToast(`${def.name} invoquée !`);
@@ -6525,9 +6640,76 @@ export default class MainScene extends Phaser.Scene {
     this.pendingResummonDef = null;
     this.pendingResummonTarget = null;
   }
+  computeSummonSeparation(summon) {
+    const SEPARATION_RADIUS = 30;
+    const SEPARATION_STRENGTH = 80;
+    let pushX = 0;
+    let pushY = 0;
+
+    for (const other of this.summons) {
+      if (other === summon) continue;
+      const dx = summon.sprite.x - other.sprite.x;
+      const dy = summon.sprite.y - other.sprite.y;
+      const dist = Math.hypot(dx, dy);
+      if (dist > 0.001 && dist < SEPARATION_RADIUS) {
+        const strength = (1 - dist / SEPARATION_RADIUS) * SEPARATION_STRENGTH;
+        pushX += (dx / dist) * strength;
+        pushY += (dy / dist) * strength;
+      }
+    }
+
+    return { x: pushX, y: pushY };
+  }
 
   updateSummons(now) {
     const remaining = [];
+    const SUMMON_SPEED_CHASE = 100;
+    const SUMMON_SPEED_FOLLOW = 120;
+    const PATH_REQUEST_COOLDOWN = 400;
+    const PATH_RETARGET_DIST = 24;
+    const ATTACK_RANGE = 34;
+
+    // Phase 1 : chaque invocation active determine sa cible la plus proche
+    const targets = new Map();
+    for (const summon of this.summons) {
+      if (summon.expiresAt && now >= summon.expiresAt) continue;
+      if (summon.hp <= 0) continue;
+      if (now < (summon.attackAnimUntil || 0)) continue;
+
+      let nearestEnemy = null;
+      let nearestDist = Infinity;
+      for (const enemy of this.enemies) {
+        if (!this.isEnemyVisible(enemy)) continue;
+        const dist = Math.hypot(
+          enemy.sprite.x - summon.sprite.x,
+          enemy.sprite.y - summon.sprite.y,
+        );
+        if (dist < nearestDist) {
+          nearestDist = dist;
+          nearestEnemy = enemy;
+        }
+      }
+      targets.set(
+        summon,
+        nearestEnemy && nearestDist < 250 ? nearestEnemy : null,
+      );
+    }
+
+    const requestSummonPath = (summon, destX, destY) => {
+      summon.pathDestX = destX;
+      summon.pathDestY = destY;
+      this.requestPath(
+        summon.sprite.x,
+        summon.sprite.y,
+        destX,
+        destY,
+        (path) => {
+          summon.path = path;
+          summon.pathIndex = 0;
+        },
+      );
+    };
+
     for (const summon of this.summons) {
       if (summon.expiresAt && now >= summon.expiresAt) {
         summon.sprite.destroy();
@@ -6545,60 +6727,219 @@ export default class MainScene extends Phaser.Scene {
         continue;
       }
 
-      let nearestEnemy = null;
-      let nearestDist = Infinity;
-      for (const enemy of this.enemies) {
-        if (!this.isEnemyVisible(enemy)) continue;
-        const dist = Math.hypot(
-          enemy.sprite.x - summon.sprite.x,
-          enemy.sprite.y - summon.sprite.y,
+      const sep = this.computeSummonSeparation(summon);
+      const nearestEnemy = targets.get(summon);
+      // Un summon "ranged" garde ses distances et tire des projectiles,
+      // exactement comme l'ennemi dont il est issu (attackType copie sur
+      // le summon a sa creation dans performSummonAbility, depuis la meme
+      // entree ENEMY_STATS que celle utilisee pour le monstre "ennemi")
+      const isRanged = summon.attackType === "ranged";
+      const summonOrbitRadius = isRanged
+        ? ENEMY_RANGED_STOP_DISTANCE
+        : ATTACK_RANGE;
+      const summonAttackRange = isRanged
+        ? ENEMY_RANGED_ATTACK_RANGE
+        : ATTACK_RANGE + 6;
+
+      let destX, destY, speed, stopDist;
+
+      if (nearestEnemy) {
+        // repartit les invocations visant le meme ennemi en cercle autour
+        // de lui (une "place" par invocation) au lieu de toutes converger
+        // vers son centre - evite l'effet "petit train"
+        const siblings = this.summons.filter(
+          (s) => targets.get(s) === nearestEnemy,
         );
-        if (dist < nearestDist) {
-          nearestDist = dist;
-          nearestEnemy = enemy;
-        }
+        siblings.sort((a, b) => a.id - b.id);
+        const slotIndex = siblings.indexOf(summon);
+        const angle = (slotIndex / siblings.length) * Math.PI * 2;
+        destX = nearestEnemy.sprite.x + Math.cos(angle) * summonOrbitRadius;
+        destY = nearestEnemy.sprite.y + Math.sin(angle) * summonOrbitRadius;
+        speed = SUMMON_SPEED_CHASE;
+        stopDist = 6;
+      } else {
+        destX = this.hero.x;
+        destY = this.hero.y;
+        speed = SUMMON_SPEED_FOLLOW;
+        stopDist = 60;
       }
 
-      if (nearestEnemy && nearestDist < 250) {
-        const dx = nearestEnemy.sprite.x - summon.sprite.x;
-        const dy = nearestEnemy.sprite.y - summon.sprite.y;
-        const dist = Math.hypot(dx, dy);
-        if (dist > 34) {
-          const nx = dx / dist,
-            ny = dy / dist;
-          summon.sprite.setVelocity(nx * 100, ny * 100);
-          summon.lastDir =
-            Math.abs(nx) > Math.abs(ny)
-              ? nx > 0
-                ? "right"
-                : "left"
-              : ny > 0
-                ? "down"
-                : "up";
-          summon.sprite.anims.play(
-            summon.spriteKey + "-walk-" + summon.lastDir,
-            true,
-          );
+      const distToDest = Math.hypot(
+        destX - summon.sprite.x,
+        destY - summon.sprite.y,
+      );
+
+      // Detection de blocage : si l'invocation essaie d'atteindre une
+      // destination mais n'a quasiment pas avance depuis le dernier
+      // controle, on force un nouveau calcul de chemin et on applique une
+      // breve poussee aleatoire pour desamorcer un clash physique avec une
+      // autre invocation (deux chemins EasyStar qui exigent de partir dans
+      // des directions opposees dans un couloir etroit, bloques par leurs
+      // colliders mutuels - la separation seule ne suffit pas a les
+      // decoincer dans ce cas)
+      const STUCK_CHECK_INTERVAL = 500;
+      const STUCK_MOVE_THRESHOLD = 10;
+      const STUCK_TELEPORT_STREAK = 4; // ~2s de blocage continu malgre les relances de chemin
+      const TELEPORT_MAX_DISTANCE = 500; // trop loin du joueur (ex : coincee dans une zone separee par un mur)
+      let jitterX = 0;
+      let jitterY = 0;
+
+      if (distToDest <= stopDist) {
+        summon.stuckCheckPos = { x: summon.sprite.x, y: summon.sprite.y };
+        summon.stuckCheckAt = now;
+        summon.stuckStreak = 0;
+      } else if (now >= summon.stuckCheckAt + STUCK_CHECK_INTERVAL) {
+        const movedDist = Math.hypot(
+          summon.sprite.x - summon.stuckCheckPos.x,
+          summon.sprite.y - summon.stuckCheckPos.y,
+        );
+        if (movedDist < STUCK_MOVE_THRESHOLD) {
+          summon.stuckStreak = (summon.stuckStreak || 0) + 1;
+          summon.path = null;
+          summon.nextPathRequestAt = now;
+          summon.stuckJitterUntil = now + 300;
         } else {
-          summon.sprite.setVelocity(0, 0);
-          summon.sprite.anims.play(
-            summon.spriteKey + "-idle-" + summon.lastDir,
-            true,
+          summon.stuckStreak = 0;
+        }
+        summon.stuckCheckPos = { x: summon.sprite.x, y: summon.sprite.y };
+        summon.stuckCheckAt = now;
+      }
+
+      const distToHero = Math.hypot(
+        this.hero.x - summon.sprite.x,
+        this.hero.y - summon.sprite.y,
+      );
+      if (
+        summon.stuckStreak >= STUCK_TELEPORT_STREAK ||
+        distToHero > TELEPORT_MAX_DISTANCE
+      ) {
+        // toujours bloquee malgre la relance de chemin + le coup de pouce
+        // aleatoire, ou beaucoup trop loin du joueur - on la teleporte
+        // pres de lui plutot que de la laisser rebondir indefiniment
+        // contre un coin de mur (cf. retour utilisateur : ca ne se
+        // debloquait qu'en rechargeant la partie)
+        const tx = this.hero.x + (Math.random() - 0.5) * 40;
+        const ty = this.hero.y + (Math.random() - 0.5) * 40;
+        summon.sprite.setPosition(tx, ty);
+        summon.sprite.setVelocity(0, 0);
+        summon.path = null;
+        summon.pathIndex = 0;
+        summon.pathDestX = null;
+        summon.pathDestY = null;
+        summon.nextPathRequestAt = now;
+        summon.stuckStreak = 0;
+        summon.stuckJitterUntil = 0;
+        summon.stuckCheckPos = { x: tx, y: ty };
+        summon.stuckCheckAt = now;
+        remaining.push(summon);
+        continue;
+      }
+
+      if (now < summon.stuckJitterUntil) {
+        const jitterAngle = Math.random() * Math.PI * 2;
+        jitterX = Math.cos(jitterAngle) * SUMMON_SPEED_CHASE;
+        jitterY = Math.sin(jitterAngle) * SUMMON_SPEED_CHASE;
+      }
+
+      if (distToDest > stopDist) {
+        // (re)calcule un chemin si aucun chemin en cours, ou si la
+        // destination a bouge de facon significative depuis le dernier calcul
+        const destMoved =
+          summon.pathDestX === null ||
+          Math.hypot(destX - summon.pathDestX, destY - summon.pathDestY) >
+            PATH_RETARGET_DIST;
+        if ((destMoved || !summon.path) && now >= summon.nextPathRequestAt) {
+          summon.nextPathRequestAt = now + PATH_REQUEST_COOLDOWN;
+          requestSummonPath(summon, destX, destY);
+        }
+
+        const step = this.followPathStep(summon, speed);
+        let nx, ny, vx, vy;
+        if (step) {
+          ({ nx, ny, vx, vy } = step);
+        } else {
+          // chemin pas encore calcule (ou introuvable) - repli temporaire
+          // en ligne droite pour eviter que l'invocation ne se fige
+          const dx = destX - summon.sprite.x;
+          const dy = destY - summon.sprite.y;
+          const dist = Math.hypot(dx, dy);
+          nx = dx / dist;
+          ny = dy / dist;
+          vx = nx * speed;
+          vy = ny * speed;
+        }
+
+        summon.sprite.setVelocity(vx + sep.x + jitterX, vy + sep.y + jitterY);
+        summon.lastDir =
+          Math.abs(nx) > Math.abs(ny)
+            ? nx > 0
+              ? "right"
+              : "left"
+            : ny > 0
+              ? "down"
+              : "up";
+        summon.sprite.anims.play(
+          summon.spriteKey + "-walk-" + summon.lastDir,
+          true,
+        );
+      } else {
+        summon.sprite.setVelocity(sep.x, sep.y);
+        summon.sprite.anims.play(
+          summon.spriteKey + "-idle-" + summon.lastDir,
+          true,
+        );
+      }
+
+      if (nearestEnemy) {
+        const realDist = Math.hypot(
+          nearestEnemy.sprite.x - summon.sprite.x,
+          nearestEnemy.sprite.y - summon.sprite.y,
+        );
+        if (
+          realDist <= summonAttackRange &&
+          summon.attackCooldown.isReady(now)
+        ) {
+          summon.attackCooldown.trigger(now);
+
+          const hasAttackAnim = this.anims.exists(
+            summon.spriteKey + "-attack-" + summon.lastDir,
           );
-          if (summon.attackCooldown.isReady(now)) {
-            summon.attackCooldown.trigger(now);
-
-            const hasAttackAnim = this.anims.exists(
+          if (hasAttackAnim) {
+            summon.sprite.anims.play(
               summon.spriteKey + "-attack-" + summon.lastDir,
+              true,
             );
-            if (hasAttackAnim) {
-              summon.sprite.anims.play(
-                summon.spriteKey + "-attack-" + summon.lastDir,
-                true,
-              );
-              summon.attackAnimUntil = now + ATTACK_ANIM_DURATION_MS;
-            }
+            summon.attackAnimUntil = now + ATTACK_ANIM_DURATION_MS;
+          }
 
+          if (isRanged) {
+            const dx = nearestEnemy.sprite.x - summon.sprite.x;
+            const dy = nearestEnemy.sprite.y - summon.sprite.y;
+            const mag = Math.hypot(dx, dy) || 1;
+            const vx = dx / mag;
+            const vy = dy / mag;
+
+            const projSprite = this.add.circle(
+              summon.sprite.x,
+              summon.sprite.y,
+              PROJECTILE_RADIUS,
+              0x99ff66,
+            );
+            this.physics.add.existing(projSprite);
+            projSprite.setDepth(12);
+            projSprite.body.setVelocity(
+              vx * ENEMY_PROJECTILE_SPEED,
+              vy * ENEMY_PROJECTILE_SPEED,
+            );
+
+            this.summonProjectiles.push({
+              sprite: projSprite,
+              startX: summon.sprite.x,
+              startY: summon.sprite.y,
+              damage: summon.damage,
+              damageType: summon.damageType,
+            });
+          } else {
             const rawDamage = applyElementalResistance(
               summon.damage,
               summon.damageType,
@@ -6610,38 +6951,66 @@ export default class MainScene extends Phaser.Scene {
             );
           }
         }
-      } else {
-        const dx = this.hero.x - summon.sprite.x;
-        const dy = this.hero.y - summon.sprite.y;
-        const dist = Math.hypot(dx, dy);
-        if (dist > 60) {
-          const nx = dx / dist,
-            ny = dy / dist;
-          summon.sprite.setVelocity(nx * 120, ny * 120);
-          summon.lastDir =
-            Math.abs(nx) > Math.abs(ny)
-              ? nx > 0
-                ? "right"
-                : "left"
-              : ny > 0
-                ? "down"
-                : "up";
-          summon.sprite.anims.play(
-            summon.spriteKey + "-walk-" + summon.lastDir,
-            true,
-          );
-        } else {
-          summon.sprite.setVelocity(0, 0);
-          summon.sprite.anims.play(
-            summon.spriteKey + "-idle-" + summon.lastDir,
-            true,
-          );
-        }
       }
 
       remaining.push(summon);
     }
     this.summons = remaining;
+  }
+
+  updateSummonProjectiles() {
+    const grid = this.fogGrid;
+    const remaining = [];
+
+    for (const proj of this.summonProjectiles) {
+      const traveled = Math.hypot(
+        proj.sprite.x - proj.startX,
+        proj.sprite.y - proj.startY,
+      );
+      const tileX = Math.floor(proj.sprite.x / TILE_SIZE);
+      const tileY = Math.floor(proj.sprite.y / TILE_SIZE);
+      const outOfBounds =
+        tileX < 0 ||
+        tileY < 0 ||
+        tileY >= grid.length ||
+        tileX >= grid[0].length;
+      const hitWall = !outOfBounds && grid[tileY][tileX] === WALL;
+
+      const fogState = this.fogState.state;
+      const projVisible = !outOfBounds && fogState[tileY][tileX] === 2;
+      proj.sprite.setVisible(projVisible);
+
+      if (traveled >= ENEMY_PROJECTILE_MAX_DISTANCE || outOfBounds || hitWall) {
+        proj.sprite.destroy();
+        continue;
+      }
+
+      let hit = false;
+      for (const enemy of this.enemies) {
+        const dist = Math.hypot(
+          enemy.sprite.x - proj.sprite.x,
+          enemy.sprite.y - proj.sprite.y,
+        );
+        if (dist <= PROJECTILE_RADIUS + 14 && this.isEnemyVisible(enemy)) {
+          const rawDamage = applyElementalResistance(
+            proj.damage,
+            proj.damageType,
+            enemy.resistances,
+          );
+          this.damageEnemy(enemy, computeDamage(rawDamage, enemy.defense));
+          hit = true;
+          break;
+        }
+      }
+      if (hit) {
+        proj.sprite.destroy();
+        continue;
+      }
+
+      remaining.push(proj);
+    }
+
+    this.summonProjectiles = remaining;
   }
 
   performShieldBashAbility(def) {
@@ -6731,17 +7100,16 @@ export default class MainScene extends Phaser.Scene {
       if (dist > def.radius) continue;
       if (enemy.state !== "chase") {
         enemy.state = "chase";
-        const ex = Math.floor(enemy.sprite.x / TILE_SIZE);
-        const ey = Math.floor(enemy.sprite.y / TILE_SIZE);
-        const playerTileX = Math.floor(this.hero.x / TILE_SIZE);
-        const playerTileY = Math.floor(this.hero.y / TILE_SIZE);
-        const path = findPath(
-          this.fogGrid,
-          { x: ex, y: ey },
-          { x: playerTileX, y: playerTileY },
+        this.requestPath(
+          enemy.sprite.x,
+          enemy.sprite.y,
+          this.hero.x,
+          this.hero.y,
+          (path) => {
+            enemy.path = path;
+            enemy.pathIndex = 0;
+          },
         );
-        enemy.path = path;
-        enemy.pathIndex = path ? 1 : 0;
       }
     }
 
@@ -7886,17 +8254,16 @@ export default class MainScene extends Phaser.Scene {
   damageEnemy(enemy, amount) {
     if (enemy.state !== "chase") {
       enemy.state = "chase";
-      const ex = Math.floor(enemy.sprite.x / TILE_SIZE);
-      const ey = Math.floor(enemy.sprite.y / TILE_SIZE);
-      const playerTileX = Math.floor(this.hero.x / TILE_SIZE);
-      const playerTileY = Math.floor(this.hero.y / TILE_SIZE);
-      const path = findPath(
-        this.fogGrid,
-        { x: ex, y: ey },
-        { x: playerTileX, y: playerTileY },
+      this.requestPath(
+        enemy.sprite.x,
+        enemy.sprite.y,
+        this.hero.x,
+        this.hero.y,
+        (path) => {
+          enemy.path = path;
+          enemy.pathIndex = 0;
+        },
       );
-      enemy.path = path;
-      enemy.pathIndex = path ? 1 : 0;
     }
     this.showDamageNumber(enemy.sprite, amount, "#ffffff");
     const result = applyDamage(enemy, amount);
