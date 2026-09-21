@@ -150,9 +150,7 @@ function findMatchingClose(content, openIndex) {
 function insertIntoObject(content, varName, entryText, filePath) {
   const openIndex = findObjectOpenBrace(content, varName, filePath);
   const closeIndex = findMatchingClose(content, openIndex);
-  return (
-    content.slice(0, closeIndex) + entryText + content.slice(closeIndex)
-  );
+  return content.slice(0, closeIndex) + entryText + content.slice(closeIndex);
 }
 
 // ---------------------------------------------------------------------
@@ -193,17 +191,13 @@ async function main() {
   console.log("=== Creation d'une nouvelle invocation ===\n");
 
   const key = (
-    await ask(
-      'Identifiant camelCase (ex: "gnome", "angryTrent") : ',
-    )
+    await ask('Identifiant camelCase (ex: "gnome", "angryTrent") : ')
   ).trim();
   if (!key) throw new Error("Identifiant requis.");
   const Key = capitalize(key);
 
   const titleName = (
-    await ask(
-      'Nom affiche, majuscule (ex: "Gnome", "Trent en colère") : ',
-    )
+    await ask('Nom affiche, majuscule (ex: "Gnome", "Trent en colère") : ')
   ).trim();
 
   const nameBare = titleName.charAt(0).toLowerCase() + titleName.slice(1);
@@ -215,9 +209,7 @@ async function main() {
   ).trim();
 
   const summonTypeInput = (
-    await ask(
-      `Cle SPRITE_REGISTRY pour le visuel (Entree = "${key}") : `,
-    )
+    await ask(`Cle SPRITE_REGISTRY pour le visuel (Entree = "${key}") : `)
   ).trim();
   const summonType = summonTypeInput || key;
 
@@ -270,9 +262,9 @@ async function main() {
     effectType: "summon",
     summonType: "${summonType}",
     durationMs: null,
-    hp: 40,
-    damage: 8,
-    defense: 1,
+    hpScale: 0.5,
+    damageScale: 0.5,
+    defenseScale: 0.8,
     damageType: "physical",
     resistances: { physical: 1 },
     unlockLevel: null,
@@ -301,12 +293,7 @@ async function main() {
     discoveryOnly: true,
   },
 `;
-    content = insertIntoObject(
-      content,
-      "CRAFTING_RECIPES",
-      entry,
-      filePath,
-    );
+    content = insertIntoObject(content, "CRAFTING_RECIPES", entry, filePath);
     writeFile(filePath, content);
     console.log(`✓ craftingRecipes.js : summon${Key}Recipe ajoute`);
   }
@@ -342,9 +329,7 @@ async function main() {
       filePath,
     );
     writeFile(filePath, content);
-    console.log(
-      `✓ itemDefs.js : ${key}Core + summon${Key}Scroll ajoutes`,
-    );
+    console.log(`✓ itemDefs.js : ${key}Core + summon${Key}Scroll ajoutes`);
   }
 
   // ---------------------------------------------------------------
@@ -382,7 +367,9 @@ async function main() {
 `;
     content = insertIntoObject(content, "ICON_TINTS", entry, filePath);
     writeFile(filePath, content);
-    console.log(`✓ InventoryScreen.jsx : teintes ${key}Core / summon${Key}Scroll ajoutees`);
+    console.log(
+      `✓ InventoryScreen.jsx : teintes ${key}Core / summon${Key}Scroll ajoutees`,
+    );
   }
 
   // ---------------------------------------------------------------
@@ -431,9 +418,7 @@ async function main() {
   }
 
   console.log("\nTermine. Pense a verifier/ajuster manuellement :");
-  console.log(
-    `  - la couleur de teinte (actuellement "${tintColor}")`,
-  );
+  console.log(`  - la couleur de teinte (actuellement "${tintColor}")`);
   console.log("  - les stats de la competence (clonees sur gnome)");
   console.log("  - le attackType de la competence si le monstre est ranged");
 }

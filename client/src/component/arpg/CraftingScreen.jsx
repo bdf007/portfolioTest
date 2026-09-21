@@ -12,16 +12,48 @@ import bookPages from "../../assets/background/book_pages.png"; // ajuste le che
  * decouverte) est identique a la version precedente - seule la mise en
  * page change.
  */
+
+// Libellés FR pour les onglets de categorie - complete/ajuste selon les
+// valeurs reelles de `category` presentes dans itemDefs. Toute categorie
+// absente de cette liste retombe sur son nom brut, capitalise (fallback
+// generique dans categoryLabel ci-dessous) - donc rien ne casse si une
+// nouvelle categorie d'objet apparait plus tard.
+const CATEGORY_LABELS = {
+  weapon: "Armes",
+  armor: "Armures",
+  jewelry: "Bijoux",
+  consumable: "Consommables",
+  tool: "Outils",
+  material: "Matériaux",
+  craftingMaterial: "Matériaux",
+  abilityScroll: "Parchemins",
+  autre: "Autres",
+};
+
+function categoryLabel(category) {
+  return (
+    CATEGORY_LABELS[category] ||
+    category.charAt(0).toUpperCase() + category.slice(1)
+  );
+}
+
+function getRecipeCategory(recipe) {
+  const resultDef = resolveItemDef(recipe.resultItemId);
+  return resultDef?.category || "autre";
+}
+
 export default function CraftingScreen({
   unlockedRecipes,
   discoveredLockedRecipes = [],
   inventory,
+  isMobile = false,
   onCraft,
   onFreeCraft,
   onClose,
 }) {
   const [selection, setSelection] = useState({}); // combinaison libre : { itemId: quantity }
   const [flexAllocations, setFlexAllocations] = useState({}); // recettes connues : { "recipeId:ingIndex": { itemId: quantity } }
+  const [activeCategory, setActiveCategory] = useState("all"); // onglet de categorie actif, page "Recettes connues"
 
   function getQuantity(itemId) {
     return inventory
@@ -234,11 +266,72 @@ export default function CraftingScreen({
           }}
         >
           <h3 style={{ margin: "0 0 8px", fontSize: 15 }}>Recettes connues</h3>
-          {unlockedRecipes.length === 0 && (
-            <div style={{ color: "#5a4a35", fontSize: 11, marginBottom: 12 }}>
-              Aucune recette connue pour l'instant.
-            </div>
-          )}
+
+          {(() => {
+            const categories = Array.from(
+              new Set(
+                unlockedRecipes
+                  .map((recipeId) => resolveCraftingRecipe(recipeId))
+                  .filter(Boolean)
+                  .map(getRecipeCategory),
+              ),
+            );
+            if (categories.length <= 1) return null; // pas de tri utile a faire avec 0-1 categorie
+            return (
+              <div
+                style={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: 4,
+                  marginBottom: 10,
+                }}
+              >
+                {["all", ...categories].map((cat) => (
+                  <button
+                    key={cat}
+                    onClick={() => setActiveCategory(cat)}
+                    style={{
+                      padding: "3px 9px",
+                      fontSize: 10,
+                      borderRadius: 5,
+                      border: "1px solid #8a7050",
+                      background:
+                        activeCategory === cat
+                          ? "#8a7050"
+                          : "rgba(120,100,70,0.15)",
+                      color: activeCategory === cat ? "#fff8ea" : "#5a4a35",
+                      cursor: "pointer",
+                    }}
+                  >
+                    {cat === "all" ? "Tout" : categoryLabel(cat)}
+                  </button>
+                ))}
+              </div>
+            );
+          })()}
+
+          {(() => {
+            const filteredUnlockedRecipes = unlockedRecipes.filter(
+              (recipeId) => {
+                if (activeCategory === "all") return true;
+                const recipe = resolveCraftingRecipe(recipeId);
+                return recipe && getRecipeCategory(recipe) === activeCategory;
+              },
+            );
+            if (filteredUnlockedRecipes.length === 0) {
+              return (
+                <div
+                  style={{ color: "#5a4a35", fontSize: 11, marginBottom: 12 }}
+                >
+                  {unlockedRecipes.length === 0
+                    ? "Aucune recette connue pour l'instant."
+                    : "Aucune recette dans cette catégorie."}
+                </div>
+              );
+            }
+            return null;
+          })()}
+
           <div
             style={{
               display: "flex",
@@ -247,234 +340,240 @@ export default function CraftingScreen({
               marginBottom: 16,
             }}
           >
-            {unlockedRecipes.map((recipeId) => {
-              const recipe = resolveCraftingRecipe(recipeId);
-              if (!recipe) return null;
-              const resultDef = resolveItemDef(recipe.resultItemId);
-              const craftable = canCraft(recipe);
+            {unlockedRecipes
+              .filter((recipeId) => {
+                if (activeCategory === "all") return true;
+                const recipe = resolveCraftingRecipe(recipeId);
+                return recipe && getRecipeCategory(recipe) === activeCategory;
+              })
+              .map((recipeId) => {
+                const recipe = resolveCraftingRecipe(recipeId);
+                if (!recipe) return null;
+                const resultDef = resolveItemDef(recipe.resultItemId);
+                const craftable = canCraft(recipe);
 
-              return (
-                <div
-                  key={recipeId}
-                  style={{
-                    padding: 8,
-                    background: "rgba(120,100,70,0.12)",
-                    border: "1px solid rgba(90,74,53,0.3)",
-                    borderRadius: 6,
-                  }}
-                >
+                return (
                   <div
+                    key={recipeId}
                     style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 6,
-                      marginBottom: 4,
+                      padding: 8,
+                      background: "rgba(120,100,70,0.12)",
+                      border: "1px solid rgba(90,74,53,0.3)",
+                      borderRadius: 6,
                     }}
                   >
-                    {hasIconFrame(recipe.resultItemId) && (
-                      <ItemIcon itemId={recipe.resultItemId} scale={1.3} />
-                    )}
-                    <div>
-                      <div style={{ fontWeight: "bold" }}>{recipe.name}</div>
-                      <div style={{ color: "#4a3a28" }}>
-                        {resultDef.name}
-                        {recipe.resultQuantity > 1
-                          ? ` x${recipe.resultQuantity}`
-                          : ""}
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 6,
+                        marginBottom: 4,
+                      }}
+                    >
+                      {hasIconFrame(recipe.resultItemId) && (
+                        <ItemIcon itemId={recipe.resultItemId} scale={1.3} />
+                      )}
+                      <div>
+                        <div style={{ fontWeight: "bold" }}>{recipe.name}</div>
+                        <div style={{ color: "#4a3a28" }}>
+                          {resultDef.name}
+                          {recipe.resultQuantity > 1
+                            ? ` x${recipe.resultQuantity}`
+                            : ""}
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  <div
-                    style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: 4,
-                      marginBottom: 6,
-                    }}
-                  >
-                    {recipe.ingredients.map((ing, ingIndex) => {
-                      if (!ing.acceptedItemIds) {
-                        const have = getQuantity(ing.itemId);
-                        const enough = have >= ing.quantity;
-                        const ingDef = resolveItemDef(ing.itemId);
+                    <div
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 4,
+                        marginBottom: 6,
+                      }}
+                    >
+                      {recipe.ingredients.map((ing, ingIndex) => {
+                        if (!ing.acceptedItemIds) {
+                          const have = getQuantity(ing.itemId);
+                          const enough = have >= ing.quantity;
+                          const ingDef = resolveItemDef(ing.itemId);
+                          return (
+                            <div
+                              key={ingIndex}
+                              style={{
+                                color: enough ? "#3f6b4f" : "#a34848",
+                                display: "flex",
+                                justifyContent: "space-between",
+                              }}
+                            >
+                              <span>{ingDef.name}</span>
+                              <span>
+                                {have} / {ing.quantity}
+                              </span>
+                            </div>
+                          );
+                        }
+
+                        const total = getFlexTotal(recipeId, ingIndex);
+                        const complete = total >= ing.quantity;
                         return (
                           <div
                             key={ingIndex}
                             style={{
-                              color: enough ? "#3f6b4f" : "#a34848",
-                              display: "flex",
-                              justifyContent: "space-between",
+                              padding: 6,
+                              background: "rgba(0,0,0,0.05)",
+                              borderRadius: 4,
                             }}
                           >
-                            <span>{ingDef.name}</span>
-                            <span>
-                              {have} / {ing.quantity}
-                            </span>
-                          </div>
-                        );
-                      }
-
-                      const total = getFlexTotal(recipeId, ingIndex);
-                      const complete = total >= ing.quantity;
-                      return (
-                        <div
-                          key={ingIndex}
-                          style={{
-                            padding: 6,
-                            background: "rgba(0,0,0,0.05)",
-                            borderRadius: 4,
-                          }}
-                        >
-                          <div
-                            style={{
-                              color: complete ? "#3f6b4f" : "#a34848",
-                              display: "flex",
-                              justifyContent: "space-between",
-                              marginBottom: 4,
-                            }}
-                          >
-                            <span>Au choix (ou mélange)</span>
-                            <span>
-                              {total} / {ing.quantity}
-                            </span>
-                          </div>
-                          {ing.acceptedItemIds.map((itemId) => {
-                            const def = resolveItemDef(itemId);
-                            const owned = getQuantity(itemId);
-                            const allocated =
-                              getFlexAllocation(recipeId, ingIndex)[itemId] ||
-                              0;
-                            return (
-                              <div
-                                key={itemId}
-                                style={{
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "space-between",
-                                  marginBottom: 3,
-                                }}
-                              >
-                                <span>
-                                  {def.name} ({owned})
-                                </span>
+                            <div
+                              style={{
+                                color: complete ? "#3f6b4f" : "#a34848",
+                                display: "flex",
+                                justifyContent: "space-between",
+                                marginBottom: 4,
+                              }}
+                            >
+                              <span>Au choix (ou mélange)</span>
+                              <span>
+                                {total} / {ing.quantity}
+                              </span>
+                            </div>
+                            {ing.acceptedItemIds.map((itemId) => {
+                              const def = resolveItemDef(itemId);
+                              const owned = getQuantity(itemId);
+                              const allocated =
+                                getFlexAllocation(recipeId, ingIndex)[itemId] ||
+                                0;
+                              return (
                                 <div
+                                  key={itemId}
                                   style={{
                                     display: "flex",
                                     alignItems: "center",
-                                    gap: 3,
+                                    justifyContent: "space-between",
+                                    marginBottom: 3,
                                   }}
                                 >
-                                  <button
-                                    onClick={() =>
-                                      adjustFlex(
-                                        recipeId,
-                                        ingIndex,
-                                        itemId,
-                                        -1,
-                                        ing.quantity,
-                                      )
-                                    }
-                                    disabled={allocated <= 0}
-                                    style={{
-                                      width: 18,
-                                      height: 18,
-                                      borderRadius: 3,
-                                      border: "1px solid #8a7050",
-                                      background: "#eee2cc",
-                                      cursor:
-                                        allocated <= 0
-                                          ? "not-allowed"
-                                          : "pointer",
-                                      fontSize: 10,
-                                    }}
-                                  >
-                                    −
-                                  </button>
-                                  <span
-                                    style={{
-                                      minWidth: 12,
-                                      textAlign: "center",
-                                    }}
-                                  >
-                                    {allocated}
+                                  <span>
+                                    {def.name} ({owned})
                                   </span>
-                                  <button
-                                    onClick={() =>
-                                      adjustFlex(
-                                        recipeId,
-                                        ingIndex,
-                                        itemId,
-                                        1,
-                                        ing.quantity,
-                                      )
-                                    }
-                                    disabled={
-                                      allocated >= owned ||
-                                      total >= ing.quantity
-                                    }
+                                  <div
                                     style={{
-                                      width: 18,
-                                      height: 18,
-                                      borderRadius: 3,
-                                      border: "1px solid #8a7050",
-                                      background: "#eee2cc",
-                                      cursor:
+                                      display: "flex",
+                                      alignItems: "center",
+                                      gap: 3,
+                                    }}
+                                  >
+                                    <button
+                                      onClick={() =>
+                                        adjustFlex(
+                                          recipeId,
+                                          ingIndex,
+                                          itemId,
+                                          -1,
+                                          ing.quantity,
+                                        )
+                                      }
+                                      disabled={allocated <= 0}
+                                      style={{
+                                        width: 18,
+                                        height: 18,
+                                        borderRadius: 3,
+                                        border: "1px solid #8a7050",
+                                        background: "#eee2cc",
+                                        cursor:
+                                          allocated <= 0
+                                            ? "not-allowed"
+                                            : "pointer",
+                                        fontSize: 10,
+                                      }}
+                                    >
+                                      −
+                                    </button>
+                                    <span
+                                      style={{
+                                        minWidth: 12,
+                                        textAlign: "center",
+                                      }}
+                                    >
+                                      {allocated}
+                                    </span>
+                                    <button
+                                      onClick={() =>
+                                        adjustFlex(
+                                          recipeId,
+                                          ingIndex,
+                                          itemId,
+                                          1,
+                                          ing.quantity,
+                                        )
+                                      }
+                                      disabled={
                                         allocated >= owned ||
                                         total >= ing.quantity
-                                          ? "not-allowed"
-                                          : "pointer",
-                                      fontSize: 10,
-                                    }}
-                                  >
-                                    +
-                                  </button>
+                                      }
+                                      style={{
+                                        width: 18,
+                                        height: 18,
+                                        borderRadius: 3,
+                                        border: "1px solid #8a7050",
+                                        background: "#eee2cc",
+                                        cursor:
+                                          allocated >= owned ||
+                                          total >= ing.quantity
+                                            ? "not-allowed"
+                                            : "pointer",
+                                        fontSize: 10,
+                                      }}
+                                    >
+                                      +
+                                    </button>
+                                  </div>
                                 </div>
-                              </div>
-                            );
-                          })}
-                          <button
-                            onClick={() =>
-                              autoFillFlex(recipeId, ingIndex, ing)
-                            }
-                            style={{
-                              padding: "1px 6px",
-                              fontSize: 9,
-                              borderRadius: 4,
-                              border: "1px solid #8a7050",
-                              background: "#eee2cc",
-                              color: "#5a4a35",
-                              cursor: "pointer",
-                            }}
-                          >
-                            Remplir auto
-                          </button>
-                        </div>
-                      );
-                    })}
-                  </div>
+                              );
+                            })}
+                            <button
+                              onClick={() =>
+                                autoFillFlex(recipeId, ingIndex, ing)
+                              }
+                              style={{
+                                padding: "1px 6px",
+                                fontSize: 9,
+                                borderRadius: 4,
+                                border: "1px solid #8a7050",
+                                background: "#eee2cc",
+                                color: "#5a4a35",
+                                cursor: "pointer",
+                              }}
+                            >
+                              Remplir auto
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
 
-                  <button
-                    disabled={!craftable}
-                    onClick={() => handleCraft(recipe)}
-                    style={{
-                      padding: "4px 10px",
-                      fontSize: 11,
-                      borderRadius: 5,
-                      border: "1px solid #8a7050",
-                      background: craftable
-                        ? "#8a7050"
-                        : "rgba(120,100,70,0.15)",
-                      color: craftable ? "#fff8ea" : "#8a7a68",
-                      cursor: craftable ? "pointer" : "not-allowed",
-                      width: "100%",
-                    }}
-                  >
-                    Fabriquer
-                  </button>
-                </div>
-              );
-            })}
+                    <button
+                      disabled={!craftable}
+                      onClick={() => handleCraft(recipe)}
+                      style={{
+                        padding: "4px 10px",
+                        fontSize: 11,
+                        borderRadius: 5,
+                        border: "1px solid #8a7050",
+                        background: craftable
+                          ? "#8a7050"
+                          : "rgba(120,100,70,0.15)",
+                        color: craftable ? "#fff8ea" : "#8a7a68",
+                        cursor: craftable ? "pointer" : "not-allowed",
+                        width: "100%",
+                      }}
+                    >
+                      Fabriquer
+                    </button>
+                  </div>
+                );
+              })}
           </div>
 
           {discoveredLockedRecipes.length > 0 && (

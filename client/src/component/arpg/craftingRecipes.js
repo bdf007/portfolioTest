@@ -4116,6 +4116,50 @@ export const CRAFTING_RECIPES = {
     ],
     discoveryOnly: true,
   },
+  summonZombiequeenBossRecipe: {
+    id: "summonZombiequeenBossRecipe",
+    name: "Recette de Parchemin : Invocation : Reine Zombie",
+    resultItemId: "summonZombiequeenBossScroll",
+    resultQuantity: 1,
+    ingredients: [
+      { itemId: "zombiequeenBossCore", quantity: 1 },
+      { itemId: "grimoire", quantity: 1 },
+    ],
+    discoveryOnly: true,
+  },
+  summonZombiequeenRecipe: {
+    id: "summonZombiequeenRecipe",
+    name: "Recette de Parchemin : Invocation : Reine Zombie",
+    resultItemId: "summonZombiequeenScroll",
+    resultQuantity: 1,
+    ingredients: [
+      { itemId: "zombiequeenCore", quantity: 1 },
+      { itemId: "grimoire", quantity: 1 },
+    ],
+    discoveryOnly: true,
+  },
+  summonBeequeenBossRecipe: {
+    id: "summonBeequeenBossRecipe",
+    name: "Recette de Parchemin : Invocation : Reine des abeilles",
+    resultItemId: "summonBeequeenBossScroll",
+    resultQuantity: 1,
+    ingredients: [
+      { itemId: "beequeenBossCore", quantity: 1 },
+      { itemId: "grimoire", quantity: 1 },
+    ],
+    discoveryOnly: true,
+  },
+  summonBeequeenRecipe: {
+    id: "summonBeequeenRecipe",
+    name: "Recette de Parchemin : Invocation : Abeille Royale",
+    resultItemId: "summonBeequeenScroll",
+    resultQuantity: 1,
+    ingredients: [
+      { itemId: "beequeenCore", quantity: 1 },
+      { itemId: "grimoire", quantity: 1 },
+    ],
+    discoveryOnly: true,
+  },
 };
 
 /**

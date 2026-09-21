@@ -884,6 +884,11 @@ export default function Arpg() {
     if (scene) scene.closeShop();
   };
 
+  const handleRefreshShop = () => {
+    const scene = gameRef.current?.scene.getScene("MainScene");
+    if (scene) scene.refreshShop();
+  };
+
   const handleResumeGame = (game) => {
     setHeroId((game.playerState && game.playerState.heroId) || "hero1");
     setResumeSave(game);
@@ -1887,6 +1892,7 @@ export default function Arpg() {
             unlockedRecipes={unlockedRecipes}
             discoveredLockedRecipes={discoveredLockedRecipes}
             inventory={inventory}
+            isMobile={isMobile}
             onCraft={handleCraftItem}
             onFreeCraft={handleAttemptFreeCraft}
             onClose={handleCloseCraftingScreen}
@@ -1916,8 +1922,14 @@ export default function Arpg() {
             stock={shopStock}
             inventory={inventory}
             equipped={equipped}
+            refreshCost={
+              gameRef.current?.scene
+                .getScene("MainScene")
+                ?.getShopRefreshCost() ?? 0
+            }
             onBuy={handleBuyItem}
             onSell={handleSellItem}
+            onRefresh={handleRefreshShop}
             onClose={handleCloseShop}
           />
         )}

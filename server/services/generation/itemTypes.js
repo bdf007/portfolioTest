@@ -52,15 +52,15 @@ const ITEM_TYPES = {
     statBonus: { meleeDamage: 1 },
     stackable: false,
     archetypes: ["guerrier"],
-    damageType: "cold",
+    // damageType: "cold",
     price: 2,
-    inflictsEffect: {
-      type: "bleed",
-      chance: 0.9,
-      damagePerTick: 1,
-      tickIntervalMs: 1000,
-      ticks: 3,
-    },
+    // inflictsEffect: {
+    //   type: "bleed",
+    //   chance: 0.9,
+    //   damagePerTick: 1,
+    //   tickIntervalMs: 1000,
+    //   ticks: 3,
+    // },
   },
 
   woodenBow: {
@@ -69,7 +69,7 @@ const ITEM_TYPES = {
     slot: "mainHand",
     twoHanded: true, // occupe les DEUX mains - equiper libere mainHand ET offHand (cf. MainScene.equipItem)
     grantsRanged: true, // sans arme marquee ainsi equipee (ici ou en offHand), l'attaque a distance est indisponible - cf. MainScene.canUseRangedAttack
-    requiresAmmo: ["woodenArrow", "bronzeArrow", "bigWoodenArrow"], // itemId EXACT requis (pas juste un booleen) - un carreau ne peut pas alimenter un arc, cf. MainScene.performRangedAttack
+    requiresAmmo: ["woodenArrow", "bigWoodenArrow"], // itemId EXACT requis (pas juste un booleen) - un carreau ne peut pas alimenter un arc, cf. MainScene.performRangedAttack
     name: "Arc en bois",
     description:
       "+1 dégât à distance. Nécessite des flèches. Arme d'entraînement de départ.",
@@ -119,6 +119,7 @@ const ITEM_TYPES = {
     statBonus: { meleeDamage: 1 },
     stackable: false,
     archetypes: ["guerrier"],
+    price: 2,
   },
   woodenShovel: {
     id: "woodenShovel",
@@ -212,7 +213,7 @@ const ITEM_TYPES = {
     stackable: false,
     archetypes: ["voleur", "guerrier", "archer", "mage"],
     unlockLevel: 2,
-    price: 40,
+    // price: 40,
   },
   sharpIronDagger: {
     id: "sharpIronDagger",
@@ -234,7 +235,7 @@ const ITEM_TYPES = {
       durationMs: 5000,
     },
     unlockLevel: 3,
-    price: 60,
+    // price: 60,
   },
   ironSword: {
     id: "ironSword",
@@ -248,7 +249,7 @@ const ITEM_TYPES = {
     stackable: false,
     archetypes: ["guerrier"],
     unlockLevel: 2,
-    price: 60,
+    // price: 60,
   },
   sharpIronSword: {
     id: "sharpIronSword",
@@ -271,24 +272,7 @@ const ITEM_TYPES = {
       durationMs: 5000,
     },
     unlockLevel: 3,
-    price: 80,
-  },
-
-  huntingBow: {
-    id: "huntingBow",
-    category: "equipment",
-    slot: "mainHand",
-    twoHanded: true,
-    grantsRanged: true,
-    requiresAmmo: ["woodenArrow", "ironArrow", "bronzeArrow", "bigWoodenArrow"],
-    name: "Arc de chasse (Unique)",
-    description: "+4 dégâts à distance. +5 de distance d'attaque",
-    unique: true,
-    statBonus: { rangedDamage: 4, rangedRange: 5 },
-    stackable: false,
-    archetypes: ["archer"],
-    unlockLevel: 2,
-    price: 55,
+    // price: 80,
   },
   crossbow: {
     id: "crossbow",
@@ -303,7 +287,6 @@ const ITEM_TYPES = {
     stackable: false,
     archetypes: ["archer", "voleur"],
     unlockLevel: 2,
-    price: 50,
   },
   ironSpear: {
     id: "ironSpear",
@@ -317,7 +300,7 @@ const ITEM_TYPES = {
     stackable: false,
     archetypes: ["guerrier"],
     unlockLevel: 2,
-    price: 55,
+    // price: 55,
   },
   ironAxe: {
     id: "ironAxe",
@@ -331,7 +314,7 @@ const ITEM_TYPES = {
     stackable: false,
     archetypes: ["guerrier"],
     unlockLevel: 2,
-    price: 65,
+    // price: 65,
   },
   ironMallet: {
     id: "ironMallet",
@@ -345,7 +328,7 @@ const ITEM_TYPES = {
     stackable: false,
     archetypes: ["guerrier"],
     unlockLevel: 2,
-    price: 60,
+    // price: 60,
   },
   ironShovel: {
     id: "ironShovel",
@@ -359,7 +342,7 @@ const ITEM_TYPES = {
     stackable: false,
     archetypes: ["guerrier"],
     unlockLevel: 2,
-    price: 55,
+    // price: 55,
   },
 
   ironHammer: {
@@ -374,7 +357,7 @@ const ITEM_TYPES = {
     stackable: false,
     archetypes: ["guerrier"],
     unlockLevel: 2,
-    price: 50,
+    // price: 50,
   },
   ironSickle: {
     id: "ironSickle",
@@ -388,153 +371,7 @@ const ITEM_TYPES = {
     stackable: false,
     archetypes: ["guerrier"],
     unlockLevel: 2,
-    price: 60,
-  },
-  bronzeDagger: {
-    id: "bronzeDagger",
-    category: "equipment",
-    slot: "mainHand",
-    twoHanded: false,
-    grantsRanged: false,
-    name: "Dague en bronze",
-    description: "+10 dégâts au corps à corps.",
-    statBonus: { meleeDamage: 10 },
-    stackable: false,
-    archetypes: ["voleur", "guerrier", "archer", "mage"],
-    unlockLevel: 5,
-    price: 100,
-  },
-  bronzeSword: {
-    id: "bronzeSword",
-    category: "equipment",
-    slot: "mainHand",
-    twoHanded: false,
-    grantsRanged: false,
-    name: "Épée de bronze",
-    description: "+12 dégâts au corps à corps. +2 de distance d'attaque.",
-    statBonus: { meleeDamage: 12, meleeRange: +2 },
-    stackable: false,
-    archetypes: ["guerrier"],
-    unlockLevel: 5,
-    price: 135,
-  },
-  warBow: {
-    id: "warBow",
-    category: "equipment",
-    slot: "mainHand",
-    twoHanded: true,
-    grantsRanged: true,
-    requiresAmmo: ["woodenArrow", "ironArrow", "acidArrow"],
-    name: "Arc de guerre",
-    description: "+10 dégâts à distance. +8 de distance d'attaque.",
-    statBonus: { rangedDamage: 10, rangedRange: 8 },
-    stackable: false,
-    archetypes: ["archer"],
-    unlockLevel: 5,
-    price: 140,
-  },
-  warCrossbow: {
-    id: "warCrossbow",
-    category: "equipment",
-    slot: "mainHand",
-    twoHanded: false,
-    grantsRanged: true,
-    requiresAmmo: [
-      "woodenCrossbowBolt",
-      "ironCrossbowBolt",
-      "acidCrossbowBolt",
-    ],
-    name: "Arbalète",
-    description: "+3 dégâts à distance. Se manie a une main.",
-    statBonus: { rangedDamage: 6, rangedRange: 6 },
-    stackable: false,
-    archetypes: ["archer", "voleur"],
-    unlockLevel: 5,
-    price: 110,
-  },
-  bronzeSpear: {
-    id: "bronzeSpear",
-    category: "equipment",
-    slot: "mainHand",
-    twoHanded: true,
-    grantsRanged: false,
-    name: "Lance en bronze",
-    description: "+8 dégât au corps à corps. +4 de distance d'attaque.",
-    statBonus: { meleeDamage: 8, meleeRange: 4 },
-    stackable: false,
-    archetypes: ["guerrier"],
-    unlockLevel: 5,
-    price: 125,
-  },
-  bronzeAxe: {
-    id: "bronzeAxe",
-    category: "equipment",
-    slot: "mainHand",
-    twoHanded: true,
-    grantsRanged: false,
-    name: "Hache de guerre en bronze",
-    description: "+12 dégât au corps à corps.",
-    statBonus: { meleeDamage: 12 },
-    stackable: false,
-    archetypes: ["guerrier"],
-    unlockLevel: 5,
-    price: 130,
-  },
-  bronzeMallet: {
-    id: "bronzeMallet",
-    category: "equipment",
-    slot: "mainHand",
-    twoHanded: true,
-    grantsRanged: false,
-    name: "Masse en bronze",
-    description: "+10 dégât au corps à corps.",
-    statBonus: { meleeDamage: 10 },
-    stackable: false,
-    archetypes: ["guerrier"],
-    unlockLevel: 5,
-    price: 125,
-  },
-  bronzeShovel: {
-    id: "bronzeShovel",
-    category: "equipment",
-    slot: "mainHand",
-    twoHanded: true,
-    grantsRanged: false,
-    name: "Pelle en bronze",
-    description: "+8 dégât au corps à corps. +2 de distance d'attaque.",
-    statBonus: { meleeDamage: 8, meleeRange: +2 },
-    stackable: false,
-    archetypes: ["guerrier"],
-    unlockLevel: 5,
-    price: 120,
-  },
-  bronzeHammer: {
-    id: "bronzeHammer",
-    category: "equipment",
-    slot: "mainHand",
-    twoHanded: true,
-    grantsRanged: false,
-    name: "Marteau de guerre en bronze",
-    description: "+8 dégât au corps à corps.",
-    statBonus: { meleeDamage: 8 },
-    stackable: false,
-    archetypes: ["guerrier"],
-    unlockLevel: 5,
-    price: 110,
-  },
-  bronzeSickle: {
-    id: "bronzeSickle",
-    category: "equipment",
-    slot: "mainHand",
-    twoHanded: true,
-    grantsRanged: false,
-    name: "Faucille en bronze",
-    description: "+10 dégât au corps à corps. +3 de distance d'attaque.",
-    statBonus: { meleeDamage: 10, meleeRange: 3 },
-    stackable: false,
-    archetypes: ["guerrier"],
-    unlockLevel: 5,
-    price: 135,
+    // price: 60,
   },
   woodenArrow: {
     id: "woodenArrow",
@@ -565,7 +402,7 @@ const ITEM_TYPES = {
     stackable: true,
     archetypes: ["archer"],
     unlockLevel: 1,
-    price: 15,
+    // price: 15,
     // inflictsEffect: {
     //   type: "slow",
     //   kind: "modifier", // <-- le champ qui manquait, decide TOUT le comportement
@@ -597,7 +434,7 @@ const ITEM_TYPES = {
     stackable: true,
     archetypes: ["archer"],
     unlockLevel: 3,
-    price: 12,
+    // price: 12,
   },
   ironCrossbowBolt: {
     id: "ironCrossbowBolt",
@@ -610,33 +447,9 @@ const ITEM_TYPES = {
     stackable: true,
     archetypes: ["archer", "voleur"],
     unlockLevel: 3,
-    price: 10,
+    // price: 10,
   },
-  bronzeArrow: {
-    id: "bronzeArrow",
-    category: "ammo",
-    slot: "quiver",
-    name: "Flèche en bronze",
-    description: "+15 dégât à distance tant que des flèches sont encochées.",
-    statBonus: { rangedDamage: 15 },
-    stackable: true,
-    archetypes: ["archer"],
-    unlockLevel: 5,
-    price: 35,
-  },
-  bronzeCrossbowBolt: {
-    id: "bronzeCrossbowBolt",
-    category: "ammo",
-    slot: "quiver",
-    name: "Carreau de bronze",
-    description:
-      "+12 dégât à distance et +2 de distance d'attaque tant que des carreaux sont encochés. Munition de l'arbalète uniquement.",
-    statBonus: { rangedDamage: 12, rangedRange: 2 },
-    stackable: true,
-    archetypes: ["archer", "voleur"],
-    unlockLevel: 5,
-    price: 33,
-  },
+
   acidArrow: {
     id: "acidArrow",
     category: "ammo",
@@ -656,7 +469,7 @@ const ITEM_TYPES = {
       ticks: 3,
     },
     unlockLevel: 5,
-    price: 45,
+    // price: 45,
   },
   acidCrossbowBolt: {
     id: "acidCrossbowBolt",
@@ -669,7 +482,7 @@ const ITEM_TYPES = {
     stackable: true,
     archetypes: ["archer", "voleur"],
     unlockLevel: 5,
-    price: 43,
+    // price: 43,
   },
 
   /** Tools **/
@@ -693,7 +506,7 @@ const ITEM_TYPES = {
     description: "Outil de minage intermédiaire. Niveau 2.",
     toolTier: 2,
     stackable: false,
-    price: 40,
+    // price: 40,
   },
   ironPickaxe: {
     id: "ironPickaxe",
@@ -703,7 +516,7 @@ const ITEM_TYPES = {
     description: "Outil de minage robuste. Niveau 3.",
     toolTier: 3,
     stackable: false,
-    price: 60,
+    // price: 60,
   },
   silverPickaxe: {
     id: "silverPickaxe",
@@ -713,7 +526,7 @@ const ITEM_TYPES = {
     description: "Outil de minage avancé. Niveau 4.",
     toolTier: 4,
     stackable: false,
-    price: 80,
+    // price: 80,
   },
   steelPickaxe: {
     id: "steelPickaxe",
@@ -723,7 +536,7 @@ const ITEM_TYPES = {
     description: "Outil de minage solide. Niveau 5.",
     toolTier: 5,
     stackable: false,
-    price: 90,
+    // price: 90,
   },
   goldPickaxe: {
     id: "goldPickaxe",
@@ -733,7 +546,7 @@ const ITEM_TYPES = {
     description: "Outil de minage expert. Niveau 6.",
     toolTier: 6,
     stackable: false,
-    price: 100,
+    // price: 100,
   },
   platiniumPickaxe: {
     id: "platiniumPickaxe",
@@ -743,7 +556,7 @@ const ITEM_TYPES = {
     description: "Outil de minage maître. Niveau 7.",
     toolTier: 7,
     stackable: false,
-    price: 120,
+    // price: 120,
   },
   cobaltPickaxe: {
     id: "cobaltPickaxe",
@@ -753,7 +566,7 @@ const ITEM_TYPES = {
     description: "Outil de minage légendaire. Niveau 8.",
     toolTier: 8,
     stackable: false,
-    price: 150,
+    // price: 150,
   },
   adamantinePickaxe: {
     id: "adamantinePickaxe",
@@ -763,7 +576,7 @@ const ITEM_TYPES = {
     description: "Outil de minage mythique. Niveau 9.",
     toolTier: 9,
     stackable: false,
-    price: 200,
+    // price: 200,
   },
   crimsonPickaxe: {
     id: "crimsonPickaxe",
@@ -773,7 +586,7 @@ const ITEM_TYPES = {
     description: "Outil de minage ultime. Niveau 10.",
     toolTier: 10,
     stackable: false,
-    price: 250,
+    // price: 250,
   },
   angelicPickaxe: {
     id: "angelicPickaxe",
@@ -783,7 +596,7 @@ const ITEM_TYPES = {
     description: "Outil de minage divin. Niveau 11.",
     toolTier: 11,
     stackable: false,
-    price: 300,
+    // price: 300,
   },
   fatefulPickaxe: {
     id: "fatefulPickaxe",
@@ -793,7 +606,7 @@ const ITEM_TYPES = {
     description: "Outil de minage du destin. Niveau 12.",
     toolTier: 12,
     stackable: false,
-    price: 400,
+    // price: 400,
   },
   novaPickaxe: {
     id: "novaPickaxe",
@@ -803,7 +616,7 @@ const ITEM_TYPES = {
     description: "Outil de minage cosmique. Niveau 13.",
     toolTier: 13,
     stackable: false,
-    price: 500,
+    // price: 500,
   },
 
   woodenAxe: {
@@ -815,6 +628,7 @@ const ITEM_TYPES = {
     toolType: "axe",
     toolTier: 1,
     stackable: false,
+    price: 10,
   },
   novaAxe: {
     id: "novaAxe",
@@ -825,7 +639,7 @@ const ITEM_TYPES = {
     toolType: "axe",
     toolTier: 13,
     stackable: false,
-    price: 500,
+    // price: 500,
   },
 
   /** Potions **/
@@ -902,7 +716,7 @@ const ITEM_TYPES = {
     statBonus: { defense: 3 },
     stackable: false,
     unlockLevel: 1,
-    price: 45,
+    // price: 45,
   },
 
   gold: {
@@ -925,7 +739,7 @@ const ITEM_TYPES = {
     statBonus: { meleeDamage: 2 },
     stackable: false,
     archetypes: ["guerrier"],
-    price: 5,
+    // price: 5,
     inflictsEffect: {
       type: "bleed",
       chance: 0.9,
@@ -973,7 +787,7 @@ const ITEM_TYPES = {
     grantsAbility: "fireball",
     stackable: true,
     unlockLevel: 1,
-    price: 80,
+    // price: 80,
   },
   whirlwindScroll: {
     id: "whirlwindScroll",
@@ -983,7 +797,7 @@ const ITEM_TYPES = {
     grantsAbility: "whirlwind",
     stackable: true,
     unlockLevel: 1,
-    price: 90,
+    // price: 90,
   },
   hasteScroll: {
     id: "hasteScroll",
@@ -993,7 +807,7 @@ const ITEM_TYPES = {
     grantsAbility: "haste",
     stackable: true,
     unlockLevel: 1,
-    price: 85,
+    // price: 85,
   },
   slowScroll: {
     id: "slowScroll",
@@ -1003,7 +817,7 @@ const ITEM_TYPES = {
     grantsAbility: "slow",
     stackable: true,
     unlockLevel: 1,
-    price: 75,
+    // price: 75,
   },
   flameWeaponScroll: {
     id: "flameWeaponScroll",
@@ -1014,7 +828,7 @@ const ITEM_TYPES = {
     grantsAbility: "flameWeapon",
     stackable: true,
     unlockLevel: 5,
-    price: 95,
+    // price: 95,
   },
   flameWallScroll: {
     id: "flameWallScroll",
@@ -1025,7 +839,7 @@ const ITEM_TYPES = {
     grantsAbility: "flameWall",
     stackable: true,
     unlockLevel: 5,
-    price: 100,
+    // price: 100,
   },
 
   // recipes
@@ -1036,7 +850,7 @@ const ITEM_TYPES = {
     description: "Apprend la recette de l'épée enflammée.",
     grantsRecipe: "flamingSword",
     stackable: true,
-    price: 70,
+    // price: 70,
   },
   woodenArrowRecipe: {
     id: "woodenArrowRecipe",
@@ -1045,7 +859,7 @@ const ITEM_TYPES = {
     description: "Apprend la recette de la flèche en bois.",
     grantsRecipe: "woodenArrow",
     stackable: true,
-    price: 40,
+    // price: 40,
   },
 
   healthPotionRecipe: {
@@ -1055,7 +869,7 @@ const ITEM_TYPES = {
     description: "Apprend la recette de la potion de soin.",
     grantsRecipe: "healthPotionRecipe",
     stackable: true,
-    price: 50,
+    // price: 50,
   },
 
   summonAngryBrownMushroomScroll: {
@@ -1109,7 +923,7 @@ const ITEM_TYPES = {
     name: "Bois de cerf",
     description: "Un bois de cerf robuste, utilisé en artisanat.",
     stackable: true,
-    price: 8,
+    // price: 8,
   },
   mushroom: {
     id: "mushroom",
@@ -1117,7 +931,7 @@ const ITEM_TYPES = {
     name: "Champignon",
     description: "Un champignon commun, utilisé en artisanat.",
     stackable: true,
-    price: 5,
+    // price: 5,
   },
   branch: {
     id: "branch",
@@ -1125,7 +939,7 @@ const ITEM_TYPES = {
     name: "Branche",
     description: "Une branche solide, utilisée en artisanat.",
     stackable: true,
-    price: 5,
+    // price: 5,
   },
   berries: {
     id: "berries",
@@ -1133,7 +947,7 @@ const ITEM_TYPES = {
     name: "Baies",
     description: "Des baies sauvages, utilisées en artisanat.",
     stackable: true,
-    price: 5,
+    // price: 5,
   },
   honeycomb: {
     id: "honeycomb",
@@ -1141,7 +955,7 @@ const ITEM_TYPES = {
     name: "Rayon de miel",
     description: "Un rayon de miel, utilisé en artisanat.",
     stackable: true,
-    price: 10,
+    // price: 10,
   },
   // unique monster cores
   angryBrownMushroomCore: {
@@ -1294,7 +1108,7 @@ const ITEM_TYPES = {
     name: "Champignon orange",
     description: "Un champignon rare.",
     stackable: true,
-    price: 5,
+    // price: 5,
   },
   mudGolemCore: {
     id: "mudGolemCore",
@@ -2279,7 +2093,7 @@ const ITEM_TYPES = {
     description:
       "Une touffe de fourrure d'ours noir, utilisée pour l'artisanat.",
     stackable: false,
-    unique: true,
+    unique: false,
   },
   blackBearPelt: {
     id: "blackBearPelt",
@@ -2287,7 +2101,7 @@ const ITEM_TYPES = {
     name: "Peau d'ours noir",
     description: "La peau d'un ours noir, utilisée pour l'artisanat.",
     stackable: false,
-    unique: true,
+    unique: false,
   },
   summonBlackBearScroll: {
     id: "summonBlackBearScroll",
@@ -2891,6 +2705,70 @@ const ITEM_TYPES = {
     grantsAbility: "summonGolemOmbre",
     stackable: false,
   },
+  zombiequeenBossCore: {
+    id: "zombiequeenBossCore",
+    category: "craftingMaterial",
+    name: "Noyau de reine Zombie",
+    description: "Le cœur d'une reine zombie, utilisé pour l'artisanat.",
+    stackable: false,
+    unique: true,
+  },
+  summonZombiequeenBossScroll: {
+    id: "summonZombiequeenBossScroll",
+    category: "abilityScroll",
+    name: "Parchemin : Invocation : Reine Zombie",
+    description: "Apprend la compétence Invocation : Reine Zombie.",
+    grantsAbility: "summonZombiequeenBoss",
+    stackable: false,
+  },
+  zombiequeenCore: {
+    id: "zombiequeenCore",
+    category: "craftingMaterial",
+    name: "Noyau de reine Zombie",
+    description: "Le cœur d'une reine zombie, utilisé pour l'artisanat.",
+    stackable: false,
+    unique: true,
+  },
+  summonZombiequeenScroll: {
+    id: "summonZombiequeenScroll",
+    category: "abilityScroll",
+    name: "Parchemin : Invocation : Reine Zombie",
+    description: "Apprend la compétence Invocation : Reine Zombie.",
+    grantsAbility: "summonZombiequeen",
+    stackable: false,
+  },
+  beequeenBossCore: {
+    id: "beequeenBossCore",
+    category: "craftingMaterial",
+    name: "Noyau de reine des abeilles",
+    description: "Le cœur d'une reine des abeilles, utilisé pour l'artisanat.",
+    stackable: false,
+    unique: true,
+  },
+  summonBeequeenBossScroll: {
+    id: "summonBeequeenBossScroll",
+    category: "abilityScroll",
+    name: "Parchemin : Invocation : Reine des abeilles",
+    description: "Apprend la compétence Invocation : Reine des abeilles.",
+    grantsAbility: "summonBeequeenBoss",
+    stackable: false,
+  },
+  beequeenCore: {
+    id: "beequeenCore",
+    category: "craftingMaterial",
+    name: "Noyau de abeille Royale",
+    description: "Le cœur d'une abeille royale, utilisé pour l'artisanat.",
+    stackable: false,
+    unique: true,
+  },
+  summonBeequeenScroll: {
+    id: "summonBeequeenScroll",
+    category: "abilityScroll",
+    name: "Parchemin : Invocation : Abeille Royale",
+    description: "Apprend la compétence Invocation : Abeille Royale.",
+    grantsAbility: "summonBeequeen",
+    stackable: false,
+  },
 };
 
 /**
@@ -3464,6 +3342,26 @@ const LOOT_TABLES = {
     { itemId: null, weight: 50 },
     { itemId: "gold", weight: 50, quantityRange: [1, 3] },
     { itemId: "golemOmbreCore", weight: 50 },
+  ],
+  zombiequeenBossDrop: [
+    { itemId: null, weight: 50 },
+    { itemId: "gold", weight: 50, quantityRange: [1, 3] },
+    { itemId: "zombiequeenBossCore", weight: 50 },
+  ],
+  zombiequeenDrop: [
+    { itemId: null, weight: 50 },
+    { itemId: "gold", weight: 50, quantityRange: [1, 3] },
+    { itemId: "zombiequeenCore", weight: 50 },
+  ],
+  beequeenBossDrop: [
+    { itemId: null, weight: 50 },
+    { itemId: "gold", weight: 50, quantityRange: [1, 3] },
+    { itemId: "beequeenBossCore", weight: 50 },
+  ],
+  beequeenDrop: [
+    { itemId: null, weight: 50 },
+    { itemId: "gold", weight: 50, quantityRange: [1, 3] },
+    { itemId: "beequeenCore", weight: 50 },
   ],
 };
 

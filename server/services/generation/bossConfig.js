@@ -50,7 +50,7 @@ const EARLIEST_BOSS_DEPTH = 5;
 const BOSS_ASSIGNMENTS = [
   {
     depth: 5,
-    type: "bigbat",
+    type: "zombiequeenBoss",
     stats: {
       hp: 100,
       damage: 10,
@@ -60,7 +60,7 @@ const BOSS_ASSIGNMENTS = [
       varianceDice: "1d10",
     },
     summonAbility: {
-      summonTypes: ["colorBat1", "colorBat2"], // liste fixe, propre a ce boss
+      summonTypes: ["zombie"], // liste fixe, propre a ce boss
       cooldownMs: 15000,
       maxActive: 2,
       hpScale: 0.3,
@@ -70,7 +70,7 @@ const BOSS_ASSIGNMENTS = [
   },
   {
     depth: 9,
-    type: "maxibee1",
+    type: "beequeenBoss",
     stats: {
       hp: 200,
       damage: 20,
@@ -80,9 +80,9 @@ const BOSS_ASSIGNMENTS = [
       varianceDice: "1d10",
     },
     summonAbility: {
-      summonTypes: ["bee1"], // liste fixe, propre a ce boss
-      cooldownMs: 15000,
-      maxActive: 4,
+      summonTypes: ["bee", "beequeen"], // liste fixe, propre a ce boss
+      cooldownMs: 1000,
+      maxActive: 10,
       hpScale: 0.1,
       damageScale: 0.1,
       defenseScale: 0.1,

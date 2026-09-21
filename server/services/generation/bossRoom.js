@@ -83,22 +83,34 @@ function carveBossRoom(grid, playerSpawn, roomSize = 5) {
   // creuse la salle dans la marge neuve, centree sur la ligne de la porte
   const perpHalf = Math.floor(roomSize / 2);
   const roomStartX = originalWidth;
+  let carvedYMin = Infinity;
+  let carvedYMax = -Infinity;
   for (let dx = 0; dx < roomSize; dx++) {
     for (let p = -perpHalf; p <= perpHalf; p++) {
       const x = roomStartX + dx;
       const y = doorTile.y + p;
       if (y < 1 || y >= height - 1 || x >= newWidth - 1) continue;
       newGrid[y][x] = FLOOR;
+      if (y < carvedYMin) carvedYMin = y;
+      if (y > carvedYMax) carvedYMax = y;
     }
   }
 
+  // centre vertical REEL de la salle creusee - peut differer de doorTile.y
+  // si la salle a ete rognee pres du bord haut/bas de la grille (cause du
+  // bug : le boss apparaissait alors sur le bord non rogne au lieu du centre)
+  const roomCenterY =
+    carvedYMin <= carvedYMax
+      ? Math.round((carvedYMin + carvedYMax) / 2)
+      : doorTile.y; // filet de securite - ne devrait jamais arriver (doorTile.y est toujours du sol)
+
   const bossSpawn = {
     x: roomStartX + Math.floor(roomSize / 2), // centre horizontal de la salle
-    y: doorTile.y, // deja le centre vertical (la salle est creusee symetriquement autour de cette ligne)
+    y: roomCenterY,
   };
   const exitTile = {
     x: roomStartX + roomSize - 1, // mur du fond, oppose a la porte - la position qu'occupait le boss avant
-    y: doorTile.y,
+    y: roomCenterY,
   };
 
   return { grid: newGrid, doorTile, bossSpawn, exitTile };
