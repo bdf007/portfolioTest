@@ -6528,9 +6528,12 @@ export default class MainScene extends Phaser.Scene {
 
     const summonHp =
       def.hp ?? Math.round(this.playerMaxHp * (def.hpScale || 0));
+    const summonDamageSource =
+      def.attackType === "ranged"
+        ? this.getEffectivePlayerRangedDamage()
+        : this.getEffectivePlayerMeleeDamage();
     const summonDamage =
-      def.damage ??
-      Math.round(this.getEffectivePlayerMeleeDamage() * (def.damageScale || 0));
+      def.damage ?? Math.round(summonDamageSource * (def.damageScale || 0));
     const summonDefense =
       def.defense ?? Math.round(this.playerDefense * (def.defenseScale || 0));
 
@@ -6596,9 +6599,12 @@ export default class MainScene extends Phaser.Scene {
 
     const summonHp =
       def.hp ?? Math.round(this.playerMaxHp * (def.hpScale || 0));
+    const summonDamageSource =
+      def.attackType === "ranged"
+        ? this.getEffectivePlayerRangedDamage()
+        : this.getEffectivePlayerMeleeDamage();
     const summonDamage =
-      def.damage ??
-      Math.round(this.getEffectivePlayerMeleeDamage() * (def.damageScale || 0));
+      def.damage ?? Math.round(summonDamageSource * (def.damageScale || 0));
     const summonDefense =
       def.defense ?? Math.round(this.playerDefense * (def.defenseScale || 0));
 
