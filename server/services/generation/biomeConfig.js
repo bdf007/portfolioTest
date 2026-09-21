@@ -23,16 +23,15 @@ const MAX_DEPTH = 100; // pas de biome infini - le jeu s'arrete a cet etage
 
 const BIOMES = [
   {
-    id: "cave1",
+    id: "muddyCave1",
     minDepth: 1,
-    maxDepth: 2,
+    maxDepth: 1,
     generator: "cavechain",
     tileset: "muddyCave_0_0",
-    enemyBaseCount: 10,
-    bossRoomSize: 40,
+    enemyBaseCount: 5,
     enemyTypes: ["angryBrownMushroom", "gnome", "angryTrent", "yellowSlime"],
     decorationConfig: {
-      count: [25, 35], // genereux - c'est fait pour remplir le biome
+      count: [40, 60], // genereux - c'est fait pour remplir le biome
       decorTypes: ["rock_small"], // cles arbitraires, a adapter
     },
     chestCount: [1, 3],
@@ -47,7 +46,7 @@ const BIOMES = [
       damageAmount: [8, 15],
       inflictsEffect: null,
     },
-    secretRoomChance: 0.15, // 0.15 pour 15% de chances par etage - reste absent/0 sur un biome = jamais de salle secrete
+    secretRoomChance: 0, // 0.15 pour 15% de chances par etage - reste absent/0 sur un biome = jamais de salle secrete
     miningConfig: {
       rockChance: 1, // chance qu'AU MOINS un gisement apparaisse cet etage
       minRocks: 5,
@@ -58,7 +57,7 @@ const BIOMES = [
         { itemId: "coalOre", weight: 1, requiredTier: 1 },
       ],
       totalHits: [1, 6], // nombre de coups avant epuisement
-      gemChance: 0.05, // 5% de chance PAR COUP d'obtenir une gemme a la place du metal
+      gemChance: 0.01, // 1% de chance PAR COUP d'obtenir une gemme a la place du metal
       gemPool: [
         { itemId: "smokyQuartz", weight: 5 },
         { itemId: "ruby", weight: 2 },
@@ -80,6 +79,75 @@ const BIOMES = [
       ],
     },
     generatorParams: {
+      width: 30,
+      height: 30,
+      roomSize: 8,
+      roomCount: 10,
+      stratBias: 0.8,
+      doorWidth: 2,
+    },
+  },
+  {
+    id: "muddyCave2",
+    minDepth: 2,
+    maxDepth: 2,
+    generator: "cavechain",
+    tileset: "muddyCave_0_0",
+    enemyBaseCount: 10,
+    bossRoomSize: 40,
+    enemyTypes: ["angryBrownMushroom", "gnome", "angryTrent", "yellowSlime"],
+    decorationConfig: {
+      count: [50, 60], // genereux - c'est fait pour remplir le biome
+      decorTypes: ["rock_small"], // cles arbitraires, a adapter
+    },
+    chestCount: [1, 3],
+    chestLootTable: "chestStandard", // table de butin utilisée pour les coffres dans ce biome modifiable dans itemTypes.js
+    crateConfig: {
+      count: [3, 6], // plus nombreuses que les vrais coffres
+      lootTable: "crateStandard", // remplace par une table dediee plus modeste une fois que tu en crees une dans itemTypes.js
+    },
+    trapConfig: {
+      frequency: 0.006,
+      damageType: "physical",
+      damageAmount: [10, 18],
+      inflictsEffect: null,
+    },
+    secretRoomChance: 0, // 0.15 pour 15% de chances par etage - reste absent/0 sur un biome = jamais de salle secrete
+    miningConfig: {
+      rockChance: 1, // chance qu'AU MOINS un gisement apparaisse cet etage
+      minRocks: 5,
+      maxRocks: 10,
+
+      resourcePool: [
+        { itemId: "copperOre", weight: 5, requiredTier: 1 },
+        { itemId: "coalOre", weight: 1, requiredTier: 1 },
+      ],
+      totalHits: [2, 6], // nombre de coups avant epuisement
+      gemChance: 0.01, // 1% de chance PAR COUP d'obtenir une gemme a la place du metal
+      gemPool: [
+        { itemId: "smokyQuartz", weight: 5 },
+        { itemId: "ruby", weight: 2 },
+        { itemId: "aquaMarine", weight: 1 },
+        { itemId: "peridot", weight: 0.5 },
+        { itemId: "ironOre", weight: 0.5 },
+      ],
+    },
+    forageConfig: {
+      nodeChance: 1,
+      minNodes: 5,
+      maxNodes: 10,
+      resourcePool: [
+        { itemId: "oakWood", weight: 5, requiredTier: 1 },
+        { itemId: "ashWood", weight: 1, requiredTier: 2 },
+      ],
+      totalHits: [2, 5],
+      bonusChance: 0.01,
+      bonusPool: [
+        { itemId: "berries", weight: 3 },
+        { itemId: "resin", weight: 1 },
+      ],
+    },
+    generatorParams: {
       width: 40,
       height: 40,
       roomSize: 8,
@@ -89,13 +157,12 @@ const BIOMES = [
     },
   },
   {
-    id: "fields1",
+    id: "mines1",
     minDepth: 3,
-    maxDepth: 4,
+    maxDepth: 3,
     generator: "cellular",
     tileset: "mines2",
     enemyBaseCount: 15,
-    bossRoomSize: 40,
     enemyTypes: [
       "angryBrownMushroom",
       "gnome",
@@ -122,16 +189,16 @@ const BIOMES = [
     secretRoomChance: 0.15, // 0.15 pour 15% de chances par etage - reste absent/0 sur un biome = jamais de salle secrete
     miningConfig: {
       rockChance: 1, // chance qu'AU MOINS un gisement apparaisse cet etage
-      minRocks: 1,
-      maxRocks: 3,
+      minRocks: 10,
+      maxRocks: 15,
 
       resourcePool: [
         { itemId: "copperOre", weight: 5, requiredTier: 1 },
         { itemId: "coalOre", weight: 1, requiredTier: 1 },
         { itemId: "ironOre", weight: 4, requiredTier: 2 },
       ],
-      totalHits: [1, 6], // nombre de coups avant epuisement
-      gemChance: 0.15, // 15% de chance PAR COUP d'obtenir une gemme a la place du metal
+      totalHits: [2, 6], // nombre de coups avant epuisement
+      gemChance: 0.01, // 1% de chance PAR COUP d'obtenir une gemme a la place du metal
       gemPool: [
         { itemId: "smokyQuartz", weight: 5 },
         { itemId: "ruby", weight: 2 },
@@ -139,18 +206,93 @@ const BIOMES = [
         { itemId: "peridot", weight: 0.5 },
       ],
     },
-    forageConfig: {
-      nodeChance: 1, // plus frequent que le minage - remplir le biome
-      minNodes: 5,
-      maxNodes: 10,
-      resourcePool: [{ itemId: "oakWood", weight: 1, requiredTier: 1 }],
-      totalHits: [1, 3],
-      bonusChance: 0.05,
-      bonusPool: [
-        { itemId: "berries", weight: 3 },
-        { itemId: "resin", weight: 1 },
+    // forageConfig: {
+    //   nodeChance: 1, // plus frequent que le minage - remplir le biome
+    //   minNodes: 5,
+    //   maxNodes: 10,
+    //   resourcePool: [
+    //     { itemId: "oakWood", weight: 5, requiredTier: 1 },
+    //     { itemId: "ashWood", weight: 1, requiredTier: 2 },
+    //   ],
+    //   totalHits: [1, 3],
+    //   bonusChance: 0.05,
+    //   bonusPool: [
+    //     { itemId: "berries", weight: 3 },
+    //     { itemId: "resin", weight: 1 },
+    //   ],
+    // },
+    generatorParams: {
+      width: 50,
+      height: 50,
+      wallProbability: 0.4,
+      minFloorRatio: 0.35,
+    },
+  },
+  {
+    id: "mines2",
+    minDepth: 4,
+    maxDepth: 4,
+    generator: "cellular",
+    tileset: "mines2",
+    enemyBaseCount: 20,
+    enemyTypes: [
+      "angryBrownMushroom",
+      "gnome",
+      "bat",
+      "warlockRed",
+      "golemEau",
+    ],
+    decorationConfig: {
+      count: [60, 120], // genereux - c'est fait pour remplir le biome
+      decorTypes: ["rock_small"], // cles arbitraires, a adapter
+    },
+    chestCount: [1, 5],
+    chestLootTable: "chestStandard",
+    crateConfig: {
+      count: [8, 12], // plus nombreuses que les vrais coffres
+      lootTable: "crateStandard", // remplace par une table dediee plus modeste une fois que tu en crees une dans itemTypes.js
+    },
+    trapConfig: {
+      frequency: 0.006,
+      damageType: "physical",
+      damageAmount: [15, 25],
+      inflictsEffect: null,
+    },
+    secretRoomChance: 0.15, // 0.15 pour 15% de chances par etage - reste absent/0 sur un biome = jamais de salle secrete
+    miningConfig: {
+      rockChance: 1, // chance qu'AU MOINS un gisement apparaisse cet etage
+      minRocks: 10,
+      maxRocks: 15,
+
+      resourcePool: [
+        { itemId: "copperOre", weight: 5, requiredTier: 1 },
+        { itemId: "coalOre", weight: 1, requiredTier: 1 },
+        { itemId: "ironOre", weight: 4, requiredTier: 2 },
+      ],
+      totalHits: [2, 6], // nombre de coups avant epuisement
+      gemChance: 0.01, // 1% de chance PAR COUP d'obtenir une gemme a la place du metal
+      gemPool: [
+        { itemId: "smokyQuartz", weight: 5 },
+        { itemId: "ruby", weight: 2 },
+        { itemId: "aquaMarine", weight: 1 },
+        { itemId: "peridot", weight: 0.5 },
       ],
     },
+    // forageConfig: {
+    //   nodeChance: 1, // plus frequent que le minage - remplir le biome
+    //   minNodes: 5,
+    //   maxNodes: 10,
+    //   resourcePool: [
+    //     { itemId: "oakWood", weight: 5, requiredTier: 1 },
+    //     { itemId: "ashWood", weight: 1, requiredTier: 2 },
+    //   ],
+    //   totalHits: [1, 3],
+    //   bonusChance: 0.05,
+    //   bonusPool: [
+    //     { itemId: "berries", weight: 3 },
+    //     { itemId: "resin", weight: 1 },
+    //   ],
+    // },
     generatorParams: {
       width: 60,
       height: 60,

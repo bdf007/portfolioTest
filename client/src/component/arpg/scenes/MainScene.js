@@ -116,6 +116,47 @@ const VISION_RADIUS_DEFAULT = 6; // repli si le profil d'archetype (cf. HERO_STA
 const ENEMY_SPEED = 90;
 const SELL_PRICE_RATIO = 0.5; // moitie du prix d'achat - cf. sellItem
 const DECRAFT_RATIO = 0.5; // proportion des ingredients rendus au decraft - reglable independamment de SELL_PRICE_RATIO
+const SHOP_REFRESH_BASE_COST = 50; // cout du 1er rafraichissement du stock sur un etage donne - augmente ensuite a chaque utilisation (cf. getShopRefreshCost)
+const SHOP_STOCK_SIZE_MIN = 3; // doit rester synchronise avec generateShopStock (shopGenerator.js, cote generation de niveau)
+const SHOP_STOCK_SIZE_MAX = 5;
+
+/**
+ * Reimplementation cote client de generateShopStock (shopGenerator.js,
+ * genere le stock DE BASE d'une boutique a la creation du niveau, seede
+ * par ville). Necessaire car le rafraichissement doit produire un NOUVEAU
+ * tirage a la demande du joueur, sans aller-retour serveur - reprend
+ * exactement le meme algorithme (mélange Fisher-Yates seede) avec le
+ * meme param `seed`, seule la CHAINE de seed passee change a chaque
+ * rafraichissement (cf. getMergedShopStock).
+ */
+function getPurchasableItemIdsClient() {
+  return Object.keys(ITEM_DEFS).filter((id) => ITEM_DEFS[id].price);
+}
+
+function generateShopStockClient(
+  seed,
+  stockSizeMin = SHOP_STOCK_SIZE_MIN,
+  stockSizeMax = SHOP_STOCK_SIZE_MAX,
+) {
+  const rng = createRng(String(seed) + "-shop-stock");
+  const candidates = getPurchasableItemIdsClient();
+
+  const shuffled = [...candidates];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+
+  const stockSize = Math.min(
+    shuffled.length,
+    stockSizeMin + Math.floor(rng() * (stockSizeMax - stockSizeMin + 1)),
+  );
+
+  return shuffled.slice(0, stockSize).map((itemId) => ({
+    itemId,
+    price: ITEM_DEFS[itemId].price,
+  }));
+}
 const ENEMY_STOP_DISTANCE = 28; // attackType 'melee' - juste en dessous de ENEMY_ATTACK_RANGE (34)
 const ENEMY_RANGED_STOP_DISTANCE = 180; // attackType 'ranged' - confortablement dans ENEMY_RANGED_ATTACK_RANGE (260), mais loin de la melee - sans ca, un ennemi a distance marcherait jusqu'a bout portant avant de tirer
 const ENEMY_RANGED_RETREAT_DISTANCE = 100; // en dessous de cette distance, un ennemi a distance recule ACTIVEMENT plutot que de simplement s'arreter - recule et tire en meme temps (les deux systemes sont deja decouples, cf. updateEnemyAttacks), jamais besoin de s'arreter pour viser
@@ -839,6 +880,8 @@ export default class MainScene extends Phaser.Scene {
     this.enemyGroup = this.physics.add.group();
     this.pendingResummonDef = null;
     this.pendingResummonTarget = null;
+    this.pendingSummonReplaceDef = null;
+    this.pendingSummonReplaceVictim = null;
     this.physics.add.collider(this.enemyGroup, this.enemyGroup);
     this.summonGroup = this.physics.add.group();
     this.physics.add.collider(this.summonGroup, this.summonGroup);
@@ -906,6 +949,7 @@ export default class MainScene extends Phaser.Scene {
     this.activeDialogQuestKey = null;
     this.activeTalkingNpc = null;
     this.shopSoldItems = {}; // { depth: [{itemId, quantity}] } - objets vendus a la boutique de CETTE ville precise, rachetables uniquement ici
+    this.shopRerollSeed = {}; // { depth: nombre de rafraichissements utilises sur CETTE boutique } - 0/absent = stock d'origine (this.shopData.stock)
     this.inventory = [];
     this.gamePaused = false;
     this.pauseReasons = new Set();
@@ -1045,6 +1089,7 @@ export default class MainScene extends Phaser.Scene {
     this.unlockedRecipes = ps.unlockedRecipes || [];
     this.discoveredLockedRecipes = ps.discoveredLockedRecipes || [];
     this.shopSoldItems = ps.shopSoldItems || {};
+    this.shopRerollSeed = ps.shopRerollSeed || {};
     this.obtainedUniqueItems = ps.obtainedUniqueItems || [];
     this.furyKillCount = ps.furyKillCount || 0;
     this.pendingBossRoomOpen = ps.bossRoomOpen || false;
@@ -1106,10 +1151,17 @@ export default class MainScene extends Phaser.Scene {
         this.hero.y + (Math.random() - 0.5) * 40,
         growthScale,
       );
+      this.summonIdCounter = (this.summonIdCounter || 0) + 1;
       this.summons.push({
+        id: this.summonIdCounter,
         sprite,
         spriteKey: savedSummon.spriteKey,
         sourceAbilityId: savedSummon.sourceAbilityId,
+        path: null,
+        pathIndex: 0,
+        nextPathRequestAt: 0,
+        pathDestX: null,
+        pathDestY: null,
         hp: savedSummon.hp,
         maxHp: savedSummon.maxHp,
         damage: savedSummon.damage,
@@ -1124,6 +1176,14 @@ export default class MainScene extends Phaser.Scene {
             : null,
         lastDir: "down",
         growthConfig,
+        stuckCheckPos: { x: sprite.x, y: sprite.y },
+        stuckCheckAt: this.time.now,
+        stuckJitterUntil: 0,
+        stuckStreak: 0,
+        // <-- le champ qui manquait et causait le bug : sans lui, isRanged
+        // valait toujours false au rechargement et l'invocation fonçait au
+        // contact comme un summon corps a corps
+        attackType: sourceAbilityDef?.attackType || "melee",
       });
     }
     this.events.emit("xp-changed", { xp: this.xp });
@@ -1650,6 +1710,7 @@ export default class MainScene extends Phaser.Scene {
           unlockedRecipes: this.unlockedRecipes,
           discoveredLockedRecipes: this.discoveredLockedRecipes,
           shopSoldItems: this.shopSoldItems,
+          shopRerollSeed: this.shopRerollSeed,
           obtainedUniqueItems: this.obtainedUniqueItems,
           summons: this.summons.map((s) => ({
             spriteKey: s.spriteKey,
@@ -3606,7 +3667,13 @@ export default class MainScene extends Phaser.Scene {
   }
 
   getMergedShopStock() {
-    const baseStock = this.shopData?.stock || [];
+    const rerollCount = this.shopRerollSeed[this.currentDepth] || 0;
+    const baseStock =
+      rerollCount > 0
+        ? generateShopStockClient(
+            `${this.currentSeed}-shop-refresh-${this.currentDepth}-${rerollCount}`,
+          )
+        : this.shopData?.stock || [];
     const soldHere = this.shopSoldItems[this.currentDepth] || [];
     const soldEntries = soldHere.map((s) => {
       const def = resolveItemDef(s.itemId);
@@ -3618,6 +3685,35 @@ export default class MainScene extends Phaser.Scene {
       };
     });
     return [...baseStock, ...soldEntries];
+  }
+
+  getShopRefreshCost() {
+    const rerollCount = this.shopRerollSeed[this.currentDepth] || 0;
+    // cout croissant a chaque utilisation sur CETTE boutique (remis a zero
+    // en revenant sur un autre etage/ville) - ajuste le multiplicateur ou
+    // passe a une formule non-lineaire si 50/100/150/... est trop plat
+    return SHOP_REFRESH_BASE_COST * (rerollCount + 1);
+  }
+
+  refreshShop() {
+    const cost = this.getShopRefreshCost();
+    const goldEntry = this.inventory.find((i) => i.itemId === "gold");
+    const currentGold = goldEntry ? goldEntry.quantity : 0;
+    if (currentGold < cost) {
+      this.showLootToast("Pas assez d'or pour rafraîchir la boutique");
+      return;
+    }
+
+    goldEntry.quantity -= cost;
+    if (goldEntry.quantity <= 0)
+      this.inventory = this.inventory.filter((i) => i !== goldEntry);
+
+    this.shopRerollSeed[this.currentDepth] =
+      (this.shopRerollSeed[this.currentDepth] || 0) + 1;
+
+    this.events.emit("inventory-updated", [...this.inventory]);
+    this.events.emit("shop", this.getMergedShopStock());
+    this.showLootToast("Stock de la boutique rafraîchi");
   }
 
   openShop() {
@@ -3825,6 +3921,7 @@ export default class MainScene extends Phaser.Scene {
     for (const proj of this.enemyProjectiles) freeze(proj);
     for (const proj of this.abilityProjectiles || []) freeze(proj);
     for (const b of this.boomerangs || []) freeze(b); // <-- absent jusqu'ici, meme souci potentiel
+    for (const summon of this.summons) freeze(summon); // fix : evite le "drift" (velocite residuelle jamais remise a zero pendant la pause)
   }
   unpauseGame(reason) {
     this.pauseReasons.delete(reason);
@@ -4859,8 +4956,12 @@ export default class MainScene extends Phaser.Scene {
       }
     }
   }
-
   updateEnemyMovement() {
+    const ENEMY_STUCK_CHECK_INTERVAL = 500;
+    const ENEMY_STUCK_MOVE_THRESHOLD = 10;
+    const ENEMY_STUCK_JITTER_STREAK = 3; // ~1.5s de blocage continu
+    const ENEMY_STUCK_JITTER_SPEED = 90;
+
     for (const enemy of this.enemies) {
       enemy.visible = this.isEnemyVisible(enemy);
       enemy.sprite.setVisible(enemy.visible);
@@ -4938,14 +5039,68 @@ export default class MainScene extends Phaser.Scene {
             enemy.spriteKey + "-idle-" + enemy.lastDir,
             true,
           );
+          enemy.stuckCheckPos = { x: enemy.sprite.x, y: enemy.sprite.y };
+          enemy.stuckCheckAt = this.time.now;
+          enemy.stuckStreak = 0;
           continue;
         }
+
+        // Detection de blocage - meme principe que pour les invocations
+        // (cf. updateSummons) : deux ennemis qui chassent la meme cible
+        // peuvent se bloquer mutuellement via leurs colliders mutuels dans
+        // un couloir/angle etroit, sans que EasyStar ne le detecte tout
+        // seul. Comme updateEnemyDecisions ne relance un chemin QUE quand
+        // le joueur change de case (raison de perf), un ennemi bloque
+        // restait fige indefiniment si le joueur arretait de bouger -
+        // transforme en cible fixe ("sitting duck"). Ici on relance le
+        // chemin nous-memes des qu'un blocage est detecte, sans attendre.
+        const now = this.time.now;
+        if (!enemy.stuckCheckPos) {
+          enemy.stuckCheckPos = { x: enemy.sprite.x, y: enemy.sprite.y };
+          enemy.stuckCheckAt = now;
+          enemy.stuckStreak = 0;
+          enemy.stuckJitterUntil = 0;
+        }
+        if (now >= enemy.stuckCheckAt + ENEMY_STUCK_CHECK_INTERVAL) {
+          const movedDist = Math.hypot(
+            enemy.sprite.x - enemy.stuckCheckPos.x,
+            enemy.sprite.y - enemy.stuckCheckPos.y,
+          );
+          if (movedDist < ENEMY_STUCK_MOVE_THRESHOLD) {
+            enemy.stuckStreak = (enemy.stuckStreak || 0) + 1;
+            if (enemy.stuckStreak >= ENEMY_STUCK_JITTER_STREAK) {
+              enemy.stuckJitterUntil = now + 300;
+              this.requestPath(
+                enemy.sprite.x,
+                enemy.sprite.y,
+                targetX,
+                targetY,
+                (path) => {
+                  enemy.path = path;
+                  enemy.pathIndex = 0;
+                },
+              );
+            }
+          } else {
+            enemy.stuckStreak = 0;
+          }
+          enemy.stuckCheckPos = { x: enemy.sprite.x, y: enemy.sprite.y };
+          enemy.stuckCheckAt = now;
+        }
+        let jitterX = 0;
+        let jitterY = 0;
+        if (now < enemy.stuckJitterUntil) {
+          const jitterAngle = Math.random() * Math.PI * 2;
+          jitterX = Math.cos(jitterAngle) * ENEMY_STUCK_JITTER_SPEED;
+          jitterY = Math.sin(jitterAngle) * ENEMY_STUCK_JITTER_SPEED;
+        }
+
         const step = this.followPathStep(
           enemy,
           this.getEffectiveEnemySpeed(enemy),
         );
         if (step) {
-          enemy.sprite.setVelocity(step.vx, step.vy);
+          enemy.sprite.setVelocity(step.vx + jitterX, step.vy + jitterY);
           enemy.lastDir =
             Math.abs(step.nx) > Math.abs(step.ny)
               ? step.nx > 0
@@ -4959,7 +5114,7 @@ export default class MainScene extends Phaser.Scene {
             true,
           );
         } else {
-          enemy.sprite.setVelocity(0, 0);
+          enemy.sprite.setVelocity(jitterX, jitterY);
           enemy.sprite.anims.play(
             enemy.spriteKey + "-idle-" + enemy.lastDir,
             true,
@@ -4967,7 +5122,6 @@ export default class MainScene extends Phaser.Scene {
         }
         continue;
       }
-
       if (
         enemy.state === "patrol" &&
         enemy.patrolPath &&
@@ -6321,6 +6475,23 @@ export default class MainScene extends Phaser.Scene {
       }
     }
 
+    if (def.effectType === "summon" && this.summons.length >= MAX_SUMMONS) {
+      const oldest = this.summons.find((s) => !s.persistent);
+      if (oldest) {
+        this.pendingSummonReplaceDef = def;
+        this.pendingSummonReplaceVictim = oldest;
+        this.pauseGame("summonReplace");
+        this.events.emit("summon-replace-prompt", {
+          victimName:
+            ABILITY_DEFS[oldest.sourceAbilityId]?.name || oldest.spriteKey,
+          newName: def.name,
+        });
+        return;
+      }
+      // sinon (toutes les invocations restantes sont persistantes) :
+      // performSummonAbility gerera l'affichage du toast "toutes occupees"
+    }
+
     if (def.staminaCost && this.playerStamina < def.staminaCost) {
       this.showLootToast("Pas assez de stamina !");
       return;
@@ -6646,6 +6817,61 @@ export default class MainScene extends Phaser.Scene {
     this.pendingResummonDef = null;
     this.pendingResummonTarget = null;
   }
+
+  confirmSummonReplace() {
+    this.unpauseGame("summonReplace");
+    this.events.emit("summon-replace-prompt", null);
+
+    const def = this.pendingSummonReplaceDef;
+    const victim = this.pendingSummonReplaceVictim;
+    this.pendingSummonReplaceDef = null;
+    this.pendingSummonReplaceVictim = null;
+    if (!def || !victim) return;
+
+    if (def.staminaCost && this.playerStamina < def.staminaCost) {
+      this.showLootToast("Pas assez de stamina !");
+      return;
+    }
+    if (def.manaCost && this.playerMana < def.manaCost) {
+      this.showLootToast("Pas assez de mana !");
+      return;
+    }
+
+    const idx = this.summons.indexOf(victim);
+    if (idx !== -1) this.summons.splice(idx, 1);
+    victim.sprite.destroy();
+
+    if (def.staminaCost) {
+      this.playerStamina -= def.staminaCost;
+      this.events.emit("player-stamina-changed", {
+        stamina: this.playerStamina,
+        maxStamina: this.playerMaxStamina,
+      });
+    }
+    if (def.manaCost) {
+      this.playerMana -= def.manaCost;
+      this.events.emit("player-mana-changed", {
+        mana: this.playerMana,
+        maxMana: this.playerMaxMana,
+      });
+    }
+    this.abilityCooldowns[def.id] = this.time.now + def.cooldownMs;
+    this.events.emit("hotbar-cooldown-started", {
+      key: `ability:${def.id}`,
+      cooldownMs: def.cooldownMs,
+      startedAt: Date.now(),
+    });
+
+    this.performSummonAbility(def); // summons.length a deja baisse de 1 (victime retiree), donc pas de re-declenchement du prompt
+  }
+
+  cancelSummonReplace() {
+    this.unpauseGame("summonReplace");
+    this.events.emit("summon-replace-prompt", null);
+    this.pendingSummonReplaceDef = null;
+    this.pendingSummonReplaceVictim = null;
+  }
+
   computeSummonSeparation(summon) {
     const SEPARATION_RADIUS = 30;
     const SEPARATION_STRENGTH = 80;
@@ -6750,17 +6976,39 @@ export default class MainScene extends Phaser.Scene {
       let destX, destY, speed, stopDist;
 
       if (nearestEnemy) {
-        // repartit les invocations visant le meme ennemi en cercle autour
-        // de lui (une "place" par invocation) au lieu de toutes converger
-        // vers son centre - evite l'effet "petit train"
-        const siblings = this.summons.filter(
-          (s) => targets.get(s) === nearestEnemy,
+        const curDist = Math.hypot(
+          summon.sprite.x - nearestEnemy.sprite.x,
+          summon.sprite.y - nearestEnemy.sprite.y,
         );
-        siblings.sort((a, b) => a.id - b.id);
-        const slotIndex = siblings.indexOf(summon);
-        const angle = (slotIndex / siblings.length) * Math.PI * 2;
-        destX = nearestEnemy.sprite.x + Math.cos(angle) * summonOrbitRadius;
-        destY = nearestEnemy.sprite.y + Math.sin(angle) * summonOrbitRadius;
+
+        if (isRanged && curDist < summonOrbitRadius * 0.6) {
+          // trop proche de la cible (ex. invocation qui vient d'apparaitre
+          // au contact, pres du heros lui-meme engage en melee) - on recule
+          // d'abord tout droit dans l'axe ennemi -> invocation, plutot que
+          // de viser directement le slot d'orbite assigne plus bas, qui
+          // peut se trouver de l'autre cote de l'ennemi et forcer un
+          // chemin qui longe ou traverse sa zone de corps a corps
+          const awayAngle = Math.atan2(
+            summon.sprite.y - nearestEnemy.sprite.y,
+            summon.sprite.x - nearestEnemy.sprite.x,
+          );
+          destX =
+            nearestEnemy.sprite.x + Math.cos(awayAngle) * summonOrbitRadius;
+          destY =
+            nearestEnemy.sprite.y + Math.sin(awayAngle) * summonOrbitRadius;
+        } else {
+          // repartit les invocations visant le meme ennemi en cercle autour
+          // de lui (une "place" par invocation) au lieu de toutes converger
+          // vers son centre - evite l'effet "petit train"
+          const siblings = this.summons.filter(
+            (s) => targets.get(s) === nearestEnemy,
+          );
+          siblings.sort((a, b) => a.id - b.id);
+          const slotIndex = siblings.indexOf(summon);
+          const angle = (slotIndex / siblings.length) * Math.PI * 2;
+          destX = nearestEnemy.sprite.x + Math.cos(angle) * summonOrbitRadius;
+          destY = nearestEnemy.sprite.y + Math.sin(angle) * summonOrbitRadius;
+        }
         speed = SUMMON_SPEED_CHASE;
         stopDist = 6;
       } else {
@@ -6823,9 +7071,25 @@ export default class MainScene extends Phaser.Scene {
         // aleatoire, ou beaucoup trop loin du joueur - on la teleporte
         // pres de lui plutot que de la laisser rebondir indefiniment
         // contre un coin de mur (cf. retour utilisateur : ca ne se
-        // debloquait qu'en rechargeant la partie)
-        const tx = this.hero.x + (Math.random() - 0.5) * 40;
-        const ty = this.hero.y + (Math.random() - 0.5) * 40;
+        // debloquait qu'en rechargeant la partie). Pour un summon a
+        // distance avec une cible connue, on evite de la lacher au corps
+        // a corps a cote du heros (souvent lui-meme engage au contact) -
+        // on la pose plutot a sa distance d'orbite habituelle, du cote du
+        // heros oppose a l'ennemi.
+        let tx, ty;
+        if (isRanged && nearestEnemy) {
+          const awayAngle = Math.atan2(
+            this.hero.y - nearestEnemy.sprite.y,
+            this.hero.x - nearestEnemy.sprite.x,
+          );
+          tx =
+            this.hero.x + Math.cos(awayAngle) * 80 + (Math.random() - 0.5) * 20;
+          ty =
+            this.hero.y + Math.sin(awayAngle) * 80 + (Math.random() - 0.5) * 20;
+        } else {
+          tx = this.hero.x + (Math.random() - 0.5) * 40;
+          ty = this.hero.y + (Math.random() - 0.5) * 40;
+        }
         summon.sprite.setPosition(tx, ty);
         summon.sprite.setVelocity(0, 0);
         summon.path = null;

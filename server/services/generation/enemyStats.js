@@ -918,7 +918,7 @@ const ENEMY_TYPES = {
   },
   gnome: {
     attackType: "melee",
-    base: { hp: 8, damage: 2, xpReward: 7 },
+    base: { hp: 20, damage: 2, xpReward: 1 },
     growthRate: { hp: 1.13, damage: 1.1, xpReward: 1.08 },
     speedBase: 120,
     speedMax: 180,
@@ -928,7 +928,7 @@ const ENEMY_TYPES = {
   },
   angryTrent: {
     attackType: "ranged",
-    base: { hp: 8, damage: 2, xpReward: 7 },
+    base: { hp: 15, damage: 2, xpReward: 1 },
     growthRate: { hp: 1.13, damage: 1.1, xpReward: 1.08 },
     speedBase: 120,
     speedMax: 180,
@@ -1491,7 +1491,7 @@ const ENEMY_TYPES = {
   // ===== Bestiaire generique nomme (creatures uniques, pas de tiers numerotes) =====
 
   bat: {
-    base: { hp: 10, damage: 2, xpReward: 8 },
+    base: { hp: 15, damage: 2, xpReward: 2 },
     growthRate: { hp: 1.13, damage: 1.1, xpReward: 1.08 },
     speedBase: 120,
     speedMax: 180,
@@ -1508,6 +1508,15 @@ const ENEMY_TYPES = {
     speedGrowthPerDepth: 4,
     defenseGrowthEveryNDepths: 5,
     lootTable: "beeDrop",
+  },
+  beequeen: {
+    base: { hp: 20, damage: 5, xpReward: 15 },
+    growthRate: { hp: 1.15, damage: 1.12, xpReward: 1.1 },
+    speedBase: 100,
+    speedMax: 160,
+    speedGrowthPerDepth: 3,
+    defenseGrowthEveryNDepths: 4,
+    lootTable: "beequeenDrop",
   },
 
   worm: {
@@ -1622,7 +1631,7 @@ const ENEMY_TYPES = {
 
   warlockRed: {
     attackType: "ranged",
-    base: { hp: 18, damage: 6, xpReward: 14 },
+    base: { hp: 18, damage: 6, xpReward: 2 },
     growthRate: { hp: 1.19, damage: 1.16, xpReward: 1.14 },
     speedBase: 85,
     speedMax: 140,
@@ -1701,7 +1710,7 @@ const ENEMY_TYPES = {
     lootTable: "greenSlimeDrop",
   },
   yellowSlime: {
-    base: { hp: 20, damage: 4, xpReward: 11 },
+    base: { hp: 18, damage: 4, xpReward: 1.5 },
     growthRate: { hp: 1.17, damage: 1.14, xpReward: 1.11 },
     speedBase: 60,
     speedMax: 100,
@@ -1749,7 +1758,7 @@ const ENEMY_TYPES = {
     lootTable: "golemDrop",
   },
   golemEau: {
-    base: { hp: 40, damage: 7, xpReward: 18 },
+    base: { hp: 30, damage: 7, xpReward: 3 },
     growthRate: { hp: 1.17, damage: 1.14, xpReward: 1.12 },
     speedBase: 55,
     speedMax: 95,
@@ -2447,6 +2456,17 @@ const ENEMY_TYPES = {
     speedGrowthPerDepth: 2,
     defenseGrowthEveryNDepths: 2,
     lootTable: "medusaDrop",
+  },
+
+  zombiequeenBoss: {
+    attackType: "melee",
+    base: { hp: 250, damage: 35, xpReward: 180 },
+    growthRate: { hp: 1.18, damage: 1.15, xpReward: 1.13 },
+    speedBase: 60,
+    speedMax: 100,
+    speedGrowthPerDepth: 2,
+    defenseGrowthEveryNDepths: 2,
+    lootTable: "zombiequeenBossDrop",
   },
 };
 

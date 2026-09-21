@@ -8,8 +8,10 @@ export default function ShopScreen({
   stock,
   inventory,
   equipped,
+  refreshCost,
   onBuy,
   onSell,
+  onRefresh,
   onClose,
 }) {
   const [buyQuantities, setBuyQuantities] = useState({});
@@ -83,8 +85,32 @@ export default function ShopScreen({
         </button>
       </div>
 
-      <div style={{ fontSize: 13, color: "#d4af37", marginBottom: 16 }}>
-        Or : {currentGold}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 12,
+          marginBottom: 16,
+        }}
+      >
+        <div style={{ fontSize: 13, color: "#d4af37" }}>Or : {currentGold}</div>
+        <button
+          onClick={onRefresh}
+          disabled={currentGold < refreshCost}
+          title="Renouvelle les objets proposés par le marchand (les objets que tu lui as vendus restent rachetables)"
+          style={{
+            padding: "4px 10px",
+            fontSize: 11,
+            borderRadius: 6,
+            border:
+              "1px solid " + (currentGold < refreshCost ? "#444" : "#8a7050"),
+            background: currentGold < refreshCost ? "#2a2a30" : "#3a2f20",
+            color: currentGold < refreshCost ? "#666" : "#f0e6d0",
+            cursor: currentGold < refreshCost ? "not-allowed" : "pointer",
+          }}
+        >
+          🔄 Rafraîchir ({refreshCost} or)
+        </button>
       </div>
 
       <div style={{ fontSize: 13, color: "#999", marginBottom: 8 }}>

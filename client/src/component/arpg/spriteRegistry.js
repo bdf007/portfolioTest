@@ -220,6 +220,8 @@ import BoneKing2Spritesheet from "../../assets/boss/bone_king_2.png";
 import dragonSpritesheet from "../../assets/boss/dragon.png";
 import giantAntSpritesheet from "../../assets/boss/giant_ant.png";
 import medusaSpritesheet from "../../assets/boss/medusa.png";
+import zombiequeenBossSpritesheet from "../../assets/boss/zombiequeenBoss.png";
+import beequeenBossSpritesheet from "../../assets/boss/beequeenBoss.png";
 // import tiles
 import wallCaveSprite from "../../assets/tilesets/wall_cave.png";
 import floorCaveSprite from "../../assets/tilesets/floor_cave.png";
@@ -1338,6 +1340,17 @@ export const SPRITE_REGISTRY = {
     animations: FULL_ANIMATION_FRAMES,
     hitbox: computeSafeHitbox(48, 48, 1),
   },
+  beequeen: {
+    key: "beequeen",
+    displayName: "Reine Abeille",
+    path: beequeenBossSpritesheet,
+    frameWidth: 96,
+    frameHeight: 96,
+    scale: 1,
+    animations: FULL_ANIMATION_FRAMES,
+    lootTable: "beequeenDrop",
+    hitbox: computeSafeHitbox(96, 96, 1),
+  },
 
   bigtick: {
     key: "bigtick",
@@ -1730,12 +1743,12 @@ export const SPRITE_REGISTRY = {
     path: knightBleuArgentSpritesheet,
     frameWidth: 48,
     frameHeight: 48,
-    scale: 1.2,
+    scale: 1.5,
     lootTable: "knightBleuArgentDrop",
     sheetCols: 4,
     sheetRows: 16,
     animations: FULL_ANIMATION_FRAMES,
-    hitbox: computeSafeHitbox(48, 48, 1.2),
+    hitbox: computeSafeHitbox(48, 48, 1.5),
   },
   knightNoirCramoisi: {
     key: "knightNoirCramoisi",
@@ -1835,12 +1848,12 @@ export const SPRITE_REGISTRY = {
     path: golemEauSpritesheet,
     frameWidth: 48,
     frameHeight: 48,
-    scale: 1.2,
+    scale: 1.5,
     lootTable: "golemEauDrop",
     sheetCols: 4,
     sheetRows: 16,
     animations: FULL_ANIMATION_FRAMES,
-    hitbox: computeSafeHitbox(48, 48, 1.2),
+    hitbox: computeSafeHitbox(48, 48, 1.5),
   },
   golemFeu: {
     key: "golemFeu",
@@ -4259,6 +4272,30 @@ export const SPRITE_REGISTRY = {
     animations: STANDARD_ANIMATION_FRAMES,
     hitbox: computeSafeHitbox(48, 60, 4),
   },
+
+  zombiequeenBoss: {
+    key: "zombiequeenBoss",
+    displayName: "reine zombie",
+    path: zombiequeenBossSpritesheet,
+    frameWidth: 96,
+    frameHeight: 96,
+    scale: 2,
+    animations: FULL_ANIMATION_FRAMES,
+    lootTable: "zombiequeenDrop",
+    hitbox: computeSafeHitbox(96, 96, 2),
+  },
+
+  beequeenBoss: {
+    key: "beequeenBoss",
+    displayName: "reine abeille",
+    path: beequeenBossSpritesheet,
+    frameWidth: 96,
+    frameHeight: 96,
+    scale: 2,
+    animations: FULL_ANIMATION_FRAMES,
+    lootTable: "beequeenDrop",
+    hitbox: computeSafeHitbox(96, 96, 2),
+  },
   // NPCs de ville
   NPC_town1_F1: {
     key: "NPC_town1_F1",
@@ -5053,7 +5090,7 @@ const HERO_STATS_PROFILES = {
     rangedRange: 350,
     startingItems: ["woodenStaff", "woodenPickaxe", "woodenAxe"],
     startingAmmo: null,
-    startingAbilities: ["summonFamiliar"],
+    startingAbilities: ["summonWolfFamiliar"],
   },
   mage: {
     archetype: "mage",
@@ -5451,13 +5488,13 @@ export const RING_NECKLACE_ALL_TIERS_SPRITESHEET = {
 // icon sheet 1 : 10 colonnes x 22 lignes, frames indexees ligne par ligne
 
 export const ICON_SHEET_1_FRAMES = {
-  huntingBow: 12,
+  // huntingBow: 12,
 
-  warBow: 22,
+  // warBow: 22,
 
   woodenArrow: 30,
   ironArrow: 31,
-  bronzeArrow: 32,
+  // bronzeArrow: 32,
   acidArrow: 33,
   fireArrow: 34,
   iceArrow: 35,
@@ -5522,7 +5559,7 @@ export const ICON_SHEET_1_FRAMES = {
   redChest: 96,
   rustyKey: 97,
   silverKey: 98,
-  bronzeKey: 99,
+  // bronzeKey: 99,
   wood: 100,
   woodAngryTrent: 100,
   stone: 101,
@@ -5735,6 +5772,10 @@ export const ICON_SHEET_1_FRAMES = {
   summonGolemFoudreScroll: 91,
   summonGolemGlaceScroll: 91,
   summonGolemOmbreScroll: 91,
+  summonZombiequeenBossScroll: 91,
+  summonZombiequeenScroll: 91,
+  summonBeequeenBossScroll: 91,
+  summonBeequeenScroll: 91,
 };
 
 export const ICON_SHEET_2_FRAMES = {
@@ -5931,6 +5972,10 @@ export const MONSTER_LOOTS_FRAMES = {
   golemFoudreCore: 23,
   golemGlaceCore: 23,
   golemOmbreCore: 23,
+  zombiequeenBossCore: 23,
+  zombiequeenCore: 23,
+  beequeenBossCore: 23,
+  beequeenCore: 23,
 };
 
 export const ICON_SKILL_1_FRAMES = {

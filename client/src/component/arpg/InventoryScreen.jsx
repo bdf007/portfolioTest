@@ -386,6 +386,14 @@ const ICON_TINTS = {
   summonGolemGlaceScroll: "#cccccc",
   golemOmbreCore: "#cccccc",
   summonGolemOmbreScroll: "#cccccc",
+  zombiequeenBossCore: "#cccccc",
+  summonZombiequeenBossScroll: "#cccccc",
+  zombiequeenCore: "#cccccc",
+  summonZombiequeenScroll: "#cccccc",
+  beequeenBossCore: "#cccccc",
+  summonBeequeenBossScroll: "#cccccc",
+  beequeenCore: "#cccccc",
+  summonBeequeenScroll: "#cccccc",
 };
 
 /**
