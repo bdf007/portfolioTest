@@ -2435,6 +2435,20 @@ export const CRAFTING_RECIPES = {
     discoveryOnly: true,
   },
 
+  woodenCrossbowRecipe: {
+    id: "woodenCrossbowRecipe",
+    name: "Recette d'évolution : Arbalète en bois",
+    resultItemId: "woodenCrossbow",
+    resultQuantity: 1,
+    ingredients: [
+      { itemId: "wood", quantity: 1 },
+      { itemId: "branch", quantity: 2 },
+      { itemId: "vegetalFiber", quantity: 2 },
+      { itemId: "gnomeClaw", quantity: 1 },
+    ],
+    discoveryOnly: true,
+  },
+
   /** Recettes de sorts */
   fireballScrollRecipe: {
     id: "fireballScrollRecipe",
@@ -2744,10 +2758,13 @@ export const CRAFTING_RECIPES = {
   },
   woodenCrossbowBoltRecipe: {
     id: "woodenCrossbowBoltRecipe",
-    name: "Carreau d'arbalète en bois",
+    name: "Recette de Carreau d'arbalète en bois",
     resultItemId: "woodenCrossbowBolt",
-    resultQuantity: 5,
-    ingredients: [{ itemId: "oakWood", quantity: 2 }],
+    resultQuantity: 10,
+    ingredients: [
+      { itemId: "branch", quantity: 5 },
+      { itemId: "gnomeClaw", quantity: 1 },
+    ],
     // unlockLevel: 1,
     discoveryOnly: true,
   },
@@ -2762,6 +2779,30 @@ export const CRAFTING_RECIPES = {
     ],
     // unlockLevel: 1, // niveau minimum pour l'UTILISER, meme une fois decouverte
     discoveryOnly: true, // <-- jamais debloquee automatiquement, uniquement par combinaison
+  },
+
+  branchRecipe: {
+    id: "branchRecipe",
+    name: "Recette de Branche",
+    resultItemId: "branch",
+    resultQuantity: 4,
+    ingredients: [{ itemId: "wood", quantity: 1 }],
+    // unlockLevel: 1,
+    discoveryOnly: true,
+  },
+
+  blanckScrollRecipe: {
+    id: "blanckScrollRecipe",
+    name: "Recette de Parchemin vierge",
+    resultItemId: "blanckScroll",
+    resultQuantity: 5,
+    ingredients: [
+      { itemId: "vegetalFiber", quantity: 2 },
+      { itemId: "wood", quantity: 1 },
+      { itemId: "coalOre", quantity: 1 },
+    ],
+    discoveryOnly: true,
+    // unlockLevel: ..., // optionnel
   },
 
   grimoireRecipe: {
@@ -2785,6 +2826,7 @@ export const CRAFTING_RECIPES = {
         ],
         quantity: 2,
       },
+      { itemId: "blanckScroll", quantity: 10 },
     ],
     discoveryOnly: true,
   },

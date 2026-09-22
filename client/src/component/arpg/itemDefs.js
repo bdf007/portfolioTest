@@ -13604,10 +13604,20 @@ export const ITEM_DEFS = {
   },
 
   //scroll
+  blanckScroll: {
+    id: "blankScroll",
+    category: "craftingMaterial",
+    name: "Parchemin vierge",
+    description:
+      "Un parchemin vierge, utilisé pour créer de nouveaux sorts. Il peut également permettre de créer des grimoires.",
+    stackable: true,
+    price: 10,
+  },
+
   grimoire: {
     id: "grimoire",
     category: "craftingMaterial",
-    name: "Grimoire",
+    name: "Grimoire vierge",
     description:
       "Un grimoire vierge, utilisé pour créer de nouvelles compétences.",
     stackable: true,
@@ -13841,6 +13851,14 @@ export const ITEM_DEFS = {
     stackable: true,
     price: 5,
   },
+  branch: {
+    id: "branch",
+    category: "craftingMaterial",
+    name: "Branche",
+    description: "Une branche solide, utilisée en artisanat.",
+    stackable: true,
+    price: 5,
+  },
   waterLily: {
     id: "waterLily",
     category: "craftingMaterial",
@@ -13854,6 +13872,23 @@ export const ITEM_DEFS = {
     category: "craftingMaterial",
     name: "Baies",
     description: "Des baies sauvages, utilisées en artisanat.",
+    stackable: true,
+    price: 5,
+  },
+  honeycomb: {
+    id: "honeycomb",
+    category: "craftingMaterial",
+    name: "Rayon de miel",
+    description: "Un rayon de miel, utilisé en artisanat.",
+    stackable: true,
+    price: 10,
+  },
+
+  vegetalFiber: {
+    id: "vegetalFiber",
+    category: "craftingMaterial",
+    name: "Fibre végétale",
+    description: "Une fibre végétale, utilisée en artisanat.",
     stackable: true,
     price: 5,
   },

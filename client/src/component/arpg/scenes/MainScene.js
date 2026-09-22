@@ -107,6 +107,8 @@ import {
   // HOUSE_FOOTPRINTS,
   MUDDY_CAVE_AUTOTILE_SPRITESHEET,
   SUMMER_FOREST_AUTOTILE_SPRITESHEET,
+  OBJECTS_DUNGEON_01_SPRITESHEET,
+  DETAILS_SPRITESHEET,
 } from "../spriteRegistry";
 
 const TILE_SIZE = 32;
@@ -733,10 +735,20 @@ export default class MainScene extends Phaser.Scene {
   }
 
   requestPath(fromX, fromY, toX, toY, callback) {
-    const fromTileX = Math.floor(fromX / TILE_SIZE);
-    const fromTileY = Math.floor(fromY / TILE_SIZE);
-    const toTileX = Math.floor(toX / TILE_SIZE);
-    const toTileY = Math.floor(toY / TILE_SIZE);
+    // clamp dans les bornes de la grille - sans ca, une destination
+    // calculee en dehors du niveau (ex : invocation visant un point
+    // d'orbite autour d'un ennemi proche du bord de la carte, offset qui
+    // deborde de la grille meme si l'ennemi lui-meme est bien dedans)
+    // fait planter EasyStar ("start or end point is outside the scope of
+    // your grid") au lieu de simplement viser le bord le plus proche
+    const maxTileX = this.map.width - 1;
+    const maxTileY = this.map.height - 1;
+    const clamp = (v, max) => Math.min(Math.max(v, 0), max);
+
+    const fromTileX = clamp(Math.floor(fromX / TILE_SIZE), maxTileX);
+    const fromTileY = clamp(Math.floor(fromY / TILE_SIZE), maxTileY);
+    const toTileX = clamp(Math.floor(toX / TILE_SIZE), maxTileX);
+    const toTileY = clamp(Math.floor(toY / TILE_SIZE), maxTileY);
 
     if (fromTileX === toTileX && fromTileY === toTileY) {
       callback([{ x: toX, y: toY }]);
@@ -3388,24 +3400,70 @@ export default class MainScene extends Phaser.Scene {
       });
     });
 
-    const DECOR_FRAMES = {
-      rock_small: [5, 6],
-      bush: [101, 228],
-      flower_patch: [69, 70, 71, 102, 103],
+    // chaque entree porte desormais sa PROPRE spritesheet (plus seulement
+    // ses frames) - necessaire depuis qu'un decor peut venir soit de
+    // CITY_TILES_AUTOTILE_SPRITESHEET (16x16), soit de
+    // OBJECTS_DUNGEON_01_SPRITESHEET (32x32, 12 colonnes x 8 lignes,
+    // frame = ligne*12 + colonne, 0-indexe) - d'ou setScale qui se base
+    // maintenant sur le frameWidth propre a chaque sheet plutot qu'un 16
+    // fige.
+    const DECOR_ENTRIES = {
+      rock_small: {
+        spriteSheet: CITY_TILES_AUTOTILE_SPRITESHEET,
+        frames: [5, 6],
+      },
+      bush: {
+        spriteSheet: CITY_TILES_AUTOTILE_SPRITESHEET,
+        frames: [101, 228],
+      },
+      flower_patch: {
+        spriteSheet: CITY_TILES_AUTOTILE_SPRITESHEET,
+        frames: [69, 70, 71, 102, 103],
+      },
+      // OBJECTS_DUNGEON_01_SPRITESHEET - indices de depart a VERIFIER en
+      // jeu et corriger selon le vrai contenu du fichier (je n'ai pas pu
+      // lire les pixels exacts depuis l'image) :
+      wooden_fence: {
+        spriteSheet: OBJECTS_DUNGEON_01_SPRITESHEET,
+        frames: [0, 1, 2],
+      },
+      crate: {
+        spriteSheet: OBJECTS_DUNGEON_01_SPRITESHEET,
+        frames: [3, 4, 5],
+      },
+      boulder: {
+        spriteSheet: OBJECTS_DUNGEON_01_SPRITESHEET,
+        frames: [6, 7, 8],
+      },
+      ground_crack: {
+        spriteSheet: OBJECTS_DUNGEON_01_SPRITESHEET,
+        frames: [
+          9, 10, 11, 21, 22, 23, 33, 34, 35, 57, 58, 59, 69, 70, 71, 81, 82, 83,
+        ],
+      },
+      vines: {
+        spriteSheet: DETAILS_SPRITESHEET,
+        frames: [38, 39],
+      },
+      flower: {
+        spriteSheet: DETAILS_SPRITESHEET,
+        frames: [240, 241, 242, 243, 244, 245, 246, 247],
+      },
     };
     const decorVariantRng = createRng(`${this.currentSeed}-decor-variants`);
     (data.decorations || []).forEach((decorData) => {
-      const frames =
-        DECOR_FRAMES[decorData.decorType] || DECOR_FRAMES.rock_small;
-      const frame = frames[Math.floor(decorVariantRng() * frames.length)];
+      const entry =
+        DECOR_ENTRIES[decorData.decorType] || DECOR_ENTRIES.rock_small;
+      const frame =
+        entry.frames[Math.floor(decorVariantRng() * entry.frames.length)];
 
       const sprite = this.add.sprite(
         decorData.x * TILE_SIZE + TILE_SIZE / 2,
         decorData.y * TILE_SIZE + TILE_SIZE / 2,
-        CITY_TILES_AUTOTILE_SPRITESHEET.key,
+        entry.spriteSheet.key,
         frame,
       );
-      sprite.setScale(TILE_SIZE / 16);
+      sprite.setScale(TILE_SIZE / entry.spriteSheet.frameWidth);
       sprite.setDepth(4);
       this.decorationSprites.push(sprite);
     });
@@ -5891,9 +5949,16 @@ export default class MainScene extends Phaser.Scene {
 
     if (!chest.opened) {
       chest.opened = true;
+      // le sprite d'une caisse ne disparait plus a l'ouverture de l'ecran
+      // sauf si elle est vide DES le depart (cas frequent et voulu) - sinon
+      // on attend qu'elle soit VRAIMENT videe (cf. takeChestItem /
+      // takeAllChestItems) avant de la faire disparaitre, pour ne pas
+      // perdre le repere visuel si le joueur ferme sans avoir tout pris
       if (chest.propType === "crate") {
-        chest.sprite.destroy();
-        chest.sprite = null;
+        if (chest.lootItems.length === 0 && chest.sprite) {
+          chest.sprite.destroy();
+          chest.sprite = null;
+        }
       } else {
         chest.sprite.setFrame(chest.variant.openFrame);
       }
@@ -5926,8 +5991,11 @@ export default class MainScene extends Phaser.Scene {
     this.addItemToInventory(item.itemId, item.quantity);
     chest.lootItems.splice(itemIndex, 1);
     if (!chest.ephemeral) this.saveChestRemainingLoot(chest);
-
     if (chest.lootItems.length === 0) {
+      if (chest.propType === "crate" && chest.sprite) {
+        chest.sprite.destroy();
+        chest.sprite = null;
+      }
       this.closeChestScreen();
       return;
     }
@@ -5949,9 +6017,12 @@ export default class MainScene extends Phaser.Scene {
     }
     chest.lootItems = [];
     if (!chest.ephemeral) this.saveChestRemainingLoot(chest);
+    if (chest.propType === "crate" && chest.sprite) {
+      chest.sprite.destroy();
+      chest.sprite = null;
+    }
     this.closeChestScreen();
   }
-
   closeChestScreen() {
     this.unpauseGame("chest");
     this.activeChest = null;
@@ -9166,11 +9237,30 @@ export default class MainScene extends Phaser.Scene {
       return { success: false };
     }
 
-    for (const ing of matchedRecipe.ingredients) {
-      let remaining = ing.quantity;
+    // verification de stock AVANT toute consommation, basee sur la
+    // selection reelle du joueur (selectedItems) plutot que sur
+    // ing.itemId - un ingredient flexible (acceptedItemIds) n'a pas de
+    // itemId propre, donc verifier/consommer via matchedRecipe.ingredients
+    // directement echoue silencieusement pour ce cas. recipeMatchesSelection
+    // garantit deja que selectedItems correspond exactement a la recette
+    // (bons items, bonnes quantites au total par groupe accepte), donc
+    // consommer tel quel selectedItems est a la fois correct et plus
+    // simple.
+    for (const { itemId, quantity } of selectedItems) {
+      const have = this.inventory
+        .filter((x) => x.itemId === itemId)
+        .reduce((s, x) => s + x.quantity, 0);
+      if (have < quantity) {
+        this.showLootToast("Il manque des ingrédients pour cette combinaison");
+        return { success: false };
+      }
+    }
+
+    for (const { itemId, quantity } of selectedItems) {
+      let remaining = quantity;
       for (let i = this.inventory.length - 1; i >= 0 && remaining > 0; i--) {
         const entry = this.inventory[i];
-        if (entry.itemId !== ing.itemId) continue;
+        if (entry.itemId !== itemId) continue;
         const take = Math.min(entry.quantity, remaining);
         entry.quantity -= take;
         remaining -= take;

@@ -770,6 +770,16 @@ const ITEM_TYPES = {
   },
 
   //scroll
+  blanckScroll: {
+    id: "blankScroll",
+    category: "craftingMaterial",
+    name: "Parchemin vierge",
+    description:
+      "Un parchemin vierge, utilisé pour créer de nouveaux sorts. Il peut également permettre de créer des grimoires.",
+    stackable: true,
+    price: 10,
+  },
+
   grimoire: {
     id: "grimoire",
     category: "craftingMaterial",
@@ -956,6 +966,14 @@ const ITEM_TYPES = {
     description: "Un rayon de miel, utilisé en artisanat.",
     stackable: true,
     // price: 10,
+  },
+  vegetalFiber: {
+    id: "vegetalFiber",
+    category: "craftingMaterial",
+    name: "Fibre végétale",
+    description: "Une fibre végétale, utilisée en artisanat.",
+    stackable: true,
+    price: 5,
   },
   // unique monster cores
   angryBrownMushroomCore: {
@@ -2815,12 +2833,13 @@ const LOOT_TABLES = {
     { itemId: "mushroom", weight: 20 },
     { itemId: "healthPotionRecipe", weight: 2 },
     { itemId: "angryBrownMushroomCore", weight: 50 },
+    { itemId: "vegetalFiber", weight: 50, quantityRange: [3, 5] },
   ],
   gnomeDrop: [
     { itemId: null, weight: 50 }, // la plupart des gnomes ne laissent rien
     { itemId: "gold", weight: 50, quantityRange: [1, 3] },
     { itemId: "gnomeCore", weight: 50 },
-    { itemId: "gnomeClaw", weight: 50 },
+    { itemId: "gnomeClaw", weight: 10 },
     { itemId: "gnomeFurTuft", weight: 50, quantityRange: [1, 3] },
   ],
   angryTrentDrop: [
@@ -2828,6 +2847,7 @@ const LOOT_TABLES = {
     { itemId: "gold", weight: 50, quantityRange: [1, 3] },
     { itemId: "angryTrentCore", weight: 100 },
     { itemId: "wood", weight: 50, quantityRange: [1, 3] },
+    { itemId: "vegetalFiber", weight: 50, quantityRange: [3, 5] },
   ],
   knifedBatDrop: [
     { itemId: null, weight: 50 }, // la plupart des chauves-souris poignardées ne laissent rien

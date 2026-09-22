@@ -293,6 +293,9 @@ import armorTextileTiersSpritesheet from "../../assets/objects_icons/armor_texti
 import pantsAllTiersSpritesheet from "../../assets/objects_icons/pants_all_tiers_sheet.png";
 import beltAllTiersSpritesheet from "../../assets/objects_icons/belt_all_tiers_sheet.png";
 import ringNecklaceAllTiersSpritesheet from "../../assets/objects_icons/ring_necklace_all_tiers_sheet.png";
+import objectsDungeon01Spritesheet from "../../assets/objects_icons/objects_Dungeon_01.png";
+import detailsSpritesheet from "../../assets/objects_icons/details.png";
+import iconScrollSpritesheet from "../../assets/objects_icons/icon_scroll.png";
 // import animation effects
 import meleeSlashSpritesheet from "../../assets/animations/melee_slash_effect.png";
 // import town PNJ spritesheets here when available
@@ -641,6 +644,28 @@ export const SUMMER_FOREST_AUTOTILE_SPRITESHEET = {
   path: summerForestAutotileImg,
   frameWidth: 16,
   frameHeight: 16,
+};
+
+export const OBJECTS_DUNGEON_01_SPRITESHEET = {
+  key: "objectsDungeon01",
+  path: objectsDungeon01Spritesheet,
+  frameWidth: 32,
+  frameHeight: 32,
+};
+
+export const DETAILS_SPRITESHEET = {
+  key: "details",
+  path: detailsSpritesheet,
+  columns: 16, // nombre de colonnes dans la feuille de sprites
+  rows: 16, // nombre de lignes dans la feuille de sprites
+  frameWidth: 32,
+  frameHeight: 32,
+};
+export const ICON_SCROLL_SPRITESHEET = {
+  key: "iconScroll",
+  path: iconScrollSpritesheet,
+  frameWidth: 32,
+  frameHeight: 32,
 };
 
 // coordonnees precises (pixels, sur city_tileset.png source 512x512) de
@@ -7237,6 +7262,14 @@ export const RING_NECKLACE_TIERS_FRAMES = {
   dragonScaleManaNecklace: 153,
   ghostEctoplasmManaNecklace: 154,
   monsterCoreManaNecklace: 155,
+};
+
+export const DETAILS_FRAMES = {
+  vegetalFiber: 38,
+};
+
+export const ICON_SCROLL_FRAMES = {
+  blanckScroll: 0,
 };
 
 /**
