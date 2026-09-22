@@ -79,8 +79,8 @@ const BIOMES = [
       ],
     },
     generatorParams: {
-      width: 30,
-      height: 30,
+      width: 40,
+      height: 40,
       roomSize: 8,
       roomCount: 10,
       stratBias: 0.8,
