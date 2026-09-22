@@ -15,6 +15,8 @@ import {
   PANTS_TIERS_SPRITESHEET,
   BELT_ALL_TIERS_SPRITESHEET,
   RING_NECKLACE_ALL_TIERS_SPRITESHEET,
+  DETAILS_SPRITESHEET,
+  ICON_SCROLL_SPRITESHEET,
   ICON_SHEET_1_FRAMES,
   ICON_SHEET_2_FRAMES,
   MONSTER_LOOTS_FRAMES,
@@ -26,6 +28,8 @@ import {
   PANTS_TIERS_FRAMES,
   BELT_ALL_TIERS_FRAMES,
   RING_NECKLACE_TIERS_FRAMES,
+  DETAILS_FRAMES,
+  ICON_SCROLL_FRAMES,
 } from "./spriteRegistry";
 import bookPages from "../../assets/background/book_pages.png";
 
@@ -429,9 +433,16 @@ export function ItemIcon({ itemId, scale = 2 }) {
     // au meme "scale" et deborderait des emplacements a taille fixe (ex :
     // la barre de raccourcis en jeu, 42x42 avec overflow: hidden)
     const ICON_BASE_SIZE = 32;
+    // Sans le scale propre au monstre (SPRITE_REGISTRY), deux monstres a la
+    // meme frameWidth/frameHeight natives (ex: 48x48) mais des tailles
+    // visuelles tres differentes en jeu (champignon scale:0.5, arbre
+    // scale:1.2) ressortaient a la MEME taille d'icone - le petit
+    // champignon paraissait alors bien plus gros que sa vraie stature.
+    const monsterScale = summonEntry.scale ?? 1;
     const normalizedScale =
       (ICON_BASE_SIZE /
         Math.max(summonEntry.frameWidth, summonEntry.frameHeight)) *
+      monsterScale *
       scale;
     const idleFrameIndex = summonEntry.animations.idleDown;
     const col = idleFrameIndex % summonEntry.sheetCols;
@@ -496,6 +507,12 @@ export function ItemIcon({ itemId, scale = 2 }) {
   } else if (RING_NECKLACE_TIERS_FRAMES[itemId] !== undefined) {
     frameIndex = RING_NECKLACE_TIERS_FRAMES[itemId];
     spriteSheet = RING_NECKLACE_ALL_TIERS_SPRITESHEET;
+  } else if (DETAILS_FRAMES[itemId] !== undefined) {
+    frameIndex = DETAILS_FRAMES[itemId];
+    spriteSheet = DETAILS_SPRITESHEET;
+  } else if (ICON_SCROLL_FRAMES[itemId] !== undefined) {
+    frameIndex = ICON_SCROLL_FRAMES[itemId];
+    spriteSheet = ICON_SCROLL_SPRITESHEET;
   } else {
     return null;
   }
@@ -570,7 +587,9 @@ export function hasIconFrame(id) {
     ARMOR_TEXTILE_TIERS_FRAMES[id] !== undefined ||
     PANTS_TIERS_FRAMES[id] !== undefined ||
     BELT_ALL_TIERS_FRAMES[id] !== undefined ||
-    RING_NECKLACE_TIERS_FRAMES[id] !== undefined
+    RING_NECKLACE_TIERS_FRAMES[id] !== undefined ||
+    ICON_SCROLL_FRAMES[id] !== undefined ||
+    DETAILS_FRAMES[id] !== undefined
   );
 }
 /**

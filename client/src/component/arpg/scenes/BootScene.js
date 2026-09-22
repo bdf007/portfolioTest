@@ -56,6 +56,8 @@ import {
   STANDARD_FIELDS3_AUTOTILE_SPRITESHEET,
   MUDDY_CAVE_AUTOTILE_SPRITESHEET,
   SUMMER_FOREST_AUTOTILE_SPRITESHEET,
+  OBJECTS_DUNGEON_01_SPRITESHEET,
+  DETAILS_SPRITESHEET,
 } from "../spriteRegistry";
 
 /**
@@ -475,6 +477,18 @@ export default class BootScene extends Phaser.Scene {
         frameHeight: SUMMER_FOREST_AUTOTILE_SPRITESHEET.frameHeight,
       },
     );
+    this.load.spritesheet(
+      OBJECTS_DUNGEON_01_SPRITESHEET.key,
+      OBJECTS_DUNGEON_01_SPRITESHEET.path,
+      {
+        frameWidth: OBJECTS_DUNGEON_01_SPRITESHEET.frameWidth,
+        frameHeight: OBJECTS_DUNGEON_01_SPRITESHEET.frameHeight,
+      },
+    );
+    this.load.spritesheet(DETAILS_SPRITESHEET.key, DETAILS_SPRITESHEET.path, {
+      frameWidth: DETAILS_SPRITESHEET.frameWidth,
+      frameHeight: DETAILS_SPRITESHEET.frameHeight,
+    });
     this.load.spritesheet(CHEST_SPRITESHEET.key, CHEST_SPRITESHEET.path, {
       frameWidth: CHEST_SPRITESHEET.frameWidth,
       frameHeight: CHEST_SPRITESHEET.frameHeight,

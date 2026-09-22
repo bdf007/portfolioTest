@@ -1,4 +1,5 @@
 import { useRef, useCallback } from "react";
+import JoystickBG from "../../assets/background/Joystick_Background.png";
 
 const JOYSTICK_RADIUS = 50; // rayon de la base, en px
 const STICK_RADIUS = 24; // rayon du bouton mobile, en px
@@ -117,8 +118,9 @@ export default function TouchControls({ gameRef, furyReady }) {
           width: JOYSTICK_RADIUS * 2,
           height: JOYSTICK_RADIUS * 2,
           borderRadius: "50%",
-          background: "rgba(255,255,255,0.12)",
-          border: "2px solid rgba(255,255,255,0.3)",
+          backgroundImage: `url(${JoystickBG})`,
+          backgroundSize: "contain",
+          backgroundRepeat: "no-repeat",
           touchAction: "none",
           pointerEvents: "auto",
         }}

@@ -326,6 +326,21 @@ export default function Arpg() {
     const game = new Phaser.Game(config);
     gameRef.current = game;
 
+    // plein ecran automatique au lancement/reprise d'une partie - le DOM
+    // de la phase "playing" (arpgContainerRef) vient d'etre monte par
+    // React juste avant que cet effet ne s'execute, donc la ref est deja
+    // valide ici (contrairement a handleSelectHero/handleResumeGame, ou
+    // on est encore en phase "select"/"picker" et cette div n'existe pas
+    // encore). Cible arpgContainerRef (le conteneur du jeu) et non
+    // document.documentElement, pour ne pas mettre toute la page
+    // (navbar/footer inclus) en plein ecran.
+    if (arpgContainerRef.current && !document.fullscreenElement) {
+      (
+        arpgContainerRef.current.requestFullscreen ||
+        arpgContainerRef.current.webkitRequestFullscreen
+      )?.call(arpgContainerRef.current);
+    }
+
     game.registry.set("heroId", heroId);
     if (resumeSave) game.registry.set("resumeSave", resumeSave);
     game.registry.set("isMobile", isMobile);
@@ -426,6 +441,11 @@ export default function Arpg() {
         setDiscoveredLockedRecipes(recipes),
       );
       scene.events.on("quit-to-menu", () => {
+        if (document.fullscreenElement) {
+          (document.exitFullscreen || document.webkitExitFullscreen)?.call(
+            document,
+          );
+        }
         setPhase("picker");
         loadGamesList();
       });
@@ -1437,7 +1457,15 @@ export default function Arpg() {
                   }}
                   title={label || "Vide"}
                 >
-                  <div style={{ fontSize: 10, color: "#8a7050" }}>
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: 1,
+                      left: 3,
+                      fontSize: 10,
+                      color: "#8a7050",
+                    }}
+                  >
                     {index + 1}
                   </div>
                   {showIcon ? (
