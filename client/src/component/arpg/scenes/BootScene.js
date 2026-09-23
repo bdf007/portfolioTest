@@ -55,7 +55,15 @@ import {
   STANDARD_FIELDS1_AUTOTILE_SPRITESHEET,
   STANDARD_FIELDS3_AUTOTILE_SPRITESHEET,
   MUDDY_CAVE_AUTOTILE_SPRITESHEET,
+  MUDDY_CAVE_V2_AUTOTILE_SPRITESHEET,
   SUMMER_FOREST_AUTOTILE_SPRITESHEET,
+  SPRING_FOREST_AUTOTILE_SPRITESHEET,
+  AUTUMN_FOREST_AUTOTILE_SPRITESHEET,
+  WINTER_FOREST_AUTOTILE_SPRITESHEET,
+  WINTER_FOREST_SNOWY_AUTOTILE_SPRITESHEET,
+  CASTLE_DUNGEON_V01_AUTOTILE_SPRITESHEET,
+  CASTLE_DUNGEON_V02_AUTOTILE_SPRITESHEET,
+  CASTLE_DUNGEON_V03_AUTOTILE_SPRITESHEET,
   OBJECTS_DUNGEON_01_SPRITESHEET,
   DETAILS_SPRITESHEET,
 } from "../spriteRegistry";
@@ -470,11 +478,75 @@ export default class BootScene extends Phaser.Scene {
       },
     );
     this.load.spritesheet(
+      MUDDY_CAVE_V2_AUTOTILE_SPRITESHEET.key,
+      MUDDY_CAVE_V2_AUTOTILE_SPRITESHEET.path,
+      {
+        frameWidth: MUDDY_CAVE_V2_AUTOTILE_SPRITESHEET.frameWidth,
+        frameHeight: MUDDY_CAVE_V2_AUTOTILE_SPRITESHEET.frameHeight,
+      },
+    );
+    this.load.spritesheet(
       SUMMER_FOREST_AUTOTILE_SPRITESHEET.key,
       SUMMER_FOREST_AUTOTILE_SPRITESHEET.path,
       {
         frameWidth: SUMMER_FOREST_AUTOTILE_SPRITESHEET.frameWidth,
         frameHeight: SUMMER_FOREST_AUTOTILE_SPRITESHEET.frameHeight,
+      },
+    );
+    this.load.spritesheet(
+      SPRING_FOREST_AUTOTILE_SPRITESHEET.key,
+      SPRING_FOREST_AUTOTILE_SPRITESHEET.path,
+      {
+        frameWidth: SPRING_FOREST_AUTOTILE_SPRITESHEET.frameWidth,
+        frameHeight: SPRING_FOREST_AUTOTILE_SPRITESHEET.frameHeight,
+      },
+    );
+    this.load.spritesheet(
+      AUTUMN_FOREST_AUTOTILE_SPRITESHEET.key,
+      AUTUMN_FOREST_AUTOTILE_SPRITESHEET.path,
+      {
+        frameWidth: AUTUMN_FOREST_AUTOTILE_SPRITESHEET.frameWidth,
+        frameHeight: AUTUMN_FOREST_AUTOTILE_SPRITESHEET.frameHeight,
+      },
+    );
+    this.load.spritesheet(
+      WINTER_FOREST_AUTOTILE_SPRITESHEET.key,
+      WINTER_FOREST_AUTOTILE_SPRITESHEET.path,
+      {
+        frameWidth: WINTER_FOREST_AUTOTILE_SPRITESHEET.frameWidth,
+        frameHeight: WINTER_FOREST_AUTOTILE_SPRITESHEET.frameHeight,
+      },
+    );
+    this.load.spritesheet(
+      WINTER_FOREST_SNOWY_AUTOTILE_SPRITESHEET.key,
+      WINTER_FOREST_SNOWY_AUTOTILE_SPRITESHEET.path,
+      {
+        frameWidth: WINTER_FOREST_SNOWY_AUTOTILE_SPRITESHEET.frameWidth,
+        frameHeight: WINTER_FOREST_SNOWY_AUTOTILE_SPRITESHEET.frameHeight,
+      },
+    );
+    this.load.spritesheet(
+      CASTLE_DUNGEON_V01_AUTOTILE_SPRITESHEET.key,
+      CASTLE_DUNGEON_V01_AUTOTILE_SPRITESHEET.path,
+      {
+        frameWidth: CASTLE_DUNGEON_V01_AUTOTILE_SPRITESHEET.frameWidth,
+        frameHeight: CASTLE_DUNGEON_V01_AUTOTILE_SPRITESHEET.frameHeight,
+      },
+    );
+    this.load.spritesheet(
+      CASTLE_DUNGEON_V02_AUTOTILE_SPRITESHEET.key,
+      CASTLE_DUNGEON_V02_AUTOTILE_SPRITESHEET.path,
+      {
+        frameWidth: CASTLE_DUNGEON_V02_AUTOTILE_SPRITESHEET.frameWidth,
+        frameHeight: CASTLE_DUNGEON_V02_AUTOTILE_SPRITESHEET.frameHeight,
+      },
+    );
+    this.load.spritesheet(
+      CASTLE_DUNGEON_V03_AUTOTILE_SPRITESHEET.key,
+      CASTLE_DUNGEON_V03_AUTOTILE_SPRITESHEET.path,
+      {
+        frameWidth: CASTLE_DUNGEON_V03_AUTOTILE_SPRITESHEET.frameWidth,
+        frameHeight: CASTLE_DUNGEON_V03_AUTOTILE_SPRITESHEET.frameHeight,
       },
     );
     this.load.spritesheet(

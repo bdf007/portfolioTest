@@ -14310,7 +14310,7 @@ export const ITEM_DEFS = {
     unique: true,
   },
   batWing: {
-    id: "batWing",
+    id: "batWings",
     category: "craftingMaterial",
     name: "Aile de chauve-souris",
     description:
@@ -15384,15 +15384,14 @@ export const ITEM_DEFS = {
     name: "Touffe de fourrure d'ours noir",
     description:
       "Une touffe de fourrure d'ours noir, utilisée pour l'artisanat.",
-    stackable: false,
-    unique: false,
+    stackable: true,
   },
   blackBearPelt: {
     id: "blackBearPelt",
     category: "craftingMaterial",
     name: "Peau d'ours noir",
     description: "La peau d'un ours noir, utilisée pour l'artisanat.",
-    stackable: false,
+    stackable: true,
     unique: false,
   },
   summonBlackBearScroll: {
@@ -15645,7 +15644,6 @@ export const ITEM_DEFS = {
     description:
       "Une touffe de fourrure d'orque gris, utilisée pour l'artisanat.",
     stackable: false,
-    unique: true,
   },
   summonOrqueGreyScroll: {
     id: "summonOrqueGreyScroll",

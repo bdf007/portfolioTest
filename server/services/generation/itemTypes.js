@@ -1035,7 +1035,7 @@ const ITEM_TYPES = {
     unique: true,
   },
   batWing: {
-    id: "batWing",
+    id: "batWings",
     category: "craftingMaterial",
     name: "Aile de chauve-souris",
     description:
@@ -2110,15 +2110,14 @@ const ITEM_TYPES = {
     name: "Touffe de fourrure d'ours noir",
     description:
       "Une touffe de fourrure d'ours noir, utilisée pour l'artisanat.",
-    stackable: false,
-    unique: false,
+    stackable: true,
   },
   blackBearPelt: {
     id: "blackBearPelt",
     category: "craftingMaterial",
     name: "Peau d'ours noir",
     description: "La peau d'un ours noir, utilisée pour l'artisanat.",
-    stackable: false,
+    stackable: true,
     unique: false,
   },
   summonBlackBearScroll: {
@@ -2371,7 +2370,6 @@ const ITEM_TYPES = {
     description:
       "Une touffe de fourrure d'orque gris, utilisée pour l'artisanat.",
     stackable: false,
-    unique: true,
   },
   summonOrqueGreyScroll: {
     id: "summonOrqueGreyScroll",
@@ -2852,7 +2850,7 @@ const LOOT_TABLES = {
   knifedBatDrop: [
     { itemId: null, weight: 50 }, // la plupart des chauves-souris poignardées ne laissent rien
     { itemId: "gold", weight: 50, quantityRange: [1, 3] },
-    { itemId: "batWing", weight: 10, quantityRange: [1, 2] },
+    { itemId: "batWings", weight: 10, quantityRange: [1, 2] },
     { itemId: "batFur", weight: 10, quantityRange: [1, 2] },
     { itemId: "batEye", weight: 10, quantityRange: [1, 2] },
     { itemId: "knifedBatCore", weight: 1 },

@@ -277,7 +277,15 @@ import standardFields1AutotileImg from "../../assets/tilesets/Set_A_Standard_Fie
 import standardFields3AutotileImg from "../../assets/tilesets/Set_A_Standard_Fields3.png";
 import worldBAutotileImg from "../../assets/tilesets/Set_B_World.png";
 import muddyCaveAutotileImg from "../../assets/tilesets/muddy_cave.png";
+import muddyCaveV2AutotileImg from "../../assets/tilesets/muddy_cave_v2.png";
 import summerForestAutotileImg from "../../assets/tilesets/summer_forest.png";
+import springForestAutotileImg from "../../assets/tilesets/spring_forest.png";
+import autumnForestAutotileImg from "../../assets/tilesets/autumn_forest.png";
+import winterForestAutotileImg from "../../assets/tilesets/winter_forest.png";
+import winterForestSnowyAutotileImg from "../../assets/tilesets/winter_forest_snowy.png";
+import castleDungeonV01AutotileImg from "../../assets/tilesets/castle_dungeon_v01.png";
+import castleDungeonV02AutotileImg from "../../assets/tilesets/castle_dungeon_v02.png";
+import castleDungeonV03AutotileImg from "../../assets/tilesets/castle_dungeon_v03.png";
 // import objects
 import chestsSpritesheet from "../../assets/objects_icons/Chests.png";
 import iconSheet1 from "../../assets/objects_icons/icon_sheet1.png";
@@ -639,9 +647,59 @@ export const MUDDY_CAVE_AUTOTILE_SPRITESHEET = {
   frameHeight: 16,
 };
 
+export const MUDDY_CAVE_V2_AUTOTILE_SPRITESHEET = {
+  key: "muddyCaveV2Autotile",
+  path: muddyCaveV2AutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+
 export const SUMMER_FOREST_AUTOTILE_SPRITESHEET = {
   key: "summerForestAutotile",
   path: summerForestAutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+export const SPRING_FOREST_AUTOTILE_SPRITESHEET = {
+  key: "springForestAutotile",
+  path: springForestAutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+export const AUTUMN_FOREST_AUTOTILE_SPRITESHEET = {
+  key: "autumnForestAutotile",
+  path: autumnForestAutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+export const WINTER_FOREST_AUTOTILE_SPRITESHEET = {
+  key: "winterForestAutotile",
+  path: winterForestAutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+export const WINTER_FOREST_SNOWY_AUTOTILE_SPRITESHEET = {
+  key: "winterForestSnowyAutotile",
+  path: winterForestSnowyAutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+export const CASTLE_DUNGEON_V01_AUTOTILE_SPRITESHEET = {
+  key: "castleDungeonV01Autotile",
+  path: castleDungeonV01AutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+export const CASTLE_DUNGEON_V02_AUTOTILE_SPRITESHEET = {
+  key: "castleDungeonV02Autotile",
+  path: castleDungeonV02AutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+
+export const CASTLE_DUNGEON_V03_AUTOTILE_SPRITESHEET = {
+  key: "castleDungeonV03Autotile",
+  path: castleDungeonV03AutotileImg,
   frameWidth: 16,
   frameHeight: 16,
 };
@@ -5855,6 +5913,8 @@ export const MONSTER_LOOTS_FRAMES = {
   furTuft: 38,
   gnomeFurTuft: 38,
   batFur: 38,
+  orqueGreyFurTuft: 38,
+  blackBearFurTuft: 38,
   bearPelt: 39,
   blackBearPelt: 40,
   coal: 41,

@@ -142,9 +142,19 @@ export default function CraftingScreen({
   // Combinaison libre
   // ------------------------------------------------------------
 
-  const combinableEntries = inventory.filter(
-    (i) => i.itemId !== "gold" && getQuantity(i.itemId) > 0,
-  );
+  // inventory est un tableau d'entrees de stack (une entree par stack/
+  // acquisition), pas d'itemId uniques - filtrer dessus tel quel affichait
+  // une ligne par stack (ex. "Peau d'ours noir" en double/triple si
+  // plusieurs stacks du meme item, jamais fusionnees). getQuantity()
+  // calcule deja le total tous stacks confondus, donc il suffit de ne
+  // garder qu'une entree par itemId unique.
+  const combinableEntries = Array.from(
+    new Set(
+      inventory
+        .filter((i) => i.itemId !== "gold" && getQuantity(i.itemId) > 0)
+        .map((i) => i.itemId),
+    ),
+  ).map((itemId) => ({ itemId }));
 
   function addToSelection(itemId) {
     const owned = getQuantity(itemId);

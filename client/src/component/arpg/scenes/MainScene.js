@@ -106,7 +106,15 @@ import {
   CITY_HOUSES,
   // HOUSE_FOOTPRINTS,
   MUDDY_CAVE_AUTOTILE_SPRITESHEET,
+  MUDDY_CAVE_V2_AUTOTILE_SPRITESHEET,
   SUMMER_FOREST_AUTOTILE_SPRITESHEET,
+  SPRING_FOREST_AUTOTILE_SPRITESHEET,
+  AUTUMN_FOREST_AUTOTILE_SPRITESHEET,
+  WINTER_FOREST_AUTOTILE_SPRITESHEET,
+  WINTER_FOREST_SNOWY_AUTOTILE_SPRITESHEET,
+  CASTLE_DUNGEON_V01_AUTOTILE_SPRITESHEET,
+  CASTLE_DUNGEON_V02_AUTOTILE_SPRITESHEET,
+  CASTLE_DUNGEON_V03_AUTOTILE_SPRITESHEET,
   OBJECTS_DUNGEON_01_SPRITESHEET,
   DETAILS_SPRITESHEET,
 } from "../spriteRegistry";
@@ -522,8 +530,31 @@ const WALL_CORNER_INDEX_TO_FRAME_0_0_MUDDY_CAVE = [
 ];
 
 const WALL_CORNER_INDEX_TO_FRAME_0_0_SUMMER_FOREST = [
-  266, 65, 1, 33, 3, 65, 2, 100, 67, 66, 3, 129, 35, 130, 132, 34,
+  266,
+  65,
+  1,
+  33,
+  3,
+  65,
+  2,
+  100,
+  67,
+  66,
+  3,
+  129,
+  35,
+  130,
+  132,
+  {
+    variants: [
+      { tiles: 34, weight: 5 },
+      { tiles: 4, weight: 1 },
+      { tiles: 36, weight: 1 },
+      { tiles: 68, weight: 1 },
+    ],
+  },
 ];
+
 const WALL_CORNER_INDEX_TO_FRAME_0_1_SUMMER_FOREST = [
   555,
   77,
@@ -549,6 +580,68 @@ const WALL_CORNER_INDEX_TO_FRAME_0_1_SUMMER_FOREST = [
       { tiles: [34, 554], weight: 0.5 },
     ],
   },
+];
+
+const WALL_CORNER_INDEX_TO_FRAME_CASTLE_DUNGEON_V01_0_0 = [
+  {
+    variants: [
+      { tiles: 299, weight: 5 },
+      { tiles: 265, weight: 1 },
+      { tiles: 231, weight: 1 },
+      { tiles: 333, weight: 1 },
+    ],
+  },
+  141,
+  107,
+  41,
+  108,
+  141,
+  74,
+  75,
+  142,
+  6,
+  73,
+  7,
+  39,
+  5,
+  73,
+  36,
+];
+const WALL_CORNER_INDEX_TO_FRAME_CASTLE_DUNGEON_V01_0_1 = [
+  {
+    variants: [
+      { tiles: 299, weight: 5 },
+      { tiles: 265, weight: 1 },
+      { tiles: 231, weight: 1 },
+      { tiles: 333, weight: 1 },
+    ],
+  },
+  77,
+  9,
+  43,
+  11,
+  77,
+  10,
+  146,
+  79,
+  78,
+  11,
+  112,
+  45,
+  {
+    variants: [
+      { tiles: 113, weight: 1 },
+      { tiles: 111, weight: 1 },
+    ],
+  },
+
+  {
+    variants: [
+      { tiles: 147, weight: 1 },
+      { tiles: 145, weight: 1 },
+    ],
+  },
+  44,
 ];
 
 // const WALL_CORNER_INDEX_TO_FRAME_FORTRESS2 = [
@@ -2225,8 +2318,23 @@ export default class MainScene extends Phaser.Scene {
       tileset === "cityTiles_0_3" ||
       tileset === "cityTiles_0_4" ||
       tileset === "muddyCave_0_0" ||
+      tileset === "muddyCaveV2_0_0" ||
       tileset === "summerForest_0_0" ||
-      tileset === "summerForest_0_1";
+      tileset === "summerForest_0_1" ||
+      tileset === "autumnForest_0_0" ||
+      tileset === "autumnForest_0_1" ||
+      tileset === "winterForest_0_0" ||
+      tileset === "winterForest_0_1" ||
+      tileset === "winterForestSnowy_0_0" ||
+      tileset === "winterForestSnowy_0_1" ||
+      tileset === "springForest_0_0" ||
+      tileset === "springForest_0_1" ||
+      tileset === "castleDungeonV01_0_0" ||
+      tileset === "castleDungeonV01_0_1" ||
+      tileset === "castleDungeonV02_0_0" ||
+      tileset === "castleDungeonV02_0_1" ||
+      tileset === "castleDungeonV03_0_0" ||
+      tileset === "castleDungeonV03_0_1";
     const useDungeon1Autotile = tileset === "dungeon1";
     const useFortress1Autotile = tileset === "fortress1";
 
@@ -2801,6 +2909,21 @@ export default class MainScene extends Phaser.Scene {
       this.currentRawTilesetKey = MUDDY_CAVE_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
       this.currentRenderGrid = renderGrid;
       this.currentSlotSourceTileIds = result.slotSourceTileIds;
+    } else if (tileset === "muddyCaveV2_0_0") {
+      const result = this.composeCornerAutotileTexture(
+        grid,
+        MUDDY_CAVE_V2_AUTOTILE_SPRITESHEET,
+        "muddyCaveV2_0_0",
+        WALL_CORNER_INDEX_TO_FRAME_0_0_MUDDY_CAVE,
+        101,
+      );
+      phaserTilesetKey = result.phaserTilesetKey;
+      renderGrid = result.renderGrid;
+      composedFloorSlots = result.floorSlotIndices;
+      this.currentFloorTileIndex = composedFloorSlots[0];
+      this.currentRawTilesetKey = MUDDY_CAVE_V2_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
+      this.currentRenderGrid = renderGrid;
+      this.currentSlotSourceTileIds = result.slotSourceTileIds;
     } else if (tileset === "summerForest_0_0") {
       const result = this.composeCornerAutotileTexture(
         grid,
@@ -2835,6 +2958,247 @@ export default class MainScene extends Phaser.Scene {
       composedFloorSlots = result.floorSlotIndices;
       this.currentFloorTileIndex = composedFloorSlots[0];
       this.currentRawTilesetKey = SUMMER_FOREST_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
+      this.currentRenderGrid = renderGrid;
+      this.currentSlotSourceTileIds = result.slotSourceTileIds;
+    } else if (tileset === "springForest_0_0") {
+      const result = this.composeCornerAutotileTexture(
+        grid,
+        SPRING_FOREST_AUTOTILE_SPRITESHEET,
+        "springForest_0_0",
+        WALL_CORNER_INDEX_TO_FRAME_0_0_SUMMER_FOREST,
+        38,
+      );
+      phaserTilesetKey = result.phaserTilesetKey;
+      renderGrid = result.renderGrid;
+      composedFloorSlots = result.floorSlotIndices;
+      this.currentFloorTileIndex = composedFloorSlots[0];
+      this.currentRawTilesetKey = SPRING_FOREST_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
+      this.currentRenderGrid = renderGrid;
+      this.currentSlotSourceTileIds = result.slotSourceTileIds;
+    } else if (tileset === "springForest_0_1") {
+      const result = this.composeCornerAutotileTexture(
+        grid,
+        SPRING_FOREST_AUTOTILE_SPRITESHEET,
+        "springForest_0_1",
+        WALL_CORNER_INDEX_TO_FRAME_0_1_SUMMER_FOREST,
+        // 38,
+        [
+          { tileId: 38, weight: 5 },
+          { tileId: [38, 516], weight: 1 },
+          { tileId: [38, 521], weight: 1 },
+          { tileId: [38, 524], weight: 1 },
+        ],
+      );
+      phaserTilesetKey = result.phaserTilesetKey;
+      renderGrid = result.renderGrid;
+      composedFloorSlots = result.floorSlotIndices;
+      this.currentFloorTileIndex = composedFloorSlots[0];
+      this.currentRawTilesetKey = SUMMER_FOREST_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
+      this.currentRenderGrid = renderGrid;
+      this.currentSlotSourceTileIds = result.slotSourceTileIds;
+    } else if (tileset === "autumnForest_0_0") {
+      const result = this.composeCornerAutotileTexture(
+        grid,
+        AUTUMN_FOREST_AUTOTILE_SPRITESHEET,
+        "autumnForest_0_0",
+        WALL_CORNER_INDEX_TO_FRAME_0_0_SUMMER_FOREST,
+        // 38,
+        [
+          { tileId: 32, weight: 5 },
+          { tileId: 64, weight: 1 },
+          { tileId: 96, weight: 1 },
+          { tileId: 128, weight: 1 },
+          { tileId: 160, weight: 1 },
+        ],
+      );
+      phaserTilesetKey = result.phaserTilesetKey;
+      renderGrid = result.renderGrid;
+      composedFloorSlots = result.floorSlotIndices;
+      this.currentFloorTileIndex = composedFloorSlots[0];
+      this.currentRawTilesetKey = AUTUMN_FOREST_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
+      this.currentRenderGrid = renderGrid;
+      this.currentSlotSourceTileIds = result.slotSourceTileIds;
+    } else if (tileset === "autumnForest_0_1") {
+      const result = this.composeCornerAutotileTexture(
+        grid,
+        AUTUMN_FOREST_AUTOTILE_SPRITESHEET,
+        "autumnForest_0_1",
+        WALL_CORNER_INDEX_TO_FRAME_0_1_SUMMER_FOREST,
+        // 38,
+        [
+          { tileId: 38, weight: 5 },
+          { tileId: [38, 516], weight: 1 },
+          { tileId: [38, 521], weight: 1 },
+          { tileId: [38, 524], weight: 1 },
+        ],
+      );
+      phaserTilesetKey = result.phaserTilesetKey;
+      renderGrid = result.renderGrid;
+      composedFloorSlots = result.floorSlotIndices;
+      this.currentFloorTileIndex = composedFloorSlots[0];
+      this.currentRawTilesetKey = AUTUMN_FOREST_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
+      this.currentRenderGrid = renderGrid;
+      this.currentSlotSourceTileIds = result.slotSourceTileIds;
+    } else if (tileset === "winterForest_0_0") {
+      const result = this.composeCornerAutotileTexture(
+        grid,
+        WINTER_FOREST_AUTOTILE_SPRITESHEET,
+        "winterForest_0_0",
+        WALL_CORNER_INDEX_TO_FRAME_0_0_SUMMER_FOREST,
+        38,
+      );
+      phaserTilesetKey = result.phaserTilesetKey;
+      renderGrid = result.renderGrid;
+      composedFloorSlots = result.floorSlotIndices;
+      this.currentFloorTileIndex = composedFloorSlots[0];
+      this.currentRawTilesetKey = WINTER_FOREST_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
+      this.currentRenderGrid = renderGrid;
+      this.currentSlotSourceTileIds = result.slotSourceTileIds;
+    } else if (tileset === "winterForest_0_1") {
+      const result = this.composeCornerAutotileTexture(
+        grid,
+        WINTER_FOREST_AUTOTILE_SPRITESHEET,
+        "winterForest_0_1",
+        WALL_CORNER_INDEX_TO_FRAME_0_1_SUMMER_FOREST,
+        // 38,
+        [
+          { tileId: 38, weight: 5 },
+          { tileId: [38, 516], weight: 1 },
+          { tileId: [38, 521], weight: 1 },
+          { tileId: [38, 524], weight: 1 },
+        ],
+      );
+      phaserTilesetKey = result.phaserTilesetKey;
+      renderGrid = result.renderGrid;
+      composedFloorSlots = result.floorSlotIndices;
+      this.currentFloorTileIndex = composedFloorSlots[0];
+      this.currentRawTilesetKey = WINTER_FOREST_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
+      this.currentRenderGrid = renderGrid;
+      this.currentSlotSourceTileIds = result.slotSourceTileIds;
+    } else if (tileset === "winterSnowyForest_0_0") {
+      const result = this.composeCornerAutotileTexture(
+        grid,
+        WINTER_FOREST_SNOWY_AUTOTILE_SPRITESHEET,
+        "winterSnowyForest_0_0",
+        WALL_CORNER_INDEX_TO_FRAME_0_0_SUMMER_FOREST,
+        38,
+      );
+      phaserTilesetKey = result.phaserTilesetKey;
+      renderGrid = result.renderGrid;
+      composedFloorSlots = result.floorSlotIndices;
+      this.currentFloorTileIndex = composedFloorSlots[0];
+      this.currentRawTilesetKey = WINTER_FOREST_SNOWY_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
+      this.currentRenderGrid = renderGrid;
+      this.currentSlotSourceTileIds = result.slotSourceTileIds;
+    } else if (tileset === "winterSnowyForest_0_1") {
+      const result = this.composeCornerAutotileTexture(
+        grid,
+        WINTER_FOREST_SNOWY_AUTOTILE_SPRITESHEET,
+        "winterSnowyForest_0_1",
+        WALL_CORNER_INDEX_TO_FRAME_0_1_SUMMER_FOREST,
+        // 38,
+        [
+          { tileId: 38, weight: 5 },
+          { tileId: [38, 516], weight: 1 },
+          { tileId: [38, 521], weight: 1 },
+          { tileId: [38, 524], weight: 1 },
+        ],
+      );
+      phaserTilesetKey = result.phaserTilesetKey;
+      renderGrid = result.renderGrid;
+      composedFloorSlots = result.floorSlotIndices;
+      this.currentFloorTileIndex = composedFloorSlots[0];
+      this.currentRawTilesetKey = WINTER_FOREST_SNOWY_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
+      this.currentRenderGrid = renderGrid;
+      this.currentSlotSourceTileIds = result.slotSourceTileIds;
+    } else if (tileset === "castleDungeonV01_0_0") {
+      const result = this.composeCornerAutotileTexture(
+        grid,
+        CASTLE_DUNGEON_V01_AUTOTILE_SPRITESHEET,
+        "castleDungeonV01_0_0",
+        WALL_CORNER_INDEX_TO_FRAME_CASTLE_DUNGEON_V01_0_0,
+        40,
+      );
+      phaserTilesetKey = result.phaserTilesetKey;
+      renderGrid = result.renderGrid;
+      composedFloorSlots = result.floorSlotIndices;
+      this.currentFloorTileIndex = composedFloorSlots[0];
+      this.currentRawTilesetKey = CASTLE_DUNGEON_V01_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
+      this.currentRenderGrid = renderGrid;
+      this.currentSlotSourceTileIds = result.slotSourceTileIds;
+    } else if (tileset === "castleDungeonV01_0_1") {
+      const result = this.composeCornerAutotileTexture(
+        grid,
+        CASTLE_DUNGEON_V01_AUTOTILE_SPRITESHEET,
+        "castleDungeonV01_0_1",
+        WALL_CORNER_INDEX_TO_FRAME_CASTLE_DUNGEON_V01_0_1,
+        36,
+      );
+      phaserTilesetKey = result.phaserTilesetKey;
+      renderGrid = result.renderGrid;
+      composedFloorSlots = result.floorSlotIndices;
+      this.currentFloorTileIndex = composedFloorSlots[0];
+      this.currentRawTilesetKey = CASTLE_DUNGEON_V01_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
+      this.currentRenderGrid = renderGrid;
+      this.currentSlotSourceTileIds = result.slotSourceTileIds;
+    } else if (tileset === "castleDungeonV02_0_0") {
+      const result = this.composeCornerAutotileTexture(
+        grid,
+        CASTLE_DUNGEON_V02_AUTOTILE_SPRITESHEET,
+        "castleDungeonV02_0_0",
+        WALL_CORNER_INDEX_TO_FRAME_CASTLE_DUNGEON_V01_0_0,
+        40,
+      );
+      phaserTilesetKey = result.phaserTilesetKey;
+      renderGrid = result.renderGrid;
+      composedFloorSlots = result.floorSlotIndices;
+      this.currentFloorTileIndex = composedFloorSlots[0];
+      this.currentRawTilesetKey = CASTLE_DUNGEON_V02_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
+      this.currentRenderGrid = renderGrid;
+      this.currentSlotSourceTileIds = result.slotSourceTileIds;
+    } else if (tileset === "castleDungeonV02_0_1") {
+      const result = this.composeCornerAutotileTexture(
+        grid,
+        CASTLE_DUNGEON_V02_AUTOTILE_SPRITESHEET,
+        "castleDungeonV02_0_1",
+        WALL_CORNER_INDEX_TO_FRAME_CASTLE_DUNGEON_V01_0_1,
+        36,
+      );
+      phaserTilesetKey = result.phaserTilesetKey;
+      renderGrid = result.renderGrid;
+      composedFloorSlots = result.floorSlotIndices;
+      this.currentFloorTileIndex = composedFloorSlots[0];
+      this.currentRawTilesetKey = CASTLE_DUNGEON_V02_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
+      this.currentRenderGrid = renderGrid;
+      this.currentSlotSourceTileIds = result.slotSourceTileIds;
+    } else if (tileset === "castleDungeonV03_0_0") {
+      const result = this.composeCornerAutotileTexture(
+        grid,
+        CASTLE_DUNGEON_V03_AUTOTILE_SPRITESHEET,
+        "castleDungeonV03_0_0",
+        WALL_CORNER_INDEX_TO_FRAME_CASTLE_DUNGEON_V01_0_0,
+        40,
+      );
+      phaserTilesetKey = result.phaserTilesetKey;
+      renderGrid = result.renderGrid;
+      composedFloorSlots = result.floorSlotIndices;
+      this.currentFloorTileIndex = composedFloorSlots[0];
+      this.currentRawTilesetKey = CASTLE_DUNGEON_V02_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
+      this.currentRenderGrid = renderGrid;
+      this.currentSlotSourceTileIds = result.slotSourceTileIds;
+    } else if (tileset === "castleDungeonV03_0_1") {
+      const result = this.composeCornerAutotileTexture(
+        grid,
+        CASTLE_DUNGEON_V03_AUTOTILE_SPRITESHEET,
+        "castleDungeonV03_0_1",
+        WALL_CORNER_INDEX_TO_FRAME_CASTLE_DUNGEON_V01_0_1,
+        36,
+      );
+      phaserTilesetKey = result.phaserTilesetKey;
+      renderGrid = result.renderGrid;
+      composedFloorSlots = result.floorSlotIndices;
+      this.currentFloorTileIndex = composedFloorSlots[0];
+      this.currentRawTilesetKey = CASTLE_DUNGEON_V02_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
       this.currentRenderGrid = renderGrid;
       this.currentSlotSourceTileIds = result.slotSourceTileIds;
     } else {
@@ -5019,6 +5383,7 @@ export default class MainScene extends Phaser.Scene {
     const ENEMY_STUCK_MOVE_THRESHOLD = 10;
     const ENEMY_STUCK_JITTER_STREAK = 3; // ~1.5s de blocage continu
     const ENEMY_STUCK_JITTER_SPEED = 90;
+    const ENEMY_STUCK_TELEPORT_JITTER_ATTEMPTS = 3; // ~4-5s de blocage malgre plusieurs jitter+repath
 
     for (const enemy of this.enemies) {
       enemy.visible = this.isEnemyVisible(enemy);
@@ -5077,18 +5442,47 @@ export default class MainScene extends Phaser.Scene {
           const speed = this.getEffectiveEnemySpeed(enemy);
           const vx = (dx / mag) * speed;
           const vy = (dy / mag) * speed;
-          enemy.sprite.setVelocity(vx, vy);
-          const edir =
-            Math.abs(vx) > Math.abs(vy)
-              ? vx > 0
-                ? "right"
-                : "left"
-              : vy > 0
-                ? "down"
-                : "up";
-          enemy.sprite.anims.play(enemy.spriteKey + "-walk-" + edir, true);
-          enemy.lastDir = edir;
-          continue;
+
+          // Le recul est un setVelocity brut, sans jamais consulter la
+          // grille de pathfinding contrairement au chase normal
+          // (followPathStep) - un ranged acculé dans un coin reculait donc
+          // droit dans le mur a chaque frame. Sur un couloir etroit / un
+          // angle de mur, ca suffit a le faire clipper a travers la
+          // geometrie (tunneling Arcade si un pic de delta fait depasser
+          // la case en une frame, ou glissement le long de deux colliders
+          // qui se resolvent l'un contre l'autre a un coin). On verifie
+          // donc la case visee avant de reculer dedans ; si c'est un mur,
+          // on ne recule pas cette frame-la (on tombera dans le
+          // stopForMelee / path-follow normal juste en dessous).
+          const lookaheadX = enemy.sprite.x + (vx / speed) * TILE_SIZE;
+          const lookaheadY = enemy.sprite.y + (vy / speed) * TILE_SIZE;
+          const retreatTileX = Math.floor(lookaheadX / TILE_SIZE);
+          const retreatTileY = Math.floor(lookaheadY / TILE_SIZE);
+          const grid = this.fogGrid;
+          const retreatOutOfBounds =
+            retreatTileX < 0 ||
+            retreatTileY < 0 ||
+            retreatTileY >= grid.length ||
+            retreatTileX >= grid[0].length;
+          const retreatBlocked =
+            retreatOutOfBounds || grid[retreatTileY][retreatTileX] === WALL;
+
+          if (!retreatBlocked) {
+            enemy.sprite.setVelocity(vx, vy);
+            const edir =
+              Math.abs(vx) > Math.abs(vy)
+                ? vx > 0
+                  ? "right"
+                  : "left"
+                : vy > 0
+                  ? "down"
+                  : "up";
+            enemy.sprite.anims.play(enemy.spriteKey + "-walk-" + edir, true);
+            enemy.lastDir = edir;
+            continue;
+          }
+          // sinon : on ne "continue" pas, on retombe sur stopForMelee /
+          // le path-follow ci-dessous, qui eux passent par la grille
         }
 
         if (stopForMelee) {
@@ -5097,9 +5491,6 @@ export default class MainScene extends Phaser.Scene {
             enemy.spriteKey + "-idle-" + enemy.lastDir,
             true,
           );
-          enemy.stuckCheckPos = { x: enemy.sprite.x, y: enemy.sprite.y };
-          enemy.stuckCheckAt = this.time.now;
-          enemy.stuckStreak = 0;
           continue;
         }
 
@@ -5127,6 +5518,35 @@ export default class MainScene extends Phaser.Scene {
           if (movedDist < ENEMY_STUCK_MOVE_THRESHOLD) {
             enemy.stuckStreak = (enemy.stuckStreak || 0) + 1;
             if (enemy.stuckStreak >= ENEMY_STUCK_JITTER_STREAK) {
+              // Filet de securite anti-softlock : le repath + jitter
+              // suffit dans la grande majorite des cas, mais pas
+              // toujours (ennemi vraiment coince dans la geometrie, clip
+              // de collision...). On compte les cycles de jitter
+              // consecutifs qui n'ont pas resolu le blocage ; au bout de
+              // ENEMY_STUCK_TELEPORT_JITTER_ATTEMPTS, on teleporte
+              // l'ennemi pres du joueur plutot que de le laisser
+              // rebondir indefiniment contre la geometrie. Critique
+              // devant une salle de boss : la porte reste verrouillee
+              // tant que tous les ennemis ne sont pas elimines, donc un
+              // ennemi injoignable = softlock garanti pour le joueur.
+              enemy.stuckJitterAttempts = (enemy.stuckJitterAttempts || 0) + 1;
+              if (
+                enemy.stuckJitterAttempts >=
+                ENEMY_STUCK_TELEPORT_JITTER_ATTEMPTS
+              ) {
+                const tx = this.hero.x + (Math.random() - 0.5) * 80;
+                const ty = this.hero.y + (Math.random() - 0.5) * 80;
+                enemy.sprite.setPosition(tx, ty);
+                enemy.sprite.setVelocity(0, 0);
+                enemy.path = null;
+                enemy.pathIndex = 0;
+                enemy.stuckStreak = 0;
+                enemy.stuckJitterAttempts = 0;
+                enemy.stuckJitterUntil = 0;
+                enemy.stuckCheckPos = { x: tx, y: ty };
+                enemy.stuckCheckAt = now;
+                continue;
+              }
               enemy.stuckJitterUntil = now + 300;
               this.requestPath(
                 enemy.sprite.x,
@@ -5141,6 +5561,7 @@ export default class MainScene extends Phaser.Scene {
             }
           } else {
             enemy.stuckStreak = 0;
+            enemy.stuckJitterAttempts = 0;
           }
           enemy.stuckCheckPos = { x: enemy.sprite.x, y: enemy.sprite.y };
           enemy.stuckCheckAt = now;
