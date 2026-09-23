@@ -38,7 +38,7 @@ const ITEM_TYPES = {
       "+1 dégât au corps à corps et -2 à la distance d'attaque. Arme d'entraînement de départ.",
     statBonus: { meleeDamage: 1, meleeRange: -2 },
     stackable: false,
-    unique: true,
+    // unique: true,
     archetypes: ["voleur"],
   },
   woodenSword: {
