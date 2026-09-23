@@ -963,8 +963,8 @@ const SHARPENING_RECIPES = buildRecipe(SHARP_WEAPONS, "whetstone", 1, 1, true);
 
 const OAKWOOD_TIER_WEAPONS = [
   { base: "woodenBow", result: "oakBow" },
-  { base: "woodCrossbow", result: "oakCrossbow" },
-  { base: "woodStaff", result: "oakStaff" },
+  { base: "woodenCrossbow", result: "oakCrossbow" },
+  { base: "woodenStaff", result: "oakStaff" },
   { base: "woodenBuckler", result: "oakBuckler" },
 ];
 
@@ -2774,8 +2774,9 @@ export const CRAFTING_RECIPES = {
     resultItemId: "woodenCrossbowBolt",
     resultQuantity: 10,
     ingredients: [
-      { itemId: "branch", quantity: 5 },
+      { itemId: "branch", quantity: 4 },
       { itemId: "gnomeClaw", quantity: 1 },
+      { itemId: "vegetalFiber", quantity: 2 },
     ],
     // unlockLevel: 1,
     discoveryOnly: true,
