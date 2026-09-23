@@ -2313,6 +2313,18 @@ export const CRAFTING_RECIPES = {
   ...REINFORCED_MONSTER_CORE_TIER_ARMOR_RECIPES,
 
   // recette d'évolution des dagues avec un seul ingot
+  woodenDaggerRecipe: {
+    id: "woodenDaggerRecipe",
+    name: "Recette d'évolution : Dague en bois",
+    resultItemId: "woodenDagger",
+    resultQuantity: 1,
+    ingredients: [
+      { itemId: "wood", quantity: 1 },
+      { itemId: "gnomeClaw", quantity: 1 },
+    ],
+    discoveryOnly: true,
+  },
+
   copperDaggerRecipe: {
     id: "copperDaggerRecipe",
     name: "Recette d'évolution : Dague en cuivre",

@@ -59,11 +59,8 @@ const BIOMES = [
       totalHits: [1, 4], // nombre de coups avant epuisement
       gemChance: 0.01, // 1% de chance PAR COUP d'obtenir une gemme a la place du metal
       gemPool: [
-        { itemId: "smokyQuartz", weight: 5 },
-        { itemId: "ruby", weight: 2 },
-        { itemId: "aquaMarine", weight: 1 },
-        { itemId: "peridot", weight: 0.5 },
-        { itemId: "ironOre", weight: 0.5 },
+        { itemId: "whetstone", weight: 5 },
+        { itemId: "ruby", weight: 0.5 },
       ],
     },
     // forageConfig: {
@@ -99,6 +96,7 @@ const BIOMES = [
       decorTypes: [
         // "rock_small", "ground_crack",
         "flower",
+        "boulder",
       ], // cles arbitraires, a adapter
     },
     chestCount: [1, 3],
@@ -126,11 +124,8 @@ const BIOMES = [
       totalHits: [1, 4], // nombre de coups avant epuisement
       gemChance: 0.01, // 1% de chance PAR COUP d'obtenir une gemme a la place du metal
       gemPool: [
-        { itemId: "smokyQuartz", weight: 5 },
-        { itemId: "ruby", weight: 2 },
-        { itemId: "aquaMarine", weight: 1 },
-        { itemId: "peridot", weight: 0.5 },
-        { itemId: "ironOre", weight: 0.5 },
+        { itemId: "whetstone", weight: 5 },
+        { itemId: "ruby", weight: 0.5 },
       ],
     },
     // forageConfig: {
@@ -237,7 +232,7 @@ const BIOMES = [
     ],
     decorationConfig: {
       count: [50, 100], // genereux - c'est fait pour remplir le biome
-      decorTypes: ["rock_small"], // cles arbitraires, a adapter
+      decorTypes: ["rock_small", "boulder"], // cles arbitraires, a adapter
     },
     chestCount: [1, 3],
     chestLootTable: "chestStandard",
@@ -265,10 +260,8 @@ const BIOMES = [
       totalHits: [2, 6], // nombre de coups avant epuisement
       gemChance: 0.01, // 1% de chance PAR COUP d'obtenir une gemme a la place du metal
       gemPool: [
-        { itemId: "smokyQuartz", weight: 5 },
-        { itemId: "ruby", weight: 2 },
-        { itemId: "aquaMarine", weight: 1 },
-        { itemId: "peridot", weight: 0.5 },
+        { itemId: "whetstone", weight: 5 },
+        { itemId: "aquamarine", weight: 0.5 },
       ],
     },
     // forageConfig: {
@@ -309,7 +302,7 @@ const BIOMES = [
     ],
     decorationConfig: {
       count: [60, 120], // genereux - c'est fait pour remplir le biome
-      decorTypes: ["rock_small"], // cles arbitraires, a adapter
+      decorTypes: ["rock_small", "ground_crack"], // cles arbitraires, a adapter
     },
     chestCount: [1, 5],
     chestLootTable: "chestStandard",
@@ -337,10 +330,8 @@ const BIOMES = [
       totalHits: [2, 6], // nombre de coups avant epuisement
       gemChance: 0.01, // 1% de chance PAR COUP d'obtenir une gemme a la place du metal
       gemPool: [
-        { itemId: "smokyQuartz", weight: 5 },
-        { itemId: "ruby", weight: 2 },
-        { itemId: "aquaMarine", weight: 1 },
-        { itemId: "peridot", weight: 0.5 },
+        { itemId: "whetstone", weight: 5 },
+        { itemId: "aquamarine", weight: 0.5 },
       ],
     },
     // forageConfig: {
@@ -382,7 +373,7 @@ const BIOMES = [
     ],
     decorationConfig: {
       count: [50, 100], // genereux - c'est fait pour remplir le biome
-      decorTypes: ["rock_small", "bush", "flower_patch"], // cles arbitraires, a adapter
+      decorTypes: ["rock_small", "bush", "ground_crack"], // cles arbitraires, a adapter
     },
     chestCount: [1, 3],
     chestLootTable: "chestStandard",
@@ -547,8 +538,8 @@ const BIOMES = [
       ],
     },
     generatorParams: {
-      width: 80,
-      height: 80,
+      width: 90,
+      height: 90,
       noiseScale: 5,
       minFloorRatio: 0.3,
     },
@@ -564,7 +555,7 @@ const BIOMES = [
     enemyTypes: ["knifedBat"],
     decorationConfig: {
       count: [50, 100], // genereux - c'est fait pour remplir le biome
-      decorTypes: ["rock_small", "bush", "flower_patch"], // cles arbitraires, a adapter
+      decorTypes: ["rock_small", "bush", "flower_patch", "flower"], // cles arbitraires, a adapter
     },
     chestCount: [2, 4],
     chestLootTable: "chestStandard",
@@ -617,7 +608,7 @@ const BIOMES = [
     enemyTypes: ["mudGolem"],
     decorationConfig: {
       count: [50, 100], // genereux - c'est fait pour remplir le biome
-      decorTypes: ["rock_small", "bush", "flower_patch"], // cles arbitraires, a adapter
+      decorTypes: ["rock_small", "bush", "flower_patch", "flower"], // cles arbitraires, a adapter
     },
     chestCount: [1, 3],
     chestLootTable: "chestStandard",
