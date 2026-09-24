@@ -1,3 +1,5 @@
+import { resolveItemDef, ITEM_DEFS } from "./itemDefs";
+
 /**
  * Genere en boucle un lot de recettes qui suivent TOUTES le meme motif
  * "objet de palier N + X lingots -> objet de palier N+1" - evite de
@@ -13,12 +15,17 @@
  * @param {boolean} [discoveryOnly] indique si la recette est uniquement decouvrable (non craftable directement)
  * @returns {Object} objet de recettes, au meme format que CRAFTING_RECIPES
  */
+function capitalize(s) {
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
 function buildRecipe(
   list,
   ingredientItemId,
   ingredientQty,
   unlockLevel,
   discoveryOnly = true,
+  allowEnhancedBase = false,
 ) {
   const recipes = {};
   for (const { base, result } of list) {
@@ -34,6 +41,26 @@ function buildRecipe(
       ...(unlockLevel != null ? { unlockLevel } : {}),
       ...(discoveryOnly ? { discoveryOnly: true } : {}),
     };
+
+    if (allowEnhancedBase) {
+      for (const prefix of ["sharp", "reinforced"]) {
+        const enhancedBase = `${prefix}${capitalize(base)}`;
+        if (enhancedBase === result) continue;
+        if (!ITEM_DEFS[enhancedBase]) continue;
+        const upgradeId = `${enhancedBase}UpgradeRecipe`;
+        recipes[upgradeId] = {
+          id: upgradeId,
+          resultItemId: result,
+          resultQuantity: 1,
+          ingredients: [
+            { itemId: enhancedBase, quantity: 1 },
+            { itemId: ingredientItemId, quantity: ingredientQty },
+          ],
+          ...(unlockLevel != null ? { unlockLevel } : {}),
+          ...(discoveryOnly ? { discoveryOnly: true } : {}),
+        };
+      }
+    }
   }
   return recipes;
 }
@@ -58,6 +85,7 @@ const REINFORCED_WOODEN_TIER_RECIPES = buildRecipe(
   1,
   1,
   true,
+  false,
 );
 
 const COPPER_TIER_WEAPONS = [
@@ -85,6 +113,7 @@ const COPPER_TIER_RECIPES = buildRecipe(
   2,
   1,
   true,
+  true,
 );
 
 const COPPER_TIER_OBJECTS = [
@@ -101,6 +130,7 @@ const COPPER_TIER_OBJECT_RECIPES = buildRecipe(
   "copperIngot",
   1,
   1,
+  true,
   true,
 );
 
@@ -128,6 +158,7 @@ const REINFORCED_COPPER_TIER_RECIPES = buildRecipe(
   1,
   1,
   true,
+  false,
 );
 
 const IRON_TIER_WEAPONS = [
@@ -149,7 +180,14 @@ const IRON_TIER_WEAPONS = [
   // ajoute toutes les autres paires cuivre -> fer ici
 ];
 
-const IRON_TIER_RECIPES = buildRecipe(IRON_TIER_WEAPONS, "ironIngot", 2, 1);
+const IRON_TIER_RECIPES = buildRecipe(
+  IRON_TIER_WEAPONS,
+  "ironIngot",
+  2,
+  1,
+  true,
+  true,
+);
 
 const IRON_TIER_OBJECTS = [
   { base: "copperHpRing", result: "ironHpRing" },
@@ -165,6 +203,7 @@ const IRON_TIER_OBJECT_RECIPES = buildRecipe(
   "ironIngot",
   1,
   1,
+  true,
   true,
 );
 
@@ -192,6 +231,7 @@ const REINFORCED_IRON_TIER_RECIPES = buildRecipe(
   1,
   1,
   true,
+  false,
 );
 
 const SILVER_TIER_WEAPONS = [
@@ -219,6 +259,7 @@ const SILVER_TIER_RECIPES = buildRecipe(
   2,
   1,
   true,
+  true,
 );
 
 const SILVER_TIER_OBJECTS = [
@@ -235,6 +276,7 @@ const SILVER_TIER_OBJECT_RECIPES = buildRecipe(
   "silverIngot",
   1,
   1,
+  true,
   true,
 );
 
@@ -261,6 +303,7 @@ const REINFORCED_SILVER_TIER_RECIPES = buildRecipe(
   1,
   1,
   true,
+  false,
 );
 
 const STEEL_TIER_WEAPONS = [
@@ -282,7 +325,14 @@ const STEEL_TIER_WEAPONS = [
   // ajoute toutes les autres paires argent -> acier ici
 ];
 
-const STEEL_TIER_RECIPES = buildRecipe(STEEL_TIER_WEAPONS, "steelIngot", 2, 1);
+const STEEL_TIER_RECIPES = buildRecipe(
+  STEEL_TIER_WEAPONS,
+  "steelIngot",
+  2,
+  1,
+  true,
+  true,
+);
 
 const STEEL_TIER_OBJECTS = [
   { base: "silverHpRing", result: "steelHpRing" },
@@ -298,6 +348,7 @@ const STEEL_TIER_OBJECT_RECIPES = buildRecipe(
   "steelIngot",
   1,
   1,
+  true,
   true,
 );
 
@@ -325,6 +376,7 @@ const REINFORCED_STEEL_TIER_RECIPES = buildRecipe(
   1,
   1,
   true,
+  false,
 );
 
 const GOLD_TIER_WEAPONS = [
@@ -351,6 +403,7 @@ const GOLD_TIER_RECIPES = buildRecipe(
   2,
   1,
   true,
+  true,
 );
 
 const GOLD_TIER_OBJECTS = [
@@ -367,6 +420,7 @@ const GOLD_TIER_OBJECT_RECIPES = buildRecipe(
   "goldIngot",
   1,
   1,
+  true,
   true,
 );
 
@@ -394,6 +448,7 @@ const REINFORCED_GOLD_TIER_RECIPES = buildRecipe(
   1,
   1,
   true,
+  false,
 );
 
 const PLATINIUM_TIER_WEAPONS = [
@@ -420,6 +475,7 @@ const PLATINIUM_TIER_RECIPES = buildRecipe(
   2,
   1,
   true,
+  true,
 );
 
 const PLATINIUM_TIER_OBJECTS = [
@@ -436,6 +492,7 @@ const PLATINIUM_TIER_OBJECT_RECIPES = buildRecipe(
   "platiniumIngot",
   1,
   1,
+  true,
   true,
 );
 
@@ -462,6 +519,7 @@ const REINFORCED_PLATINIUM_TIER_RECIPES = buildRecipe(
   1,
   1,
   true,
+  false,
 );
 
 const COBALT_TIER_WEAPONS = [
@@ -488,6 +546,7 @@ const COBALT_TIER_RECIPES = buildRecipe(
   2,
   1,
   true,
+  true,
 );
 
 const COBALT_TIER_OBJECTS = [
@@ -504,6 +563,7 @@ const COBALT_TIER_OBJECT_RECIPES = buildRecipe(
   "cobaltIngot",
   1,
   1,
+  true,
   true,
 );
 
@@ -530,6 +590,7 @@ const REINFORCED_COBALT_TIER_RECIPES = buildRecipe(
   1,
   1,
   true,
+  false,
 );
 
 const ADAMANTINE_TIER_WEAPONS = [
@@ -556,6 +617,7 @@ const ADAMANTINE_TIER_RECIPES = buildRecipe(
   2,
   1,
   true,
+  true,
 );
 
 const ADAMANTINE_TIER_OBJECTS = [
@@ -572,6 +634,7 @@ const ADAMANTINE_TIER_OBJECT_RECIPES = buildRecipe(
   "adamantineIngot",
   1,
   1,
+  true,
   true,
 );
 
@@ -598,6 +661,7 @@ const REINFORCED_ADAMANTINE_TIER_RECIPES = buildRecipe(
   1,
   1,
   true,
+  false,
 );
 
 const CRIMSON_TIER_WEAPONS = [
@@ -624,6 +688,7 @@ const CRIMSON_TIER_RECIPES = buildRecipe(
   2,
   1,
   true,
+  true,
 );
 
 const CRIMSON_TIER_OBJECTS = [
@@ -640,6 +705,7 @@ const CRIMSON_TIER_OBJECT_RECIPES = buildRecipe(
   "crimsonIngot",
   1,
   1,
+  true,
   true,
 );
 
@@ -666,6 +732,7 @@ const REINFORCED_CRIMSON_TIER_RECIPES = buildRecipe(
   1,
   1,
   true,
+  false,
 );
 
 const ANGELIC_TIER_WEAPONS = [
@@ -692,6 +759,7 @@ const ANGELIC_TIER_RECIPES = buildRecipe(
   2,
   1,
   true,
+  true,
 );
 
 const ANGELIC_TIER_OBJECTS = [
@@ -708,6 +776,7 @@ const ANGELIC_TIER_OBJECT_RECIPES = buildRecipe(
   "angelicIngot",
   1,
   1,
+  true,
   true,
 );
 
@@ -734,6 +803,7 @@ const REINFORCED_ANGELIC_TIER_RECIPES = buildRecipe(
   1,
   1,
   true,
+  false,
 );
 
 const FATEFUL_TIER_WEAPONS = [
@@ -760,6 +830,7 @@ const FATEFUL_TIER_RECIPES = buildRecipe(
   2,
   1,
   true,
+  true,
 );
 
 const FATEFUL_TIER_OBJECTS = [
@@ -776,6 +847,7 @@ const FATEFUL_TIER_OBJECT_RECIPES = buildRecipe(
   "fatefulIngot",
   1,
   1,
+  true,
   true,
 );
 
@@ -802,6 +874,7 @@ const REINFORCED_FATEFUL_TIER_RECIPES = buildRecipe(
   1,
   1,
   true,
+  false,
 );
 
 const NOVA_TIER_WEAPONS = [
@@ -828,6 +901,7 @@ const NOVA_TIER_RECIPES = buildRecipe(
   2,
   1,
   true,
+  true,
 );
 
 const NOVA_TIER_OBJECTS = [
@@ -844,6 +918,7 @@ const NOVA_TIER_OBJECT_RECIPES = buildRecipe(
   "novaIngot",
   1,
   1,
+  true,
   true,
 );
 
@@ -870,6 +945,7 @@ const REINFORCED_NOVA_TIER_RECIPES = buildRecipe(
   1,
   1,
   true,
+  false,
 );
 
 const SHARP_WEAPONS = [
@@ -959,7 +1035,14 @@ const SHARP_WEAPONS = [
   { base: "novaSickle", result: "sharpNovaSickle" },
 ];
 
-const SHARPENING_RECIPES = buildRecipe(SHARP_WEAPONS, "whetstone", 1, 1, true);
+const SHARPENING_RECIPES = buildRecipe(
+  SHARP_WEAPONS,
+  "whetstone",
+  1,
+  1,
+  true,
+  false,
+);
 
 const OAKWOOD_TIER_WEAPONS = [
   { base: "woodenBow", result: "oakBow" },
@@ -974,6 +1057,7 @@ const OAKWOOD_TIER_RECIPES = buildRecipe(
   2,
   1,
   true,
+  true,
 );
 
 const OAKWOOD_TIER_OBJECTS = [
@@ -987,6 +1071,7 @@ const OAKWOOD_TIER_OBJECT_RECIPES = buildRecipe(
   "oakWood",
   1,
   1,
+  true,
   true,
 );
 
@@ -1003,6 +1088,7 @@ const REINFORCED_OAKWOOD_TIER_RECIPES = buildRecipe(
   1,
   1,
   true,
+  false,
 );
 
 const ASHWOOD_TIER_WEAPONS = [
@@ -1018,6 +1104,7 @@ const ASHWOOD_TIER_RECIPES = buildRecipe(
   2,
   1,
   true,
+  true,
 );
 
 const ASHWOOD_TIER_OBJECTS = [
@@ -1031,6 +1118,7 @@ const ASHWOOD_TIER_OBJECT_RECIPES = buildRecipe(
   "ashWood",
   1,
   1,
+  true,
   true,
 );
 
@@ -1047,6 +1135,7 @@ const REINFORCED_ASHWOOD_TIER_RECIPES = buildRecipe(
   1,
   1,
   true,
+  false,
 );
 
 const YEWWOOD_TIER_WEAPONS = [
@@ -1062,6 +1151,7 @@ const YEWWOOD_TIER_RECIPES = buildRecipe(
   2,
   1,
   true,
+  true,
 );
 
 const YEWWOOD_TIER_OBJECTS = [
@@ -1075,6 +1165,7 @@ const YEWWOOD_TIER_OBJECT_RECIPES = buildRecipe(
   "yewWood",
   1,
   1,
+  true,
   true,
 );
 
@@ -1091,6 +1182,7 @@ const REINFORCED_YEWWOOD_TIER_RECIPES = buildRecipe(
   1,
   1,
   true,
+  false,
 );
 
 const EBONYWOOD_TIER_WEAPONS = [
@@ -1106,6 +1198,7 @@ const EBONYWOOD_TIER_RECIPES = buildRecipe(
   2,
   1,
   true,
+  true,
 );
 
 const EBONYWOOD_TIER_OBJECTS = [
@@ -1119,6 +1212,7 @@ const EBONYWOOD_TIER_OBJECT_RECIPES = buildRecipe(
   "ebonyWood",
   1,
   1,
+  true,
   true,
 );
 
@@ -1135,6 +1229,7 @@ const REINFORCED_EBONYWOOD_TIER_RECIPES = buildRecipe(
   1,
   1,
   true,
+  false,
 );
 
 const PETRIFIEDWOOD_TIER_WEAPONS = [
@@ -1150,6 +1245,7 @@ const PETRIFIEDWOOD_TIER_RECIPES = buildRecipe(
   2,
   1,
   true,
+  true,
 );
 
 const PETRIFIEDWOOD_TIER_OBJECTS = [
@@ -1163,6 +1259,7 @@ const PETRIFIEDWOOD_TIER_OBJECT_RECIPES = buildRecipe(
   "petrifiedWood",
   1,
   1,
+  true,
   true,
 );
 
@@ -1179,6 +1276,7 @@ const REINFORCED_PETRIFIEDWOOD_TIER_RECIPES = buildRecipe(
   1,
   1,
   true,
+  false,
 );
 
 const MISTWOOD_TIER_WEAPONS = [
@@ -1194,6 +1292,7 @@ const MISTWOOD_TIER_RECIPES = buildRecipe(
   2,
   1,
   true,
+  true,
 );
 
 const MISTWOOD_TIER_OBJECTS = [
@@ -1207,6 +1306,7 @@ const MISTWOOD_TIER_OBJECT_RECIPES = buildRecipe(
   "mistWood",
   1,
   1,
+  true,
   true,
 );
 
@@ -1223,6 +1323,7 @@ const REINFORCED_MISTWOOD_TIER_RECIPES = buildRecipe(
   1,
   1,
   true,
+  false,
 );
 
 const RUNEWOOD_TIER_WEAPONS = [
@@ -1238,6 +1339,7 @@ const RUNEWOOD_TIER_RECIPES = buildRecipe(
   2,
   1,
   true,
+  true,
 );
 
 const RUNEWOOD_TIER_OBJECTS = [
@@ -1251,6 +1353,7 @@ const RUNEWOOD_TIER_OBJECT_RECIPES = buildRecipe(
   "runeWood",
   1,
   1,
+  true,
   true,
 );
 
@@ -1267,6 +1370,7 @@ const REINFORCED_RUNEWOOD_TIER_RECIPES = buildRecipe(
   1,
   1,
   true,
+  false,
 );
 
 const SKYWOOD_TIER_WEAPONS = [
@@ -1282,6 +1386,7 @@ const SKYWOOD_TIER_RECIPES = buildRecipe(
   2,
   1,
   true,
+  true,
 );
 
 const SKYWOOD_TIER_OBJECTS = [
@@ -1295,6 +1400,7 @@ const SKYWOOD_TIER_OBJECT_RECIPES = buildRecipe(
   "skyWood",
   1,
   1,
+  true,
   true,
 );
 
@@ -1311,6 +1417,7 @@ const REINFORCED_SKYWOOD_TIER_RECIPES = buildRecipe(
   1,
   1,
   true,
+  false,
 );
 
 const SCARLETWOOD_TIER_WEAPONS = [
@@ -1326,6 +1433,7 @@ const SCARLETWOOD_TIER_RECIPES = buildRecipe(
   2,
   1,
   true,
+  true,
 );
 
 const SCARLETWOOD_TIER_OBJECTS = [
@@ -1339,6 +1447,7 @@ const SCARLETWOOD_TIER_OBJECT_RECIPES = buildRecipe(
   "scarletWood",
   1,
   1,
+  true,
   true,
 );
 
@@ -1355,6 +1464,7 @@ const REINFORCED_SCARLETWOOD_TIER_RECIPES = buildRecipe(
   1,
   1,
   true,
+  false,
 );
 
 const SACREDWOOD_TIER_WEAPONS = [
@@ -1370,6 +1480,7 @@ const SACREDWOOD_TIER_RECIPES = buildRecipe(
   2,
   1,
   true,
+  true,
 );
 
 const SACREDWOOD_TIER_OBJECTS = [
@@ -1383,6 +1494,7 @@ const SACREDWOOD_TIER_OBJECT_RECIPES = buildRecipe(
   "sacredWood",
   2,
   1,
+  true,
   true,
 );
 
@@ -1399,6 +1511,7 @@ const REINFORCED_SACREDWOOD_TIER_RECIPES = buildRecipe(
   1,
   1,
   true,
+  false,
 );
 
 const ETERNALWOOD_TIER_WEAPONS = [
@@ -1414,6 +1527,7 @@ const ETERNALWOOD_TIER_RECIPES = buildRecipe(
   2,
   1,
   true,
+  true,
 );
 
 const ETERNALWOOD_TIER_OBJECTS = [
@@ -1427,6 +1541,7 @@ const ETERNALWOOD_TIER_OBJECT_RECIPES = buildRecipe(
   "eternalWood",
   2,
   1,
+  true,
   true,
 );
 
@@ -1443,6 +1558,7 @@ const REINFORCED_ETERNALWOOD_TIER_RECIPES = buildRecipe(
   1,
   1,
   true,
+  false,
 );
 
 const STARWOOD_TIER_WEAPONS = [
@@ -1458,6 +1574,7 @@ const STARWOOD_TIER_RECIPES = buildRecipe(
   2,
   1,
   true,
+  true,
 );
 
 const STARWOOD_TIER_OBJECTS = [
@@ -1471,6 +1588,7 @@ const STARWOOD_TIER_OBJECT_RECIPES = buildRecipe(
   "starWood",
   2,
   1,
+  true,
   true,
 );
 
@@ -1487,6 +1605,7 @@ const REINFORCED_STARWOOD_TIER_RECIPES = buildRecipe(
   1,
   1,
   true,
+  false,
 );
 
 const REINFORCED_FURTUFT_TIER_ARMORS = [
@@ -1505,6 +1624,7 @@ const REINFORCED_FURTUFT_TIER_RECIPES = buildRecipe(
   1,
   1,
   true,
+  false,
 );
 
 const SLIMEBLOB_TIERS = [
@@ -1523,6 +1643,7 @@ const SLIMEBLOB_TIER_RECIPES = buildRecipe(
   2,
   1,
   true,
+  true,
 );
 
 const SLIMEBLOB_TIER_OBJECTS = [
@@ -1536,6 +1657,7 @@ const SLIMEBLOB_TIER_OBJECT_RECIPES = buildRecipe(
   "slimeBlob",
   1,
   1,
+  true,
   true,
 );
 
@@ -1558,6 +1680,7 @@ const REINFORCED_SLIMEBLOB_TIER_ARMOR_RECIPES = buildRecipe(
   1,
   1,
   true,
+  false,
 );
 
 const BEAR_PELT_TIERS = [
@@ -1576,6 +1699,7 @@ const BEAR_PELT_TIER_RECIPES = buildRecipe(
   2,
   1,
   true,
+  true,
 );
 
 const BEAR_PELT_TIER_OBJECTS = [
@@ -1589,6 +1713,7 @@ const BEAR_PELT_TIER_OBJECT_RECIPES = buildRecipe(
   "bearPelt",
   1,
   1,
+  true,
   true,
 );
 
@@ -1607,6 +1732,7 @@ const REINFORCED_BEAR_PELT_TIER_ARMOR_RECIPES = buildRecipe(
   1,
   1,
   true,
+  false,
 );
 
 const SPIDER_LEG_TIERS = [
@@ -1625,6 +1751,7 @@ const SPIDER_LEG_TIER_RECIPES = buildRecipe(
   2,
   1,
   true,
+  true,
 );
 
 const SPIDER_LEG_TIER_OBJECTS = [
@@ -1638,6 +1765,7 @@ const SPIDER_LEG_TIER_OBJECT_RECIPES = buildRecipe(
   "spiderLeg",
   1,
   1,
+  true,
   true,
 );
 
@@ -1660,6 +1788,7 @@ const REINFORCED_SPIDER_LEG_TIER_ARMOR_RECIPES = buildRecipe(
   1,
   1,
   true,
+  false,
 );
 
 const GREY_MONSTER_SCALE_TIERS = [
@@ -1678,6 +1807,7 @@ const GREY_MONSTER_SCALE_TIER_RECIPES = buildRecipe(
   2,
   1,
   true,
+  true,
 );
 
 const GREY_MONSTER_SCALE_TIER_OBJECTS = [
@@ -1694,6 +1824,7 @@ const GREY_MONSTER_SCALE_TIER_OBJECT_RECIPES = buildRecipe(
   "greyMonsterScale",
   1,
   1,
+  true,
   true,
 );
 
@@ -1725,6 +1856,7 @@ const REINFORCED_GREY_MONSTER_SCALE_TIER_ARMOR_RECIPES = buildRecipe(
   1,
   1,
   true,
+  false,
 );
 
 const CRAB_CLAW_TIERS = [
@@ -1743,6 +1875,7 @@ const CRAB_CLAW_TIER_RECIPES = buildRecipe(
   2,
   1,
   true,
+  true,
 );
 
 const CRAB_CLAW_TIER_OBJECTS = [
@@ -1759,6 +1892,7 @@ const CRAB_CLAW_TIER_OBJECT_RECIPES = buildRecipe(
   "crabClaw",
   1,
   1,
+  true,
   true,
 );
 
@@ -1778,6 +1912,7 @@ const REINFORCED_CRAB_CLAW_TIER_ARMOR_RECIPES = buildRecipe(
   1,
   1,
   true,
+  false,
 );
 
 const BLACK_BEAR_PELT_TIERS = [
@@ -1796,6 +1931,7 @@ const BLACK_BEAR_PELT_TIER_RECIPES = buildRecipe(
   2,
   1,
   true,
+  true,
 );
 
 const BLACK_BEAR_PELT_TIER_OBJECTS = [
@@ -1809,6 +1945,7 @@ const BLACK_BEAR_PELT_TIER_OBJECT_RECIPES = buildRecipe(
   "blackBearPelt",
   1,
   1,
+  true,
   true,
 );
 
@@ -1834,6 +1971,7 @@ const REINFORCED_BLACK_BEAR_PELT_TIER_ARMOR_RECIPES = buildRecipe(
   1,
   1,
   true,
+  false,
 );
 
 const TURTLE_SHELL_TIERS = [
@@ -1852,6 +1990,7 @@ const TURTLE_SHELL_TIER_RECIPES = buildRecipe(
   2,
   1,
   true,
+  true,
 );
 
 const TURTLE_SHELL_TIER_OBJECTS = [
@@ -1868,6 +2007,7 @@ const TURTLE_SHELL_TIER_OBJECT_RECIPES = buildRecipe(
   "turtleShell",
   1,
   1,
+  true,
   true,
 );
 
@@ -1893,6 +2033,7 @@ const REINFORCED_TURTLE_SHELL_TIER_ARMOR_RECIPES = buildRecipe(
   1,
   1,
   true,
+  false,
 );
 
 const GREEN_MONSTER_SCALE_TIERS = [
@@ -1914,6 +2055,7 @@ const GREEN_MONSTER_SCALE_TIER_RECIPES = buildRecipe(
   2,
   1,
   true,
+  true,
 );
 
 const GREEN_MONSTER_SCALE_TIER_OBJECTS = [
@@ -1930,6 +2072,7 @@ const GREEN_MONSTER_SCALE_TIER_OBJECT_RECIPES = buildRecipe(
   "greenMonsterScale",
   1,
   1,
+  true,
   true,
 );
 
@@ -1967,6 +2110,7 @@ const REINFORCED_GREEN_MONSTER_SCALE_TIER_ARMOR_RECIPES = buildRecipe(
   1,
   1,
   true,
+  false,
 );
 
 const BAT_WINGS_TIERS = [
@@ -1985,6 +2129,7 @@ const BAT_WINGS_TIER_RECIPES = buildRecipe(
   2,
   1,
   true,
+  true,
 );
 
 const BAT_WINGS_TIER_OBJECTS = [
@@ -2001,6 +2146,7 @@ const BAT_WINGS_TIER_OBJECT_RECIPES = buildRecipe(
   "batWings",
   1,
   1,
+  true,
   true,
 );
 
@@ -2020,6 +2166,7 @@ const REINFORCED_BAT_WINGS_TIER_ARMOR_RECIPES = buildRecipe(
   1,
   1,
   true,
+  false,
 );
 
 const DRAGON_SCALE_TIERS = [
@@ -2038,6 +2185,7 @@ const DRAGON_SCALE_TIER_RECIPES = buildRecipe(
   2,
   1,
   true,
+  true,
 );
 
 const DRAGON_SCALE_TIER_OBJECTS = [
@@ -2051,6 +2199,7 @@ const DRAGON_SCALE_TIER_OBJECT_RECIPES = buildRecipe(
   "dragonScale",
   1,
   1,
+  true,
   true,
 );
 
@@ -2076,6 +2225,7 @@ const REINFORCED_DRAGON_SCALE_TIER_ARMOR_RECIPES = buildRecipe(
   1,
   1,
   true,
+  false,
 );
 
 const GHOST_ECTOPLASM_TIERS = [
@@ -2094,6 +2244,7 @@ const GHOST_ECTOPLASM_TIER_RECIPES = buildRecipe(
   2,
   1,
   true,
+  true,
 );
 
 const GHOST_ECTOPLASM_TIER_OBJECTS = [
@@ -2110,6 +2261,7 @@ const GHOST_ECTOPLASM_TIER_OBJECT_RECIPES = buildRecipe(
   "ghostEctoplasm",
   1,
   1,
+  true,
   true,
 );
 
@@ -2138,6 +2290,7 @@ const REINFORCED_GHOST_ECTOPLASM_TIER_ARMOR_RECIPES = buildRecipe(
   1,
   1,
   true,
+  false,
 );
 
 const MONSTER_CORE_TIERS = [
@@ -2156,6 +2309,7 @@ const MONSTER_CORE_TIER_RECIPES = buildRecipe(
   2,
   1,
   true,
+  true,
 );
 
 const MONSTER_CORE_TIER_OBJECTS = [
@@ -2172,6 +2326,7 @@ const MONSTER_CORE_TIER_OBJECT_RECIPES = buildRecipe(
   "monsterCore",
   1,
   1,
+  true,
   true,
 );
 
@@ -2197,6 +2352,7 @@ const REINFORCED_MONSTER_CORE_TIER_ARMOR_RECIPES = buildRecipe(
   1,
   1,
   true,
+  false,
 );
 
 export const CRAFTING_RECIPES = {
@@ -3301,17 +3457,6 @@ export const CRAFTING_RECIPES = {
     ],
     discoveryOnly: true,
   },
-  summonBearRecipe: {
-    id: "summonBearRecipe",
-    name: "Recette de Parchemin : Invocation : Ours",
-    resultItemId: "summonBearScroll",
-    resultQuantity: 1,
-    ingredients: [
-      { itemId: "brownBearCore", quantity: 1 },
-      { itemId: "grimoire", quantity: 1 },
-    ],
-    discoveryOnly: true,
-  },
   summonBeeRecipe: {
     id: "summonBeeRecipe",
     name: "Recette de Parchemin : Invocation : Abeille",
@@ -3704,17 +3849,6 @@ export const CRAFTING_RECIPES = {
     resultQuantity: 1,
     ingredients: [
       { itemId: "skeletonkingCore", quantity: 1 },
-      { itemId: "grimoire", quantity: 1 },
-    ],
-    discoveryOnly: true,
-  },
-  summonSlimeRecipe: {
-    id: "summonSlimeRecipe",
-    name: "Recette de Parchemin : Invocation : Slime",
-    resultItemId: "summonSlimeScroll",
-    resultQuantity: 1,
-    ingredients: [
-      { itemId: "slimeCore", quantity: 1 },
       { itemId: "grimoire", quantity: 1 },
     ],
     discoveryOnly: true,
@@ -4216,6 +4350,17 @@ export const CRAFTING_RECIPES = {
     discoveryOnly: true,
   },
 };
+
+// Les recettes generees par buildRecipe() n'ont pas de champ `name` explicite
+// (contrairement aux recettes ecrites a la main) : on le derive ici, une seule
+// fois au chargement du module, a partir du nom de l'objet resultant. Ca couvre
+// aussi bien resolveCraftingRecipe() que les endroits qui iterent directement
+// sur Object.values(CRAFTING_RECIPES) (ex: findMatchingRecipeIgnoringLevel).
+for (const recipe of Object.values(CRAFTING_RECIPES)) {
+  if (!recipe.name) {
+    recipe.name = resolveItemDef(recipe.resultItemId).name;
+  }
+}
 
 /**
  * Normalise recipe.ingredients (une seule liste, comportement historique)
