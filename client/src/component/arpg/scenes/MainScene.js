@@ -554,6 +554,50 @@ const WALL_CORNER_INDEX_TO_FRAME_0_0_SUMMER_FOREST = [
     ],
   },
 ];
+const WALL_CORNER_INDEX_TO_FRAME_SUMMER_FOREST_WATER_0_0 = [
+  266, 596, 532, 564, 534, 596, 533, 661, 598, 597, 596, 629, 566, 628, 660,
+  // {
+  //   variants: [
+  //     { tiles: 34, weight: 5 },
+  //     { tiles: 4, weight: 1 },
+  //     { tiles: 36, weight: 1 },
+  //     { tiles: 68, weight: 1 },
+  //   ],
+  // },
+  565,
+];
+const WALL_CORNER_INDEX_TO_FRAME_0_0_WINTER_SNOWY_FOREST = [
+  {
+    variants: [
+      { tiles: 265, weight: 5 },
+      { tiles: 201, weight: 1 },
+      { tiles: 233, weight: 1 },
+      { tiles: 297, weight: 1 },
+    ],
+  },
+  65,
+  1,
+  33,
+  3,
+  65,
+  2,
+  130,
+  67,
+  66,
+  3,
+  98,
+  35,
+  97,
+  129,
+  {
+    variants: [
+      { tiles: 34, weight: 5 },
+      { tiles: 4, weight: 1 },
+      { tiles: 36, weight: 1 },
+      { tiles: 68, weight: 1 },
+    ],
+  },
+];
 
 const WALL_CORNER_INDEX_TO_FRAME_0_1_SUMMER_FOREST = [
   555,
@@ -2321,12 +2365,13 @@ export default class MainScene extends Phaser.Scene {
       tileset === "muddyCaveV2_0_0" ||
       tileset === "summerForest_0_0" ||
       tileset === "summerForest_0_1" ||
+      tileset === "summerForestWater_0_0" ||
       tileset === "autumnForest_0_0" ||
       tileset === "autumnForest_0_1" ||
       tileset === "winterForest_0_0" ||
       tileset === "winterForest_0_1" ||
-      tileset === "winterForestSnowy_0_0" ||
-      tileset === "winterForestSnowy_0_1" ||
+      tileset === "winterSnowyForest_0_0" ||
+      tileset === "winterSnowyForest_0_1" ||
       tileset === "springForest_0_0" ||
       tileset === "springForest_0_1" ||
       tileset === "castleDungeonV01_0_0" ||
@@ -2960,13 +3005,33 @@ export default class MainScene extends Phaser.Scene {
       this.currentRawTilesetKey = SUMMER_FOREST_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
       this.currentRenderGrid = renderGrid;
       this.currentSlotSourceTileIds = result.slotSourceTileIds;
+    } else if (tileset === "summerForestWater_0_0") {
+      const result = this.composeCornerAutotileTexture(
+        grid,
+        SUMMER_FOREST_AUTOTILE_SPRITESHEET,
+        "summerForestWater_0_0",
+        WALL_CORNER_INDEX_TO_FRAME_SUMMER_FOREST_WATER_0_0,
+        38,
+      );
+      phaserTilesetKey = result.phaserTilesetKey;
+      renderGrid = result.renderGrid;
+      composedFloorSlots = result.floorSlotIndices;
+      this.currentFloorTileIndex = composedFloorSlots[0];
+      this.currentRawTilesetKey = SUMMER_FOREST_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
+      this.currentRenderGrid = renderGrid;
+      this.currentSlotSourceTileIds = result.slotSourceTileIds;
     } else if (tileset === "springForest_0_0") {
       const result = this.composeCornerAutotileTexture(
         grid,
         SPRING_FOREST_AUTOTILE_SPRITESHEET,
         "springForest_0_0",
-        WALL_CORNER_INDEX_TO_FRAME_0_0_SUMMER_FOREST,
-        38,
+        WALL_CORNER_INDEX_TO_FRAME_0_0_WINTER_SNOWY_FOREST,
+        [
+          { tileId: [32, 621], weight: 5 },
+          { tileId: [64, 516, 621], weight: 1 },
+          { tileId: [96, 521, 621], weight: 1 },
+          { tileId: [128, 524, 621], weight: 1 },
+        ],
       );
       phaserTilesetKey = result.phaserTilesetKey;
       renderGrid = result.renderGrid;
@@ -3080,8 +3145,8 @@ export default class MainScene extends Phaser.Scene {
         grid,
         WINTER_FOREST_SNOWY_AUTOTILE_SPRITESHEET,
         "winterSnowyForest_0_0",
-        WALL_CORNER_INDEX_TO_FRAME_0_0_SUMMER_FOREST,
-        38,
+        WALL_CORNER_INDEX_TO_FRAME_0_0_WINTER_SNOWY_FOREST,
+        32,
       );
       phaserTilesetKey = result.phaserTilesetKey;
       renderGrid = result.renderGrid;
@@ -6477,7 +6542,7 @@ export default class MainScene extends Phaser.Scene {
         : this.lastAimVector.y > 0
           ? "down"
           : "up";
-    const slashOffset = 22;
+    const slashOffset = 10;
     const slash = this.add.sprite(
       this.hero.x + this.lastAimVector.x * slashOffset,
       this.hero.y + this.lastAimVector.y * slashOffset,
@@ -6501,76 +6566,89 @@ export default class MainScene extends Phaser.Scene {
 
     const imbue = this.pendingWeaponImbue;
     this.pendingWeaponImbue = null;
-    let anyHit = false;
+    // direction figee au moment du swing (celle utilisee par l'anim
+    // lancee dans playAttackAnim) - pas celle au moment de la resolution,
+    // sinon tourner sur soi pendant l'anim changerait retroactivement le cone de frappe
+    const aimVector = { x: this.lastAimVector.x, y: this.lastAimVector.y };
 
-    for (const enemy of this.enemies) {
-      const dx = enemy.sprite.x - this.hero.x;
-      const dy = enemy.sprite.y - this.hero.y;
-      const dist = Math.hypot(dx, dy);
-      if (dist > this.playerMeleeRange || !this.isEnemyVisible(enemy)) continue;
+    // les degats sont resolus a la FIN de l'anim (pas au lancer du coup),
+    // pour laisser le temps a la cible de sortir de portee/du cone et
+    // esquiver - coherent avec le mouvement de l'animation d'attaque
+    this.time.delayedCall(ATTACK_ANIM_DURATION_MS, () => {
+      if (!this.hero) return; // scene/etage change entre-temps
 
-      if (dist > 0.001) {
-        const nx = dx / dist;
-        const ny = dy / dist;
-        const dot = nx * this.lastAimVector.x + ny * this.lastAimVector.y;
-        if (dot < MELEE_CONE_DOT_THRESHOLD) continue;
-      }
+      let anyHit = false;
 
-      const isCrit = rollCritical(
-        enemy.state !== "chase",
-        imbue?.critChanceBonus || 0,
-      );
-      let rawDamage =
-        this.getEffectivePlayerMeleeDamage() * (isCrit ? CRIT_MULTIPLIER : 1);
+      for (const enemy of this.enemies) {
+        const dx = enemy.sprite.x - this.hero.x;
+        const dy = enemy.sprite.y - this.hero.y;
+        const dist = Math.hypot(dx, dy);
+        if (dist > this.playerMeleeRange || !this.isEnemyVisible(enemy))
+          continue;
 
-      if (meleeWeaponDef?.varianceDice) {
-        rawDamage = applyDiceVariance(rawDamage, meleeWeaponDef.varianceDice);
-      }
-      rawDamage = applyElementalResistance(
-        rawDamage,
-        meleeWeaponDef?.damageType,
-        enemy.resistances,
-      );
-      if (
-        imbue?.executeThreshold &&
-        enemy.hp / enemy.maxHp <= imbue.executeThreshold
-      ) {
-        rawDamage *= imbue.executeBonusMultiplier;
-      }
-      if (imbue) rawDamage += imbue.bonusDamage;
+        if (dist > 0.001) {
+          const nx = dx / dist;
+          const ny = dy / dist;
+          const dot = nx * aimVector.x + ny * aimVector.y;
+          if (dot < MELEE_CONE_DOT_THRESHOLD) continue;
+        }
 
-      const dealt = computeDamage(rawDamage, enemy.defense);
-      this.damageEnemy(enemy, dealt);
-      anyHit = true;
-
-      if (imbue?.healPercent) {
-        this.playerHp = Math.min(
-          this.playerMaxHp,
-          this.playerHp + dealt * imbue.healPercent,
+        const isCrit = rollCritical(
+          enemy.state !== "chase",
+          imbue?.critChanceBonus || 0,
         );
-        this.events.emit("player-hp-changed", {
-          hp: this.playerHp,
-          maxHp: this.playerMaxHp,
-        });
-      }
+        let rawDamage =
+          this.getEffectivePlayerMeleeDamage() * (isCrit ? CRIT_MULTIPLIER : 1);
 
-      if (enemy.hp > 0) {
-        this.applyStatusEffect(
-          enemy.statusEffects,
-          this.rollStatusEffect(meleeWeaponDef),
+        if (meleeWeaponDef?.varianceDice) {
+          rawDamage = applyDiceVariance(rawDamage, meleeWeaponDef.varianceDice);
+        }
+        rawDamage = applyElementalResistance(
+          rawDamage,
+          meleeWeaponDef?.damageType,
+          enemy.resistances,
         );
-        if (imbue) {
+        if (
+          imbue?.executeThreshold &&
+          enemy.hp / enemy.maxHp <= imbue.executeThreshold
+        ) {
+          rawDamage *= imbue.executeBonusMultiplier;
+        }
+        if (imbue) rawDamage += imbue.bonusDamage;
+
+        const dealt = computeDamage(rawDamage, enemy.defense);
+        this.damageEnemy(enemy, dealt);
+        anyHit = true;
+
+        if (imbue?.healPercent) {
+          this.playerHp = Math.min(
+            this.playerMaxHp,
+            this.playerHp + dealt * imbue.healPercent,
+          );
+          this.events.emit("player-hp-changed", {
+            hp: this.playerHp,
+            maxHp: this.playerMaxHp,
+          });
+        }
+
+        if (enemy.hp > 0) {
           this.applyStatusEffect(
             enemy.statusEffects,
-            this.rollStatusEffect(imbue),
+            this.rollStatusEffect(meleeWeaponDef),
           );
+          if (imbue) {
+            this.applyStatusEffect(
+              enemy.statusEffects,
+              this.rollStatusEffect(imbue),
+            );
+          }
         }
       }
-    }
 
-    if (imbue && !anyHit) {
-      this.pendingWeaponImbue = imbue;
-    }
+      if (imbue && !anyHit) {
+        this.pendingWeaponImbue = imbue;
+      }
+    });
   }
 
   getActiveRangedWeaponDef() {
@@ -6663,41 +6741,51 @@ export default class MainScene extends Phaser.Scene {
       this.attackAnimUntil = now + ATTACK_ANIM_DURATION_MS;
     }
 
-    let v = this.lastAimVector;
-    let nearestDist = Infinity;
-    for (const enemy of this.enemies) {
-      if (!this.isEnemyVisible(enemy)) continue;
-      const dx = enemy.sprite.x - this.hero.x;
-      const dy = enemy.sprite.y - this.hero.y;
-      const dist = Math.hypot(dx, dy);
-      if (dist > this.playerRangedRange || dist >= nearestDist) continue;
-      nearestDist = dist;
-      const mag = dist || 1;
-      v = { x: dx / mag, y: dy / mag };
-    }
-
-    const sprite = this.add.circle(
-      this.hero.x,
-      this.hero.y,
-      PROJECTILE_RADIUS,
-      0x66ccff,
-    );
-    this.physics.add.existing(sprite);
-    sprite.setDepth(12);
-    sprite.body.setVelocity(v.x * PROJECTILE_SPEED, v.y * PROJECTILE_SPEED);
-
     const ammoDef = this.equipped.quiver
       ? resolveItemDef(this.equipped.quiver)
       : null;
     const imbue = this.pendingWeaponImbue;
     this.pendingWeaponImbue = null;
-    this.projectiles.push({
-      sprite,
-      startX: this.hero.x,
-      startY: this.hero.y,
-      weaponDef,
-      ammoDef,
-      imbue,
+
+    // munitions/mana/cooldown deja consommes ci-dessus (l'action est
+    // engagee des le debut de l'anim) - seul le TIR effectif (spawn du
+    // projectile) est repousse a la fin de l'anim, pour que la fleche/le
+    // sort parte visuellement au moment ou le geste se termine plutot
+    // qu'instantanement au clic
+    this.time.delayedCall(ATTACK_ANIM_DURATION_MS, () => {
+      if (!this.hero) return; // scene/etage change entre-temps
+
+      let v = this.lastAimVector;
+      let nearestDist = Infinity;
+      for (const enemy of this.enemies) {
+        if (!this.isEnemyVisible(enemy)) continue;
+        const dx = enemy.sprite.x - this.hero.x;
+        const dy = enemy.sprite.y - this.hero.y;
+        const dist = Math.hypot(dx, dy);
+        if (dist > this.playerRangedRange || dist >= nearestDist) continue;
+        nearestDist = dist;
+        const mag = dist || 1;
+        v = { x: dx / mag, y: dy / mag };
+      }
+
+      const sprite = this.add.circle(
+        this.hero.x,
+        this.hero.y,
+        PROJECTILE_RADIUS,
+        0x66ccff,
+      );
+      this.physics.add.existing(sprite);
+      sprite.setDepth(12);
+      sprite.body.setVelocity(v.x * PROJECTILE_SPEED, v.y * PROJECTILE_SPEED);
+
+      this.projectiles.push({
+        sprite,
+        startX: this.hero.x,
+        startY: this.hero.y,
+        weaponDef,
+        ammoDef,
+        imbue,
+      });
     });
   }
 
@@ -7675,42 +7763,61 @@ export default class MainScene extends Phaser.Scene {
           }
 
           if (isRanged) {
-            const dx = nearestEnemy.sprite.x - summon.sprite.x;
-            const dy = nearestEnemy.sprite.y - summon.sprite.y;
-            const mag = Math.hypot(dx, dy) || 1;
-            const vx = dx / mag;
-            const vy = dy / mag;
+            // meme principe : le tir effectif est repousse a la fin de
+            // l'anim (summon deja fige entre-temps par le check
+            // attackAnimUntil plus haut dans cette meme fonction)
+            this.time.delayedCall(ATTACK_ANIM_DURATION_MS, () => {
+              if (!this.enemies.includes(nearestEnemy)) return; // mort entre-temps
 
-            const projSprite = this.add.circle(
-              summon.sprite.x,
-              summon.sprite.y,
-              PROJECTILE_RADIUS,
-              0x99ff66,
-            );
-            this.physics.add.existing(projSprite);
-            projSprite.setDepth(12);
-            projSprite.body.setVelocity(
-              vx * ENEMY_PROJECTILE_SPEED,
-              vy * ENEMY_PROJECTILE_SPEED,
-            );
+              const dx = nearestEnemy.sprite.x - summon.sprite.x;
+              const dy = nearestEnemy.sprite.y - summon.sprite.y;
+              const mag = Math.hypot(dx, dy) || 1;
+              const vx = dx / mag;
+              const vy = dy / mag;
 
-            this.summonProjectiles.push({
-              sprite: projSprite,
-              startX: summon.sprite.x,
-              startY: summon.sprite.y,
-              damage: summon.damage,
-              damageType: summon.damageType,
+              const projSprite = this.add.circle(
+                summon.sprite.x,
+                summon.sprite.y,
+                PROJECTILE_RADIUS,
+                0x99ff66,
+              );
+              this.physics.add.existing(projSprite);
+              projSprite.setDepth(12);
+              projSprite.body.setVelocity(
+                vx * ENEMY_PROJECTILE_SPEED,
+                vy * ENEMY_PROJECTILE_SPEED,
+              );
+
+              this.summonProjectiles.push({
+                sprite: projSprite,
+                startX: summon.sprite.x,
+                startY: summon.sprite.y,
+                damage: summon.damage,
+                damageType: summon.damageType,
+              });
             });
           } else {
-            const rawDamage = applyElementalResistance(
-              summon.damage,
-              summon.damageType,
-              nearestEnemy.resistances,
-            );
-            this.damageEnemy(
-              nearestEnemy,
-              computeDamage(rawDamage, nearestEnemy.defense),
-            );
+            // meme principe que pour l'ennemi/le heros : le summon est
+            // fige par attackAnimUntil pendant l'anim, on resout les
+            // degats a la fin pour laisser une chance d'esquive a la cible
+            this.time.delayedCall(ATTACK_ANIM_DURATION_MS, () => {
+              if (!this.enemies.includes(nearestEnemy)) return; // mort entre-temps
+              const resolveDist = Math.hypot(
+                nearestEnemy.sprite.x - summon.sprite.x,
+                nearestEnemy.sprite.y - summon.sprite.y,
+              );
+              if (resolveDist > summonAttackRange) return; // esquive
+
+              const rawDamage = applyElementalResistance(
+                summon.damage,
+                summon.damageType,
+                nearestEnemy.resistances,
+              );
+              this.damageEnemy(
+                nearestEnemy,
+                computeDamage(rawDamage, nearestEnemy.defense),
+              );
+            });
           }
         }
       }
@@ -9430,39 +9537,47 @@ export default class MainScene extends Phaser.Scene {
           enemy.attackAnimUntil = now + ATTACK_ANIM_DURATION_MS;
         }
 
-        const dx = this.hero.x - enemy.sprite.x;
-        const dy = this.hero.y - enemy.sprite.y;
-        const mag = Math.hypot(dx, dy) || 1;
-        const vx = dx / mag;
-        const vy = dy / mag;
+        // l'ennemi est fige pendant l'anim (cf. updateEnemyMovement) -
+        // le tir effectif (spawn du projectile) est repousse a la fin,
+        // pour que le lancer coincide visuellement avec le geste
+        this.time.delayedCall(ATTACK_ANIM_DURATION_MS, () => {
+          if (!this.hero) return;
+          if (!this.enemies.includes(enemy)) return; // mort entre-temps
 
-        const sprite = this.add.circle(
-          enemy.sprite.x,
-          enemy.sprite.y,
-          PROJECTILE_RADIUS,
-          0xff6644,
-        );
-        this.physics.add.existing(sprite);
-        sprite.setDepth(12);
-        sprite.body.setVelocity(
-          vx * ENEMY_PROJECTILE_SPEED,
-          vy * ENEMY_PROJECTILE_SPEED,
-        );
+          const dx = this.hero.x - enemy.sprite.x;
+          const dy = this.hero.y - enemy.sprite.y;
+          const mag = Math.hypot(dx, dy) || 1;
+          const vx = dx / mag;
+          const vy = dy / mag;
 
-        let rangedRawDamage = this.getEffectiveEnemyDamage(enemy);
-        if (enemy.varianceDice) {
-          rangedRawDamage = applyDiceVariance(
-            rangedRawDamage,
-            enemy.varianceDice,
+          const sprite = this.add.circle(
+            enemy.sprite.x,
+            enemy.sprite.y,
+            PROJECTILE_RADIUS,
+            0xff6644,
           );
-        }
-        this.enemyProjectiles.push({
-          sprite,
-          startX: enemy.sprite.x,
-          startY: enemy.sprite.y,
-          damage: rangedRawDamage,
-          damageType: enemy.damageType,
-          inflictsEffect: enemy.inflictsEffect,
+          this.physics.add.existing(sprite);
+          sprite.setDepth(12);
+          sprite.body.setVelocity(
+            vx * ENEMY_PROJECTILE_SPEED,
+            vy * ENEMY_PROJECTILE_SPEED,
+          );
+
+          let rangedRawDamage = this.getEffectiveEnemyDamage(enemy);
+          if (enemy.varianceDice) {
+            rangedRawDamage = applyDiceVariance(
+              rangedRawDamage,
+              enemy.varianceDice,
+            );
+          }
+          this.enemyProjectiles.push({
+            sprite,
+            startX: enemy.sprite.x,
+            startY: enemy.sprite.y,
+            damage: rangedRawDamage,
+            damageType: enemy.damageType,
+            inflictsEffect: enemy.inflictsEffect,
+          });
         });
         continue;
       }
@@ -9502,61 +9617,91 @@ export default class MainScene extends Phaser.Scene {
         enemy.attackAnimUntil = now + ATTACK_ANIM_DURATION_MS;
       }
 
-      if (target.isSummon) {
-        const dmg = computeDamage(
-          applyElementalResistance(
-            this.getEffectiveEnemyDamage(enemy),
-            enemy.damageType,
-            target.summon.resistances,
-          ),
-          target.defense,
-        );
-        target.summon.hp = Math.max(0, target.summon.hp - dmg);
+      // L'ennemi est fige pendant l'anim (updateEnemyMovement le skip
+      // tant que attackAnimUntil n'est pas passe), donc sa position ne
+      // bouge plus - mais la cible (heros/summon), elle, peut se
+      // deplacer : on resout les degats a la FIN de l'anim pour lui
+      // laisser une chance d'esquiver en sortant de portee.
+      this.time.delayedCall(ATTACK_ANIM_DURATION_MS, () => {
+        if (!this.hero) return;
+        if (!this.enemies.includes(enemy)) return; // mort entre-temps
 
-        this.showDamageNumber(target.summon.sprite, dmg, "#ff44c7");
-      } else {
-        let rawEnemyDamage = this.getEffectiveEnemyDamage(enemy);
-        if (enemy.varianceDice) {
-          rawEnemyDamage = applyDiceVariance(
-            rawEnemyDamage,
-            enemy.varianceDice,
+        const resolveDist = Math.hypot(
+          enemy.sprite.x - this.hero.x,
+          enemy.sprite.y - this.hero.y,
+        );
+
+        let resolveTarget = {
+          isSummon: false,
+          defense: this.playerDefense,
+        };
+        for (const summon of this.summons) {
+          const summonDist = Math.hypot(
+            enemy.sprite.x - summon.sprite.x,
+            enemy.sprite.y - summon.sprite.y,
           );
-        }
-        let dmg = computeDamage(
-          applyElementalResistance(
-            rawEnemyDamage,
-            enemy.damageType,
-            this.playerResistances,
-          ),
-          target.defense,
-        );
-        if (this.time.now < this.parryUntil) {
-          dmg = Math.round(dmg * (1 - this.parryDamageReduction));
-        }
-        this.playerHp = Math.max(0, this.playerHp - dmg);
-        this.showDamageNumber(this.hero, dmg, "#ff4444");
-        this.events.emit("player-hp-changed", {
-          hp: this.playerHp,
-          maxHp: this.playerMaxHp,
-        });
-
-        if (this.time.now < this.riposteUntil) {
-          this.damageEnemy(enemy, dmg * this.riposteReflectPercent);
-        }
-
-        this.applyStatusEffect(
-          this.playerStatusEffects,
-          this.rollStatusEffect(enemy),
-        );
-
-        this.hero.setTint(0xff8888).setTintMode(Phaser.TintModes.FILL);
-        this.time.delayedCall(100, () => {
-          if (this.hero) {
-            this.hero.clearTint();
-            this.hero.setTintMode(Phaser.TintModes.MULTIPLY);
+          if (summonDist <= ENEMY_ATTACK_RANGE && summonDist < resolveDist) {
+            resolveTarget = { isSummon: true, summon, defense: summon.defense };
           }
-        });
-      }
+        }
+        if (!resolveTarget.isSummon && resolveDist > ENEMY_ATTACK_RANGE) return; // esquive : plus personne a portee
+
+        if (resolveTarget.isSummon) {
+          const dmg = computeDamage(
+            applyElementalResistance(
+              this.getEffectiveEnemyDamage(enemy),
+              enemy.damageType,
+              resolveTarget.summon.resistances,
+            ),
+            resolveTarget.defense,
+          );
+          resolveTarget.summon.hp = Math.max(0, resolveTarget.summon.hp - dmg);
+
+          this.showDamageNumber(resolveTarget.summon.sprite, dmg, "#ff44c7");
+        } else {
+          let rawEnemyDamage = this.getEffectiveEnemyDamage(enemy);
+          if (enemy.varianceDice) {
+            rawEnemyDamage = applyDiceVariance(
+              rawEnemyDamage,
+              enemy.varianceDice,
+            );
+          }
+          let dmg = computeDamage(
+            applyElementalResistance(
+              rawEnemyDamage,
+              enemy.damageType,
+              this.playerResistances,
+            ),
+            resolveTarget.defense,
+          );
+          if (this.time.now < this.parryUntil) {
+            dmg = Math.round(dmg * (1 - this.parryDamageReduction));
+          }
+          this.playerHp = Math.max(0, this.playerHp - dmg);
+          this.showDamageNumber(this.hero, dmg, "#ff4444");
+          this.events.emit("player-hp-changed", {
+            hp: this.playerHp,
+            maxHp: this.playerMaxHp,
+          });
+
+          if (this.time.now < this.riposteUntil) {
+            this.damageEnemy(enemy, dmg * this.riposteReflectPercent);
+          }
+
+          this.applyStatusEffect(
+            this.playerStatusEffects,
+            this.rollStatusEffect(enemy),
+          );
+
+          this.hero.setTint(0xff8888).setTintMode(Phaser.TintModes.FILL);
+          this.time.delayedCall(100, () => {
+            if (this.hero) {
+              this.hero.clearTint();
+              this.hero.setTintMode(Phaser.TintModes.MULTIPLY);
+            }
+          });
+        }
+      });
     }
   }
 
