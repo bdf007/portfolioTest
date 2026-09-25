@@ -529,7 +529,7 @@ const WALL_CORNER_INDEX_TO_FRAME_0_0_MUDDY_CAVE = [
   80,
 ];
 
-const WALL_CORNER_INDEX_TO_FRAME_0_0_SUMMER_FOREST = [
+const WALL_CORNER_INDEX_TO_FRAME_FOREST_0_0 = [
   266,
   65,
   1,
@@ -554,17 +554,143 @@ const WALL_CORNER_INDEX_TO_FRAME_0_0_SUMMER_FOREST = [
     ],
   },
 ];
-const WALL_CORNER_INDEX_TO_FRAME_SUMMER_FOREST_WATER_0_0 = [
-  266, 596, 532, 564, 534, 596, 533, 661, 598, 597, 596, 629, 566, 628, 660,
+
+const WALL_CORNER_INDEX_TO_FRAME_FOREST_0_1 = [
+  265, 69, 5, 37, 7, 103, 6, 104, 71, 70, 135, 133, 39, 134, 136,
   // {
   //   variants: [
-  //     { tiles: 34, weight: 5 },
-  //     { tiles: 4, weight: 1 },
-  //     { tiles: 36, weight: 1 },
-  //     { tiles: 68, weight: 1 },
+  //     { tiles: [34, 46], weight: 10 },
+  //     { tiles: [34, 144], weight: 2 },
+  //     { tiles: [34, 48], weight: 1 },
+  //     { tiles: [34, 80], weight: 1 },
+  //     { tiles: [34, 554], weight: 0.5 },
+  //   ],
+  // },
+  40,
+];
+
+const WALL_CORNER_INDEX_TO_FRAME_FOREST_1_0 = [
+  266, 133, 71, 39, 69, 135, 70, 104, 5, 6, 103, 7, 37, 101, 96,
+  // {
+  //   variants: [
+  //     { tiles: [34, 46], weight: 10 },
+  //     { tiles: [34, 144], weight: 2 },
+  //     { tiles: [34, 48], weight: 1 },
+  //     { tiles: [34, 80], weight: 1 },
+  //     { tiles: [34, 554], weight: 0.5 },
+  //   ],
+  // },
+  32,
+];
+
+const WALL_CORNER_INDEX_TO_FRAME_FOREST_0_3 = [
+  298,
+  77,
+  13,
+  45,
+  15,
+  77,
+  14,
+  111,
+  79,
+  78,
+  15,
+  141,
+  47,
+  142,
+  46,
+  {
+    variants: [
+      { tiles: [34, 46], weight: 10 },
+      { tiles: [34, 144], weight: 2 },
+      { tiles: [34, 48], weight: 1 },
+      { tiles: [34, 80], weight: 1 },
+      { tiles: [34, 554], weight: 0.5 },
+    ],
+  },
+];
+
+const WALL_CORNER_INDEX_TO_FRAME_FOREST_WATER_0_0 = [
+  266, 596, 532, 564, 534, 630, 533, 661, 598, 597, 662, 629, 566, 628, 660,
+  // {
+  //   variants: [
+  //     { tiles: 565, weight: 5 },
+  //     { tiles: 203, weight: 1 },
+  //     { tiles: 267, weight: 1 },
+  //     { tiles: 299, weight: 1 },
   //   ],
   // },
   565,
+];
+const WALL_CORNER_INDEX_TO_FRAME_FOREST_WATER_0_1 = [
+  266,
+  599,
+  535,
+  567,
+  537,
+  633,
+  536,
+  664,
+  601,
+  600,
+  665,
+  632,
+  569,
+  631,
+  663,
+  {
+    variants: [
+      { tiles: 568, weight: 5 },
+      { tiles: 203, weight: 1 },
+      { tiles: 267, weight: 1 },
+      { tiles: 299, weight: 1 },
+      { tiles: 208, weight: 1 },
+      { tiles: 240, weight: 1 },
+    ],
+  },
+  // 565,
+];
+const WALL_CORNER_INDEX_TO_FRAME_FOREST_WATER_0_2 = [
+  265, 602, 538, 570, 540, 636, 539, 667, 604, 603, 602, 635, 572, 634, 666,
+  // {
+  //   variants: [
+  //     { tiles: 571, weight: 5 },
+  //     { tiles: 203, weight: 1 },
+  //     { tiles: 267, weight: 1 },
+  //     { tiles: 299, weight: 1 },
+  //     { tiles: 208, weight: 1 },
+  //     { tiles: 240, weight: 1 },
+  //   ],
+  // },
+  565,
+];
+const WALL_CORNER_INDEX_TO_FRAME_FOREST_WATER_0_3 = [
+  265,
+  605,
+  541,
+  573,
+  543,
+  639,
+  542,
+  670,
+  607,
+  606,
+  671,
+  638,
+  575,
+  637,
+  669,
+  {
+    variants: [
+      { tiles: 568, weight: 10 },
+      { tiles: 203, weight: 1 },
+      { tiles: 267, weight: 1 },
+      { tiles: 299, weight: 1 },
+      { tiles: 208, weight: 1 },
+      { tiles: 240, weight: 1 },
+    ],
+  },
+  // 568,
 ];
 const WALL_CORNER_INDEX_TO_FRAME_0_0_WINTER_SNOWY_FOREST = [
   {
@@ -595,33 +721,6 @@ const WALL_CORNER_INDEX_TO_FRAME_0_0_WINTER_SNOWY_FOREST = [
       { tiles: 4, weight: 1 },
       { tiles: 36, weight: 1 },
       { tiles: 68, weight: 1 },
-    ],
-  },
-];
-
-const WALL_CORNER_INDEX_TO_FRAME_0_1_SUMMER_FOREST = [
-  555,
-  77,
-  13,
-  45,
-  15,
-  77,
-  14,
-  111,
-  79,
-  78,
-  15,
-  141,
-  47,
-  142,
-  46,
-  {
-    variants: [
-      { tiles: [34, 46], weight: 10 },
-      { tiles: [34, 144], weight: 2 },
-      { tiles: [34, 48], weight: 1 },
-      { tiles: [34, 80], weight: 1 },
-      { tiles: [34, 554], weight: 0.5 },
     ],
   },
 ];
@@ -2368,12 +2467,24 @@ export default class MainScene extends Phaser.Scene {
       tileset === "summerForestWater_0_0" ||
       tileset === "autumnForest_0_0" ||
       tileset === "autumnForest_0_1" ||
+      tileset === "autumnForestWater_0_0" ||
+      tileset === "autumnForestWater_0_1" ||
       tileset === "winterForest_0_0" ||
       tileset === "winterForest_0_1" ||
+      tileset === "winterForest_1_0" ||
+      tileset === "winterForest_0_2" ||
+      tileset === "winterForest_0_3" ||
+      tileset === "winterForestWater_0_0" ||
+      tileset === "winterForestWater_0_1" ||
       tileset === "winterSnowyForest_0_0" ||
       tileset === "winterSnowyForest_0_1" ||
+      tileset === "winterSnowyForestWater_0_0" ||
+      tileset === "winterSnowyForestWater_0_1" ||
+      tileset === "winterSnowyForestWater_0_2" ||
+      tileset === "winterSnowyForestWater_0_3" ||
       tileset === "springForest_0_0" ||
       tileset === "springForest_0_1" ||
+      tileset === "springForestWater_0_0" ||
       tileset === "castleDungeonV01_0_0" ||
       tileset === "castleDungeonV01_0_1" ||
       tileset === "castleDungeonV02_0_0" ||
@@ -2974,7 +3085,7 @@ export default class MainScene extends Phaser.Scene {
         grid,
         SUMMER_FOREST_AUTOTILE_SPRITESHEET,
         "summerForest_0_0",
-        WALL_CORNER_INDEX_TO_FRAME_0_0_SUMMER_FOREST,
+        WALL_CORNER_INDEX_TO_FRAME_FOREST_0_0,
         38,
       );
       phaserTilesetKey = result.phaserTilesetKey;
@@ -2989,7 +3100,7 @@ export default class MainScene extends Phaser.Scene {
         grid,
         SUMMER_FOREST_AUTOTILE_SPRITESHEET,
         "summerForest_0_1",
-        WALL_CORNER_INDEX_TO_FRAME_0_1_SUMMER_FOREST,
+        WALL_CORNER_INDEX_TO_FRAME_FOREST_0_3,
         // 38,
         [
           { tileId: 38, weight: 5 },
@@ -3010,7 +3121,7 @@ export default class MainScene extends Phaser.Scene {
         grid,
         SUMMER_FOREST_AUTOTILE_SPRITESHEET,
         "summerForestWater_0_0",
-        WALL_CORNER_INDEX_TO_FRAME_SUMMER_FOREST_WATER_0_0,
+        WALL_CORNER_INDEX_TO_FRAME_FOREST_WATER_0_0,
         38,
       );
       phaserTilesetKey = result.phaserTilesetKey;
@@ -3045,7 +3156,7 @@ export default class MainScene extends Phaser.Scene {
         grid,
         SPRING_FOREST_AUTOTILE_SPRITESHEET,
         "springForest_0_1",
-        WALL_CORNER_INDEX_TO_FRAME_0_1_SUMMER_FOREST,
+        WALL_CORNER_INDEX_TO_FRAME_FOREST_0_3,
         // 38,
         [
           { tileId: 38, weight: 5 },
@@ -3061,12 +3172,27 @@ export default class MainScene extends Phaser.Scene {
       this.currentRawTilesetKey = SUMMER_FOREST_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
       this.currentRenderGrid = renderGrid;
       this.currentSlotSourceTileIds = result.slotSourceTileIds;
+    } else if (tileset === "springForestWater_0_0") {
+      const result = this.composeCornerAutotileTexture(
+        grid,
+        SPRING_FOREST_AUTOTILE_SPRITESHEET,
+        "springForestWater_0_0",
+        WALL_CORNER_INDEX_TO_FRAME_FOREST_WATER_0_0,
+        38,
+      );
+      phaserTilesetKey = result.phaserTilesetKey;
+      renderGrid = result.renderGrid;
+      composedFloorSlots = result.floorSlotIndices;
+      this.currentFloorTileIndex = composedFloorSlots[0];
+      this.currentRawTilesetKey = SPRING_FOREST_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
+      this.currentRenderGrid = renderGrid;
+      this.currentSlotSourceTileIds = result.slotSourceTileIds;
     } else if (tileset === "autumnForest_0_0") {
       const result = this.composeCornerAutotileTexture(
         grid,
         AUTUMN_FOREST_AUTOTILE_SPRITESHEET,
         "autumnForest_0_0",
-        WALL_CORNER_INDEX_TO_FRAME_0_0_SUMMER_FOREST,
+        WALL_CORNER_INDEX_TO_FRAME_FOREST_0_0,
         // 38,
         [
           { tileId: 32, weight: 5 },
@@ -3088,7 +3214,7 @@ export default class MainScene extends Phaser.Scene {
         grid,
         AUTUMN_FOREST_AUTOTILE_SPRITESHEET,
         "autumnForest_0_1",
-        WALL_CORNER_INDEX_TO_FRAME_0_1_SUMMER_FOREST,
+        WALL_CORNER_INDEX_TO_FRAME_FOREST_0_3,
         // 38,
         [
           { tileId: 38, weight: 5 },
@@ -3104,13 +3230,64 @@ export default class MainScene extends Phaser.Scene {
       this.currentRawTilesetKey = AUTUMN_FOREST_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
       this.currentRenderGrid = renderGrid;
       this.currentSlotSourceTileIds = result.slotSourceTileIds;
+    } else if (tileset === "autumnForestWater_0_0") {
+      const result = this.composeCornerAutotileTexture(
+        grid,
+        AUTUMN_FOREST_AUTOTILE_SPRITESHEET,
+        "autumnForestWater_0_0",
+        WALL_CORNER_INDEX_TO_FRAME_FOREST_WATER_0_0,
+        38,
+      );
+      phaserTilesetKey = result.phaserTilesetKey;
+      renderGrid = result.renderGrid;
+      composedFloorSlots = result.floorSlotIndices;
+      this.currentFloorTileIndex = composedFloorSlots[0];
+      this.currentRawTilesetKey = AUTUMN_FOREST_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
+      this.currentRenderGrid = renderGrid;
+      this.currentSlotSourceTileIds = result.slotSourceTileIds;
+    } else if (tileset === "autumnForestWater_0_1") {
+      const result = this.composeCornerAutotileTexture(
+        grid,
+        AUTUMN_FOREST_AUTOTILE_SPRITESHEET,
+        "autumnForestWater_0_1",
+        WALL_CORNER_INDEX_TO_FRAME_FOREST_WATER_0_1,
+        38,
+      );
+      phaserTilesetKey = result.phaserTilesetKey;
+      renderGrid = result.renderGrid;
+      composedFloorSlots = result.floorSlotIndices;
+      this.currentFloorTileIndex = composedFloorSlots[0];
+      this.currentRawTilesetKey = AUTUMN_FOREST_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
+      this.currentRenderGrid = renderGrid;
+      this.currentSlotSourceTileIds = result.slotSourceTileIds;
     } else if (tileset === "winterForest_0_0") {
       const result = this.composeCornerAutotileTexture(
         grid,
         WINTER_FOREST_AUTOTILE_SPRITESHEET,
         "winterForest_0_0",
-        WALL_CORNER_INDEX_TO_FRAME_0_0_SUMMER_FOREST,
+        WALL_CORNER_INDEX_TO_FRAME_FOREST_0_0,
         38,
+      );
+      phaserTilesetKey = result.phaserTilesetKey;
+      renderGrid = result.renderGrid;
+      composedFloorSlots = result.floorSlotIndices;
+      this.currentFloorTileIndex = composedFloorSlots[0];
+      this.currentRawTilesetKey = WINTER_FOREST_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
+      this.currentRenderGrid = renderGrid;
+      this.currentSlotSourceTileIds = result.slotSourceTileIds;
+    } else if (tileset === "winterForest_0_3") {
+      const result = this.composeCornerAutotileTexture(
+        grid,
+        WINTER_FOREST_AUTOTILE_SPRITESHEET,
+        "winterForest_0_3",
+        WALL_CORNER_INDEX_TO_FRAME_FOREST_0_3,
+        // 38,
+        [
+          { tileId: 38, weight: 5 },
+          { tileId: [38, 516], weight: 1 },
+          { tileId: [38, 521], weight: 1 },
+          { tileId: [38, 524], weight: 1 },
+        ],
       );
       phaserTilesetKey = result.phaserTilesetKey;
       renderGrid = result.renderGrid;
@@ -3124,14 +3301,65 @@ export default class MainScene extends Phaser.Scene {
         grid,
         WINTER_FOREST_AUTOTILE_SPRITESHEET,
         "winterForest_0_1",
-        WALL_CORNER_INDEX_TO_FRAME_0_1_SUMMER_FOREST,
-        // 38,
-        [
-          { tileId: 38, weight: 5 },
-          { tileId: [38, 516], weight: 1 },
-          { tileId: [38, 521], weight: 1 },
-          { tileId: [38, 524], weight: 1 },
-        ],
+        WALL_CORNER_INDEX_TO_FRAME_FOREST_0_1,
+        32,
+        // [
+        //   { tileId: 38, weight: 5 },
+        //   { tileId: [38, 516], weight: 1 },
+        //   { tileId: [38, 521], weight: 1 },
+        //   { tileId: [38, 524], weight: 1 },
+        // ],
+      );
+      phaserTilesetKey = result.phaserTilesetKey;
+      renderGrid = result.renderGrid;
+      composedFloorSlots = result.floorSlotIndices;
+      this.currentFloorTileIndex = composedFloorSlots[0];
+      this.currentRawTilesetKey = WINTER_FOREST_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
+      this.currentRenderGrid = renderGrid;
+      this.currentSlotSourceTileIds = result.slotSourceTileIds;
+    } else if (tileset === "winterForest_1_0") {
+      const result = this.composeCornerAutotileTexture(
+        grid,
+        WINTER_FOREST_AUTOTILE_SPRITESHEET,
+        "winterForest_1_0",
+        WALL_CORNER_INDEX_TO_FRAME_FOREST_1_0,
+        38,
+        // [
+        //   { tileId: 38, weight: 5 },
+        //   { tileId: [38, 516], weight: 1 },
+        //   { tileId: [38, 521], weight: 1 },
+        //   { tileId: [38, 524], weight: 1 },
+        // ],
+      );
+      phaserTilesetKey = result.phaserTilesetKey;
+      renderGrid = result.renderGrid;
+      composedFloorSlots = result.floorSlotIndices;
+      this.currentFloorTileIndex = composedFloorSlots[0];
+      this.currentRawTilesetKey = WINTER_FOREST_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
+      this.currentRenderGrid = renderGrid;
+      this.currentSlotSourceTileIds = result.slotSourceTileIds;
+    } else if (tileset === "winterForestWater_0_0") {
+      const result = this.composeCornerAutotileTexture(
+        grid,
+        WINTER_FOREST_AUTOTILE_SPRITESHEET,
+        "winterForestWater_0_0",
+        WALL_CORNER_INDEX_TO_FRAME_FOREST_WATER_0_0,
+        38,
+      );
+      phaserTilesetKey = result.phaserTilesetKey;
+      renderGrid = result.renderGrid;
+      composedFloorSlots = result.floorSlotIndices;
+      this.currentFloorTileIndex = composedFloorSlots[0];
+      this.currentRawTilesetKey = WINTER_FOREST_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
+      this.currentRenderGrid = renderGrid;
+      this.currentSlotSourceTileIds = result.slotSourceTileIds;
+    } else if (tileset === "winterForestWater_0_1") {
+      const result = this.composeCornerAutotileTexture(
+        grid,
+        WINTER_FOREST_AUTOTILE_SPRITESHEET,
+        "winterForestWater_0_1",
+        WALL_CORNER_INDEX_TO_FRAME_FOREST_WATER_0_1,
+        38,
       );
       phaserTilesetKey = result.phaserTilesetKey;
       renderGrid = result.renderGrid;
@@ -3160,7 +3388,7 @@ export default class MainScene extends Phaser.Scene {
         grid,
         WINTER_FOREST_SNOWY_AUTOTILE_SPRITESHEET,
         "winterSnowyForest_0_1",
-        WALL_CORNER_INDEX_TO_FRAME_0_1_SUMMER_FOREST,
+        WALL_CORNER_INDEX_TO_FRAME_FOREST_0_3,
         // 38,
         [
           { tileId: 38, weight: 5 },
@@ -3168,6 +3396,78 @@ export default class MainScene extends Phaser.Scene {
           { tileId: [38, 521], weight: 1 },
           { tileId: [38, 524], weight: 1 },
         ],
+      );
+      phaserTilesetKey = result.phaserTilesetKey;
+      renderGrid = result.renderGrid;
+      composedFloorSlots = result.floorSlotIndices;
+      this.currentFloorTileIndex = composedFloorSlots[0];
+      this.currentRawTilesetKey = WINTER_FOREST_SNOWY_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
+      this.currentRenderGrid = renderGrid;
+      this.currentSlotSourceTileIds = result.slotSourceTileIds;
+    } else if (tileset === "winterSnowyForestWater_0_0") {
+      const result = this.composeCornerAutotileTexture(
+        grid,
+        WINTER_FOREST_SNOWY_AUTOTILE_SPRITESHEET,
+        "winterSnowyForestWater_0_0",
+        WALL_CORNER_INDEX_TO_FRAME_FOREST_WATER_0_0,
+        38,
+      );
+      phaserTilesetKey = result.phaserTilesetKey;
+      renderGrid = result.renderGrid;
+      composedFloorSlots = result.floorSlotIndices;
+      this.currentFloorTileIndex = composedFloorSlots[0];
+      this.currentRawTilesetKey = WINTER_FOREST_SNOWY_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
+      this.currentRenderGrid = renderGrid;
+      this.currentSlotSourceTileIds = result.slotSourceTileIds;
+    } else if (tileset === "winterSnowyForestWater_0_1") {
+      const result = this.composeCornerAutotileTexture(
+        grid,
+        WINTER_FOREST_SNOWY_AUTOTILE_SPRITESHEET,
+        "winterSnowyForestWater_0_1",
+        WALL_CORNER_INDEX_TO_FRAME_FOREST_WATER_0_1,
+        38,
+        // [
+        //   { tileId: 38, weight: 5 },
+        //   { tileId: [38, 516], weight: 1 },
+        //   { tileId: [38, 521], weight: 1 },
+        //   { tileId: [38, 524], weight: 1 },
+        // ],
+      );
+      phaserTilesetKey = result.phaserTilesetKey;
+      renderGrid = result.renderGrid;
+      composedFloorSlots = result.floorSlotIndices;
+      this.currentFloorTileIndex = composedFloorSlots[0];
+      this.currentRawTilesetKey = WINTER_FOREST_SNOWY_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
+      this.currentRenderGrid = renderGrid;
+      this.currentSlotSourceTileIds = result.slotSourceTileIds;
+    } else if (tileset === "winterSnowyForestWater_0_2") {
+      const result = this.composeCornerAutotileTexture(
+        grid,
+        WINTER_FOREST_SNOWY_AUTOTILE_SPRITESHEET,
+        "winterSnowyForestWater_0_2",
+        WALL_CORNER_INDEX_TO_FRAME_FOREST_WATER_0_2,
+        32,
+      );
+      phaserTilesetKey = result.phaserTilesetKey;
+      renderGrid = result.renderGrid;
+      composedFloorSlots = result.floorSlotIndices;
+      this.currentFloorTileIndex = composedFloorSlots[0];
+      this.currentRawTilesetKey = WINTER_FOREST_SNOWY_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
+      this.currentRenderGrid = renderGrid;
+      this.currentSlotSourceTileIds = result.slotSourceTileIds;
+    } else if (tileset === "winterSnowyForestWater_0_3") {
+      const result = this.composeCornerAutotileTexture(
+        grid,
+        WINTER_FOREST_SNOWY_AUTOTILE_SPRITESHEET,
+        "winterSnowyForestWater_0_3",
+        WALL_CORNER_INDEX_TO_FRAME_FOREST_WATER_0_3,
+        32,
+        // [
+        //   { tileId: 38, weight: 5 },
+        //   { tileId: [38, 516], weight: 1 },
+        //   { tileId: [38, 521], weight: 1 },
+        //   { tileId: [38, 524], weight: 1 },
+        // ],
       );
       phaserTilesetKey = result.phaserTilesetKey;
       renderGrid = result.renderGrid;
