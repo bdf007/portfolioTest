@@ -215,6 +215,7 @@ const PROJECTILE_RADIUS = 5;
 const CONSUMABLE_COOLDOWN_MS = 2000; // ajustable - meme delai pour toutes les potions pour l'instant
 const FURY_KILLS_REQUIRED = 10; // ajustable
 const MAX_SUMMONS = 3;
+const ESCORT_NPC_HP = 40; // fragile - pas cense encaisser des coups longtemps, purement passif
 const STATUS_EFFECT_COLORS = {
   burn: 0xff8800, // orange
   bleed: 0xcc0000, // rouge
@@ -725,7 +726,7 @@ const WALL_CORNER_INDEX_TO_FRAME_0_0_WINTER_SNOWY_FOREST = [
   },
 ];
 
-const WALL_CORNER_INDEX_TO_FRAME_CASTLE_DUNGEON_V01_0_0 = [
+const WALL_CORNER_INDEX_TO_FRAME_CASTLE_DUNGEON_0_1 = [
   {
     variants: [
       { tiles: 299, weight: 5 },
@@ -750,7 +751,7 @@ const WALL_CORNER_INDEX_TO_FRAME_CASTLE_DUNGEON_V01_0_0 = [
   73,
   36,
 ];
-const WALL_CORNER_INDEX_TO_FRAME_CASTLE_DUNGEON_V01_0_1 = [
+const WALL_CORNER_INDEX_TO_FRAME_CASTLE_DUNGEON_0_2 = [
   {
     variants: [
       { tiles: 299, weight: 5 },
@@ -1405,6 +1406,8 @@ export default class MainScene extends Phaser.Scene {
         sprite,
         spriteKey: savedSummon.spriteKey,
         sourceAbilityId: savedSummon.sourceAbilityId,
+        isEscort: savedSummon.isEscort || false,
+        escortQuestKey: savedSummon.escortQuestKey || null,
         path: null,
         pathIndex: 0,
         nextPathRequestAt: 0,
@@ -1970,6 +1973,8 @@ export default class MainScene extends Phaser.Scene {
             resistances: s.resistances,
             persistent: s.persistent,
             sourceAbilityId: s.sourceAbilityId,
+            isEscort: s.isEscort || false,
+            escortQuestKey: s.escortQuestKey || null,
             remainingMs: s.expiresAt
               ? Math.max(0, s.expiresAt - this.time.now)
               : null,
@@ -2435,7 +2440,7 @@ export default class MainScene extends Phaser.Scene {
       tileset === "darkwoods_1_1" ||
       tileset === "darkwoods_1_2" ||
       tileset === "darkwoods_1_3" ||
-      tileset === "darkwoods2" ||
+      tileset === "darkwoods2_0_0" ||
       tileset === "standardFields_1_0_1" ||
       tileset === "standardFields_1_1_1" ||
       tileset === "standardFields_2_0_1" ||
@@ -2464,33 +2469,60 @@ export default class MainScene extends Phaser.Scene {
       tileset === "muddyCaveV2_0_0" ||
       tileset === "summerForest_0_0" ||
       tileset === "summerForest_0_1" ||
+      tileset === "summerForest_1_0" ||
+      // tileset === "summerForest_0_2" ||
+      // tileset === "summerForest_2_0" ||
+      // tileset === "summerForest_0_3" ||
       tileset === "summerForestWater_0_0" ||
+      tileset === "summerForestWater_0_1" ||
+      tileset === "summerForestWater_0_2" ||
+      tileset === "summerForestWater_0_3" ||
       tileset === "autumnForest_0_0" ||
       tileset === "autumnForest_0_1" ||
+      tileset === "autumnForest_1_0" ||
+      // tileset === "autumnForest_0_2" ||
+      // tileset === "autumnForest_2_0" ||
+      // tileset === "autumnForest_0_3" ||
       tileset === "autumnForestWater_0_0" ||
       tileset === "autumnForestWater_0_1" ||
+      tileset === "autumnForestWater_0_2" ||
+      tileset === "autumnForestWater_0_3" ||
       tileset === "winterForest_0_0" ||
       tileset === "winterForest_0_1" ||
       tileset === "winterForest_1_0" ||
-      tileset === "winterForest_0_2" ||
-      tileset === "winterForest_0_3" ||
+      // tileset === "winterForest_0_2" ||
+      // tileset === "winterForest_2_0" ||
+      // tileset === "winterForest_0_3" ||
       tileset === "winterForestWater_0_0" ||
       tileset === "winterForestWater_0_1" ||
+      tileset === "winterForestWater_0_2" ||
+      tileset === "winterForestWater_0_3" ||
       tileset === "winterSnowyForest_0_0" ||
       tileset === "winterSnowyForest_0_1" ||
+      tileset === "winterSnowyForest_1_0" ||
+      // tileset === "winterSnowyForest_0_2" ||
+      // tileset === "winterSnowyForest_2_0" ||
+      // tileset === "winterSnowyForest_0_3" ||
       tileset === "winterSnowyForestWater_0_0" ||
       tileset === "winterSnowyForestWater_0_1" ||
       tileset === "winterSnowyForestWater_0_2" ||
       tileset === "winterSnowyForestWater_0_3" ||
       tileset === "springForest_0_0" ||
       tileset === "springForest_0_1" ||
+      tileset === "springForest_1_0" ||
+      // tileset === "springForest_0_2" ||
+      // tileset === "springForest_2_0" ||
+      // tileset === "springForest_0_3" ||
       tileset === "springForestWater_0_0" ||
-      tileset === "castleDungeonV01_0_0" ||
+      tileset === "springForestWater_0_1" ||
+      tileset === "springForestWater_0_2" ||
+      tileset === "springForestWater_0_3" ||
       tileset === "castleDungeonV01_0_1" ||
-      tileset === "castleDungeonV02_0_0" ||
+      tileset === "castleDungeonV01_0_2" ||
       tileset === "castleDungeonV02_0_1" ||
-      tileset === "castleDungeonV03_0_0" ||
-      tileset === "castleDungeonV03_0_1";
+      tileset === "castleDungeonV02_0_2" ||
+      tileset === "castleDungeonV03_0_1" ||
+      tileset === "castleDungeonV03_0_2";
     const useDungeon1Autotile = tileset === "dungeon1";
     const useFortress1Autotile = tileset === "fortress1";
 
@@ -2885,11 +2917,11 @@ export default class MainScene extends Phaser.Scene {
       this.currentRawTilesetKey = DARKWOODS_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
       this.currentRenderGrid = renderGrid;
       this.currentSlotSourceTileIds = result.slotSourceTileIds;
-    } else if (tileset === "darkwoods2") {
+    } else if (tileset === "darkwoods2_0_0") {
       const result = this.composeCornerAutotileTexture(
         grid,
         DARKWOODS2_AUTOTILE_SPRITESHEET,
-        "darkwoods2",
+        "darkwoods2_0_0",
         WALL_CORNER_INDEX_TO_FRAME_0_0,
         17,
       );
@@ -3100,7 +3132,28 @@ export default class MainScene extends Phaser.Scene {
         grid,
         SUMMER_FOREST_AUTOTILE_SPRITESHEET,
         "summerForest_0_1",
-        WALL_CORNER_INDEX_TO_FRAME_FOREST_0_3,
+        WALL_CORNER_INDEX_TO_FRAME_FOREST_0_1,
+        // 38,
+        [
+          { tileId: 38, weight: 5 },
+          { tileId: [38, 516], weight: 1 },
+          { tileId: [38, 521], weight: 1 },
+          { tileId: [38, 524], weight: 1 },
+        ],
+      );
+      phaserTilesetKey = result.phaserTilesetKey;
+      renderGrid = result.renderGrid;
+      composedFloorSlots = result.floorSlotIndices;
+      this.currentFloorTileIndex = composedFloorSlots[0];
+      this.currentRawTilesetKey = SUMMER_FOREST_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
+      this.currentRenderGrid = renderGrid;
+      this.currentSlotSourceTileIds = result.slotSourceTileIds;
+    } else if (tileset === "summerForest_1_0") {
+      const result = this.composeCornerAutotileTexture(
+        grid,
+        SUMMER_FOREST_AUTOTILE_SPRITESHEET,
+        "summerForest_1_0",
+        WALL_CORNER_INDEX_TO_FRAME_FOREST_1_0,
         // 38,
         [
           { tileId: 38, weight: 5 },
@@ -3122,6 +3175,51 @@ export default class MainScene extends Phaser.Scene {
         SUMMER_FOREST_AUTOTILE_SPRITESHEET,
         "summerForestWater_0_0",
         WALL_CORNER_INDEX_TO_FRAME_FOREST_WATER_0_0,
+        38,
+      );
+      phaserTilesetKey = result.phaserTilesetKey;
+      renderGrid = result.renderGrid;
+      composedFloorSlots = result.floorSlotIndices;
+      this.currentFloorTileIndex = composedFloorSlots[0];
+      this.currentRawTilesetKey = SUMMER_FOREST_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
+      this.currentRenderGrid = renderGrid;
+      this.currentSlotSourceTileIds = result.slotSourceTileIds;
+    } else if (tileset === "summerForestWater_0_1") {
+      const result = this.composeCornerAutotileTexture(
+        grid,
+        SUMMER_FOREST_AUTOTILE_SPRITESHEET,
+        "summerForestWater_0_1",
+        WALL_CORNER_INDEX_TO_FRAME_FOREST_WATER_0_1,
+        38,
+      );
+      phaserTilesetKey = result.phaserTilesetKey;
+      renderGrid = result.renderGrid;
+      composedFloorSlots = result.floorSlotIndices;
+      this.currentFloorTileIndex = composedFloorSlots[0];
+      this.currentRawTilesetKey = SUMMER_FOREST_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
+      this.currentRenderGrid = renderGrid;
+      this.currentSlotSourceTileIds = result.slotSourceTileIds;
+    } else if (tileset === "summerForestWater_0_2") {
+      const result = this.composeCornerAutotileTexture(
+        grid,
+        SUMMER_FOREST_AUTOTILE_SPRITESHEET,
+        "summerForestWater_0_2",
+        WALL_CORNER_INDEX_TO_FRAME_FOREST_WATER_0_2,
+        38,
+      );
+      phaserTilesetKey = result.phaserTilesetKey;
+      renderGrid = result.renderGrid;
+      composedFloorSlots = result.floorSlotIndices;
+      this.currentFloorTileIndex = composedFloorSlots[0];
+      this.currentRawTilesetKey = SUMMER_FOREST_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
+      this.currentRenderGrid = renderGrid;
+      this.currentSlotSourceTileIds = result.slotSourceTileIds;
+    } else if (tileset === "summerForestWater_0_3") {
+      const result = this.composeCornerAutotileTexture(
+        grid,
+        SUMMER_FOREST_AUTOTILE_SPRITESHEET,
+        "summerForestWater_0_3",
+        WALL_CORNER_INDEX_TO_FRAME_FOREST_WATER_0_3,
         38,
       );
       phaserTilesetKey = result.phaserTilesetKey;
@@ -3156,7 +3254,7 @@ export default class MainScene extends Phaser.Scene {
         grid,
         SPRING_FOREST_AUTOTILE_SPRITESHEET,
         "springForest_0_1",
-        WALL_CORNER_INDEX_TO_FRAME_FOREST_0_3,
+        WALL_CORNER_INDEX_TO_FRAME_FOREST_0_1,
         // 38,
         [
           { tileId: 38, weight: 5 },
@@ -3169,7 +3267,28 @@ export default class MainScene extends Phaser.Scene {
       renderGrid = result.renderGrid;
       composedFloorSlots = result.floorSlotIndices;
       this.currentFloorTileIndex = composedFloorSlots[0];
-      this.currentRawTilesetKey = SUMMER_FOREST_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
+      this.currentRawTilesetKey = SPRING_FOREST_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
+      this.currentRenderGrid = renderGrid;
+      this.currentSlotSourceTileIds = result.slotSourceTileIds;
+    } else if (tileset === "springForest_1_0") {
+      const result = this.composeCornerAutotileTexture(
+        grid,
+        SPRING_FOREST_AUTOTILE_SPRITESHEET,
+        "springForest_1_0",
+        WALL_CORNER_INDEX_TO_FRAME_FOREST_1_0,
+        // 38,
+        [
+          { tileId: 38, weight: 5 },
+          { tileId: [38, 516], weight: 1 },
+          { tileId: [38, 521], weight: 1 },
+          { tileId: [38, 524], weight: 1 },
+        ],
+      );
+      phaserTilesetKey = result.phaserTilesetKey;
+      renderGrid = result.renderGrid;
+      composedFloorSlots = result.floorSlotIndices;
+      this.currentFloorTileIndex = composedFloorSlots[0];
+      this.currentRawTilesetKey = SPRING_FOREST_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
       this.currentRenderGrid = renderGrid;
       this.currentSlotSourceTileIds = result.slotSourceTileIds;
     } else if (tileset === "springForestWater_0_0") {
@@ -3178,6 +3297,51 @@ export default class MainScene extends Phaser.Scene {
         SPRING_FOREST_AUTOTILE_SPRITESHEET,
         "springForestWater_0_0",
         WALL_CORNER_INDEX_TO_FRAME_FOREST_WATER_0_0,
+        38,
+      );
+      phaserTilesetKey = result.phaserTilesetKey;
+      renderGrid = result.renderGrid;
+      composedFloorSlots = result.floorSlotIndices;
+      this.currentFloorTileIndex = composedFloorSlots[0];
+      this.currentRawTilesetKey = SPRING_FOREST_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
+      this.currentRenderGrid = renderGrid;
+      this.currentSlotSourceTileIds = result.slotSourceTileIds;
+    } else if (tileset === "springForestWater_0_1") {
+      const result = this.composeCornerAutotileTexture(
+        grid,
+        SPRING_FOREST_AUTOTILE_SPRITESHEET,
+        "springForestWater_0_1",
+        WALL_CORNER_INDEX_TO_FRAME_FOREST_WATER_0_1,
+        38,
+      );
+      phaserTilesetKey = result.phaserTilesetKey;
+      renderGrid = result.renderGrid;
+      composedFloorSlots = result.floorSlotIndices;
+      this.currentFloorTileIndex = composedFloorSlots[0];
+      this.currentRawTilesetKey = SPRING_FOREST_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
+      this.currentRenderGrid = renderGrid;
+      this.currentSlotSourceTileIds = result.slotSourceTileIds;
+    } else if (tileset === "springForestWater_0_2") {
+      const result = this.composeCornerAutotileTexture(
+        grid,
+        SPRING_FOREST_AUTOTILE_SPRITESHEET,
+        "springForestWater_0_2",
+        WALL_CORNER_INDEX_TO_FRAME_FOREST_WATER_0_2,
+        38,
+      );
+      phaserTilesetKey = result.phaserTilesetKey;
+      renderGrid = result.renderGrid;
+      composedFloorSlots = result.floorSlotIndices;
+      this.currentFloorTileIndex = composedFloorSlots[0];
+      this.currentRawTilesetKey = SPRING_FOREST_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
+      this.currentRenderGrid = renderGrid;
+      this.currentSlotSourceTileIds = result.slotSourceTileIds;
+    } else if (tileset === "springForestWater_0_3") {
+      const result = this.composeCornerAutotileTexture(
+        grid,
+        SPRING_FOREST_AUTOTILE_SPRITESHEET,
+        "springForestWater_0_3",
+        WALL_CORNER_INDEX_TO_FRAME_FOREST_WATER_0_3,
         38,
       );
       phaserTilesetKey = result.phaserTilesetKey;
@@ -3214,6 +3378,48 @@ export default class MainScene extends Phaser.Scene {
         grid,
         AUTUMN_FOREST_AUTOTILE_SPRITESHEET,
         "autumnForest_0_1",
+        WALL_CORNER_INDEX_TO_FRAME_FOREST_0_1,
+        // 38,
+        [
+          { tileId: 38, weight: 5 },
+          { tileId: [38, 516], weight: 1 },
+          { tileId: [38, 521], weight: 1 },
+          { tileId: [38, 524], weight: 1 },
+        ],
+      );
+      phaserTilesetKey = result.phaserTilesetKey;
+      renderGrid = result.renderGrid;
+      composedFloorSlots = result.floorSlotIndices;
+      this.currentFloorTileIndex = composedFloorSlots[0];
+      this.currentRawTilesetKey = AUTUMN_FOREST_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
+      this.currentRenderGrid = renderGrid;
+      this.currentSlotSourceTileIds = result.slotSourceTileIds;
+    } else if (tileset === "autumnForest_1_0") {
+      const result = this.composeCornerAutotileTexture(
+        grid,
+        AUTUMN_FOREST_AUTOTILE_SPRITESHEET,
+        "autumnForest_1_0",
+        WALL_CORNER_INDEX_TO_FRAME_FOREST_1_0,
+        // 38,
+        [
+          { tileId: 38, weight: 5 },
+          { tileId: [38, 516], weight: 1 },
+          { tileId: [38, 521], weight: 1 },
+          { tileId: [38, 524], weight: 1 },
+        ],
+      );
+      phaserTilesetKey = result.phaserTilesetKey;
+      renderGrid = result.renderGrid;
+      composedFloorSlots = result.floorSlotIndices;
+      this.currentFloorTileIndex = composedFloorSlots[0];
+      this.currentRawTilesetKey = AUTUMN_FOREST_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
+      this.currentRenderGrid = renderGrid;
+      this.currentSlotSourceTileIds = result.slotSourceTileIds;
+    } else if (tileset === "autumnForest_0_3") {
+      const result = this.composeCornerAutotileTexture(
+        grid,
+        AUTUMN_FOREST_AUTOTILE_SPRITESHEET,
+        "autumnForest_0_3",
         WALL_CORNER_INDEX_TO_FRAME_FOREST_0_3,
         // 38,
         [
@@ -3260,6 +3466,36 @@ export default class MainScene extends Phaser.Scene {
       this.currentRawTilesetKey = AUTUMN_FOREST_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
       this.currentRenderGrid = renderGrid;
       this.currentSlotSourceTileIds = result.slotSourceTileIds;
+    } else if (tileset === "autumnForestWater_0_2") {
+      const result = this.composeCornerAutotileTexture(
+        grid,
+        AUTUMN_FOREST_AUTOTILE_SPRITESHEET,
+        "autumnForestWater_0_2",
+        WALL_CORNER_INDEX_TO_FRAME_FOREST_WATER_0_2,
+        38,
+      );
+      phaserTilesetKey = result.phaserTilesetKey;
+      renderGrid = result.renderGrid;
+      composedFloorSlots = result.floorSlotIndices;
+      this.currentFloorTileIndex = composedFloorSlots[0];
+      this.currentRawTilesetKey = AUTUMN_FOREST_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
+      this.currentRenderGrid = renderGrid;
+      this.currentSlotSourceTileIds = result.slotSourceTileIds;
+    } else if (tileset === "autumnForestWater_0_3") {
+      const result = this.composeCornerAutotileTexture(
+        grid,
+        AUTUMN_FOREST_AUTOTILE_SPRITESHEET,
+        "autumnForestWater_0_3",
+        WALL_CORNER_INDEX_TO_FRAME_FOREST_WATER_0_3,
+        38,
+      );
+      phaserTilesetKey = result.phaserTilesetKey;
+      renderGrid = result.renderGrid;
+      composedFloorSlots = result.floorSlotIndices;
+      this.currentFloorTileIndex = composedFloorSlots[0];
+      this.currentRawTilesetKey = AUTUMN_FOREST_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
+      this.currentRenderGrid = renderGrid;
+      this.currentSlotSourceTileIds = result.slotSourceTileIds;
     } else if (tileset === "winterForest_0_0") {
       const result = this.composeCornerAutotileTexture(
         grid,
@@ -3267,27 +3503,6 @@ export default class MainScene extends Phaser.Scene {
         "winterForest_0_0",
         WALL_CORNER_INDEX_TO_FRAME_FOREST_0_0,
         38,
-      );
-      phaserTilesetKey = result.phaserTilesetKey;
-      renderGrid = result.renderGrid;
-      composedFloorSlots = result.floorSlotIndices;
-      this.currentFloorTileIndex = composedFloorSlots[0];
-      this.currentRawTilesetKey = WINTER_FOREST_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
-      this.currentRenderGrid = renderGrid;
-      this.currentSlotSourceTileIds = result.slotSourceTileIds;
-    } else if (tileset === "winterForest_0_3") {
-      const result = this.composeCornerAutotileTexture(
-        grid,
-        WINTER_FOREST_AUTOTILE_SPRITESHEET,
-        "winterForest_0_3",
-        WALL_CORNER_INDEX_TO_FRAME_FOREST_0_3,
-        // 38,
-        [
-          { tileId: 38, weight: 5 },
-          { tileId: [38, 516], weight: 1 },
-          { tileId: [38, 521], weight: 1 },
-          { tileId: [38, 524], weight: 1 },
-        ],
       );
       phaserTilesetKey = result.phaserTilesetKey;
       renderGrid = result.renderGrid;
@@ -3338,6 +3553,27 @@ export default class MainScene extends Phaser.Scene {
       this.currentRawTilesetKey = WINTER_FOREST_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
       this.currentRenderGrid = renderGrid;
       this.currentSlotSourceTileIds = result.slotSourceTileIds;
+    } else if (tileset === "winterForest_0_3") {
+      const result = this.composeCornerAutotileTexture(
+        grid,
+        WINTER_FOREST_AUTOTILE_SPRITESHEET,
+        "winterForest_0_3",
+        WALL_CORNER_INDEX_TO_FRAME_FOREST_0_3,
+        // 38,
+        [
+          { tileId: 38, weight: 5 },
+          { tileId: [38, 516], weight: 1 },
+          { tileId: [38, 521], weight: 1 },
+          { tileId: [38, 524], weight: 1 },
+        ],
+      );
+      phaserTilesetKey = result.phaserTilesetKey;
+      renderGrid = result.renderGrid;
+      composedFloorSlots = result.floorSlotIndices;
+      this.currentFloorTileIndex = composedFloorSlots[0];
+      this.currentRawTilesetKey = WINTER_FOREST_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
+      this.currentRenderGrid = renderGrid;
+      this.currentSlotSourceTileIds = result.slotSourceTileIds;
     } else if (tileset === "winterForestWater_0_0") {
       const result = this.composeCornerAutotileTexture(
         grid,
@@ -3368,6 +3604,36 @@ export default class MainScene extends Phaser.Scene {
       this.currentRawTilesetKey = WINTER_FOREST_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
       this.currentRenderGrid = renderGrid;
       this.currentSlotSourceTileIds = result.slotSourceTileIds;
+    } else if (tileset === "winterForestWater_0_2") {
+      const result = this.composeCornerAutotileTexture(
+        grid,
+        WINTER_FOREST_AUTOTILE_SPRITESHEET,
+        "winterForestWater_0_2",
+        WALL_CORNER_INDEX_TO_FRAME_FOREST_WATER_0_2,
+        32,
+      );
+      phaserTilesetKey = result.phaserTilesetKey;
+      renderGrid = result.renderGrid;
+      composedFloorSlots = result.floorSlotIndices;
+      this.currentFloorTileIndex = composedFloorSlots[0];
+      this.currentRawTilesetKey = WINTER_FOREST_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
+      this.currentRenderGrid = renderGrid;
+      this.currentSlotSourceTileIds = result.slotSourceTileIds;
+    } else if (tileset === "winterForestWater_0_3") {
+      const result = this.composeCornerAutotileTexture(
+        grid,
+        WINTER_FOREST_AUTOTILE_SPRITESHEET,
+        "winterForestWater_0_3",
+        WALL_CORNER_INDEX_TO_FRAME_FOREST_WATER_0_3,
+        32,
+      );
+      phaserTilesetKey = result.phaserTilesetKey;
+      renderGrid = result.renderGrid;
+      composedFloorSlots = result.floorSlotIndices;
+      this.currentFloorTileIndex = composedFloorSlots[0];
+      this.currentRawTilesetKey = WINTER_FOREST_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
+      this.currentRenderGrid = renderGrid;
+      this.currentSlotSourceTileIds = result.slotSourceTileIds;
     } else if (tileset === "winterSnowyForest_0_0") {
       const result = this.composeCornerAutotileTexture(
         grid,
@@ -3388,6 +3654,48 @@ export default class MainScene extends Phaser.Scene {
         grid,
         WINTER_FOREST_SNOWY_AUTOTILE_SPRITESHEET,
         "winterSnowyForest_0_1",
+        WALL_CORNER_INDEX_TO_FRAME_FOREST_0_1,
+        // 38,
+        [
+          { tileId: 38, weight: 5 },
+          { tileId: [38, 516], weight: 1 },
+          { tileId: [38, 521], weight: 1 },
+          { tileId: [38, 524], weight: 1 },
+        ],
+      );
+      phaserTilesetKey = result.phaserTilesetKey;
+      renderGrid = result.renderGrid;
+      composedFloorSlots = result.floorSlotIndices;
+      this.currentFloorTileIndex = composedFloorSlots[0];
+      this.currentRawTilesetKey = WINTER_FOREST_SNOWY_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
+      this.currentRenderGrid = renderGrid;
+      this.currentSlotSourceTileIds = result.slotSourceTileIds;
+    } else if (tileset === "winterSnowyForest_1_0") {
+      const result = this.composeCornerAutotileTexture(
+        grid,
+        WINTER_FOREST_SNOWY_AUTOTILE_SPRITESHEET,
+        "winterSnowyForest_1_0",
+        WALL_CORNER_INDEX_TO_FRAME_FOREST_1_0,
+        // 38,
+        [
+          { tileId: 38, weight: 5 },
+          { tileId: [38, 516], weight: 1 },
+          { tileId: [38, 521], weight: 1 },
+          { tileId: [38, 524], weight: 1 },
+        ],
+      );
+      phaserTilesetKey = result.phaserTilesetKey;
+      renderGrid = result.renderGrid;
+      composedFloorSlots = result.floorSlotIndices;
+      this.currentFloorTileIndex = composedFloorSlots[0];
+      this.currentRawTilesetKey = WINTER_FOREST_SNOWY_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
+      this.currentRenderGrid = renderGrid;
+      this.currentSlotSourceTileIds = result.slotSourceTileIds;
+    } else if (tileset === "winterSnowyForest_0_3") {
+      const result = this.composeCornerAutotileTexture(
+        grid,
+        WINTER_FOREST_SNOWY_AUTOTILE_SPRITESHEET,
+        "winterSnowyForest_0_3",
         WALL_CORNER_INDEX_TO_FRAME_FOREST_0_3,
         // 38,
         [
@@ -3476,12 +3784,12 @@ export default class MainScene extends Phaser.Scene {
       this.currentRawTilesetKey = WINTER_FOREST_SNOWY_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
       this.currentRenderGrid = renderGrid;
       this.currentSlotSourceTileIds = result.slotSourceTileIds;
-    } else if (tileset === "castleDungeonV01_0_0") {
+    } else if (tileset === "castleDungeonV01_0_1") {
       const result = this.composeCornerAutotileTexture(
         grid,
         CASTLE_DUNGEON_V01_AUTOTILE_SPRITESHEET,
-        "castleDungeonV01_0_0",
-        WALL_CORNER_INDEX_TO_FRAME_CASTLE_DUNGEON_V01_0_0,
+        "castleDungeonV01_0_1",
+        WALL_CORNER_INDEX_TO_FRAME_CASTLE_DUNGEON_0_1,
         40,
       );
       phaserTilesetKey = result.phaserTilesetKey;
@@ -3491,12 +3799,12 @@ export default class MainScene extends Phaser.Scene {
       this.currentRawTilesetKey = CASTLE_DUNGEON_V01_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
       this.currentRenderGrid = renderGrid;
       this.currentSlotSourceTileIds = result.slotSourceTileIds;
-    } else if (tileset === "castleDungeonV01_0_1") {
+    } else if (tileset === "castleDungeonV01_0_2") {
       const result = this.composeCornerAutotileTexture(
         grid,
         CASTLE_DUNGEON_V01_AUTOTILE_SPRITESHEET,
-        "castleDungeonV01_0_1",
-        WALL_CORNER_INDEX_TO_FRAME_CASTLE_DUNGEON_V01_0_1,
+        "castleDungeonV01_0_2",
+        WALL_CORNER_INDEX_TO_FRAME_CASTLE_DUNGEON_0_2,
         36,
       );
       phaserTilesetKey = result.phaserTilesetKey;
@@ -3504,21 +3812,6 @@ export default class MainScene extends Phaser.Scene {
       composedFloorSlots = result.floorSlotIndices;
       this.currentFloorTileIndex = composedFloorSlots[0];
       this.currentRawTilesetKey = CASTLE_DUNGEON_V01_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
-      this.currentRenderGrid = renderGrid;
-      this.currentSlotSourceTileIds = result.slotSourceTileIds;
-    } else if (tileset === "castleDungeonV02_0_0") {
-      const result = this.composeCornerAutotileTexture(
-        grid,
-        CASTLE_DUNGEON_V02_AUTOTILE_SPRITESHEET,
-        "castleDungeonV02_0_0",
-        WALL_CORNER_INDEX_TO_FRAME_CASTLE_DUNGEON_V01_0_0,
-        40,
-      );
-      phaserTilesetKey = result.phaserTilesetKey;
-      renderGrid = result.renderGrid;
-      composedFloorSlots = result.floorSlotIndices;
-      this.currentFloorTileIndex = composedFloorSlots[0];
-      this.currentRawTilesetKey = CASTLE_DUNGEON_V02_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
       this.currentRenderGrid = renderGrid;
       this.currentSlotSourceTileIds = result.slotSourceTileIds;
     } else if (tileset === "castleDungeonV02_0_1") {
@@ -3526,8 +3819,8 @@ export default class MainScene extends Phaser.Scene {
         grid,
         CASTLE_DUNGEON_V02_AUTOTILE_SPRITESHEET,
         "castleDungeonV02_0_1",
-        WALL_CORNER_INDEX_TO_FRAME_CASTLE_DUNGEON_V01_0_1,
-        36,
+        WALL_CORNER_INDEX_TO_FRAME_CASTLE_DUNGEON_0_1,
+        40,
       );
       phaserTilesetKey = result.phaserTilesetKey;
       renderGrid = result.renderGrid;
@@ -3536,13 +3829,13 @@ export default class MainScene extends Phaser.Scene {
       this.currentRawTilesetKey = CASTLE_DUNGEON_V02_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
       this.currentRenderGrid = renderGrid;
       this.currentSlotSourceTileIds = result.slotSourceTileIds;
-    } else if (tileset === "castleDungeonV03_0_0") {
+    } else if (tileset === "castleDungeonV02_0_2") {
       const result = this.composeCornerAutotileTexture(
         grid,
-        CASTLE_DUNGEON_V03_AUTOTILE_SPRITESHEET,
-        "castleDungeonV03_0_0",
-        WALL_CORNER_INDEX_TO_FRAME_CASTLE_DUNGEON_V01_0_0,
-        40,
+        CASTLE_DUNGEON_V02_AUTOTILE_SPRITESHEET,
+        "castleDungeonV02_0_2",
+        WALL_CORNER_INDEX_TO_FRAME_CASTLE_DUNGEON_0_2,
+        36,
       );
       phaserTilesetKey = result.phaserTilesetKey;
       renderGrid = result.renderGrid;
@@ -3556,7 +3849,22 @@ export default class MainScene extends Phaser.Scene {
         grid,
         CASTLE_DUNGEON_V03_AUTOTILE_SPRITESHEET,
         "castleDungeonV03_0_1",
-        WALL_CORNER_INDEX_TO_FRAME_CASTLE_DUNGEON_V01_0_1,
+        WALL_CORNER_INDEX_TO_FRAME_CASTLE_DUNGEON_0_1,
+        40,
+      );
+      phaserTilesetKey = result.phaserTilesetKey;
+      renderGrid = result.renderGrid;
+      composedFloorSlots = result.floorSlotIndices;
+      this.currentFloorTileIndex = composedFloorSlots[0];
+      this.currentRawTilesetKey = CASTLE_DUNGEON_V02_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
+      this.currentRenderGrid = renderGrid;
+      this.currentSlotSourceTileIds = result.slotSourceTileIds;
+    } else if (tileset === "castleDungeonV03_0_2") {
+      const result = this.composeCornerAutotileTexture(
+        grid,
+        CASTLE_DUNGEON_V03_AUTOTILE_SPRITESHEET,
+        "castleDungeonV03_0_2",
+        WALL_CORNER_INDEX_TO_FRAME_CASTLE_DUNGEON_0_2,
         36,
       );
       phaserTilesetKey = result.phaserTilesetKey;
@@ -4784,8 +5092,17 @@ export default class MainScene extends Phaser.Scene {
     let nextReceiverIndex = 0;
     for (const questKey of Object.keys(this.quests)) {
       const giverQs = this.quests[questKey];
-      if (giverQs.questId !== "delivery" || giverQs.role !== "giver") continue;
-      if (!giverQs.accepted || giverQs.completed || giverQs.receiverKey)
+      if (
+        (giverQs.questId !== "delivery" && giverQs.questId !== "escort") ||
+        giverQs.role !== "giver"
+      )
+        continue;
+      if (
+        !giverQs.accepted ||
+        giverQs.completed ||
+        giverQs.failed ||
+        giverQs.receiverKey
+      )
         continue;
       if (giverQs.targetDepth !== this.currentDepth) continue;
 
@@ -4803,16 +5120,27 @@ export default class MainScene extends Phaser.Scene {
 
       const receiverNpcIndex = nextReceiverIndex++;
       const receiverKey = `${this.currentDepth}-${receiverNpcIndex}`;
-      this.quests[receiverKey] = {
-        questId: "delivery",
-        role: "receiver",
-        linkedKey: questKey,
-        itemId: giverQs.itemId,
-        xpReward: giverQs.xpReward,
-        goldReward: giverQs.goldReward,
-        accepted: true,
-        completed: false,
-      };
+      this.quests[receiverKey] =
+        giverQs.questId === "escort"
+          ? {
+              questId: "escort",
+              role: "receiver",
+              linkedKey: questKey,
+              xpReward: giverQs.xpReward,
+              goldReward: giverQs.goldReward,
+              accepted: true,
+              completed: false,
+            }
+          : {
+              questId: "delivery",
+              role: "receiver",
+              linkedKey: questKey,
+              itemId: giverQs.itemId,
+              xpReward: giverQs.xpReward,
+              goldReward: giverQs.goldReward,
+              accepted: true,
+              completed: false,
+            };
       giverQs.receiverKey = receiverKey;
     }
 
@@ -5139,6 +5467,48 @@ export default class MainScene extends Phaser.Scene {
           }
         }
       }
+    } else if (qs.questId === "escort") {
+      // role "giver" : ce texte ne sert qu'AVANT acceptation - une fois
+      // accepte, le PNJ physique disparait de questNpcs (devient une
+      // invocation qui suit le heros), donc plus jamais reparlable ici
+      if (qs.role === "giver") {
+        if (qs.completed) {
+          text = custom.complete || `Merci de m'avoir escorté !`;
+        } else {
+          text = custom.offer;
+          canAccept = true;
+        }
+      } else {
+        // role "receiver"
+        if (!this.quests[qs.linkedKey]?.accepted) {
+          text = "Bonjour, voyageur !";
+          this.events.emit("npc-dialog", {
+            text,
+            canAccept: false,
+            canTurnIn: false,
+          });
+          return;
+        }
+        if (qs.completed) {
+          text =
+            custom.complete ||
+            `Merci de m'avoir aidé à retrouver mes proches !`;
+        } else {
+          const escortArrived = this.summons.some(
+            (s) => s.isEscort && s.escortQuestKey === qs.linkedKey,
+          );
+          if (escortArrived) {
+            text =
+              custom.progress ||
+              `Te voilà enfin ! Merci de m'avoir escorté jusqu'ici.`;
+            canTurnIn = true;
+          } else {
+            text =
+              custom.progress ||
+              `J'attends toujours l'arrivée de mon protégé...`;
+          }
+        }
+      }
     } else if (qs.completed) {
       const enemyName = resolveEnemyDisplayName(qs.targetEnemyType);
       text = custom.complete || `Merci d'avoir tué ces ${enemyName} pour moi !`;
@@ -5170,6 +5540,72 @@ export default class MainScene extends Phaser.Scene {
     if (qs.questId === "delivery" && qs.role === "giver") {
       this.addItemToInventory(qs.itemId, 1);
     }
+    if (qs.questId === "escort") {
+      // meme calcul de ville future que maybeInjectDeliveryQuest - seul
+      // le client connait this.visitedFloors, jamais decide cote serveur
+      const firstFutureTown = Math.floor(this.currentDepth / 10) * 10 + 10;
+      const futureCandidates = [];
+      for (let d = firstFutureTown; d <= 100; d += 10) {
+        if (!this.visitedFloors.find((f) => f.depth === d))
+          futureCandidates.push(d);
+      }
+
+      if (futureCandidates.length === 0) {
+        // aucune ville future disponible - annule silencieusement
+        // l'acceptation plutot que de creer une quete impossible a rendre
+        qs.accepted = false;
+        this.showLootToast("Aucune ville à escorter pour l'instant");
+      } else {
+        const targetRng = createRng(
+          `${this.currentSeed}-escort-target-${this.activeDialogQuestKey}`,
+        );
+        qs.targetDepth =
+          futureCandidates[Math.floor(targetRng() * futureCandidates.length)];
+        qs.role = "giver";
+        qs.receiverKey = null;
+
+        // le PNJ physique quitte questNpcs (patrouille) et devient une
+        // invocation speciale (isEscort) qui suit le heros - reutilise
+        // TOUT le systeme d'invocation (pathfinding, separation,
+        // persistance cross-etage, ciblage par les ennemis) sans code
+        // duplique, cf. discussion de conception
+        const npc = this.activeTalkingNpc;
+        if (npc) {
+          this.questNpcs = this.questNpcs.filter((n) => n !== npc);
+          this.summonIdCounter = (this.summonIdCounter || 0) + 1;
+          this.summons.push({
+            id: this.summonIdCounter,
+            sprite: npc.sprite,
+            spriteKey: npc.spriteKey,
+            sourceAbilityId: null,
+            isEscort: true,
+            escortQuestKey: this.activeDialogQuestKey,
+            path: null,
+            pathIndex: 0,
+            nextPathRequestAt: 0,
+            pathDestX: null,
+            pathDestY: null,
+            hp: ESCORT_NPC_HP,
+            maxHp: ESCORT_NPC_HP,
+            damage: 0,
+            defense: 0,
+            damageType: "physical",
+            resistances: {},
+            persistent: true, // jamais remplacable par une vraie invocation (cf. performSummonAbility)
+            attackCooldown: createCooldown(ENEMY_ATTACK_COOLDOWN),
+            expiresAt: null,
+            lastDir: npc.lastDir || "down",
+            growthConfig: null,
+            stuckCheckPos: { x: npc.sprite.x, y: npc.sprite.y },
+            stuckCheckAt: this.time.now,
+            stuckJitterUntil: 0,
+            stuckStreak: 0,
+            attackType: "melee",
+          });
+          if (this.summonGroup) this.summonGroup.add(npc.sprite);
+        }
+      }
+    }
     this.dialogOpen = false;
     this.unpauseGame("dialog");
     this.activeDialogQuestKey = null;
@@ -5186,7 +5622,8 @@ export default class MainScene extends Phaser.Scene {
       qs.questId !== "obtainItem" &&
       qs.questId !== "defeatBoss" &&
       qs.questId !== "killEnemies" &&
-      !(qs.questId === "delivery" && qs.role === "receiver")
+      !(qs.questId === "delivery" && qs.role === "receiver") &&
+      !(qs.questId === "escort" && qs.role === "receiver")
     )
       return;
 
@@ -5210,6 +5647,16 @@ export default class MainScene extends Phaser.Scene {
       if (!qs.bossDefeated) return;
     } else if (qs.questId === "killEnemies") {
       if (qs.killCount < qs.target) return;
+    } else if (qs.questId === "escort" && qs.role === "receiver") {
+      const escortIndex = this.summons.findIndex(
+        (s) => s.isEscort && s.escortQuestKey === qs.linkedKey,
+      );
+      if (escortIndex === -1) return; // pas encore arrive (ou deja mort)
+      const escort = this.summons.splice(escortIndex, 1)[0];
+      escort.sprite.destroy();
+
+      const giverQs = this.quests[qs.linkedKey];
+      if (giverQs) giverQs.completed = true;
     } else {
       const itemIndex = this.inventory.findIndex((i) => i.itemId === qs.itemId);
       if (itemIndex === -1) return;
@@ -7355,7 +7802,10 @@ export default class MainScene extends Phaser.Scene {
       }
     }
 
-    if (def.effectType === "summon" && this.summons.length >= MAX_SUMMONS) {
+    if (
+      def.effectType === "summon" &&
+      this.summons.filter((s) => !s.isEscort).length >= MAX_SUMMONS
+    ) {
       const oldest = this.summons.find((s) => !s.persistent);
       if (oldest) {
         this.pendingSummonReplaceDef = def;
@@ -7567,7 +8017,7 @@ export default class MainScene extends Phaser.Scene {
   }
 
   performSummonAbility(def) {
-    if (this.summons.length >= MAX_SUMMONS) {
+    if (this.summons.filter((s) => !s.isEscort).length >= MAX_SUMMONS) {
       const oldestIndex = this.summons.findIndex((s) => !s.persistent);
       if (oldestIndex === -1) {
         this.showLootToast("Toutes tes invocations sont déjà occupées");
@@ -7787,6 +8237,7 @@ export default class MainScene extends Phaser.Scene {
       if (summon.expiresAt && now >= summon.expiresAt) continue;
       if (summon.hp <= 0) continue;
       if (now < (summon.attackAnimUntil || 0)) continue;
+      if (summon.isEscort) continue; // passif - jamais de cible, tombe toujours sur "suit le heros" en phase 2
 
       let nearestEnemy = null;
       let nearestDist = Infinity;
@@ -7830,7 +8281,19 @@ export default class MainScene extends Phaser.Scene {
       }
       if (summon.hp <= 0) {
         summon.sprite.destroy();
-        this.showLootToast("L'invocation a été vaincue");
+        if (summon.isEscort) {
+          const qs = this.quests[summon.escortQuestKey];
+          if (qs) {
+            qs.failed = true;
+            this.events.emit("quests-updated", { ...this.quests });
+          }
+          this.showLootToast(
+            "La personne que tu escortais est morte... Échec de la quête.",
+          );
+          this.persistProgress();
+        } else {
+          this.showLootToast("L'invocation a été vaincue");
+        }
         continue;
       }
 

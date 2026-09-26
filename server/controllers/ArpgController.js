@@ -31,6 +31,7 @@ const {
   generateObtainItemQuest,
   generateDefeatBossQuest,
   generateObtainEnemyLootQuest,
+  generateEscortQuest,
   getFixedQuest,
 } = require("../services/generation/questTypes");
 const {
@@ -404,14 +405,23 @@ async function getLevel(req, res) {
 
           const npcSeed = `${seed}-dungeon-npc`;
           const questTypeRng = createRng(`${npcSeed}-quest-type-choice`);
-          // 50/50 entre "recuperer sur un ennemi de cet etage" (si au
-          // moins un type present en declare un) et "tuer N ennemis de
-          // cet etage"
-          const useEnemyLoot =
-            enemyLootPoolThisFloor.length > 0 && questTypeRng() < 0.5;
-          const quest = useEnemyLoot
-            ? generateObtainEnemyLootQuest(npcSeed, enemyLootPoolThisFloor)
-            : generateQuestForNpc(npcSeed, currentFloorEnemyTypes, depth);
+          // tirage a 3 branches en UN SEUL jet : 20% escorte (eligible
+          // partout, contrairement a obtainItem(boss)/defeatBoss),
+          // sinon meme repartition qu'avant entre "recuperer sur un
+          // ennemi de cet etage" (si au moins un type present en
+          // declare un) et "tuer N ennemis de cet etage"
+          const roll = questTypeRng();
+          let quest;
+          if (roll < 0.2) {
+            quest = generateEscortQuest(npcSeed);
+          } else if (enemyLootPoolThisFloor.length > 0 && roll < 0.6) {
+            quest = generateObtainEnemyLootQuest(
+              npcSeed,
+              enemyLootPoolThisFloor,
+            );
+          } else {
+            quest = generateQuestForNpc(npcSeed, currentFloorEnemyTypes, depth);
+          }
 
           questNpcs = [{ x: npcPos.x, y: npcPos.y, npcIndex: 0, ...quest }];
         }
