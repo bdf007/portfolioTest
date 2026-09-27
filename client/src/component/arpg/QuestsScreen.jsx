@@ -21,14 +21,19 @@ export default function QuestsScreen({ quests, inventory, onClose }) {
     }
     return q.accepted;
   });
-  const active = entries.filter(([, q]) => !q.completed);
-  const completed = entries.filter(([, q]) => q.completed);
+  const active = entries.filter(([, q]) => !q.completed && !q.failed);
+  // regroupe reussites ET echecs (ex. escorte tuee en route, cf.
+  // summons.js) sur la page de droite - une quete en echec ne doit
+  // jamais rester coincee indefiniment sur la page "en cours"
+  const completed = entries.filter(([, q]) => q.completed || q.failed);
 
   function describeAction(q) {
     if (q.questId === "obtainItem") return "Rapporter : ";
     if (q.questId === "defeatBoss") return "Vaincre : ";
     if (q.questId === "delivery")
       return q.role === "giver" ? "Livrer : " : "Réceptionner : ";
+    if (q.questId === "escort")
+      return q.role === "receiver" ? "Accueillir : " : "Escorter : ";
     return "Tuer : ";
   }
 
@@ -54,6 +59,12 @@ export default function QuestsScreen({ quests, inventory, onClose }) {
         return `${itemName} → étage ${q.targetDepth}${q.receiverKey ? "" : " (destinataire pas encore croisé)"}`;
       }
       return `${itemName} à remettre`;
+    }
+    if (q.questId === "escort") {
+      if (q.role === "receiver") {
+        return "Un voyageur escorté, en route vers ici";
+      }
+      return `Un voyageur → étage ${q.targetDepth}`;
     }
     return `${q.killCount} / ${q.target} ${resolveEnemyDisplayName(q.targetEnemyType)}`;
   }
@@ -187,6 +198,11 @@ export default function QuestsScreen({ quests, inventory, onClose }) {
               <div key={questKey} style={{ fontSize: 12, opacity: 0.75 }}>
                 <div style={{ fontWeight: "bold" }}>
                   Étage {questKey.split("-")[0]}
+                  {q.failed && (
+                    <span style={{ color: "#a33", marginLeft: 6 }}>
+                      (Échec)
+                    </span>
+                  )}
                 </div>
                 <div style={{ color: "#5a4a35" }}>
                   {describeAction(q)}

@@ -412,7 +412,7 @@ async function getLevel(req, res) {
           // declare un) et "tuer N ennemis de cet etage"
           const roll = questTypeRng();
           let quest;
-          if (roll < 0.2) {
+          if (roll < 0.4) {
             quest = generateEscortQuest(npcSeed);
           } else if (enemyLootPoolThisFloor.length > 0 && roll < 0.6) {
             quest = generateObtainEnemyLootQuest(
