@@ -41,7 +41,7 @@ const BIOMES = [
     chestLootTable: "chestStandard", // table de butin utilisée pour les coffres dans ce biome modifiable dans itemTypes.js
     crateConfig: {
       count: [3, 6], // plus nombreuses que les vrais coffres
-      lootTable: "crateStandard", // remplace par une table dediee plus modeste une fois que tu en crees une dans itemTypes.js
+      lootTable: "crateStandard",
     },
     trapConfig: {
       frequency: 0.006,
