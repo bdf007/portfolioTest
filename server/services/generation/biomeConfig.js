@@ -27,7 +27,7 @@ const BIOMES = [
     minDepth: 1,
     maxDepth: 1,
     generator: "drunkardwalk",
-    tileset: ["springForest_0_1", "autumnForest_0_0"],
+    tileset: ["muddyCave_0_0", "muddyCaveV2_0_0"],
     enemyBaseCount: 5,
     enemyTypes: ["angryBrownMushroom", "gnome", "angryTrent", "yellowSlime"],
     decorationConfig: {
@@ -41,7 +41,7 @@ const BIOMES = [
     chestLootTable: "chestStandard", // table de butin utilisée pour les coffres dans ce biome modifiable dans itemTypes.js
     crateConfig: {
       count: [3, 6], // plus nombreuses que les vrais coffres
-      lootTable: "crateStandard", // remplace par une table dediee plus modeste une fois que tu en crees une dans itemTypes.js
+      lootTable: "crateStandard",
     },
     trapConfig: {
       frequency: 0.006,
@@ -91,7 +91,7 @@ const BIOMES = [
     minDepth: 2,
     maxDepth: 2,
     generator: "cellular",
-    tileset: ["springForest_0_1", "autumnForest_0_0"],
+    tileset: ["muddyCave_0_0", "muddyCaveV2_0_0"],
     enemyBaseCount: 10,
     enemyTypes: ["angryBrownMushroom", "gnome", "angryTrent", "yellowSlime"],
     decorationConfig: {
@@ -224,7 +224,7 @@ const BIOMES = [
     minDepth: 3,
     maxDepth: 3,
     generator: "cellular",
-    tileset: ["springForest_0_1", "autumnForest_0_0"],
+    tileset: ["muddyCave_0_0", "muddyCaveV2_0_0"],
     enemyBaseCount: 15,
     enemyTypes: [
       "angryBrownMushroom",
@@ -294,7 +294,7 @@ const BIOMES = [
     minDepth: 4,
     maxDepth: 4,
     generator: "cellular",
-    tileset: ["springForest_0_1", "autumnForest_0_0"],
+    tileset: ["muddyCave_0_0", "muddyCaveV2_0_0"],
     enemyBaseCount: 20,
     enemyTypes: [
       "angryBrownMushroom",
@@ -365,7 +365,7 @@ const BIOMES = [
     minDepth: 5,
     maxDepth: 5,
     generator: "cellular",
-    tileset: ["springForest_0_1", "autumnForest_0_0"],
+    tileset: ["muddyCave_0_0", "muddyCaveV2_0_0"],
     enemyBaseCount: 15,
     bossRoomSize: 40,
     enemyTypes: [

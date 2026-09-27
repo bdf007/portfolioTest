@@ -1034,7 +1034,7 @@ const ITEM_TYPES = {
     stackable: false,
     unique: true,
   },
-  batWing: {
+  batWings: {
     id: "batWings",
     category: "craftingMaterial",
     name: "Aile de chauve-souris",

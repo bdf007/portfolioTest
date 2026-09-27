@@ -510,6 +510,7 @@ const REINFORCED_PLATINIUM_TIER_WEAPONS = [
   { base: "platiniumHelmet", result: "reinforcedPlatiniumHelmet" },
   { base: "platiniumArmorPants", result: "reinforcedPlatiniumArmorPants" },
   { base: "platiniumArmorBelt", result: "reinforcedPlatiniumArmorBelt" },
+  { base: "platiniumDagger", result: "reinforcedPlatiniumDagger" },
   // ajoute toutes les autres paires platine -> platine renforcé ici
 ];
 
@@ -581,6 +582,7 @@ const REINFORCED_COBALT_TIER_WEAPONS = [
   { base: "cobaltHelmet", result: "reinforcedCobaltHelmet" },
   { base: "cobaltArmorPants", result: "reinforcedCobaltArmorPants" },
   { base: "cobaltArmorBelt", result: "reinforcedCobaltArmorBelt" },
+  { base: "cobaltDagger", result: "reinforcedCobaltDagger" },
   // ajoute toutes les autres paires cobalt -> cobalt renforcé ici
 ];
 
@@ -652,6 +654,7 @@ const REINFORCED_ADAMANTINE_TIER_WEAPONS = [
   { base: "adamantineHelmet", result: "reinforcedAdamantineHelmet" },
   { base: "adamantineArmorPants", result: "reinforcedAdamantineArmorPants" },
   { base: "adamantineArmorBelt", result: "reinforcedAdamantineArmorBelt" },
+  { base: "adamantineDagger", result: "reinforcedAdamantineDagger" },
   // ajoute toutes les autres paires adamantine -> adamantine renforcé ici
 ];
 
@@ -723,6 +726,7 @@ const REINFORCED_CRIMSON_TIER_WEAPONS = [
   { base: "crimsonHelmet", result: "reinforcedCrimsonHelmet" },
   { base: "crimsonArmorPants", result: "reinforcedCrimsonArmorPants" },
   { base: "crimsonArmorBelt", result: "reinforcedCrimsonArmorBelt" },
+  { base: "crimsonDagger", result: "reinforcedCrimsonDagger" },
   // ajoute toutes les autres paires crimson -> crimson renforcé ici
 ];
 
@@ -794,6 +798,7 @@ const REINFORCED_ANGELIC_TIER_WEAPONS = [
   { base: "angelicHelmet", result: "reinforcedAngelicHelmet" },
   { base: "angelicArmorPants", result: "reinforcedAngelicArmorPants" },
   { base: "angelicArmorBelt", result: "reinforcedAngelicArmorBelt" },
+  { base: "angelicDagger", result: "reinforcedAngelicDagger" },
   // ajoute toutes les autres paires angelic -> angelic renforcé ici
 ];
 
@@ -865,6 +870,7 @@ const REINFORCED_FATEFUL_TIER_WEAPONS = [
   { base: "fatefulHelmet", result: "reinforcedFatefulHelmet" },
   { base: "fatefulArmorPants", result: "reinforcedFatefulArmorPants" },
   { base: "fatefulArmorBelt", result: "reinforcedFatefulArmorBelt" },
+  { base: "fatefulDagger", result: "reinforcedFatefulDagger" },
   // ajoute toutes les autres paires fateful -> fateful renforcé ici
 ];
 
@@ -2492,6 +2498,17 @@ export const CRAFTING_RECIPES = {
     ],
     discoveryOnly: true,
   },
+  reinforcedWoodenDaggerUpgradeRecipe: {
+    id: "reinforcedWoodenDaggerUpgradeRecipe",
+    name: "Recette d'évolution : Dague en cuivre",
+    resultItemId: "copperDagger",
+    resultQuantity: 1,
+    ingredients: [
+      { itemId: "reinforcedWoodenDagger", quantity: 1 },
+      { itemId: "copperIngot", quantity: 1 },
+    ],
+    discoveryOnly: true,
+  },
   ironDaggerRecipe: {
     id: "ironDaggerRecipe",
     name: "Recette d'évolution : Dague en fer",
@@ -2499,6 +2516,28 @@ export const CRAFTING_RECIPES = {
     resultQuantity: 1,
     ingredients: [
       { itemId: "copperDagger", quantity: 1 },
+      { itemId: "ironIngot", quantity: 1 },
+    ],
+    discoveryOnly: true,
+  },
+  reinforcedCopperDaggerUpgradeRecipe: {
+    id: "reinforcedCopperDaggerUpgradeRecipe",
+    name: "Recette d'évolution : Dague en fer",
+    resultItemId: "ironDagger",
+    resultQuantity: 1,
+    ingredients: [
+      { itemId: "reinforcedCopperDagger", quantity: 1 },
+      { itemId: "ironIngot", quantity: 1 },
+    ],
+    discoveryOnly: true,
+  },
+  sharpCopperDaggerUpgradeRecipe: {
+    id: "sharpCopperDaggerUpgradeRecipe",
+    name: "Recette d'évolution : Dague en fer",
+    resultItemId: "ironDagger",
+    resultQuantity: 1,
+    ingredients: [
+      { itemId: "sharpCopperDagger", quantity: 1 },
       { itemId: "ironIngot", quantity: 1 },
     ],
     discoveryOnly: true,
@@ -2514,6 +2553,28 @@ export const CRAFTING_RECIPES = {
     ],
     discoveryOnly: true,
   },
+  reinforcedIronDaggerUpgradeRecipe: {
+    id: "reinforcedIronDaggerUpgradeRecipe",
+    name: "Recette d'évolution : Dague en argent",
+    resultItemId: "silverDagger",
+    resultQuantity: 1,
+    ingredients: [
+      { itemId: "reinforcedIronDagger", quantity: 1 },
+      { itemId: "silverIngot", quantity: 1 },
+    ],
+    discoveryOnly: true,
+  },
+  sharpIronDaggerUpgradeRecipe: {
+    id: "sharpIronDaggerUpgradeRecipe",
+    name: "Recette d'évolution : Dague en argent",
+    resultItemId: "silverDagger",
+    resultQuantity: 1,
+    ingredients: [
+      { itemId: "sharpIronDagger", quantity: 1 },
+      { itemId: "silverIngot", quantity: 1 },
+    ],
+    discoveryOnly: true,
+  },
   steelDaggerRecipe: {
     id: "steelDaggerRecipe",
     name: "Recette d'évolution : Dague en acier",
@@ -2521,6 +2582,28 @@ export const CRAFTING_RECIPES = {
     resultQuantity: 1,
     ingredients: [
       { itemId: "silverDagger", quantity: 1 },
+      { itemId: "steelIngot", quantity: 1 },
+    ],
+    discoveryOnly: true,
+  },
+  reinforcedSilverDaggerUpgradeRecipe: {
+    id: "reinforcedSilverDaggerUpgradeRecipe",
+    name: "Recette d'évolution : Dague en acier",
+    resultItemId: "steelDagger",
+    resultQuantity: 1,
+    ingredients: [
+      { itemId: "reinforcedSilverDagger", quantity: 1 },
+      { itemId: "steelIngot", quantity: 1 },
+    ],
+    discoveryOnly: true,
+  },
+  sharpSilverDaggerUpgradeRecipe: {
+    id: "sharpSilverDaggerUpgradeRecipe",
+    name: "Recette d'évolution : Dague en acier",
+    resultItemId: "steelDagger",
+    resultQuantity: 1,
+    ingredients: [
+      { itemId: "sharpSilverDagger", quantity: 1 },
       { itemId: "steelIngot", quantity: 1 },
     ],
     discoveryOnly: true,
@@ -2536,6 +2619,28 @@ export const CRAFTING_RECIPES = {
     ],
     discoveryOnly: true,
   },
+  reinforcedSteelDaggerUpgradeRecipe: {
+    id: "reinforcedSteelDaggerUpgradeRecipe",
+    name: "Recette d'évolution : Dague en or",
+    resultItemId: "goldDagger",
+    resultQuantity: 1,
+    ingredients: [
+      { itemId: "reinforcedSteelDagger", quantity: 1 },
+      { itemId: "goldIngot", quantity: 1 },
+    ],
+    discoveryOnly: true,
+  },
+  sharpSteelDaggerUpgradeRecipe: {
+    id: "sharpSteelDaggerUpgradeRecipe",
+    name: "Recette d'évolution : Dague en or",
+    resultItemId: "goldDagger",
+    resultQuantity: 1,
+    ingredients: [
+      { itemId: "sharpSteelDagger", quantity: 1 },
+      { itemId: "goldIngot", quantity: 1 },
+    ],
+    discoveryOnly: true,
+  },
   platiniumDaggerRecipe: {
     id: "platiniumDaggerRecipe",
     name: "Recette d'évolution : Dague en platine",
@@ -2543,6 +2648,28 @@ export const CRAFTING_RECIPES = {
     resultQuantity: 1,
     ingredients: [
       { itemId: "goldDagger", quantity: 1 },
+      { itemId: "platiniumIngot", quantity: 1 },
+    ],
+    discoveryOnly: true,
+  },
+  reinforcedGoldDaggerUpgradeRecipe: {
+    id: "reinforcedGoldDaggerUpgradeRecipe",
+    name: "Recette d'évolution : Dague en platine",
+    resultItemId: "platiniumDagger",
+    resultQuantity: 1,
+    ingredients: [
+      { itemId: "reinforcedGoldDagger", quantity: 1 },
+      { itemId: "platiniumIngot", quantity: 1 },
+    ],
+    discoveryOnly: true,
+  },
+  sharpGoldDaggerUpgradeRecipe: {
+    id: "sharpGoldDaggerUpgradeRecipe",
+    name: "Recette d'évolution : Dague en platine",
+    resultItemId: "platiniumDagger",
+    resultQuantity: 1,
+    ingredients: [
+      { itemId: "sharpGoldDagger", quantity: 1 },
       { itemId: "platiniumIngot", quantity: 1 },
     ],
     discoveryOnly: true,
@@ -2558,6 +2685,28 @@ export const CRAFTING_RECIPES = {
     ],
     discoveryOnly: true,
   },
+  reinforcedPlatiniumDaggerUpgradeRecipe: {
+    id: "reinforcedPlatiniumDaggerUpgradeRecipe",
+    name: "Recette d'évolution : Dague en cobalt",
+    resultItemId: "cobaltDagger",
+    resultQuantity: 1,
+    ingredients: [
+      { itemId: "reinforcedPlatiniumDagger", quantity: 1 },
+      { itemId: "cobaltIngot", quantity: 1 },
+    ],
+    discoveryOnly: true,
+  },
+  sharpPlatiniumDaggerUpgradeRecipe: {
+    id: "sharpPlatiniumDaggerUpgradeRecipe",
+    name: "Recette d'évolution : Dague en cobalt",
+    resultItemId: "cobaltDagger",
+    resultQuantity: 1,
+    ingredients: [
+      { itemId: "sharpPlatiniumDagger", quantity: 1 },
+      { itemId: "cobaltIngot", quantity: 1 },
+    ],
+    discoveryOnly: true,
+  },
   adamantineDaggerRecipe: {
     id: "adamantineDaggerRecipe",
     name: "Recette d'évolution : Dague en adamantine",
@@ -2569,13 +2718,90 @@ export const CRAFTING_RECIPES = {
     ],
     discoveryOnly: true,
   },
+  reinforcedCobaltDaggerUpgradeRecipe: {
+    id: "reinforcedCobaltDaggerUpgradeRecipe",
+    name: "Recette d'évolution : Dague en adamantine",
+    resultItemId: "adamantineDagger",
+    resultQuantity: 1,
+    ingredients: [
+      { itemId: "reinforcedCobaltDagger", quantity: 1 },
+      { itemId: "adamantineIngot", quantity: 1 },
+    ],
+    discoveryOnly: true,
+  },
+  sharpCobaltDaggerUpgradeRecipe: {
+    id: "sharpCobaltDaggerUpgradeRecipe",
+    name: "Recette d'évolution : Dague en adamantine",
+    resultItemId: "adamantineDagger",
+    resultQuantity: 1,
+    ingredients: [
+      { itemId: "sharpCobaltDagger", quantity: 1 },
+      { itemId: "adamantineIngot", quantity: 1 },
+    ],
+    discoveryOnly: true,
+  },
+  crimsonDaggerRecipe: {
+    id: "crimsonDaggerRecipe",
+    name: "Recette d'évolution : Dague cramoisie",
+    resultItemId: "crimsonDagger",
+    resultQuantity: 1,
+    ingredients: [
+      { itemId: "adamantineDagger", quantity: 1 },
+      { itemId: "crimsonIngot", quantity: 1 },
+    ],
+    discoveryOnly: true,
+  },
+  reinforcedAdamantineDaggerUpgradeRecipe: {
+    id: "reinforcedAdamantineDaggerUpgradeRecipe",
+    name: "Recette d'évolution : Dague cramoisie",
+    resultItemId: "crimsonDagger",
+    resultQuantity: 1,
+    ingredients: [
+      { itemId: "reinforcedAdamantineDagger", quantity: 1 },
+      { itemId: "crimsonIngot", quantity: 1 },
+    ],
+    discoveryOnly: true,
+  },
+  sharpAdamantineDaggerUpgradeRecipe: {
+    id: "sharpAdamantineDaggerUpgradeRecipe",
+    name: "Recette d'évolution : Dague cramoisie",
+    resultItemId: "crimsonDagger",
+    resultQuantity: 1,
+    ingredients: [
+      { itemId: "sharpAdamantineDagger", quantity: 1 },
+      { itemId: "crimsonIngot", quantity: 1 },
+    ],
+    discoveryOnly: true,
+  },
   angelicDaggerRecipe: {
     id: "angelicDaggerRecipe",
     name: "Recette d'évolution : Dague angélique",
     resultItemId: "angelicDagger",
     resultQuantity: 1,
     ingredients: [
-      { itemId: "adamantineDagger", quantity: 1 },
+      { itemId: "crimsonDagger", quantity: 1 },
+      { itemId: "angelicIngot", quantity: 1 },
+    ],
+    discoveryOnly: true,
+  },
+  reinforcedCrimsonDaggerUpgradeRecipe: {
+    id: "reinforcedCrimsonDaggerUpgradeRecipe",
+    name: "Recette d'évolution : Dague angélique",
+    resultItemId: "angelicDagger",
+    resultQuantity: 1,
+    ingredients: [
+      { itemId: "reinforcedCrimsonDagger", quantity: 1 },
+      { itemId: "angelicIngot", quantity: 1 },
+    ],
+    discoveryOnly: true,
+  },
+  sharpCrimsonDaggerUpgradeRecipe: {
+    id: "sharpCrimsonDaggerUpgradeRecipe",
+    name: "Recette d'évolution : Dague angélique",
+    resultItemId: "angelicDagger",
+    resultQuantity: 1,
+    ingredients: [
+      { itemId: "sharpCrimsonDagger", quantity: 1 },
       { itemId: "angelicIngot", quantity: 1 },
     ],
     discoveryOnly: true,
@@ -2591,6 +2817,28 @@ export const CRAFTING_RECIPES = {
     ],
     discoveryOnly: true,
   },
+  reinforcedAngelicDaggerUpgradeRecipe: {
+    id: "reinforcedAngelicDaggerUpgradeRecipe",
+    name: "Recette d'évolution : Dague fatale",
+    resultItemId: "fatefulDagger",
+    resultQuantity: 1,
+    ingredients: [
+      { itemId: "reinforcedAngelicDagger", quantity: 1 },
+      { itemId: "fatefulIngot", quantity: 1 },
+    ],
+    discoveryOnly: true,
+  },
+  sharpAngelicDaggerUpgradeRecipe: {
+    id: "sharpAngelicDaggerUpgradeRecipe",
+    name: "Recette d'évolution : Dague fatale",
+    resultItemId: "fatefulDagger",
+    resultQuantity: 1,
+    ingredients: [
+      { itemId: "sharpAngelicDagger", quantity: 1 },
+      { itemId: "fatefulIngot", quantity: 1 },
+    ],
+    discoveryOnly: true,
+  },
   novaDaggerRecipe: {
     id: "novaDaggerRecipe",
     name: "Recette d'évolution : Dague de nova",
@@ -2602,7 +2850,28 @@ export const CRAFTING_RECIPES = {
     ],
     discoveryOnly: true,
   },
-
+  reinforcedFatefulDaggerUpgradeRecipe: {
+    id: "reinforcedFatefulDaggerUpgradeRecipe",
+    name: "Recette d'évolution : Dague de nova",
+    resultItemId: "novaDagger",
+    resultQuantity: 1,
+    ingredients: [
+      { itemId: "reinforcedFatefulDagger", quantity: 1 },
+      { itemId: "novaIngot", quantity: 1 },
+    ],
+    discoveryOnly: true,
+  },
+  sharpFatefulDaggerUpgradeRecipe: {
+    id: "sharpFatefulDaggerUpgradeRecipe",
+    name: "Recette d'évolution : Dague de nova",
+    resultItemId: "novaDagger",
+    resultQuantity: 1,
+    ingredients: [
+      { itemId: "sharpFatefulDagger", quantity: 1 },
+      { itemId: "novaIngot", quantity: 1 },
+    ],
+    discoveryOnly: true,
+  },
   woodenCrossbowRecipe: {
     id: "woodenCrossbowRecipe",
     name: "Recette d'évolution : Arbalète en bois",
