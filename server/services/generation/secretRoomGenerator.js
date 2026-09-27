@@ -6,36 +6,54 @@ const WALL = 1;
 const FLOOR = 0;
 
 /**
- * Trouve les emplacements ou une salle secrete peut etre creusee, en
- * verifiant par SIMULATION REELLE (creuse + scelle la porte + refait un
- * calcul d'accessibilite complet) que la salle obtenue est VRAIMENT
- * isolee - pas juste "semble isolee" a partir d'une heuristique locale.
- *
- * Necessaire suite a un bug constate en jeu : une simple verification
- * "la case de la porte + la zone de la salle ne sont pas deja
- * accessibles" ne suffit pas dans un terrain organique (cavernes) - la
- * salle peut se retrouver adjacente a un AUTRE passage deja existant,
- * ou le creusement de la salle 3x3 peut chevaucher la colonne/ligne de
- * la porte elle-meme (roomSize=3 => la porte n'est qu'UNE case parmi 3
- * sur cette face, les 2 autres restaient alors des ouvertures non
- * voulues, jamais rescellees). D'ou :
- * - `roomX`/`roomY` decales de 2 pas (pas 1) depuis la porte, pour que
- *   le creusement de la salle ne touche JAMAIS la colonne/ligne de la
- *   porte, qui reste donc murée naturellement sans rescellement manuel
- * - simulation complete (creuse + mur sur la porte + reachableFloorSet)
- *   avant d'accepter un candidat, plutot que de deviner a l'avance
- *
- * Plus couteux (une simulation BFS par candidat brut) mais reste de
- * l'ordre de quelques ms a quelques dizaines de ms par appel - negligeable
- * a la generation d'un etage, executee une seule fois.
+ * Verifie SANS clone de grille ni BFS qu'un bloc roomSize x roomSize
+ * centre sur (cx, cy) est entierement compose de mur - pre-filtre rapide
+ * avant la simulation couteuse (clone + BFS), qui elle reste necessaire
+ * pour confirmer une VRAIE isolation (cf. commentaire plus bas).
  */
-function findRoomCandidates(
+function isAllWall(grid, cx, cy, half, width, height) {
+  for (let oy = -half; oy <= half; oy++) {
+    for (let ox = -half; ox <= half; ox++) {
+      const x = cx + ox;
+      const y = cy + oy;
+      if (x < 1 || y < 1 || x >= width - 1 || y >= height - 1) return false;
+      if (grid[y][x] !== WALL) return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * Repere les emplacements ou une salle secrete POURRAIT tenir a
+ * l'interieur du terrain deja genere (contrairement a l'extension de
+ * grille, cf. extendGridForSecretRoom, qui greffe la salle a l'exterieur
+ * - fonctionne toujours mais rendu moins organique).
+ *
+ * Deux passes :
+ * 1. Pre-filtre RAPIDE (isAllWall, pas de clone/BFS) - elimine l'immense
+ *    majorite des candidats bruts en O(candidats x roomSize^2). Sur un
+ *    labyrinthe a couloirs fins (wallThickness < roomSize), le mur ne
+ *    forme jamais de bloc plein assez grand nulle part - ce pre-filtre
+ *    le detecte en quelques dizaines de ms au lieu de faire tourner la
+ *    simulation couteuse sur des milliers de candidats voues a l'echec
+ *    (bug constate en prod : 41s+ puis timeout nginx, cf. CHANTIERS.md).
+ * 2. Simulation complete (clone + BFS reel) sur les candidats qui passent
+ *    le pre-filtre, mais SEULEMENT jusqu'au premier qui valide (candidats
+ *    melanges au prealable) - la position exacte du bloc dans le mur ne
+ *    garantit pas a 100% l'isolation reelle (topologie non locale), d'ou
+ *    le besoin de garder cette verification, mais elle ne coute plus
+ *    cher puisqu'on s'arrete au premier succes.
+ *
+ * @returns {{doorX,doorY,roomX,roomY}|null}
+ */
+function findInternalRoomCandidate(
   grid,
   reachable,
   width,
   height,
   roomSize,
   playerSpawn,
+  rng,
 ) {
   const half = Math.floor(roomSize / 2);
   const margin = half + 3;
@@ -58,7 +76,9 @@ function findRoomCandidates(
       )
         continue;
       if (grid[doorY][doorX] !== WALL) continue;
-      // decale de 2 pas (pas 1) depuis la porte - cf. commentaire ci-dessus
+      // decale de 2 pas (pas 1) depuis la porte, pour que le creusement
+      // de la salle ne touche jamais la colonne/ligne de la porte, qui
+      // reste donc muree naturellement sans rescellement manuel
       const roomX = doorX + dx * 2;
       const roomY = doorY + dy * 2;
       if (
@@ -68,21 +88,95 @@ function findRoomCandidates(
         roomY >= height - margin
       )
         continue;
+      if (!isAllWall(grid, roomX, roomY, half, width, height)) continue;
       rawCandidates.push({ doorX, doorY, roomX, roomY });
     }
   }
 
-  const validCandidates = [];
+  // melange (Fisher-Yates, seede) puis validation complete paresseuse,
+  // arret au premier candidat reellement isole
+  for (let i = rawCandidates.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [rawCandidates[i], rawCandidates[j]] = [rawCandidates[j], rawCandidates[i]];
+  }
+
   for (const c of rawCandidates) {
     const testGrid = grid.map((row) => row.slice());
     carveRoom(testGrid, c.roomX, c.roomY, roomSize);
     testGrid[c.doorY][c.doorX] = WALL;
     const testReachable = reachableFloorSet(testGrid, playerSpawn);
     if (!testReachable.has(`${c.roomX},${c.roomY}`)) {
-      validCandidates.push(c);
+      return c;
     }
   }
-  return validCandidates;
+  return null;
+}
+
+/**
+ * Trouve un emplacement pour la salle secrete en ETENDANT la grille vers
+ * l'est (meme principe que carveBossRoom, cf. bossRoom.js) - solution de
+ * SECOURS, utilisee uniquement quand findInternalRoomCandidate n'a rien
+ * trouve (mur trop fin pour contenir une salle nulle part). Fonctionne
+ * TOUJOURS, quels que soient passageWidth/wallThickness/le generateur,
+ * mais rendu moins organique (la salle "depasse" visiblement du niveau
+ * plutot que d'etre integree dedans).
+ *
+ * @returns {{grid:number[][], doorTile:{x,y}, roomCenter:{x,y}}}
+ */
+function extendGridForSecretRoom(grid, playerSpawn, reachable, roomSize, rng) {
+  const height = grid.length;
+  const originalWidth = grid[0].length;
+
+  const reachableList = [...reachable];
+  const [ox, oy] = reachableList[Math.floor(rng() * reachableList.length)]
+    .split(",")
+    .map(Number);
+
+  const half = Math.floor(roomSize / 2);
+  const margin = roomSize + 3;
+  const newWidth = originalWidth + margin;
+
+  const newGrid = grid.map((row) => {
+    const extended = row.slice();
+    while (extended.length < newWidth) extended.push(WALL);
+    return extended;
+  });
+
+  const doorTile = { x: originalWidth - 1, y: oy };
+
+  const xStart = Math.min(ox, originalWidth - 2);
+  const xEnd = Math.max(ox, originalWidth - 2);
+  for (let x = xStart; x <= xEnd; x++) {
+    newGrid[oy][x] = FLOOR;
+  }
+
+  newGrid[doorTile.y][doorTile.x] = WALL; // scelle la porte
+
+  const roomStartX = originalWidth;
+  let carvedYMin = Infinity;
+  let carvedYMax = -Infinity;
+  for (let dx = 0; dx < roomSize; dx++) {
+    for (let p = -half; p <= half; p++) {
+      const x = roomStartX + dx;
+      const y = doorTile.y + p;
+      if (y < 1 || y >= height - 1 || x >= newWidth - 1) continue;
+      newGrid[y][x] = FLOOR;
+      if (y < carvedYMin) carvedYMin = y;
+      if (y > carvedYMax) carvedYMax = y;
+    }
+  }
+
+  const roomCenterY =
+    carvedYMin <= carvedYMax
+      ? Math.round((carvedYMin + carvedYMax) / 2)
+      : doorTile.y;
+
+  const roomCenter = {
+    x: roomStartX + Math.floor(roomSize / 2),
+    y: roomCenterY,
+  };
+
+  return { grid: newGrid, doorTile, roomCenter };
 }
 
 function carveRoom(grid, centerX, centerY, roomSize) {
@@ -117,6 +211,13 @@ function carveRoom(grid, centerX, centerY, roomSize) {
  * Jamais appelee sur un etage a boss (cf. ArpgController - risquerait
  * de creuser dans/pres de la salle du boss, jamais teste ensemble).
  *
+ * Trouve l'emplacement en 2 passes : (1) poche INTERNE au terrain deja
+ * genere si geometriquement possible (rendu organique), (2) sinon,
+ * extension de la grille en secours (fonctionne toujours, rendu moins
+ * organique) - cf. commentaires de findInternalRoomCandidate /
+ * extendGridForSecretRoom ci-dessus pour le detail et l'historique du
+ * bug de timeout que ce systeme a 2 passes corrige.
+ *
  * @param {number[][]} grid
  * @param {string} seed
  * @param {{x:number,y:number}} playerSpawn
@@ -126,7 +227,8 @@ function carveRoom(grid, centerX, centerY, roomSize) {
  * @param {object} biome cf. biomeConfig.js - utilise enemyTypes pour le
  *   trigger 'combat'
  * @returns {object|null} null si aucune salle cette fois (frequence non
- *   atteinte, ou aucun emplacement valide trouve sur cette grille)
+ *   atteinte - il y a toujours un emplacement trouve des que la chance
+ *   est tiree, grace au secours par extension de grille)
  */
 function generateSecretRoom(
   grid,
@@ -144,19 +246,43 @@ function generateSecretRoom(
   const width = grid[0].length;
   const roomSize = 3;
   const reachable = reachableFloorSet(grid, playerSpawn);
-  const candidates = findRoomCandidates(
+
+  // 1. essaie d'abord une poche INTERNE (rendu organique, integre au niveau)
+  const internal = findInternalRoomCandidate(
     grid,
     reachable,
     width,
     height,
     roomSize,
     playerSpawn,
+    rng,
   );
-  if (candidates.length === 0) return null;
 
-  const chosen = candidates[Math.floor(rng() * candidates.length)];
-  const newGrid = grid.map((row) => row.slice());
-  carveRoom(newGrid, chosen.roomX, chosen.roomY, roomSize);
+  let newGrid;
+  let chosen;
+  if (internal) {
+    newGrid = grid.map((row) => row.slice());
+    carveRoom(newGrid, internal.roomX, internal.roomY, roomSize);
+    chosen = internal;
+  } else {
+    // 2. secours : aucune poche interne possible (mur trop fin pour
+    // cette taille de salle) - on greffe la salle en exterieur, comme
+    // pour les salles de boss
+    const extended = extendGridForSecretRoom(
+      grid,
+      playerSpawn,
+      reachable,
+      roomSize,
+      rng,
+    );
+    newGrid = extended.grid;
+    chosen = {
+      doorX: extended.doorTile.x,
+      doorY: extended.doorTile.y,
+      roomX: extended.roomCenter.x,
+      roomY: extended.roomCenter.y,
+    };
+  }
 
   const triggerTypes = ["wall", "lever", "combat"];
   const triggerType = triggerTypes[Math.floor(rng() * triggerTypes.length)];
@@ -173,11 +299,11 @@ function generateSecretRoom(
   };
 
   if (triggerType === "wall") {
-    // porte deja MUREE naturellement (jamais touchee par carveRoom,
-    // decalee de 2 pas - cf. findRoomCandidates) - ouverte cote client
-    // par interaction, rien a faire ici
+    // porte deja bloquee (murée naturellement pour le cas interne, ou
+    // scellee explicitement dans extendGridForSecretRoom pour le cas
+    // exterieur) - ouverte cote client par interaction, rien a faire ici
   } else if (triggerType === "lever") {
-    newGrid[chosen.doorY][chosen.doorX] = WALL; // deja murée naturellement (idem ci-dessus) - reaffectation explicite, juste par securite/clarte
+    newGrid[chosen.doorY][chosen.doorX] = WALL; // deja bloquee, reaffectation explicite par securite/clarte
 
     const leverCount = 1 + Math.floor(rng() * 3); // 1 a 3
     const leverCandidates = [...reachable].filter((k) => {

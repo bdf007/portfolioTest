@@ -127,6 +127,42 @@ function generateDefeatBossQuest(seed, bossDepth, bossType) {
   };
 }
 
+const ESCORT_XP_REWARD = 45; // le plus genereux des types dynamiques - implique de proteger le PNJ sur plusieurs etages, risque de tout perdre en cours de route
+const ESCORT_GOLD_REWARD_RANGE = [30, 60];
+
+/**
+ * Quête "escorter un PNJ trouvé dans le donjon jusqu'à la prochaine
+ * ville" - contrairement a obtainItem(boss)/defeatBoss, ELIGIBLE PARTOUT
+ * (pas de condition serveur particuliere), donc peut faire partie du
+ * tirage normal du PNJ de donjon isole (cf. ArpgController.getLevel,
+ * branche "etage normal").
+ *
+ * Ne fournit QUE la recompense - la ville de destination (`targetDepth`)
+ * est decidee cote CLIENT au moment de l'acceptation (cf.
+ * MainScene.acceptQuest), exactement comme pour la quete `delivery`
+ * (maybeInjectDeliveryQuest) : seul le client connait les etages deja
+ * visites (this.visitedFloors), le serveur ne peut pas le savoir.
+ *
+ * @param {string} seed seed DEJA distincte par PNJ (meme convention que generateQuestForNpc)
+ * @returns {{questId:string, xpReward:number, goldReward:number, itemReward:null, dialogText:Object}}
+ */
+function generateEscortQuest(seed) {
+  const rng = createRng(String(seed) + "-escort");
+  const [minGold, maxGold] = ESCORT_GOLD_REWARD_RANGE;
+  const goldReward = minGold + Math.floor(rng() * (maxGold - minGold + 1));
+
+  return {
+    questId: "escort",
+    xpReward: ESCORT_XP_REWARD,
+    goldReward,
+    itemReward: null,
+    dialogText: {
+      offer:
+        "Je me suis perdu en explorant ces lieux et je ne survivrai pas seul. Peux-tu m'escorter jusqu'à la prochaine ville ?",
+    },
+  };
+}
+
 /**
  * Quêtes écrites à la main, pour des moments précis - indexées par
  * profondeur, en TABLEAU (un élément par PNJ à cet étage, dans l'ordre
@@ -266,6 +302,7 @@ module.exports = {
   generateQuestForNpc,
   generateObtainItemQuest,
   generateDefeatBossQuest,
+  generateEscortQuest,
   getFixedQuest,
   generateObtainEnemyLootQuest,
 };

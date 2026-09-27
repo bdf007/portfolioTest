@@ -26,13 +26,16 @@ const BIOMES = [
     id: "muddyCave1",
     minDepth: 1,
     maxDepth: 1,
-    generator: "cellular",
-    tileset: "muddyCave_0_0",
-    enemyBaseCount: 10,
+    generator: "drunkardwalk",
+    tileset: "springForest_0_0",
+    enemyBaseCount: 5,
     enemyTypes: ["angryBrownMushroom", "gnome", "angryTrent", "yellowSlime"],
     decorationConfig: {
       count: [40, 60], // genereux - c'est fait pour remplir le biome
-      decorTypes: ["rock_small", "vines"], // cles arbitraires, a adapter
+      decorTypes: [
+        "rock_small",
+        //   "vines"
+      ], // cles arbitraires, a adapter
     },
     chestCount: [1, 3],
     chestLootTable: "chestStandard", // table de butin utilisée pour les coffres dans ce biome modifiable dans itemTypes.js
@@ -78,8 +81,8 @@ const BIOMES = [
     generatorParams: {
       width: 30,
       height: 30,
-      wallProbability: 0.3,
-      minFloorRatio: 0.4,
+      // wallProbability: 0.3,
+      // minFloorRatio: 0.35,
     },
   },
 
@@ -88,7 +91,7 @@ const BIOMES = [
     minDepth: 2,
     maxDepth: 2,
     generator: "cellular",
-    tileset: "muddyCaveV2_0_0",
+    tileset: "springForest_0_0",
     enemyBaseCount: 10,
     enemyTypes: ["angryBrownMushroom", "gnome", "angryTrent", "yellowSlime"],
     decorationConfig: {
@@ -141,10 +144,10 @@ const BIOMES = [
     //   ],
     // },
     generatorParams: {
-      width: 40,
-      height: 40,
-      wallProbability: 0.35,
-      minFloorRatio: 0.35,
+      width: 30,
+      height: 30,
+      wallProbability: 0.3,
+      minFloorRatio: 0.4,
     },
   },
   // {
@@ -221,7 +224,7 @@ const BIOMES = [
     minDepth: 3,
     maxDepth: 3,
     generator: "cellular",
-    tileset: "castleDungeonV01_0_0",
+    tileset: "springForest_0_0",
     enemyBaseCount: 15,
     enemyTypes: [
       "angryBrownMushroom",
@@ -280,9 +283,9 @@ const BIOMES = [
     //   ],
     // },
     generatorParams: {
-      width: 50,
-      height: 50,
-      wallProbability: 0.4,
+      width: 30,
+      height: 30,
+      wallProbability: 0.35,
       minFloorRatio: 0.35,
     },
   },
@@ -291,7 +294,7 @@ const BIOMES = [
     minDepth: 4,
     maxDepth: 4,
     generator: "cellular",
-    tileset: "castleDungeonV01_0_1",
+    tileset: "springForest_0_0",
     enemyBaseCount: 20,
     enemyTypes: [
       "angryBrownMushroom",
@@ -326,6 +329,7 @@ const BIOMES = [
         { itemId: "copperOre", weight: 5, requiredTier: 1 },
         { itemId: "coalOre", weight: 1, requiredTier: 1 },
         { itemId: "ironOre", weight: 4, requiredTier: 2 },
+        { itemId: "silverOre", weight: 3, requiredTier: 3 },
       ],
       totalHits: [2, 6], // nombre de coups avant epuisement
       gemChance: 0.01, // 1% de chance PAR COUP d'obtenir une gemme a la place du metal
@@ -350,8 +354,8 @@ const BIOMES = [
     //   ],
     // },
     generatorParams: {
-      width: 60,
-      height: 60,
+      width: 50,
+      height: 50,
       wallProbability: 0.4,
       minFloorRatio: 0.35,
     },
@@ -359,9 +363,9 @@ const BIOMES = [
   {
     id: "cave3",
     minDepth: 5,
-    maxDepth: 6,
-    generator: "bsp",
-    tileset: "castleDungeonV02_0_0",
+    maxDepth: 5,
+    generator: "cellular",
+    tileset: "springForest_0_0",
     enemyBaseCount: 15,
     bossRoomSize: 40,
     enemyTypes: [
@@ -397,6 +401,7 @@ const BIOMES = [
         { itemId: "copperOre", weight: 4, requiredTier: 1 },
         { itemId: "coalOre", weight: 1, requiredTier: 1 },
         { itemId: "ironOre", weight: 3, requiredTier: 2 },
+        { itemId: "silverOre", weight: 3, requiredTier: 1 },
       ],
       totalHits: [1, 6], // nombre de coups avant epuisement
       gemChance: 0.15, // 15% de chance PAR COUP d'obtenir une gemme a la place du metal
@@ -411,7 +416,10 @@ const BIOMES = [
       nodeChance: 1, // plus frequent que le minage - remplir le biome
       minNodes: 10,
       maxNodes: 15,
-      resourcePool: [{ itemId: "oakWood", weight: 1, requiredTier: 1 }],
+      resourcePool: [
+        { itemId: "oakWood", weight: 1, requiredTier: 1 },
+        { itemId: "ashWood", weight: 1, requiredTier: 2 },
+      ],
       totalHits: [2, 5],
       bonusChance: 0.15,
       bonusPool: [
@@ -420,17 +428,18 @@ const BIOMES = [
       ],
     },
     generatorParams: {
-      width: 80,
-      height: 80,
-      corridorWidth: 2,
+      width: 30,
+      height: 30,
+      wallProbability: 0.35,
+      minFloorRatio: 0.4,
     },
   },
   {
     id: "cave4",
-    minDepth: 7,
+    minDepth: 6,
     maxDepth: 7,
-    generator: "drunkardwalk",
-    tileset: "castleDungeonV02_0_1",
+    generator: "cellular",
+    tileset: "springForest_0_0",
     enemyBaseCount: 20,
     bossRoomSize: 40,
     enemyTypes: ["angryTrent", "knightBleuArgent", "blueWarriorMushroom"],
@@ -456,7 +465,11 @@ const BIOMES = [
       minRocks: 1,
       maxRocks: 3,
 
-      resourcePool: [{ itemId: "ironOre", weight: 1, requiredTier: 2 }],
+      resourcePool: [
+        { itemId: "ironOre", weight: 1, requiredTier: 2 },
+        { itemId: "silverOre", weight: 1, requiredTier: 1 },
+        { itemId: "copperOre", weight: 1, requiredTier: 1 },
+      ],
       totalHits: [3, 6],
       gemChance: 0.15,
       gemPool: [
@@ -470,7 +483,10 @@ const BIOMES = [
       nodeChance: 1, // plus frequent que le minage - remplir le biome
       minNodes: 2,
       maxNodes: 5,
-      resourcePool: [{ itemId: "oakWood", weight: 1, requiredTier: 1 }],
+      resourcePool: [
+        { itemId: "oakWood", weight: 1, requiredTier: 1 },
+        { itemId: "ashWood", weight: 1, requiredTier: 2 },
+      ],
       totalHits: [2, 5],
       bonusChance: 0.15,
       bonusPool: [
@@ -479,19 +495,18 @@ const BIOMES = [
       ],
     },
     generatorParams: {
-      width: 80,
-      height: 80,
-      targetFloorRatio: 0.4,
-      maxSteps: 50000,
-      walkerCount: 3,
+      width: 30,
+      height: 30,
+      wallProbability: 0.35,
+      minFloorRatio: 0.35,
     },
   },
   {
     id: "desert1",
     minDepth: 8,
     maxDepth: 8,
-    generator: "noise",
-    tileset: "castleDungeonV03_0_0",
+    generator: "bsp",
+    tileset: "springForest_0_0",
     enemyBaseCount: 20,
     enemyTypes: ["gnome", "blueSlime", "warlockBlack", "blackBear"],
     decorationConfig: {
@@ -538,18 +553,18 @@ const BIOMES = [
       ],
     },
     generatorParams: {
-      width: 90,
-      height: 90,
-      noiseScale: 5,
-      minFloorRatio: 0.3,
+      width: 30,
+      height: 30,
+      // wallProbability: 0.3,
+      // minFloorRatio: 0.4,
     },
   },
   {
     id: "forest2",
     minDepth: 9,
     maxDepth: 9,
-    generator: "voronoi",
-    tileset: "castleDungeonV03_0_1",
+    generator: "cavechain",
+    tileset: "springForest_0_0",
     enemyBaseCount: 10,
     bossRoomSize: 40,
     enemyTypes: ["knifedBat"],
@@ -584,7 +599,12 @@ const BIOMES = [
       nodeChance: 1, // plus frequent que le minage - remplir le biome
       minNodes: 2,
       maxNodes: 5,
-      resourcePool: [{ itemId: "oakWood", weight: 1, requiredTier: 1 }],
+      resourcePool: [
+        { itemId: "oakWood", weight: 1, requiredTier: 1 },
+        { itemId: "ashWood", weight: 1, requiredTier: 2 },
+        { itemId: "yewWood", weight: 1, requiredTier: 3 },
+        { itemId: "ebonyWood", weight: 1, requiredTier: 4 },
+      ],
       totalHits: [2, 5],
       bonusChance: 0.15,
       bonusPool: [
@@ -593,16 +613,17 @@ const BIOMES = [
       ],
     },
     generatorParams: {
-      width: 100,
-      height: 100,
-      cellCount: 25,
+      width: 30,
+      height: 30,
+      // wallProbability: 0.3,
+      // minFloorRatio: 0.4,
     },
   },
   {
     id: "cave4",
     minDepth: 10,
     maxDepth: 10,
-    generator: "voronoi",
+    generator: "cellular",
     tileset: "springForest_0_0",
     enemyBaseCount: 10,
     enemyTypes: ["mudGolem"],
@@ -651,17 +672,18 @@ const BIOMES = [
       ],
     },
     generatorParams: {
-      width: 100,
-      height: 100,
-      cellCount: 25,
+      width: 30,
+      height: 30,
+      wallProbability: 0.3,
+      minFloorRatio: 0.4,
     },
   },
   {
     id: "desert2",
     minDepth: 11,
     maxDepth: 11,
-    generator: "randomwalk",
-    tileset: "springForest_0_1",
+    generator: "noise",
+    tileset: "springForest_0_0",
     enemyBaseCount: 3,
     enemyTypes: ["redBeetle"],
     decorationConfig: {
@@ -685,11 +707,15 @@ const BIOMES = [
       rockChance: 1, // chance qu'AU MOINS un gisement apparaisse cet etage
       minRocks: 1,
       maxRocks: 3,
-      resourcePool: [{ itemId: "cobaltOre", weight: 5, requiredTier: 7 }], // objet obtenu a chaque coup
+      resourcePool: [
+        { itemId: "goldOre", weight: 5, requiredTier: 5 },
+        { itemId: "silverOre", weight: 3, requiredTier: 4 },
+        { itemId: "copperOre", weight: 2, requiredTier: 3 },
+      ], // objet obtenu a chaque coup
       totalHits: [1, 6], // nombre de coups avant epuisement
       gemChance: 0.15, // 15% de chance PAR COUP d'obtenir une gemme a la place du metal
       gemPool: [
-        { itemId: "smokyQuartz", weight: 5 },
+        { itemId: "whetstone", weight: 5 },
         { itemId: "ruby", weight: 2 },
         { itemId: "aquaMarine", weight: 1 },
         { itemId: "peridot", weight: 0.5 },
@@ -699,7 +725,11 @@ const BIOMES = [
       nodeChance: 1, // plus frequent que le minage - remplir le biome
       minNodes: 2,
       maxNodes: 5,
-      resourcePool: [{ itemId: "oakWood", weight: 1, requiredTier: 1 }],
+      resourcePool: [
+        { itemId: "yewWood", weight: 1, requiredTier: 3 },
+        { itemId: "ebonyWood", weight: 1, requiredTier: 4 },
+        { itemId: "petrifiedWood", weight: 1, requiredTier: 5 },
+      ],
       totalHits: [2, 5],
       bonusChance: 0.15,
       bonusPool: [
@@ -708,20 +738,18 @@ const BIOMES = [
       ],
     },
     generatorParams: {
-      width: 100,
-      height: 100,
-      roomSize: 5,
-      roomCount: 20,
-      stratBias: 0.8,
-      doorWidth: 2,
+      width: 40,
+      height: 40,
+      // wallProbability: 0.3,
+      // minFloorRatio: 0.4,
     },
   },
   {
     id: "desert3",
     minDepth: 12,
     maxDepth: 12,
-    generator: "noise",
-    tileset: "autumnForest_0_0",
+    generator: "drunkardwalk",
+    tileset: "springForest_0_0",
     enemyBaseCount: 10,
     enemyTypes: ["pinkOgre"],
     decorationConfig: {
@@ -764,17 +792,18 @@ const BIOMES = [
       ],
     },
     generatorParams: {
-      width: 120,
-      height: 120,
-      noiseScale: 10,
+      width: 30,
+      height: 30,
+      // wallProbability: 0.3,
+      // minFloorRatio: 0.4,
     },
   },
   {
     id: "forest2",
     minDepth: 13,
     maxDepth: 13,
-    generator: "voronoi",
-    tileset: "autumnForest_0_1",
+    generator: "drunkardwalk",
+    tileset: "springForest_0_0",
     enemyBaseCount: 10,
     enemyTypes: ["mudGolem"],
     decorationConfig: {
@@ -817,17 +846,18 @@ const BIOMES = [
       ],
     },
     generatorParams: {
-      width: 100,
-      height: 100,
-      cellCount: 25,
+      width: 60,
+      height: 60,
+      // wallProbability: 0.3,
+      // minFloorRatio: 0.4,
     },
   },
   {
     id: "maze2",
     minDepth: 14,
     maxDepth: 14,
-    generator: "maze",
-    tileset: "winterForest_0_0",
+    generator: "cellular",
+    tileset: "springForest_0_0",
     enemyBaseCount: 15,
     bossRoomSize: 40,
     enemyTypes: ["deer1"],
@@ -875,18 +905,18 @@ const BIOMES = [
     // inconfortable pour l'esquive/les projectiles/le deplacement des
     // ennemis une fois le niveau reellement jouable
     generatorParams: {
-      width: 150,
-      height: 150,
-      passageWidth: 2,
-      wallThickness: 2,
+      width: 30,
+      height: 30,
+      wallProbability: 0.3,
+      minFloorRatio: 0.4,
     },
   },
   {
     id: "maze3",
     minDepth: 15,
     maxDepth: 16,
-    generator: "maze",
-    tileset: "winterForest_0_1",
+    generator: "cellular",
+    tileset: "springForest_0_0",
     enemyBaseCount: 15,
     enemyTypes: ["deer1"],
     decorationConfig: {
@@ -933,10 +963,10 @@ const BIOMES = [
       ],
     },
     generatorParams: {
-      width: 150,
-      height: 150,
-      passageWidth: 5,
-      wallThickness: 2,
+      width: 30,
+      height: 30,
+      wallProbability: 0.3,
+      minFloorRatio: 0.4,
     },
   },
   {
@@ -944,7 +974,7 @@ const BIOMES = [
     minDepth: 17,
     maxDepth: 18,
     generator: "cellular",
-    tileset: "winterSnowyForest_0_0",
+    tileset: "springForest_0_0",
     enemyBaseCount: 20,
     enemyTypes: [
       "redBeetle",
@@ -998,9 +1028,9 @@ const BIOMES = [
       ],
     },
     generatorParams: {
-      width: 150,
-      height: 150,
-      wallProbability: 0.35,
+      width: 30,
+      height: 30,
+      wallProbability: 0.3,
       minFloorRatio: 0.4,
     },
   },
@@ -1009,8 +1039,8 @@ const BIOMES = [
     id: "temple",
     minDepth: 19,
     maxDepth: MAX_DEPTH,
-    generator: "bsp",
-    tileset: "winterSnowyForest_0_1",
+    generator: "cellular",
+    tileset: "springForest_0_0",
     enemyBaseCount: 20,
     bossRoomSize: 40,
     enemyTypes: [
@@ -1067,7 +1097,12 @@ const BIOMES = [
     // niveaux plus grands et plus ouverts en fin de progression, cf.
     // /areas/phaser-arpg.md - d'ou une grille plus large que les autres
     // biomes
-    generatorParams: { width: 60, height: 60 },
+    generatorParams: {
+      width: 30,
+      height: 30,
+      wallProbability: 0.3,
+      minFloorRatio: 0.4,
+    },
   },
   // D'autres biomes sont prevus entre depth 10 et MAX_DEPTH (l'enchainement
   // exact reste a definir) - le jour venu, reduire la plage de `temple`
