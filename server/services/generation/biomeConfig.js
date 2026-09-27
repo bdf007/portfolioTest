@@ -27,7 +27,7 @@ const BIOMES = [
     minDepth: 1,
     maxDepth: 1,
     generator: "drunkardwalk",
-    tileset: "springForest_0_0",
+    tileset: ["springForest_0_1", "autumnForest_0_0"],
     enemyBaseCount: 5,
     enemyTypes: ["angryBrownMushroom", "gnome", "angryTrent", "yellowSlime"],
     decorationConfig: {
@@ -91,7 +91,7 @@ const BIOMES = [
     minDepth: 2,
     maxDepth: 2,
     generator: "cellular",
-    tileset: "springForest_0_0",
+    tileset: ["springForest_0_1", "autumnForest_0_0"],
     enemyBaseCount: 10,
     enemyTypes: ["angryBrownMushroom", "gnome", "angryTrent", "yellowSlime"],
     decorationConfig: {
@@ -224,7 +224,7 @@ const BIOMES = [
     minDepth: 3,
     maxDepth: 3,
     generator: "cellular",
-    tileset: "springForest_0_0",
+    tileset: ["springForest_0_1", "autumnForest_0_0"],
     enemyBaseCount: 15,
     enemyTypes: [
       "angryBrownMushroom",
@@ -294,7 +294,7 @@ const BIOMES = [
     minDepth: 4,
     maxDepth: 4,
     generator: "cellular",
-    tileset: "springForest_0_0",
+    tileset: ["springForest_0_1", "autumnForest_0_0"],
     enemyBaseCount: 20,
     enemyTypes: [
       "angryBrownMushroom",
@@ -365,7 +365,7 @@ const BIOMES = [
     minDepth: 5,
     maxDepth: 5,
     generator: "cellular",
-    tileset: "springForest_0_0",
+    tileset: ["springForest_0_1", "autumnForest_0_0"],
     enemyBaseCount: 15,
     bossRoomSize: 40,
     enemyTypes: [
@@ -439,7 +439,7 @@ const BIOMES = [
     minDepth: 6,
     maxDepth: 7,
     generator: "cellular",
-    tileset: "springForest_0_0",
+    tileset: ["springForest_0_1", "autumnForest_0_0"],
     enemyBaseCount: 20,
     bossRoomSize: 40,
     enemyTypes: ["angryTrent", "knightBleuArgent", "blueWarriorMushroom"],
@@ -506,7 +506,7 @@ const BIOMES = [
     minDepth: 8,
     maxDepth: 8,
     generator: "bsp",
-    tileset: "springForest_0_0",
+    tileset: ["springForest_0_1", "autumnForest_0_0"],
     enemyBaseCount: 20,
     enemyTypes: ["gnome", "blueSlime", "warlockBlack", "blackBear"],
     decorationConfig: {
@@ -564,7 +564,7 @@ const BIOMES = [
     minDepth: 9,
     maxDepth: 9,
     generator: "cavechain",
-    tileset: "springForest_0_0",
+    tileset: ["springForest_0_1", "autumnForest_0_0"],
     enemyBaseCount: 10,
     bossRoomSize: 40,
     enemyTypes: ["knifedBat"],
@@ -624,7 +624,7 @@ const BIOMES = [
     minDepth: 10,
     maxDepth: 10,
     generator: "cellular",
-    tileset: "springForest_0_0",
+    tileset: ["springForest_0_1", "autumnForest_0_0"],
     enemyBaseCount: 10,
     enemyTypes: ["mudGolem"],
     decorationConfig: {
@@ -683,7 +683,7 @@ const BIOMES = [
     minDepth: 11,
     maxDepth: 11,
     generator: "noise",
-    tileset: "springForest_0_0",
+    tileset: ["springForest_0_1", "autumnForest_0_0"],
     enemyBaseCount: 3,
     enemyTypes: ["redBeetle"],
     decorationConfig: {
@@ -749,7 +749,7 @@ const BIOMES = [
     minDepth: 12,
     maxDepth: 12,
     generator: "drunkardwalk",
-    tileset: "springForest_0_0",
+    tileset: ["springForest_0_1", "autumnForest_0_0"],
     enemyBaseCount: 10,
     enemyTypes: ["pinkOgre"],
     decorationConfig: {
@@ -803,7 +803,7 @@ const BIOMES = [
     minDepth: 13,
     maxDepth: 13,
     generator: "drunkardwalk",
-    tileset: "springForest_0_0",
+    tileset: ["springForest_0_1", "autumnForest_0_0"],
     enemyBaseCount: 10,
     enemyTypes: ["mudGolem"],
     decorationConfig: {
@@ -857,7 +857,7 @@ const BIOMES = [
     minDepth: 14,
     maxDepth: 14,
     generator: "cellular",
-    tileset: "springForest_0_0",
+    tileset: ["springForest_0_1", "autumnForest_0_0"],
     enemyBaseCount: 15,
     bossRoomSize: 40,
     enemyTypes: ["deer1"],
@@ -916,7 +916,7 @@ const BIOMES = [
     minDepth: 15,
     maxDepth: 16,
     generator: "cellular",
-    tileset: "springForest_0_0",
+    tileset: ["springForest_0_1", "autumnForest_0_0"],
     enemyBaseCount: 15,
     enemyTypes: ["deer1"],
     decorationConfig: {
@@ -974,7 +974,7 @@ const BIOMES = [
     minDepth: 17,
     maxDepth: 18,
     generator: "cellular",
-    tileset: "springForest_0_0",
+    tileset: ["springForest_0_1", "autumnForest_0_0"],
     enemyBaseCount: 20,
     enemyTypes: [
       "redBeetle",
@@ -1040,7 +1040,7 @@ const BIOMES = [
     minDepth: 19,
     maxDepth: MAX_DEPTH,
     generator: "cellular",
-    tileset: "springForest_0_0",
+    tileset: ["springForest_0_1", "autumnForest_0_0"],
     enemyBaseCount: 20,
     bossRoomSize: 40,
     enemyTypes: [

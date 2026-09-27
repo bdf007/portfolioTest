@@ -1789,12 +1789,12 @@ export function buildFloorTilemap(scene, { grid, tileset, data, depth }) {
       SUMMER_FOREST_AUTOTILE_SPRITESHEET,
       "summerForest_0_1",
       WALL_CORNER_INDEX_TO_FRAME_FOREST_0_1,
-      // 38,
       [
         { tileId: 32, weight: 5 },
-        { tileId: [32, 516], weight: 1 },
-        { tileId: [32, 521], weight: 1 },
-        { tileId: [32, 524], weight: 1 },
+        { tileId: 64, weight: 1 },
+        { tileId: 96, weight: 1 },
+        { tileId: 128, weight: 1 },
+        { tileId: 160, weight: 1 },
       ],
     );
     phaserTilesetKey = result.phaserTilesetKey;
@@ -2084,12 +2084,12 @@ export function buildFloorTilemap(scene, { grid, tileset, data, depth }) {
       SPRING_FOREST_AUTOTILE_SPRITESHEET,
       "springForest_0_1",
       WALL_CORNER_INDEX_TO_FRAME_FOREST_0_1,
-      // 38,
       [
-        { tileId: 38, weight: 5 },
-        { tileId: [38, 516], weight: 1 },
-        { tileId: [38, 521], weight: 1 },
-        { tileId: [38, 524], weight: 1 },
+        { tileId: 32, weight: 5 },
+        { tileId: 64, weight: 1 },
+        { tileId: 96, weight: 1 },
+        { tileId: 128, weight: 1 },
+        { tileId: 160, weight: 1 },
       ],
     );
     phaserTilesetKey = result.phaserTilesetKey;
@@ -2374,12 +2374,12 @@ export function buildFloorTilemap(scene, { grid, tileset, data, depth }) {
       AUTUMN_FOREST_AUTOTILE_SPRITESHEET,
       "autumnForest_0_1",
       WALL_CORNER_INDEX_TO_FRAME_FOREST_0_1,
-      // 38,
       [
         { tileId: 32, weight: 5 },
-        { tileId: [32, 516], weight: 1 },
-        { tileId: [32, 521], weight: 1 },
-        { tileId: [32, 524], weight: 1 },
+        { tileId: 64, weight: 1 },
+        { tileId: 96, weight: 1 },
+        { tileId: 128, weight: 1 },
+        { tileId: 160, weight: 1 },
       ],
     );
     phaserTilesetKey = result.phaserTilesetKey;

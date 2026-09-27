@@ -94,6 +94,20 @@ async function getLevel(req, res) {
 
     const biome = getBiomeForDepth(depth);
 
+    // certains biomes proposent plusieurs tilesets possibles (cf.
+    // biomeConfig.js, ex. tileset: ["springForest_0_0", "autumnForest_0_0"])
+    // - le choix doit rester IDENTIQUE tant qu'on relit le meme etage (F5,
+    // resumeFromSave...) : jamais Math.random() ici, on derive le tirage
+    // du `seed` de cet etage via createRng, exactement comme les autres
+    // tirages seedes de ce fichier (cf. bossLootRng, npcCountRng...) -
+    // `seed` est reutilise tel quel a chaque relecture du meme etage,
+    // contrairement a `lootSeed` (cf. commentaire plus haut).
+    const tileset = Array.isArray(biome.tileset)
+      ? biome.tileset[
+          Math.floor(createRng(`${seed}-tileset`)() * biome.tileset.length)
+        ]
+      : biome.tileset;
+
     let grid;
     let townBuildings = []; // rempli uniquement pour le biome 'town' - sert a placer l'entree de la boutique (cf. findBuildingFrontTile)
 
@@ -700,7 +714,7 @@ async function getLevel(req, res) {
     res.json({
       depth,
       biome: biome.id,
-      tileset: biome.tileset,
+      tileset,
       seed,
       grid,
       playerSpawn,
