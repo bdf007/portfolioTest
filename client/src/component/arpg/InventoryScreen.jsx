@@ -100,6 +100,70 @@ function SocketPips({ instance, onOpenPicker }) {
     </div>
   );
 }
+/**
+ * Nom d'un exemplaire d'equipement, cliquable pour le renommer -
+ * purement cosmetique (cf. inventory.renameEquipmentInstance), gratuit
+ * et illimite. Un champ vide au valide reinitialise au nom generique de
+ * l'objet.
+ */
+function NameEditor({ instance, defaultName, onRename }) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(instance.customName || "");
+
+  if (!editing) {
+    return (
+      <span
+        onClick={() => {
+          setDraft(instance.customName || "");
+          setEditing(true);
+        }}
+        title="Cliquer pour renommer"
+        style={{ cursor: "pointer", borderBottom: "1px dotted #8a7050" }}
+      >
+        {instance.customName || defaultName}
+      </span>
+    );
+  }
+
+  function confirm() {
+    onRename(instance.instanceId, draft);
+    setEditing(false);
+  }
+
+  return (
+    <span
+      style={{ display: "inline-flex", alignItems: "center", gap: 3 }}
+      onClick={(e) => e.stopPropagation()}
+    >
+      <input
+        autoFocus
+        value={draft}
+        maxLength={24}
+        placeholder={defaultName}
+        onChange={(e) => setDraft(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") confirm();
+          if (e.key === "Escape") setEditing(false);
+        }}
+        style={{ fontSize: 11, width: 100, padding: "1px 3px" }}
+      />
+      <button
+        onClick={confirm}
+        title="Valider"
+        style={{
+          fontSize: 10,
+          padding: "0 4px",
+          cursor: "pointer",
+          border: "1px solid #8a7050",
+          borderRadius: 3,
+          background: "#eee2cc",
+        }}
+      >
+        ✓
+      </button>
+    </span>
+  );
+}
 // const SHEET_COLS = 12;
 // const SHEET_ROWS = 8;
 // const ICON_SHEET_COLS = 10;
@@ -141,9 +205,10 @@ export function groupInventory(inventory, equipped = {}) {
     if (entry.instanceId && equippedInstanceIds.has(entry.instanceId)) return;
     if (entry.itemId === equipped.quiver) return; // munitions equipees : deja affichees case Carquois
 
-    if (entry.gemSlots > 0) {
-      // objet a sockets : jamais regroupe avec un autre exemplaire,
-      // meme identique - ses sockets lui sont propres.
+    if (entry.gemSlots > 0 || entry.customName) {
+      // objet a sockets OU renomme : jamais regroupe avec un autre
+      // exemplaire, meme identique - ses sockets/son nom lui sont
+      // propres (cf. inventory.renameEquipmentInstance).
       singles.push({
         itemId: entry.itemId,
         totalQuantity: 1,
@@ -151,6 +216,7 @@ export function groupInventory(inventory, equipped = {}) {
         instanceId: entry.instanceId,
         gemSlots: entry.gemSlots,
         sockets: entry.sockets || [],
+        customName: entry.customName || null,
       });
       return;
     }
@@ -695,12 +761,18 @@ export default function InventoryScreen({
   onUse,
   onDecraft,
   onSocketGem,
+  onRename,
+  onAttemptPerforation,
   onClose,
 }) {
   console.log(stats);
   // {instanceId, socketIndex} de l'objet en cours de socketage, ou null
   // - ouvre le panneau de selection de gemme (cf. plus bas).
   const [socketingSocket, setSocketingSocket] = useState(null);
+  // index (dans `inventory`) du parchemin de perforation en cours
+  // d'utilisation, ou null - ouvre le panneau de selection de la cible
+  // (cf. plus bas).
+  const [perforatingScrollIndex, setPerforatingScrollIndex] = useState(null);
   const heroEntry = SPRITE_REGISTRY[heroId] || SPRITE_REGISTRY.hero1;
   const sheetCols = heroEntry.sheetCols || 12;
   const sheetRows = heroEntry.sheetRows || 8;
@@ -806,6 +878,15 @@ export default function InventoryScreen({
                 ✕
               </button>
             </div>
+            {instance && (
+              <div style={{ fontSize: 9, textAlign: "center" }}>
+                <NameEditor
+                  instance={instance}
+                  defaultName={def.name}
+                  onRename={onRename}
+                />
+              </div>
+            )}
             {instance && (
               <SocketPips
                 instance={instance}
@@ -962,7 +1043,15 @@ export default function InventoryScreen({
 
                     <div>
                       <div style={{ fontSize: 12 }}>
-                        {def.name}
+                        {group.instanceId ? (
+                          <NameEditor
+                            instance={group}
+                            defaultName={def.name}
+                            onRename={onRename}
+                          />
+                        ) : (
+                          def.name
+                        )}
                         {group.totalQuantity > 1
                           ? ` x${group.totalQuantity}`
                           : ""}
@@ -1004,9 +1093,14 @@ export default function InventoryScreen({
                   )}
                   {(def.category === "consumable" ||
                     def.category === "abilityScroll" ||
-                    def.category === "recipeScroll") && (
+                    def.category === "recipeScroll" ||
+                    def.category === "socketPerforation") && (
                     <button
-                      onClick={() => onUse(group.firstIndex)}
+                      onClick={() =>
+                        def.category === "socketPerforation"
+                          ? setPerforatingScrollIndex(group.firstIndex)
+                          : onUse(group.firstIndex)
+                      }
                       style={{
                         padding: "4px 10px",
                         fontSize: 11,
@@ -1064,7 +1158,8 @@ export default function InventoryScreen({
                 label: "Parchemins & recettes",
                 test: (def) =>
                   def.category === "abilityScroll" ||
-                  def.category === "recipeScroll",
+                  def.category === "recipeScroll" ||
+                  def.category === "socketPerforation",
               },
               {
                 key: "consumable",
@@ -1397,6 +1492,112 @@ export default function InventoryScreen({
             })()}
             <button
               onClick={() => setSocketingSocket(null)}
+              style={{
+                marginTop: 10,
+                fontSize: 11,
+                padding: "3px 8px",
+                borderRadius: 5,
+                border: "1px solid #8a7050",
+                background: "none",
+                color: "#f0e6d0",
+                cursor: "pointer",
+              }}
+            >
+              Annuler
+            </button>
+          </div>
+        </div>
+      )}
+
+      {perforatingScrollIndex !== null && (
+        <div
+          onClick={() => setPerforatingScrollIndex(null)}
+          style={{
+            position: "absolute",
+            inset: 0,
+            zIndex: 30,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            background: "rgba(0,0,0,0.6)",
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: "#2a2015",
+              border: "1px solid #8a7050",
+              borderRadius: 8,
+              padding: 14,
+              minWidth: 220,
+              maxWidth: 300,
+              maxHeight: "70%",
+              overflowY: "auto",
+              color: "#f0e6d0",
+            }}
+          >
+            <h4 style={{ margin: "0 0 10px", fontSize: 13 }}>
+              Choisir l'objet à perforer
+            </h4>
+            {(() => {
+              const targets = inventory.filter(
+                (i) =>
+                  i.instanceId &&
+                  resolveItemDef(i.itemId).category === "equipment",
+              );
+              if (targets.length === 0) {
+                return (
+                  <div style={{ fontSize: 11, color: "#c9b896" }}>
+                    Aucun équipement en inventaire.
+                  </div>
+                );
+              }
+              return (
+                <div
+                  style={{ display: "flex", flexDirection: "column", gap: 6 }}
+                >
+                  {targets.map((inst) => {
+                    const targetDef = resolveItemDef(inst.itemId);
+                    const filled = (inst.sockets || []).filter(
+                      Boolean,
+                    ).length;
+                    return (
+                      <button
+                        key={inst.instanceId}
+                        onClick={() => {
+                          onAttemptPerforation(
+                            perforatingScrollIndex,
+                            inst.instanceId,
+                          );
+                          setPerforatingScrollIndex(null);
+                        }}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 8,
+                          padding: "4px 8px",
+                          fontSize: 11,
+                          borderRadius: 5,
+                          border: "1px solid #8a7050",
+                          background: "rgba(120,100,70,0.2)",
+                          color: "#f0e6d0",
+                          cursor: "pointer",
+                          textAlign: "left",
+                        }}
+                      >
+                        <ItemIcon itemId={inst.itemId} scale={1.2} />
+                        <span>
+                          {inst.customName || targetDef.name} (
+                          {filled}/{inst.gemSlots || 0} sockets)
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              );
+            })()}
+            <button
+              onClick={() => setPerforatingScrollIndex(null)}
               style={{
                 marginTop: 10,
                 fontSize: 11,
