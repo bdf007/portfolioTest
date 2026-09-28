@@ -1,16 +1,18 @@
 import { resolveAbilityDef, ABILITY_DEFS } from "../abilityDefs";
 import { resolveItemDef } from "../itemDefs";
-import { computeDamage, applyElementalResistance } from "../combat";
+import {
+  computeDamage,
+  applyElementalResistance,
+} from "../combat";
 import { hasClearLineOfSight, computeVisibleTiles } from "../fogOfWar";
 import { WALL } from "./floorRenderer";
-import { rollStatusEffect, applyStatusEffect } from "./statusEffects";
+import {
+  rollStatusEffect,
+  applyStatusEffect,
+} from "./statusEffects";
 import { performSummonAbility } from "./summons";
 
-// TILE_SIZE et MAX_SUMMONS dupliques volontairement (identiques a ceux de
-// MainScene.js) - memes constantes numeriques des deux cotes, meme logique
-// que dans floorRenderer.js/floorEntities.js.
-const TILE_SIZE = 32;
-const MAX_SUMMONS = 3;
+import { TILE_SIZE, MAX_SUMMONS } from "./gameConstants";
 
 export function performAbility(scene, abilityId) {
   if (!scene.unlockedAbilities.includes(abilityId)) return;
@@ -25,7 +27,10 @@ export function performAbility(scene, abilityId) {
     );
     return;
   }
-  if (def.disabledBiomes && def.disabledBiomes.includes(scene.currentBiomeId)) {
+  if (
+    def.disabledBiomes &&
+    def.disabledBiomes.includes(scene.currentBiomeId)
+  ) {
     scene.showLootToast(`${def.name} est désactivée sur ce type de niveau`);
     return;
   }
@@ -183,13 +188,7 @@ export function performAoeStunAbility(scene, def) {
     });
   }
 
-  const circle = scene.add.circle(
-    scene.hero.x,
-    scene.hero.y,
-    10,
-    0xffff00,
-    0.4,
-  );
+  const circle = scene.add.circle(scene.hero.x, scene.hero.y, 10, 0xffff00, 0.4);
   circle.setDepth(14);
   scene.tweens.add({
     targets: circle,
@@ -226,13 +225,7 @@ export function performRepelAbility(scene, def) {
     );
   }
 
-  const circle = scene.add.circle(
-    scene.hero.x,
-    scene.hero.y,
-    10,
-    0xaaaaff,
-    0.4,
-  );
+  const circle = scene.add.circle(scene.hero.x, scene.hero.y, 10, 0xaaaaff, 0.4);
   circle.setDepth(14);
   scene.tweens.add({
     targets: circle,
@@ -287,13 +280,7 @@ export function performTauntAbility(scene, def) {
     }
   }
 
-  const circle = scene.add.circle(
-    scene.hero.x,
-    scene.hero.y,
-    10,
-    0xffcc00,
-    0.4,
-  );
+  const circle = scene.add.circle(scene.hero.x, scene.hero.y, 10, 0xffcc00, 0.4);
   circle.setDepth(14);
   scene.tweens.add({
     targets: circle,
@@ -324,13 +311,7 @@ export function performAoeAbility(scene, def) {
     }
   }
 
-  const circle = scene.add.circle(
-    scene.hero.x,
-    scene.hero.y,
-    10,
-    0xff6600,
-    0.5,
-  );
+  const circle = scene.add.circle(scene.hero.x, scene.hero.y, 10, 0xff6600, 0.5);
   circle.setDepth(14);
   scene.tweens.add({
     targets: circle,
@@ -358,7 +339,10 @@ export function performProjectileAoeAbility(scene, def) {
   const sprite = scene.add.circle(scene.hero.x, scene.hero.y, 8, 0xff6600);
   scene.physics.add.existing(sprite);
   sprite.setDepth(12);
-  sprite.body.setVelocity(v.x * def.projectileSpeed, v.y * def.projectileSpeed);
+  sprite.body.setVelocity(
+    v.x * def.projectileSpeed,
+    v.y * def.projectileSpeed,
+  );
 
   scene.abilityProjectiles.push({
     sprite,
@@ -370,7 +354,9 @@ export function performProjectileAoeAbility(scene, def) {
 
 export function performWeaponImbueAbility(scene, def) {
   scene.pendingWeaponImbue = def;
-  scene.showLootToast(`${def.name} activée - le prochain coup sera renforcé !`);
+  scene.showLootToast(
+    `${def.name} activée - le prochain coup sera renforcé !`,
+  );
 }
 
 export function performPierceAbility(scene, def) {
@@ -390,7 +376,10 @@ export function performPierceAbility(scene, def) {
   const sprite = scene.add.circle(scene.hero.x, scene.hero.y, 6, 0xffdd44);
   scene.physics.add.existing(sprite);
   sprite.setDepth(12);
-  sprite.body.setVelocity(v.x * def.projectileSpeed, v.y * def.projectileSpeed);
+  sprite.body.setVelocity(
+    v.x * def.projectileSpeed,
+    v.y * def.projectileSpeed,
+  );
 
   scene.abilityProjectiles.push({
     sprite,
@@ -428,13 +417,7 @@ export function performAoeDebuffAbility(scene, def) {
     });
   }
 
-  const circle = scene.add.circle(
-    scene.hero.x,
-    scene.hero.y,
-    10,
-    0x4488ff,
-    0.4,
-  );
+  const circle = scene.add.circle(scene.hero.x, scene.hero.y, 10, 0x4488ff, 0.4);
   circle.setDepth(14);
   scene.tweens.add({
     targets: circle,
@@ -462,7 +445,8 @@ export function performFogPulseAbility(scene, def) {
     for (let y = minY; y <= maxY; y++) {
       for (let x = minX; x <= maxX; x++) {
         const key = x + "," + y;
-        if (Math.hypot(x - centerTileX, y - centerTileY) > def.radius) continue;
+        if (Math.hypot(x - centerTileX, y - centerTileY) > def.radius)
+          continue;
         if (bossRoomTiles.has(key)) continue;
         revealed.add(key);
       }
@@ -652,13 +636,7 @@ export function performAoeCurseAbility(scene, def) {
       durationMs: def.durationMs,
     });
   }
-  const circle = scene.add.circle(
-    scene.hero.x,
-    scene.hero.y,
-    10,
-    0x882299,
-    0.4,
-  );
+  const circle = scene.add.circle(scene.hero.x, scene.hero.y, 10, 0x882299, 0.4);
   circle.setDepth(14);
   scene.tweens.add({
     targets: circle,
