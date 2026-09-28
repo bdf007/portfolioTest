@@ -1,8 +1,6 @@
 import Phaser from "phaser";
 import EasyStar from "easystarjs";
-import { fetchLevel } from "../../../api/arpgClient";
 import { createRng } from "../rng";
-import { createFogState } from "../fogOfWar";
 import { createEnemyBehavior } from "../enemyBehavior";
 import {
   computeDamage,
@@ -18,7 +16,6 @@ import {
   SPRITE_REGISTRY,
   resolveEnemySprite,
   resolveHeroStatsOverride,
-  LEVER_SPRITESHEET,
 } from "../spriteRegistry";
 import { resolveItemDef } from "../itemDefs";
 import {
@@ -28,17 +25,7 @@ import {
 import { ABILITY_DEFS } from "../abilityDefs";
 import { CRAFTING_RECIPES } from "../craftingRecipes";
 import { resolveFuryDef } from "../furyDefs";
-import {
-  WALL,
-  buildFloorTilemap,
-  spawnFloorDecorations,
-} from "./floorRenderer";
-import {
-  spawnChests,
-  spawnTraps,
-  spawnMiningRocks,
-  spawnForageNodes,
-} from "./floorEntities";
+import { WALL } from "./floorRenderer";
 import {
   descendStairs,
   goToDepth,
@@ -69,7 +56,6 @@ import {
 } from "./statusEffects";
 import {
   computeFamiliarGrowthScale,
-  spawnSummonSprite,
   confirmResummon as confirmResummonImpl,
   cancelResummon as cancelResummonImpl,
   confirmSummonReplace as confirmSummonReplaceImpl,
@@ -78,8 +64,6 @@ import {
   updateSummonProjectiles,
 } from "./summons";
 import {
-  createQuestNpcs,
-  createAmbientNpcs,
   openQuestDialog,
   acceptQuest as acceptQuestImpl,
   turnInQuest as turnInQuestImpl,
@@ -117,7 +101,6 @@ import {
 } from "./inventory";
 import {
   toggleDebugTileIndices,
-  clearDebugTileIndices,
   getQuestNpcMinimapData,
   getSummonMinimapData,
   drawHpBars,
@@ -127,6 +110,10 @@ import {
   persistProgressAsync,
   saveAndQuit as saveAndQuitImpl,
 } from "./save";
+import {
+  loadLevel as loadLevelImpl,
+  retryLevel as retryLevelImpl,
+} from "./levelLoader";
 
 const TILE_SIZE = 32;
 
@@ -767,695 +754,27 @@ export default class MainScene extends Phaser.Scene {
     savedEphemeralChests = [],
     savedForageNodesState = [],
   ) {
-    this.currentFloorChestRemainingLoot = savedChestRemainingLoot || {};
-    this.currentFloorTriggeredTraps = savedTriggeredTraps || [];
-    this.currentFloorRevealedTraps = savedRevealedTraps || [];
-
-    if (this.fogState?.state && this.currentDepth != null) {
-      const discoveredTiles = [];
-      for (let y = 0; y < this.fogState.state.length; y++) {
-        for (let x = 0; x < this.fogState.state[y].length; x++) {
-          if (this.fogState.state[y][x] !== 0)
-            discoveredTiles.push(`${x},${y}`);
-        }
-      }
-      this.floorFogCache[this.currentDepth] = discoveredTiles;
-    }
-
-    this.events.emit("level-loading", { depth });
-    const effectiveLootSeed = lootSeed || `${Date.now()}-${Math.random()}`;
-    this.currentFloorLootSeed = effectiveLootSeed;
-
-    let data;
-    try {
-      const previousFloors = this.visitedFloors
-        .filter((f) => f.depth < depth)
-        .map((f) => ({ depth: f.depth, seed: f.seed }));
-      data = await fetchLevel(
-        depth,
-        seed,
-        effectiveLootSeed,
-        previousFloors,
-        this.discoveredSecretRoomDepths,
-        this.obtainedUniqueItems,
-      );
-    } catch (err) {
-      this.events.emit("level-load-error", { depth, error: err.message });
-      return;
-    }
-
-    const {
-      grid,
-      playerSpawn,
-      exitTile,
-      upstairsTile,
-      boss,
-      bossDoorTile,
-      travelHubTile,
-      shop,
-      ambientNpcs: ambientNpcData,
-      enemies,
-      chests,
-      traps,
-      tileset,
-    } = data;
-
-    const effectiveSavedFogState =
-      savedFogState || this.floorFogCache[depth] || null;
-
-    this.currentDepth = depth;
-    this.currentBiomeId = data.biome;
-    this.currentSeed = data.seed;
-    if (!this.discoveredLandmarks[depth]) {
-      this.discoveredLandmarks[depth] = {
-        exitTile: exitTile ? { ...exitTile } : null,
-        exitDiscovered: false,
-
-        upstairsTile: upstairsTile ? { ...upstairsTile } : null,
-        upstairsDiscovered: false,
-
-        questNpcs: {},
-      };
-    } else {
-      this.discoveredLandmarks[depth].exitTile = exitTile
-        ? { ...exitTile }
-        : null;
-
-      this.discoveredLandmarks[depth].upstairsTile = upstairsTile
-        ? { ...upstairsTile }
-        : null;
-    }
-    this.fogGrid = grid;
-    this.currentFloorKills = [...killedIndices];
-    this.currentFloorOpenedChests = [...openedChestIndices];
-    this.bossData = boss || null;
-    this.travelHubTile = travelHubTile || null;
-    this.shopData = shop || null;
-    this.bossDoorTile = bossDoorTile || null;
-    this.bossRoomOpen = false;
-    this.bossAlive = this.bossData ? true : null;
-
-    if (!this.visitedFloors.find((f) => f.depth === depth)) {
-      this.visitedFloors.push({ depth, seed: data.seed });
-    }
-
-    this.levelColliders.forEach((c) => c.destroy());
-    this.levelColliders = [];
-
-    if (this.layer) {
-      this.layer.destroy();
-      this.layer = null;
-    }
-    if (this.fogLayer) {
-      this.fogLayer.destroy();
-      this.fogLayer = null;
-    }
-    if (this.map) {
-      this.map.destroy();
-      this.map = null;
-    }
-    if (this.hero) {
-      this.hero.destroy();
-      this.hero = null;
-    }
-    if (this.exitMarker) {
-      this.exitMarker.destroy();
-      this.exitMarker = null;
-    }
-    if (this.upstairsMarker) {
-      this.upstairsMarker.destroy();
-      this.upstairsMarker = null;
-    }
-    if (this.bossDoorMarker) {
-      this.bossDoorMarker.destroy();
-      this.bossDoorMarker = null;
-    }
-    if (this.travelHubMarker) {
-      this.travelHubMarker.destroy();
-      this.travelHubMarker = null;
-    }
-    if (this.shopMarker) {
-      this.shopMarker.destroy();
-      this.shopMarker = null;
-    }
-    if (this.questNpcs) {
-      this.questNpcs.forEach((n) => n.sprite.destroy());
-    }
-    this.questNpcs = [];
-    if (this.ambientNpcs) {
-      this.ambientNpcs.forEach((n) => n.sprite.destroy());
-    }
-    this.ambientNpcs = [];
-    this.activeTalkingNpc = null;
-    if (this.chests) {
-      this.chests.forEach((c) => {
-        if (c.sprite) c.sprite.destroy();
-      });
-    }
-    this.chests = [];
-    this.nextLootChestId = 0;
-    this.activeChest = null;
-    this.floorTraps.forEach((t) => {
-      t.sprite.destroy();
-      t.spikeSprite.destroy();
-    });
-    this.floorTraps = [];
-    this.townHouseSprites.forEach((s) => s.destroy());
-    this.townHouseSprites = [];
-    this.secretLevers.forEach((l) => l.sprite.destroy());
-    this.secretLevers = [];
-    if (this.secretWallMarker) {
-      this.secretWallMarker.destroy();
-      this.secretWallMarker = null;
-    }
-    this.miningRocks.forEach((r) => {
-      if (r.sprite) r.sprite.destroy();
-    });
-    this.miningRocks = [];
-    this.forageNodes.forEach((n) => {
-      if (n.sprite) n.sprite.destroy();
-    });
-    this.forageNodes = [];
-    this.decorationSprites.forEach((s) => s.destroy());
-    this.decorationSprites = [];
-    this.secretRoomData = null;
-    this.secretDoorOpened = false;
-    this.dialogOpen = false;
-    this.gamePaused = false;
-    this.pauseReasons.clear();
-    this.enemies.forEach((e) => {
-      if (e.visualEmitter) e.visualEmitter.destroy();
-      e.sprite.destroy();
-    });
-    if (this.enemyGroup) this.enemyGroup.clear(false, false);
-    this.enemies = [];
-    this.projectiles.forEach((p) => p.sprite.destroy());
-    this.projectiles = [];
-    this.enemyProjectiles.forEach((p) => p.sprite.destroy());
-    this.enemyProjectiles = [];
-    this.abilityProjectiles.forEach((p) => p.sprite.destroy());
-    this.abilityProjectiles = [];
-    this.summonProjectiles.forEach((p) => p.sprite.destroy());
-    this.summonProjectiles = [];
-    if (this.summonGroup) this.summonGroup.clear(false, false);
-    const persistentSummons = this.summons.filter((s) => s.persistent);
-    this.summons.forEach((s) => {
-      s.sprite.destroy(); // detruit TOUJOURS l'ancien sprite - meme pour un persistant, qui en recevra un nouveau juste apres (spawnSummonSprite)
-    });
-    this.summons = [];
-    this.playerStatusEffects = [];
-    this.pendingWeaponImbue = null;
-    this.zones.forEach((z) => z.sprite.destroy());
-    this.zones = [];
-    this.traps.forEach((t) => t.sprite.destroy());
-    this.traps = [];
-    this.boomerangs.forEach((b) => b.sprite.destroy());
-    this.boomerangs = [];
-    this.stealthUntil = 0;
-    this.riposteUntil = 0;
-    this.parryUntil = 0;
-    this.visionBonusUntil = 0;
-
-    clearDebugTileIndices(this);
-
-    this.playerHp =
-      typeof hpOverride === "number"
-        ? Math.min(hpOverride, this.playerMaxHp)
-        : Math.min(this.playerHp, this.playerMaxHp);
-    this.isDead = false;
-    this.events.emit("player-hp-changed", {
-      hp: this.playerHp,
-      maxHp: this.playerMaxHp,
-    });
-    this.events.emit("player-mana-changed", {
-      mana: this.playerMana,
-      maxMana: this.playerMaxMana,
-    });
-    this.events.emit("player-stamina-changed", {
-      stamina: this.playerStamina,
-      maxStamina: this.playerMaxStamina,
-    });
-
-    const worldW = grid[0].length * TILE_SIZE;
-    const worldH = grid.length * TILE_SIZE;
-
-    buildFloorTilemap(this, { grid, tileset, data, depth });
-
-    const startPosition = savedPlayerPosition || playerSpawn;
-
-    const heroSprite = SPRITE_REGISTRY[this.heroSpriteKey];
-
-    this.hero = this.physics.add.sprite(
-      startPosition.x * TILE_SIZE + TILE_SIZE / 2,
-      startPosition.y * TILE_SIZE + TILE_SIZE / 2,
-      heroSprite.key,
-      heroSprite.animations.idleDown,
+    return loadLevelImpl(
+      this,
+      depth,
+      seed,
+      hpOverride,
+      killedIndices,
+      openedChestIndices,
+      lootSeed,
+      savedFogState,
+      savedPlayerPosition,
+      savedChestRemainingLoot,
+      savedTriggeredTraps,
+      savedRevealedTraps,
+      savedLeverActivations,
+      savedMiningRocksState,
+      savedEphemeralChests,
+      savedForageNodesState,
     );
-
-    this.lastPlayerTile = {
-      x: startPosition.x,
-      y: startPosition.y,
-    };
-    for (const ps of persistentSummons) {
-      ps.sprite = spawnSummonSprite(
-        this,
-        ps.spriteKey,
-        playerSpawn.x * TILE_SIZE + TILE_SIZE / 2,
-        playerSpawn.y * TILE_SIZE + TILE_SIZE / 2,
-      );
-      this.summons.push(ps);
-    }
-    this.hero.setScale(heroSprite.scale);
-    this.hero.setCollideWorldBounds(true);
-    const hb = heroSprite.hitbox;
-    this.hero.body
-      .setSize(hb.width, hb.height)
-      .setOffset(hb.offsetX, hb.offsetY);
-    this.hero.setDepth(10);
-    this.hero.anims.play(this.heroSpriteKey + "-idle-down");
-    this.lastDir = "down";
-    this.lastAimVector = { x: 0, y: 1 };
-
-    this.levelColliders.push(this.physics.add.collider(this.hero, this.layer));
-    this.levelColliders.push(
-      this.physics.add.collider(this.enemyGroup, this.layer),
-    );
-    this.physics.world.setBounds(0, 0, worldW, worldH);
-    this.cameras.main.setBounds(0, 0, worldW, worldH);
-    this.cameras.main.startFollow(this.hero, true, 0.1, 0.1);
-
-    if (this.registry.get("isMobile")) {
-      const visionDiameterPx = this.playerVisionRadius * TILE_SIZE * 2;
-      const targetFraction = 0.85;
-      const smallerDimension = Math.min(
-        this.cameras.main.width,
-        this.cameras.main.height,
-      );
-      this.cameras.main.setZoom(
-        (smallerDimension * targetFraction) / visionDiameterPx,
-      );
-    }
-
-    this.exitTile = exitTile;
-    this.exitMarker = this.add.image(
-      exitTile.x * TILE_SIZE + TILE_SIZE / 2,
-      exitTile.y * TILE_SIZE + TILE_SIZE / 2,
-      "stair_up",
-    );
-    this.exitMarker.setDepth(2);
-
-    this.upstairsTile = upstairsTile;
-    if (upstairsTile) {
-      this.upstairsMarker = this.add.image(
-        upstairsTile.x * TILE_SIZE + TILE_SIZE / 2,
-        upstairsTile.y * TILE_SIZE + TILE_SIZE / 2,
-        "stair_down",
-      );
-      this.upstairsMarker.setDepth(2);
-    }
-
-    if (this.bossDoorTile) {
-      this.bossDoorMarker = this.add.circle(
-        this.bossDoorTile.x * TILE_SIZE + TILE_SIZE / 2,
-        this.bossDoorTile.y * TILE_SIZE + TILE_SIZE / 2,
-        10,
-        0x6a1b9a,
-      );
-      this.bossDoorMarker.setDepth(2);
-      this.bossDoorMarker.setStrokeStyle(2, 0xffffff);
-      this.tweens.add({
-        targets: this.bossDoorMarker,
-        scale: { from: 0.7, to: 1.15 },
-        alpha: { from: 0.6, to: 1 },
-        duration: 700,
-        yoyo: true,
-        repeat: -1,
-      });
-    }
-    if (this.pendingBossRoomOpen && this.bossDoorTile) {
-      this.bossRoomOpen = true;
-      const { x, y } = this.bossDoorTile;
-      this.layer.putTileAt(this.currentFloorTileIndex ?? 0, x, y);
-      this.fogGrid[y][x] = 0;
-      if (this.bossDoorMarker) {
-        this.bossDoorMarker.destroy();
-        this.bossDoorMarker = null;
-      }
-      if (this.pendingBossAlive === false) {
-        this.bossAlive = false; // deja vaincu avant l'interruption - ne jamais le refaire apparaitre
-      } else {
-        // porte deja ouverte ET boss pas encore vaincu au moment de la
-        // sauvegarde - il faut le recreer explicitement ici : bossRoomOpen
-        // etant deja a true, le declenchement habituel (enemies.length===0)
-        // ne se produira plus jamais, donc rien d'autre ne le ferait
-        // reapparaitre
-        this.spawnBossEncounter(
-          this.pendingBossHp,
-          this.pendingBossPosition,
-          this.pendingBossState,
-        );
-      }
-    }
-    this.pendingBossRoomOpen = false;
-    this.pendingBossAlive = null;
-    this.pendingBossHp = null;
-    this.pendingBossPosition = null;
-    this.pendingBossState = null;
-
-    this.buildPathfindingGrid();
-
-    if (this.travelHubTile) {
-      this.travelHubMarker = this.add.circle(
-        this.travelHubTile.x * TILE_SIZE + TILE_SIZE / 2,
-        this.travelHubTile.y * TILE_SIZE + TILE_SIZE / 2,
-        10,
-        0x1ba8c9,
-      );
-      this.travelHubMarker.setDepth(2);
-      this.travelHubMarker.setStrokeStyle(2, 0xffffff);
-      this.tweens.add({
-        targets: this.travelHubMarker,
-        scale: { from: 0.7, to: 1.15 },
-        alpha: { from: 0.6, to: 1 },
-        duration: 700,
-        yoyo: true,
-        repeat: -1,
-      });
-    }
-
-    if (this.shopData) {
-      this.shopMarker = this.add.circle(
-        this.shopData.x * TILE_SIZE + TILE_SIZE / 2,
-        this.shopData.y * TILE_SIZE + TILE_SIZE / 2,
-        10,
-        0xd4af37,
-      );
-      this.shopMarker.setDepth(2);
-      this.shopMarker.setStrokeStyle(2, 0xffffff);
-      this.tweens.add({
-        targets: this.shopMarker,
-        scale: { from: 0.7, to: 1.15 },
-        alpha: { from: 0.6, to: 1 },
-        duration: 700,
-        yoyo: true,
-        repeat: -1,
-      });
-    }
-
-    const behaviorRng = createRng(data.seed + "-behaviors");
-    enemies.forEach((enemyData, spawnIndex) => {
-      const spawnPos = { x: enemyData.x, y: enemyData.y };
-
-      const behavior = createEnemyBehavior(grid, spawnPos, behaviorRng);
-
-      if (this.currentFloorKills.includes(spawnIndex)) return;
-
-      const { entry: enemySprite, spriteKey } = resolveEnemySprite(
-        enemyData.type,
-      );
-
-      const sprite = this.enemyGroup.create(
-        spawnPos.x * TILE_SIZE + TILE_SIZE / 2,
-        spawnPos.y * TILE_SIZE + TILE_SIZE / 2,
-        enemySprite.key,
-        enemySprite.animations.idleDown,
-      );
-      sprite.setScale(enemySprite.scale);
-      const ehb = enemySprite.hitbox;
-      sprite.body
-        .setSize(ehb.width, ehb.height)
-        .setOffset(ehb.offsetX, ehb.offsetY);
-      sprite.setDepth(8);
-      sprite.anims.play(spriteKey + "-idle-down");
-      const resolvedEffect = resolveVisualEffect(enemyData);
-      const visualEmitter = resolvedEffect
-        ? createEnemyVisualEffect(this, sprite, resolvedEffect)
-        : null;
-      this.enemies.push({
-        sprite,
-        spriteKey,
-        spawnIndex,
-        archetype: enemyData.type,
-        type: behavior.type,
-        state: behavior.state,
-        home: behavior.home,
-        aggroRadius: behavior.aggroRadius,
-        patrolPath: behavior.patrolPath,
-        patrolIndex: 0,
-        patrolDirection: 1,
-        path: null,
-        pathIndex: 0,
-        lastDir: "down",
-        hp: enemyData.hp,
-        maxHp: enemyData.maxHp,
-        damage: enemyData.damage,
-        defense: enemyData.defense,
-        xpReward: enemyData.xpReward,
-        attackType: enemyData.attackType || "melee",
-        questLoot: enemyData.questLoot || null,
-        inflictsEffect: enemyData.inflictsEffect || null,
-        resistances: enemyData.resistances || {},
-        damageType: enemyData.damageType || "physical",
-        visualEmitter,
-        statusEffects: [],
-        drops: enemyData.drops || [],
-        attackCooldown: createCooldown(ENEMY_ATTACK_COOLDOWN),
-      });
-    });
-
-    spawnChests(this, { chests, savedEphemeralChests });
-    spawnTraps(this, { traps });
-    spawnMiningRocks(this, { data, savedMiningRocksState });
-    spawnForageNodes(this, { data, savedForageNodesState });
-
-    spawnFloorDecorations(this, data);
-
-    this.secretRoomData = data.secretRoom || null;
-    const alreadyDiscovered = this.discoveredSecretRoomDepths.includes(depth);
-
-    if (this.secretRoomData && !this.floorsWithSecretRoom.includes(depth)) {
-      this.floorsWithSecretRoom.push(depth);
-    }
-
-    if (this.secretRoomData) {
-      if (alreadyDiscovered) {
-        // deja trouvee au moins une fois - la salle reste DEFINITIVEMENT
-        // ouverte, ne se referme jamais : ni levier ni combat a refaire,
-        // juste une partie normale de l'etage desormais
-        this.secretDoorOpened = true;
-      } else if (this.secretRoomData.triggerType === "lever") {
-        for (const leverTile of this.secretRoomData.leverTiles) {
-          const wasActivated = savedLeverActivations.includes(
-            `${leverTile.x},${leverTile.y}`,
-          );
-          const sprite = this.add.sprite(
-            leverTile.x * TILE_SIZE + TILE_SIZE / 2,
-            leverTile.y * TILE_SIZE + TILE_SIZE / 2,
-            LEVER_SPRITESHEET.key,
-            wasActivated ? 2 : 0, // 0 = position de repos, 2 = actionne (etat final apres animation)
-          );
-          sprite.setScale(TILE_SIZE / 16);
-          sprite.setDepth(4);
-          sprite.setVisible(true);
-          sprite.setAlpha(wasActivated ? 1 : 0.22);
-          this.secretLevers.push({
-            sprite,
-            x: leverTile.x,
-            y: leverTile.y,
-            activated: wasActivated,
-          });
-        }
-        if (
-          this.secretLevers.length > 0 &&
-          this.secretLevers.every((l) => l.activated)
-        ) {
-          this.secretDoorOpened = true;
-        }
-      } else if (this.secretRoomData.triggerType === "wall") {
-        const door = this.secretRoomData.doorTile;
-        const marker = this.add.circle(
-          door.x * TILE_SIZE + TILE_SIZE / 2,
-          door.y * TILE_SIZE + TILE_SIZE / 2,
-          5,
-          0xffcc00,
-        );
-        marker.setDepth(4);
-        marker.setAlpha(0.22); // meme discretion que les leviers - PLACEHOLDER, remplace par une texture de fissure sur le mur une fois identifiee sur une planche
-        this.secretWallMarker = marker;
-      } else if (this.secretRoomData.triggerType === "combat") {
-        const secretRoomEnemyRng = createRng(
-          `${this.currentSeed}-secret-room-enemies`,
-        );
-        for (const enemyData of this.secretRoomData.enemySpawns) {
-          const { entry: enemySprite, spriteKey } = resolveEnemySprite(
-            enemyData.type,
-          );
-          const sprite = this.enemyGroup.create(
-            enemyData.x * TILE_SIZE + TILE_SIZE / 2,
-            enemyData.y * TILE_SIZE + TILE_SIZE / 2,
-            enemySprite.key,
-            enemySprite.animations.idleDown,
-          );
-          sprite.setScale(enemySprite.scale);
-          const ehb = enemySprite.hitbox;
-          sprite.body
-            .setSize(ehb.width, ehb.height)
-            .setOffset(ehb.offsetX, ehb.offsetY);
-          sprite.setDepth(8);
-          sprite.anims.play(spriteKey + "-idle-down");
-
-          const behavior = createEnemyBehavior(
-            this.fogGrid,
-            { x: enemyData.x, y: enemyData.y },
-            secretRoomEnemyRng,
-            { guard: 1 },
-          );
-
-          this.enemies.push({
-            sprite,
-            spriteKey,
-            spawnIndex: -1,
-            archetype: enemyData.type,
-            type: behavior.type,
-            state: behavior.state,
-            home: behavior.home,
-            aggroRadius: behavior.aggroRadius,
-            patrolPath: null,
-            patrolIndex: 0,
-            patrolDirection: 1,
-            path: null,
-            pathIndex: 0,
-            lastDir: "down",
-            hp: enemyData.hp,
-            maxHp: enemyData.maxHp,
-            damage: enemyData.damage,
-            defense: enemyData.defense,
-            xpReward: enemyData.xpReward,
-            attackType: enemyData.attackType || "melee",
-            questLoot: null,
-            inflictsEffect: null,
-            resistances: enemyData.resistances || {},
-            damageType: enemyData.damageType || "physical",
-            statusEffects: [],
-            drops: [],
-            attackCooldown: createCooldown(ENEMY_ATTACK_COOLDOWN),
-            isSecretRoomGuard: true,
-          });
-        }
-        this.secretRewardLocked = true;
-      }
-    }
-
-    if (data.questNpcs && data.questNpcs.length > 0) {
-      createQuestNpcs(this, data.questNpcs);
-    }
-
-    if (ambientNpcData && ambientNpcData.length > 0) {
-      createAmbientNpcs(this, ambientNpcData);
-    }
-
-    this.fogState = createFogState(grid);
-
-    if (effectiveSavedFogState) {
-      for (const tile of effectiveSavedFogState) {
-        const [x, y] = tile.split(",").map(Number);
-
-        if (
-          y >= 0 &&
-          y < this.fogState.state.length &&
-          x >= 0 &&
-          x < this.fogState.state[y].length
-        ) {
-          this.fogState.state[y][x] = 1;
-        }
-      }
-    }
-    this.lastPlayerTile = { x: startPosition.x, y: startPosition.y };
-
-    this.fogDisabled = data.tileset === "town";
-
-    const fogTileset = this.map.addTilesetImage(
-      this.fogTilesetKey,
-      this.fogTilesetKey,
-      TILE_SIZE,
-      TILE_SIZE,
-      0,
-      0,
-    );
-
-    this.fogLayer = this.map.createBlankLayer("fog", fogTileset, 0, 0);
-    this.fogLayer.fill(0);
-    this.fogLayer.setDepth(5);
-
-    if (this.fogDisabled) {
-      const allChanges = [];
-
-      for (let y = 0; y < grid.length; y++) {
-        for (let x = 0; x < grid[0].length; x++) {
-          this.fogState.state[y][x] = 2;
-          allChanges.push({ x, y });
-        }
-      }
-
-      this.applyFogChanges(allChanges);
-    } else {
-      if (effectiveSavedFogState) {
-        for (const tile of effectiveSavedFogState) {
-          const [x, y] = tile.split(",").map(Number);
-
-          if (
-            y >= 0 &&
-            y < this.fogState.state.length &&
-            x >= 0 &&
-            x < this.fogState.state[y].length
-          ) {
-            this.fogState.state[y][x] = 1;
-            this.fogLayer.putTileAt(1, x, y);
-          }
-        }
-      }
-
-      const initialChanges = this.fogState.update(
-        startPosition.x,
-        startPosition.y,
-        getEffectivePlayerVisionRadius(this),
-      );
-
-      this.applyFogChanges(initialChanges);
-    }
-
-    this.events.emit("level-loaded", { depth, biome: data.biome });
-    this.events.emit("inventory-updated", [...this.inventory]);
-    this.events.emit("equipment-updated", { ...this.equipped });
-    this.events.emit("hotbar-updated", [...this.hotbarSlots]);
-    this.events.emit("recipes-updated", [...this.unlockedRecipes]);
-    this.events.emit("locked-recipes-updated", [
-      ...this.discoveredLockedRecipes,
-    ]);
-    this.events.emit("fury-progress", {
-      count: this.furyKillCount,
-      required: FURY_KILLS_REQUIRED,
-    });
-    this.events.emit("abilities-updated", [...this.unlockedAbilities]);
-    this.events.emit("attributes-updated", {
-      attributes: { ...this.playerAttributes },
-      unspent: this.unspentAttributePoints,
-    });
-    this.persistProgress();
   }
-
   retryLevel() {
-    this.playerHp = this.playerMaxHp;
-    delete this.floorFogCache[this.currentDepth];
-    const newLootSeed = "retry-" + Date.now();
-    this.loadLevel(
-      this.currentDepth,
-      this.currentSeed,
-      null,
-      [],
-      [],
-      newLootSeed,
-    );
+    retryLevelImpl(this);
   }
 
   travelToDepth(targetDepth) {
@@ -2304,14 +1623,12 @@ export default class MainScene extends Phaser.Scene {
         }
 
         if (enemy.hp > 0) {
-          applyStatusEffect(
-            this,
+          applyStatusEffect(this,
             enemy.statusEffects,
             rollStatusEffect(meleeWeaponDef),
           );
           if (imbue) {
-            applyStatusEffect(
-              this,
+            applyStatusEffect(this,
               enemy.statusEffects,
               rollStatusEffect(imbue),
             );
@@ -2524,19 +1841,16 @@ export default class MainScene extends Phaser.Scene {
           this.damageEnemy(enemy, computeDamage(rawDamage, enemy.defense));
 
           if (enemy.hp > 0) {
-            applyStatusEffect(
-              this,
+            applyStatusEffect(this,
               enemy.statusEffects,
               rollStatusEffect(proj.weaponDef),
             );
-            applyStatusEffect(
-              this,
+            applyStatusEffect(this,
               enemy.statusEffects,
               rollStatusEffect(proj.ammoDef),
             );
             if (proj.imbue)
-              applyStatusEffect(
-                this,
+              applyStatusEffect(this,
                 enemy.statusEffects,
                 rollStatusEffect(proj.imbue),
               );
@@ -2761,8 +2075,7 @@ export default class MainScene extends Phaser.Scene {
             );
             this.damageEnemy(enemy, computeDamage(rawDamage, enemy.defense));
             if (enemy.hp > 0) {
-              applyStatusEffect(
-                this,
+              applyStatusEffect(this,
                 enemy.statusEffects,
                 rollStatusEffect(proj.def),
               );
@@ -2848,8 +2161,7 @@ export default class MainScene extends Phaser.Scene {
           enemy.sprite.y - trap.y,
         );
         if (dist <= trap.triggerRadius) {
-          applyStatusEffect(
-            this,
+          applyStatusEffect(this,
             enemy.statusEffects,
             rollStatusEffect({ inflictsEffect: trap.inflictsEffect }),
           );
@@ -3269,10 +2581,7 @@ export default class MainScene extends Phaser.Scene {
     });
     for (const summon of this.summons) {
       if (summon.growthConfig) {
-        const growthScale = computeFamiliarGrowthScale(
-          this,
-          summon.growthConfig,
-        );
+        const growthScale = computeFamiliarGrowthScale(this, summon.growthConfig);
         const baseSpriteInfo = SPRITE_REGISTRY[summon.spriteKey];
         if (baseSpriteInfo)
           summon.sprite.setScale(baseSpriteInfo.scale * growthScale);
