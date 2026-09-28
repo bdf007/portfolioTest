@@ -13108,6 +13108,124 @@ export const ITEM_DEFS = {
     price: 500,
   },
 
+  /** Gemmes de socket **/
+  // Gemmes socketables sur les armes/armures ayant des sockets libres
+  // (cf. gemSlots tire aleatoirement a la creation de l'objet dans
+  // gemSockets.js). category "gem" : simples objets empilables tant
+  // qu'ils ne sont pas socketes (comme un consommable classique). Une
+  // fois socketee dans un objet instancie, la gemme est retiree de
+  // l'inventaire (consommee definitivement) et son effet
+  // (permanentModifiers + inflictsEffect) devient permanent sur CET
+  // exemplaire d'objet (cf. socketGem dans gemSockets.js).
+  // gemFamily reutilise directement les types d'effet de statut deja
+  // existants (burn/bleed/acid/slow/stun) - sert aussi a determiner le
+  // bonus de combo (actif quand tous les sockets d'un objet sont de la
+  // meme famille). Valeurs d'exemple, a ajuster selon l'equilibrage.
+  burnGem: {
+    id: "burnGem",
+    category: "gem",
+    name: "Gemme de braise",
+    description:
+      "+3 dégâts au corps à corps une fois socketée. Chance d'infliger une brûlure (dégâts sur la durée).",
+    gemFamily: "burn",
+    permanentModifiers: { meleeDamage: 3 },
+    inflictsEffect: {
+      type: "burn",
+      kind: "dot",
+      chance: 0.25,
+      damagePerTick: 2,
+      tickIntervalMs: 1000,
+      durationMs: 4000,
+    },
+    stackable: true,
+    price: 80,
+  },
+  bleedGem: {
+    id: "bleedGem",
+    category: "gem",
+    name: "Gemme d'épine",
+    description:
+      "+3 dégâts à distance une fois socketée. Chance d'infliger un saignement (dégâts sur la durée).",
+    gemFamily: "bleed",
+    permanentModifiers: { rangedDamage: 3 },
+    inflictsEffect: {
+      type: "bleed",
+      kind: "dot",
+      chance: 0.25,
+      damagePerTick: 2,
+      tickIntervalMs: 1000,
+      durationMs: 4000,
+    },
+    stackable: true,
+    price: 80,
+  },
+  acidGem: {
+    id: "acidGem",
+    category: "gem",
+    name: "Gemme corrosive",
+    description:
+      "+2 défense une fois socketée. Chance d'infliger de l'acide (dégâts sur la durée).",
+    gemFamily: "acid",
+    permanentModifiers: { defense: 2 },
+    inflictsEffect: {
+      type: "acid",
+      kind: "dot",
+      chance: 0.25,
+      damagePerTick: 2,
+      tickIntervalMs: 1000,
+      durationMs: 4000,
+    },
+    stackable: true,
+    price: 80,
+  },
+  slowGem: {
+    id: "slowGem",
+    category: "gem",
+    name: "Gemme de givre",
+    description:
+      "+15 PV max une fois socketée. Chance de ralentir l'ennemi touché.",
+    gemFamily: "slow",
+    permanentModifiers: { maxHp: 15 },
+    inflictsEffect: {
+      type: "slow",
+      kind: "modifier",
+      chance: 0.25,
+      statModifiers: { moveSpeedPercent: -0.3 },
+      durationMs: 2000,
+    },
+    stackable: true,
+    price: 80,
+  },
+  stunGem: {
+    id: "stunGem",
+    category: "gem",
+    name: "Gemme de foudre",
+    description:
+      "+8 vitesse de déplacement une fois socketée. Chance d'étourdir l'ennemi touché.",
+    gemFamily: "stun",
+    permanentModifiers: { moveSpeed: 8 },
+    inflictsEffect: {
+      type: "stun",
+      kind: "modifier",
+      chance: 0.15,
+      statModifiers: { stunned: true },
+      durationMs: 1200,
+    },
+    stackable: true,
+    price: 100,
+  },
+
+  /** Parchemins d'amélioration **/
+  socketPerforationScroll: {
+    id: "socketPerforationScroll",
+    category: "socketPerforation",
+    name: "Parchemin de perforation",
+    description:
+      "Tente d'ajouter un socket supplémentaire à un équipement (jusqu'au maximum de son palier). Consomme aussi un matériau du même palier que la cible. Risque d'échec : perte des matériaux sans effet sur l'objet, ou très rarement destruction totale de celui-ci.",
+    stackable: true,
+    price: 150,
+  },
+
   /** Potions **/
 
   healthPotion: {
