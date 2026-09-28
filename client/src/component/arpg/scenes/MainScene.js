@@ -11,7 +11,7 @@ import {
   applyDiceVariance,
   applyElementalResistance,
 } from "../combat";
-import { computeLevelFromXp, getPlayerStatsForLevel } from "../leveling";
+import { getPlayerStatsForLevel } from "../leveling";
 import {
   SPRITE_REGISTRY,
   resolveEnemySprite,
@@ -22,8 +22,6 @@ import {
   computeEquipmentBonuses,
   computeEquipmentResistances,
 } from "../equipment";
-import { ABILITY_DEFS } from "../abilityDefs";
-import { CRAFTING_RECIPES } from "../craftingRecipes";
 import { resolveFuryDef } from "../furyDefs";
 import { WALL } from "./floorRenderer";
 import {
@@ -55,7 +53,6 @@ import {
   getEffectivePlayerVisionRadius,
 } from "./statusEffects";
 import {
-  computeFamiliarGrowthScale,
   confirmResummon as confirmResummonImpl,
   cancelResummon as cancelResummonImpl,
   confirmSummonReplace as confirmSummonReplaceImpl,
@@ -114,6 +111,16 @@ import {
   loadLevel as loadLevelImpl,
   retryLevel as retryLevelImpl,
 } from "./levelLoader";
+import {
+  checkLevelUp as checkLevelUpImpl,
+  openLevelUpScreen as openLevelUpScreenImpl,
+  closeLevelUpScreen as closeLevelUpScreenImpl,
+  applyPendingLevelUp as applyPendingLevelUpImpl,
+  unlockAvailableAbilitiesAndRecipes as unlockAvailableAbilitiesAndRecipesImpl,
+  allocateAttributePoint as allocateAttributePointImpl,
+  deallocateAttributePoint as deallocateAttributePointImpl,
+  confirmAttributeAllocation as confirmAttributeAllocationImpl,
+} from "./playerProgression";
 
 const TILE_SIZE = 32;
 
@@ -163,7 +170,6 @@ const ENEMY_ATTACK_COOLDOWN = 900;
 
 const ATTACK_ANIM_DURATION_MS = 400;
 
-const ATTRIBUTE_POINTS_PER_LEVEL = 5;
 const DEFAULT_ATTRIBUTES = {
   force: 0,
   dexterite: 0,
@@ -2481,234 +2487,36 @@ export default class MainScene extends Phaser.Scene {
   }
 
   checkLevelUp() {
-    const { level } = computeLevelFromXp(this.xp);
-    if (level <= this.playerLevel) return;
-    this.events.emit("levelup-available", { available: true });
+    checkLevelUpImpl(this);
   }
 
   openLevelUpScreen() {
-    const inCombat = this.enemies.some((e) => e.state === "chase");
-    if (inCombat) {
-      this.showLootToast("Impossible en plein combat");
-      return;
-    }
-
-    const { level } = computeLevelFromXp(this.xp);
-    if (level > this.playerLevel) {
-      this.applyPendingLevelUp(level);
-    }
-
-    this.draftAttributes = { ...this.playerAttributes };
-    this.draftUnspentPoints = this.unspentAttributePoints;
-
-    this.pauseGame("levelup");
-    this.events.emit("levelup-screen-open", {
-      attributes: { ...this.playerAttributes }, // confirme - le plancher pour le bouton "-"
-      draftAttributes: { ...this.draftAttributes },
-      unspent: this.draftUnspentPoints,
-      level: this.playerLevel,
-    });
+    openLevelUpScreenImpl(this);
   }
 
   closeLevelUpScreen() {
-    this.unpauseGame("levelup");
-    this.events.emit("levelup-screen-open", null);
+    closeLevelUpScreenImpl(this);
   }
 
   applyPendingLevelUp(level) {
-    const levelsGained = level - this.playerLevel;
-    this.playerLevel = level;
-    this.unspentAttributePoints += ATTRIBUTE_POINTS_PER_LEVEL * levelsGained;
-    this.recalculatePlayerStats();
-    this.playerHp = this.playerMaxHp;
-    this.playerMana = this.playerMaxMana;
-    this.playerStamina = this.playerMaxStamina;
-
-    let anyAbilityUnlocked = false;
-    const heroArchetype = resolveHeroStatsOverride(
-      this.heroSpriteKey,
-    )?.archetype;
-    for (const def of Object.values(ABILITY_DEFS)) {
-      if (
-        def.archetypes &&
-        def.archetypes.length > 0 &&
-        !def.archetypes.includes(heroArchetype)
-      )
-        continue;
-      if (def.unlockLevel == null || def.unlockLevel > level) continue;
-      if (this.unlockedAbilities.includes(def.id)) continue;
-      if (def.staminaCost && this.playerMaxStamina <= 0) continue;
-      if (def.manaCost && this.playerMaxMana <= 0) continue;
-      this.unlockedAbilities.push(def.id);
-      anyAbilityUnlocked = true;
-      this.showLootToast(`Nouvelle compétence débloquée : ${def.name} !`);
-    }
-    if (anyAbilityUnlocked)
-      this.events.emit("abilities-updated", [...this.unlockedAbilities]);
-    let anyRecipeUnlocked = false;
-    for (const recipe of Object.values(CRAFTING_RECIPES)) {
-      if (recipe.unlockLevel == null || recipe.unlockLevel > level) continue;
-      if (recipe.discoveryOnly) continue;
-      if (this.unlockedRecipes.includes(recipe.id)) continue;
-      this.unlockedRecipes.push(recipe.id);
-      anyRecipeUnlocked = true;
-      this.showLootToast(`Nouvelle recette débloquée : ${recipe.name} !`);
-    }
-    if (anyRecipeUnlocked)
-      this.events.emit("recipes-updated", [...this.unlockedRecipes]);
-
-    const stillLocked = this.discoveredLockedRecipes.filter(
-      (id) => !this.unlockedRecipes.includes(id),
-    );
-    if (stillLocked.length !== this.discoveredLockedRecipes.length) {
-      this.discoveredLockedRecipes = stillLocked;
-      this.events.emit("locked-recipes-updated", [
-        ...this.discoveredLockedRecipes,
-      ]);
-    }
-
-    this.events.emit("player-hp-changed", {
-      hp: this.playerHp,
-      maxHp: this.playerMaxHp,
-    });
-    this.events.emit("player-mana-changed", {
-      mana: this.playerMana,
-      maxMana: this.playerMaxMana,
-    });
-    this.events.emit("player-stamina-changed", {
-      stamina: this.playerStamina,
-      maxStamina: this.playerMaxStamina,
-    });
-    for (const summon of this.summons) {
-      if (summon.growthConfig) {
-        const growthScale = computeFamiliarGrowthScale(this, summon.growthConfig);
-        const baseSpriteInfo = SPRITE_REGISTRY[summon.spriteKey];
-        if (baseSpriteInfo)
-          summon.sprite.setScale(baseSpriteInfo.scale * growthScale);
-      }
-    }
-
-    this.events.emit("level-up", { level });
-    this.events.emit("levelup-available", { available: false });
-    this.persistProgress();
+    applyPendingLevelUpImpl(this, level);
   }
-  /**
-   * Debloque tout ce qui a unlockLevel <= niveau actuel - separee
-   * d'applyPendingLevelUp car appelee aussi a la CREATION du personnage
-   * (niveau 1), moment ou aucune vraie "montee de niveau" ne se produit
-   * jamais (on demarre deja a ce niveau, on ne le "franchit" pas).
-   */
+
   unlockAvailableAbilitiesAndRecipes() {
-    const heroArchetype = resolveHeroStatsOverride(
-      this.heroSpriteKey,
-    )?.archetype;
-    for (const def of Object.values(ABILITY_DEFS)) {
-      if (
-        def.archetypes &&
-        def.archetypes.length > 0 &&
-        !def.archetypes.includes(heroArchetype)
-      )
-        continue;
-      if (def.unlockLevel == null || def.unlockLevel > this.playerLevel)
-        continue;
-      if (this.unlockedAbilities.includes(def.id)) continue;
-      if (def.staminaCost && this.playerMaxStamina <= 0) continue;
-      if (def.manaCost && this.playerMaxMana <= 0) continue;
-      this.unlockedAbilities.push(def.id);
-    }
-    for (const recipe of Object.values(CRAFTING_RECIPES)) {
-      if (recipe.unlockLevel == null || recipe.unlockLevel > this.playerLevel)
-        continue;
-      if (recipe.discoveryOnly) continue; // <-- nouveau, meme garde qu'applyPendingLevelUp
-      if (this.unlockedRecipes.includes(recipe.id)) continue;
-      this.unlockedRecipes.push(recipe.id);
-    }
+    unlockAvailableAbilitiesAndRecipesImpl(this);
   }
 
   allocateAttributePoint(attribute) {
-    if (this.draftUnspentPoints <= 0) return;
-    if (!(attribute in this.draftAttributes)) return;
-    const inCombat = this.enemies.some((e) => e.state === "chase");
-    if (inCombat) {
-      this.showLootToast("Impossible en plein combat");
-      return;
-    }
-
-    this.draftAttributes[attribute]++;
-    this.draftUnspentPoints--;
-
-    this.events.emit("levelup-draft-updated", {
-      attributes: { ...this.draftAttributes },
-      unspent: this.draftUnspentPoints,
-    });
+    allocateAttributePointImpl(this, attribute);
   }
 
-  /**
-   * Retire un point du brouillon - UNIQUEMENT si ce point a ete ajoute
-   * CETTE session (jamais en dessous de this.playerAttributes, deja
-   * confirme lors d'une session precedente).
-   */
   deallocateAttributePoint(attribute) {
-    if (!(attribute in this.draftAttributes)) return;
-    if (this.draftAttributes[attribute] <= this.playerAttributes[attribute])
-      return;
-
-    this.draftAttributes[attribute]--;
-    this.draftUnspentPoints++;
-
-    this.events.emit("levelup-draft-updated", {
-      attributes: { ...this.draftAttributes },
-      unspent: this.draftUnspentPoints,
-    });
+    deallocateAttributePointImpl(this, attribute);
   }
 
-  /**
-   * Applique reellement le brouillon - stats recalculees (proportions de
-   * ressources preservees, meme principe qu'avant), sauvegarde. Tant que
-   * cette methode n'est pas appelee, rien n'est definitif - fermer l'ecran
-   * sans valider abandonne silencieusement le brouillon (this.playerAttributes
-   * n'a jamais ete touche entre-temps).
-   */
   confirmAttributeAllocation() {
-    this.playerAttributes = { ...this.draftAttributes };
-    this.unspentAttributePoints = this.draftUnspentPoints;
-
-    const previousHpRatio = this.playerHp / this.playerMaxHp;
-    const previousManaRatio =
-      this.playerMaxMana > 0 ? this.playerMana / this.playerMaxMana : 1;
-    const previousStaminaRatio =
-      this.playerMaxStamina > 0
-        ? this.playerStamina / this.playerMaxStamina
-        : 1;
-
-    this.recalculatePlayerStats();
-
-    this.playerHp = Math.round(this.playerMaxHp * previousHpRatio);
-    this.playerMana = Math.round(this.playerMaxMana * previousManaRatio);
-    this.playerStamina = Math.round(
-      this.playerMaxStamina * previousStaminaRatio,
-    );
-
-    this.events.emit("player-hp-changed", {
-      hp: this.playerHp,
-      maxHp: this.playerMaxHp,
-    });
-    this.events.emit("player-mana-changed", {
-      mana: this.playerMana,
-      maxMana: this.playerMaxMana,
-    });
-    this.events.emit("player-stamina-changed", {
-      stamina: this.playerStamina,
-      maxStamina: this.playerMaxStamina,
-    });
-    this.events.emit("attributes-updated", {
-      attributes: { ...this.playerAttributes },
-      unspent: this.unspentAttributePoints,
-    });
-    this.showLootToast("Attributs confirmés !");
-    this.persistProgress();
+    confirmAttributeAllocationImpl(this);
   }
-
   attemptFreeCraft(selectedItems) {
     return attemptFreeCraftImpl(this, selectedItems);
   }
