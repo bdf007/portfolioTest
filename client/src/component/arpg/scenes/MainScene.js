@@ -18,6 +18,7 @@ import {
   rollGemSlotCount,
   generateInstanceId,
   socketGem as socketGemImpl,
+  attemptSocketPerforation as attemptSocketPerforationImpl,
 } from "../gemSockets";
 import {
   descendStairs,
@@ -88,6 +89,7 @@ import {
   consumeItem as consumeItemImpl,
   triggerHotbarSlot as triggerHotbarSlotImpl,
   assignHotbarSlot as assignHotbarSlotImpl,
+  renameEquipmentInstance as renameEquipmentInstanceImpl,
 } from "./inventory";
 import {
   toggleDebugTileIndices,
@@ -583,6 +585,14 @@ export default class MainScene extends Phaser.Scene {
 
   socketGem(instanceId, gemItemId, socketIndex) {
     return socketGemImpl(this, instanceId, gemItemId, socketIndex);
+  }
+
+  attemptSocketPerforation(scrollIndex, targetInstanceId) {
+    return attemptSocketPerforationImpl(this, scrollIndex, targetInstanceId);
+  }
+
+  renameEquipmentInstance(instanceId, newName) {
+    return renameEquipmentInstanceImpl(this, instanceId, newName);
   }
 
   showLootToast(text) {
@@ -1840,8 +1850,8 @@ export default class MainScene extends Phaser.Scene {
     decraftItemImpl(this, inventoryIndex);
   }
 
-  craftItem(recipeId, flexAllocations = {}) {
-    craftItemImpl(this, recipeId, flexAllocations);
+  craftItem(recipeId, flexAllocations = {}, baseInstanceId = null) {
+    craftItemImpl(this, recipeId, flexAllocations, baseInstanceId);
   }
 
   showDamageNumber(sprite, amount, color = "#ffffff", prefix = "-") {
