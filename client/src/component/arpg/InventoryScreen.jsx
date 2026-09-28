@@ -48,6 +48,58 @@ const SLOT_LABELS = {
 };
 
 const PREVIEW_SCALE = 3; // meme echelle que CharacterSelectScreen, pour un portrait coherent
+
+// couleurs des pastilles de socket, par famille de gemme (gemFamily,
+// cf. itemDefs.js) - reprend les memes teintes que STATUS_EFFECT_COLORS
+// dans statusEffects.js pour rester coherent avec les flashs de degats
+// affiches en jeu.
+const GEM_FAMILY_COLORS = {
+  burn: "#ff8800",
+  bleed: "#cc0000",
+  acid: "#88ff00",
+  slow: "#4488ff",
+  stun: "#ffff00",
+};
+
+/**
+ * Pastilles de sockets d'un exemplaire d'equipement instancie - une
+ * pastille pleine (couleur de la famille de la gemme, cf.
+ * GEM_FAMILY_COLORS) par socket occupe, une pastille vide et cliquable
+ * par socket libre (ouvre le panneau de selection de gemme). Insertion
+ * definitive : un socket deja plein n'est plus cliquable (cf.
+ * gemSockets.socketGem cote MainScene, qui refuse aussi ce cas).
+ */
+function SocketPips({ instance, onOpenPicker }) {
+  if (!instance || !instance.gemSlots) return null;
+  return (
+    <div style={{ display: "flex", gap: 3, marginTop: 4 }}>
+      {Array.from({ length: instance.gemSlots }).map((_, i) => {
+        const gemId = instance.sockets?.[i];
+        const gemDef = gemId ? resolveItemDef(gemId) : null;
+        return (
+          <div
+            key={i}
+            onClick={() =>
+              !gemDef && onOpenPicker(instance.instanceId, i)
+            }
+            title={gemDef ? gemDef.name : "Socket vide - cliquer pour insérer une gemme"}
+            style={{
+              width: 10,
+              height: 10,
+              borderRadius: "50%",
+              border: "1px solid #8a7050",
+              background: gemDef
+                ? GEM_FAMILY_COLORS[gemDef.gemFamily] || "#ccc"
+                : "rgba(120,100,70,0.15)",
+              cursor: gemDef ? "default" : "pointer",
+              flexShrink: 0,
+            }}
+          />
+        );
+      })}
+    </div>
+  );
+}
 // const SHEET_COLS = 12;
 // const SHEET_ROWS = 8;
 // const ICON_SHEET_COLS = 10;
@@ -69,9 +121,40 @@ const PREVIEW_SCALE = 3; // meme echelle que CharacterSelectScreen, pour un port
  * LEQUEL des exemplaires identiques est equipe/utilise en premier, ils
  * sont interchangeables par definition).
  */
-export function groupInventory(inventory) {
+export function groupInventory(inventory, equipped = {}) {
+  // les objets d'equipement (armes/armures) sont desormais instancies
+  // (instanceId + sockets propres, cf. gemSockets.js) et ne quittent
+  // plus jamais this.inventory quand ils sont equipes - exactement
+  // comme le carquois le faisait deja pour les munitions. Il faut donc
+  // exclure explicitement toute instance actuellement equipee de la
+  // liste "Objets" (elle est deja affichee sur le mannequin).
+  const equippedInstanceIds = new Set(
+    Object.entries(equipped)
+      .filter(([slot]) => slot !== "quiver")
+      .map(([, ref]) => ref)
+      .filter(Boolean),
+  );
+
   const groups = new Map();
+  const singles = [];
   inventory.forEach((entry, index) => {
+    if (entry.instanceId && equippedInstanceIds.has(entry.instanceId)) return;
+    if (entry.itemId === equipped.quiver) return; // munitions equipees : deja affichees case Carquois
+
+    if (entry.gemSlots > 0) {
+      // objet a sockets : jamais regroupe avec un autre exemplaire,
+      // meme identique - ses sockets lui sont propres.
+      singles.push({
+        itemId: entry.itemId,
+        totalQuantity: 1,
+        firstIndex: index,
+        instanceId: entry.instanceId,
+        gemSlots: entry.gemSlots,
+        sockets: entry.sockets || [],
+      });
+      return;
+    }
+
     if (!groups.has(entry.itemId)) {
       groups.set(entry.itemId, {
         itemId: entry.itemId,
@@ -81,7 +164,7 @@ export function groupInventory(inventory) {
     }
     groups.get(entry.itemId).totalQuantity += entry.quantity;
   });
-  return [...groups.values()];
+  return [...groups.values(), ...singles];
 }
 
 function TintedItemIcon({
@@ -611,9 +694,13 @@ export default function InventoryScreen({
   onUnequip,
   onUse,
   onDecraft,
+  onSocketGem,
   onClose,
 }) {
   console.log(stats);
+  // {instanceId, socketIndex} de l'objet en cours de socketage, ou null
+  // - ouvre le panneau de selection de gemme (cf. plus bas).
+  const [socketingSocket, setSocketingSocket] = useState(null);
   const heroEntry = SPRITE_REGISTRY[heroId] || SPRITE_REGISTRY.hero1;
   const sheetCols = heroEntry.sheetCols || 12;
   const sheetRows = heroEntry.sheetRows || 8;
@@ -625,13 +712,24 @@ export default function InventoryScreen({
   const sheetH = heroEntry.frameHeight * sheetRows;
 
   function renderSlot(slot, fullWidth = false) {
-    const itemId = equipped[slot];
+    // equipped[slot] est un instanceId pour tout objet d'equipement -
+    // seul le carquois (munitions, non instanciees) stocke encore un
+    // itemId direct (cf. inventory.equipItem).
+    const ref = equipped[slot];
+    const instance =
+      slot !== "quiver" && ref
+        ? inventory.find((i) => i.instanceId === ref)
+        : null;
+    const itemId = slot === "quiver" ? ref : instance?.itemId;
     const def = itemId ? resolveItemDef(itemId) : null;
 
-    const mainHandDef =
+    const mainHandInstance =
       slot === "offHand" && equipped.mainHand
-        ? resolveItemDef(equipped.mainHand)
+        ? inventory.find((i) => i.instanceId === equipped.mainHand)
         : null;
+    const mainHandDef = mainHandInstance
+      ? resolveItemDef(mainHandInstance.itemId)
+      : null;
     const lockedByTwoHanded = mainHandDef && mainHandDef.twoHanded;
 
     const quiverQuantity =
@@ -661,49 +759,61 @@ export default function InventoryScreen({
           <div
             style={{
               display: "flex",
+              flexDirection: "column",
               alignItems: "center",
-              justifyContent: "center",
-              gap: 4,
+              gap: 2,
               position: "relative",
             }}
             title={def.description}
           >
-            <div style={{ position: "relative" }}>
-              <ItemIcon itemId={itemId} scale={1.1} />
-              {quiverQuantity !== null && (
-                <div
-                  style={{
-                    position: "absolute",
-                    bottom: -4,
-                    right: -4,
-                    fontSize: 8,
-                    background: "#eee2cc",
-                    border: "1px solid #8a7050",
-                    borderRadius: 3,
-                    padding: "0 2px",
-                    color: "#5a4a35",
-                  }}
-                >
-                  x{quiverQuantity}
-                </div>
-              )}
-            </div>
-            <button
-              onClick={() => onUnequip(slot)}
-              title="Retirer"
-              style={{
-                padding: "1px 4px",
-                fontSize: 11,
-                lineHeight: 1,
-                borderRadius: 4,
-                border: "1px solid #8a7050",
-                background: "none",
-                color: "#5a4a35",
-                cursor: "pointer",
-              }}
+            <div
+              style={{ display: "flex", alignItems: "center", gap: 4 }}
             >
-              ✕
-            </button>
+              <div style={{ position: "relative" }}>
+                <ItemIcon itemId={itemId} scale={1.1} />
+                {quiverQuantity !== null && (
+                  <div
+                    style={{
+                      position: "absolute",
+                      bottom: -4,
+                      right: -4,
+                      fontSize: 8,
+                      background: "#eee2cc",
+                      border: "1px solid #8a7050",
+                      borderRadius: 3,
+                      padding: "0 2px",
+                      color: "#5a4a35",
+                    }}
+                  >
+                    x{quiverQuantity}
+                  </div>
+                )}
+              </div>
+              <button
+                onClick={() => onUnequip(slot)}
+                title="Retirer"
+                style={{
+                  padding: "1px 4px",
+                  fontSize: 11,
+                  lineHeight: 1,
+                  borderRadius: 4,
+                  border: "1px solid #8a7050",
+                  background: "none",
+                  color: "#5a4a35",
+                  cursor: "pointer",
+                }}
+              >
+                ✕
+              </button>
+            </div>
+            {instance && (
+              <SocketPips
+                instance={instance}
+                onOpenPicker={(instanceId, socketIndex) =>
+                  setSocketingSocket({ instanceId, socketIndex })
+                }
+              />
+            )}
           </div>
         ) : (
           <>
@@ -725,17 +835,12 @@ export default function InventoryScreen({
     );
   }
 
-  // les flèches equipees (cf. equipped.quiver) ne quittent JAMAIS
-  // reellement this.inventory (contrairement a un objet d'equipement
-  // classique - cf. MainScene.equipItem, categorie 'ammo') - sans ce
-  // filtre, elles apparaitraient a la fois dans la case Carquois ET
-  // dans "Objets", alors que tout le reste de l'equipement disparait de
-  // cette liste une fois equipe. Le filtre se base sur l'itemId (pas la
-  // categorie generique) : si un jour un autre type de munition existe,
-  // il faudra le meme traitement pour son propre emplacement.
-  const groupedItems = groupInventory(inventory).filter(
-    (group) => group.itemId !== equipped.quiver,
-  );
+  // ni les munitions equipees (equipped.quiver) ni, desormais, aucun
+  // objet d'equipement equipe (armes/armures instanciees, cf.
+  // gemSockets.js) ne quittent JAMAIS reellement this.inventory - sans
+  // ce filtre (fait directement dans groupInventory), ils
+  // apparaitraient a la fois dans "Objets" ET sur le mannequin.
+  const groupedItems = groupInventory(inventory, equipped);
 
   const containerRef = useRef(null);
   const [bookSize, setBookSize] = useState({ width: 800, height: 500 });
@@ -831,7 +936,7 @@ export default function InventoryScreen({
               const def = resolveItemDef(group.itemId);
               return (
                 <div
-                  key={group.itemId}
+                  key={group.instanceId || group.itemId}
                   style={{
                     display: "flex",
                     flexDirection: isMobile ? "column" : "row",
@@ -868,6 +973,15 @@ export default function InventoryScreen({
                       >
                         {def.description}
                       </div>
+
+                      {group.gemSlots > 0 && (
+                        <SocketPips
+                          instance={group}
+                          onOpenPicker={(instanceId, socketIndex) =>
+                            setSocketingSocket({ instanceId, socketIndex })
+                          }
+                        />
+                      )}
                     </div>
                   </div>
                   {(def.category === "equipment" ||
@@ -1203,6 +1317,103 @@ export default function InventoryScreen({
           )}
         </div>
       </div>
+
+      {socketingSocket && (
+        <div
+          onClick={() => setSocketingSocket(null)}
+          style={{
+            position: "absolute",
+            inset: 0,
+            zIndex: 30,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            background: "rgba(0,0,0,0.6)",
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: "#2a2015",
+              border: "1px solid #8a7050",
+              borderRadius: 8,
+              padding: 14,
+              minWidth: 220,
+              maxWidth: 280,
+              color: "#f0e6d0",
+            }}
+          >
+            <h4 style={{ margin: "0 0 10px", fontSize: 13 }}>
+              Choisir une gemme (insertion définitive)
+            </h4>
+            {(() => {
+              const ownedGems = groupedItems.filter(
+                (g) => resolveItemDef(g.itemId).category === "gem",
+              );
+              if (ownedGems.length === 0) {
+                return (
+                  <div style={{ fontSize: 11, color: "#c9b896" }}>
+                    Aucune gemme en inventaire.
+                  </div>
+                );
+              }
+              return (
+                <div
+                  style={{ display: "flex", flexDirection: "column", gap: 6 }}
+                >
+                  {ownedGems.map((gem) => (
+                    <button
+                      key={gem.itemId}
+                      onClick={() => {
+                        onSocketGem(
+                          socketingSocket.instanceId,
+                          gem.itemId,
+                          socketingSocket.socketIndex,
+                        );
+                        setSocketingSocket(null);
+                      }}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 8,
+                        padding: "4px 8px",
+                        fontSize: 11,
+                        borderRadius: 5,
+                        border: "1px solid #8a7050",
+                        background: "rgba(120,100,70,0.2)",
+                        color: "#f0e6d0",
+                        cursor: "pointer",
+                        textAlign: "left",
+                      }}
+                    >
+                      <ItemIcon itemId={gem.itemId} scale={1.2} />
+                      <span>
+                        {resolveItemDef(gem.itemId).name} x{gem.totalQuantity}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              );
+            })()}
+            <button
+              onClick={() => setSocketingSocket(null)}
+              style={{
+                marginTop: 10,
+                fontSize: 11,
+                padding: "3px 8px",
+                borderRadius: 5,
+                border: "1px solid #8a7050",
+                background: "none",
+                color: "#f0e6d0",
+                cursor: "pointer",
+              }}
+            >
+              Annuler
+            </button>
+          </div>
+        </div>
+      )}
+
       <style>{`
   .book-page-scroll::-webkit-scrollbar {
     width: 7px;
