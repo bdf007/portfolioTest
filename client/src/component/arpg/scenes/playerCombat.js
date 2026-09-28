@@ -21,7 +21,7 @@ import {
 import { resolveItemDef } from "../itemDefs";
 import { resolveHeroStatsOverride } from "../spriteRegistry";
 import { resolveFuryDef } from "../furyDefs";
-import { resolveInstanceGemEffectSources } from "../gemSockets";
+import { resolveAllEquippedGemEffectSources } from "../gemSockets";
 
 import {
   TILE_SIZE,
@@ -54,9 +54,12 @@ export function performMeleeAttack(scene, now) {
   const meleeWeaponDef = meleeWeaponInstance
     ? resolveItemDef(meleeWeaponInstance.itemId)
     : null;
-  const meleeGemEffectSources = resolveInstanceGemEffectSources(
-    meleeWeaponInstance,
-  );
+  // cumule les gemmes a effet de TOUT l'equipement porte (pas seulement
+  // l'arme) - certaines gemmes de combat (slowGem, stunGem) sont plutot
+  // destinees a une armure/botte pour leur bonus de stat mais doivent
+  // quand meme pouvoir declencher leur effet au corps a corps de la, cf.
+  // resolveAllEquippedGemEffectSources dans gemSockets.js.
+  const meleeGemEffectSources = resolveAllEquippedGemEffectSources(scene);
 
   scene.playAttackAnim(now);
 
@@ -128,7 +131,8 @@ export function performMeleeAttack(scene, now) {
       }
 
       if (enemy.hp > 0) {
-        applyStatusEffect(scene,
+        applyStatusEffect(
+          scene,
           enemy.statusEffects,
           rollStatusEffect(meleeWeaponDef),
         );
@@ -136,13 +140,15 @@ export function performMeleeAttack(scene, now) {
         // celui de l'arme elle-meme (une gemme ne remplace jamais
         // l'effet propre de l'arme, cf. gemSockets.js).
         for (const gemSource of meleeGemEffectSources) {
-          applyStatusEffect(scene,
+          applyStatusEffect(
+            scene,
             enemy.statusEffects,
             rollStatusEffect(gemSource),
           );
         }
         if (imbue) {
-          applyStatusEffect(scene,
+          applyStatusEffect(
+            scene,
             enemy.statusEffects,
             rollStatusEffect(imbue),
           );
@@ -178,12 +184,16 @@ export function canUseRangedAttack(scene) {
 export function performRangedAttack(scene, now) {
   if (!scene.rangedCooldown.isReady(now)) return;
   const weaponInstance = getActiveRangedWeaponInstance(scene);
-  const weaponDef = weaponInstance ? resolveItemDef(weaponInstance.itemId) : null;
+  const weaponDef = weaponInstance
+    ? resolveItemDef(weaponInstance.itemId)
+    : null;
   if (!weaponDef) {
     scene.showLootToast("Aucune arme à distance équipée");
     return;
   }
-  const weaponGemEffectSources = resolveInstanceGemEffectSources(weaponInstance);
+  // meme principe qu'en melee ci-dessus : cumule les gemmes a effet de
+  // TOUT l'equipement porte, pas seulement l'arme a distance active.
+  const weaponGemEffectSources = resolveAllEquippedGemEffectSources(scene);
 
   if (weaponDef.requiresAmmo) {
     const requiredAmmoId = weaponDef.requiresAmmo;
@@ -312,10 +322,7 @@ export function updateProjectiles(scene) {
     const tileX = Math.floor(proj.sprite.x / TILE_SIZE);
     const tileY = Math.floor(proj.sprite.y / TILE_SIZE);
     const outOfBounds =
-      tileX < 0 ||
-      tileY < 0 ||
-      tileY >= grid.length ||
-      tileX >= grid[0].length;
+      tileX < 0 || tileY < 0 || tileY >= grid.length || tileX >= grid[0].length;
     const hitWall = !outOfBounds && grid[tileY][tileX] === WALL;
 
     const fogState = scene.fogState.state;
@@ -346,10 +353,7 @@ export function updateProjectiles(scene) {
           (isCrit ? CRIT_MULTIPLIER : 1);
 
         if (proj.weaponDef?.varianceDice) {
-          rawDamage = applyDiceVariance(
-            rawDamage,
-            proj.weaponDef.varianceDice,
-          );
+          rawDamage = applyDiceVariance(rawDamage, proj.weaponDef.varianceDice);
         }
 
         rawDamage = applyElementalResistance(
@@ -361,11 +365,13 @@ export function updateProjectiles(scene) {
         scene.damageEnemy(enemy, computeDamage(rawDamage, enemy.defense));
 
         if (enemy.hp > 0) {
-          applyStatusEffect(scene,
+          applyStatusEffect(
+            scene,
             enemy.statusEffects,
             rollStatusEffect(proj.weaponDef),
           );
-          applyStatusEffect(scene,
+          applyStatusEffect(
+            scene,
             enemy.statusEffects,
             rollStatusEffect(proj.ammoDef),
           );
@@ -373,13 +379,15 @@ export function updateProjectiles(scene) {
           // distance - se CUMULE avec celui de l'arme et celui de la
           // munition (meme logique qu'au corps a corps).
           for (const gemSource of proj.weaponGemEffectSources || []) {
-            applyStatusEffect(scene,
+            applyStatusEffect(
+              scene,
               enemy.statusEffects,
               rollStatusEffect(gemSource),
             );
           }
           if (proj.imbue)
-            applyStatusEffect(scene,
+            applyStatusEffect(
+              scene,
               enemy.statusEffects,
               rollStatusEffect(proj.imbue),
             );
@@ -405,12 +413,7 @@ export function knockbackEnemyIfClear(scene, enemy, dx, dy) {
   const tileX = Math.floor(newX / TILE_SIZE);
   const tileY = Math.floor(newY / TILE_SIZE);
   const grid = scene.fogGrid;
-  if (
-    tileY < 0 ||
-    tileX < 0 ||
-    tileY >= grid.length ||
-    tileX >= grid[0].length
-  )
+  if (tileY < 0 || tileX < 0 || tileY >= grid.length || tileX >= grid[0].length)
     return;
   if (grid[tileY][tileX] === WALL) return;
   enemy.sprite.x = newX;
@@ -439,7 +442,8 @@ export function updateShieldBash(scene) {
       );
       scene.damageEnemy(enemy, computeDamage(rawDamage, enemy.defense));
       ds.hitEnemyIds.add(enemy);
-      knockbackEnemyIfClear(scene,
+      knockbackEnemyIfClear(
+        scene,
         enemy,
         ds.dirX * ds.def.knockbackDistance,
         ds.dirY * ds.def.knockbackDistance,
@@ -517,7 +521,8 @@ export function computeBossRoomTiles(scene) {
   const centerTileX = Math.floor(scene.hero.x / TILE_SIZE);
   const centerTileY = Math.floor(scene.hero.y / TILE_SIZE);
 
-  const reachableNow = computeReachableFloorTiles(scene,
+  const reachableNow = computeReachableFloorTiles(
+    scene,
     centerTileX,
     centerTileY,
   );
@@ -525,7 +530,8 @@ export function computeBossRoomTiles(scene) {
   const { x: dx, y: dy } = scene.bossDoorTile;
   const original = scene.fogGrid[dy][dx];
   scene.fogGrid[dy][dx] = 0;
-  const reachableIfOpen = computeReachableFloorTiles(scene,
+  const reachableIfOpen = computeReachableFloorTiles(
+    scene,
     centerTileX,
     centerTileY,
   );
@@ -550,10 +556,7 @@ export function updateAbilityProjectiles(scene) {
     const tileX = Math.floor(proj.sprite.x / TILE_SIZE);
     const tileY = Math.floor(proj.sprite.y / TILE_SIZE);
     const outOfBounds =
-      tileX < 0 ||
-      tileY < 0 ||
-      tileY >= grid.length ||
-      tileX >= grid[0].length;
+      tileX < 0 || tileY < 0 || tileY >= grid.length || tileX >= grid[0].length;
     const hitWall = !outOfBounds && grid[tileY][tileX] === WALL;
 
     const fogState = scene.fogState.state;
@@ -584,7 +587,8 @@ export function updateAbilityProjectiles(scene) {
           );
           scene.damageEnemy(enemy, computeDamage(rawDamage, enemy.defense));
           if (enemy.hp > 0) {
-            applyStatusEffect(scene,
+            applyStatusEffect(
+              scene,
               enemy.statusEffects,
               rollStatusEffect(proj.def),
             );
@@ -665,12 +669,10 @@ export function updateTraps(scene, now) {
     }
     let triggered = false;
     for (const enemy of scene.enemies) {
-      const dist = Math.hypot(
-        enemy.sprite.x - trap.x,
-        enemy.sprite.y - trap.y,
-      );
+      const dist = Math.hypot(enemy.sprite.x - trap.x, enemy.sprite.y - trap.y);
       if (dist <= trap.triggerRadius) {
-        applyStatusEffect(scene,
+        applyStatusEffect(
+          scene,
           enemy.statusEffects,
           rollStatusEffect({ inflictsEffect: trap.inflictsEffect }),
         );
@@ -688,10 +690,7 @@ export function updateBoomerangs(scene) {
   const remaining = [];
   for (const b of scene.boomerangs) {
     if (!b.returning) {
-      const traveled = Math.hypot(
-        b.sprite.x - b.startX,
-        b.sprite.y - b.startY,
-      );
+      const traveled = Math.hypot(b.sprite.x - b.startX, b.sprite.y - b.startY);
       if (traveled >= b.def.maxDistance) b.returning = true;
     } else {
       const dx = scene.hero.x - b.sprite.x;

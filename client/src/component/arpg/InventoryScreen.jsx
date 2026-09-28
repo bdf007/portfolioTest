@@ -79,10 +79,12 @@ function SocketPips({ instance, onOpenPicker }) {
         return (
           <div
             key={i}
-            onClick={() =>
-              !gemDef && onOpenPicker(instance.instanceId, i)
+            onClick={() => !gemDef && onOpenPicker(instance.instanceId, i)}
+            title={
+              gemDef
+                ? gemDef.description
+                : "Socket vide - cliquer pour insérer une gemme"
             }
-            title={gemDef ? gemDef.name : "Socket vide - cliquer pour insérer une gemme"}
             style={{
               width: 10,
               height: 10,
@@ -142,9 +144,19 @@ function NameEditor({ instance, defaultName, onRename }) {
         placeholder={defaultName}
         onChange={(e) => setDraft(e.target.value)}
         onKeyDown={(e) => {
+          // Phaser capture ses touches de jeu (Z/Q/S/D, W/A, E, X - cf.
+          // this.keys dans MainScene.js) via un listener natif sur window en
+          // phase de bulles et appelle preventDefault() dessus, ce qui bloque
+          // la saisie de ces lettres dans CE champ meme s'il a le focus (le
+          // filtre document.activeElement ajoute dans Arpg.js ne protege que
+          // les raccourcis globaux React, pas la capture clavier de Phaser).
+          // stopPropagation() empeche l'evenement natif d'atteindre ce
+          // listener de Phaser, donc la frappe s'insere normalement.
+          e.stopPropagation();
           if (e.key === "Enter") confirm();
           if (e.key === "Escape") setEditing(false);
         }}
+        onKeyUp={(e) => e.stopPropagation()}
         style={{ fontSize: 11, width: 100, padding: "1px 3px" }}
       />
       <button
@@ -763,6 +775,7 @@ export default function InventoryScreen({
   onSocketGem,
   onRename,
   onAttemptPerforation,
+  onAttemptGemExtraction,
   onClose,
 }) {
   console.log(stats);
@@ -773,6 +786,10 @@ export default function InventoryScreen({
   // d'utilisation, ou null - ouvre le panneau de selection de la cible
   // (cf. plus bas).
   const [perforatingScrollIndex, setPerforatingScrollIndex] = useState(null);
+  // index (dans `inventory`) du parchemin d'extraction en cours
+  // d'utilisation, ou null - ouvre le panneau de selection de la cible ET
+  // du socket precis a extraire (cf. plus bas).
+  const [extractingScrollIndex, setExtractingScrollIndex] = useState(null);
   const heroEntry = SPRITE_REGISTRY[heroId] || SPRITE_REGISTRY.hero1;
   const sheetCols = heroEntry.sheetCols || 12;
   const sheetRows = heroEntry.sheetRows || 8;
@@ -838,9 +855,7 @@ export default function InventoryScreen({
             }}
             title={def.description}
           >
-            <div
-              style={{ display: "flex", alignItems: "center", gap: 4 }}
-            >
+            <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
               <div style={{ position: "relative" }}>
                 <ItemIcon itemId={itemId} scale={1.1} />
                 {quiverQuantity !== null && (
@@ -1071,6 +1086,21 @@ export default function InventoryScreen({
                           }
                         />
                       )}
+
+                      {(group.sockets || []).some(Boolean) && (
+                        <div
+                          style={{
+                            fontSize: 9,
+                            color: "#6a5a3f",
+                            marginTop: 2,
+                          }}
+                        >
+                          {(group.sockets || [])
+                            .filter(Boolean)
+                            .map((gemId) => resolveItemDef(gemId).description)
+                            .join(" • ")}
+                        </div>
+                      )}
                     </div>
                   </div>
                   {(def.category === "equipment" ||
@@ -1094,13 +1124,18 @@ export default function InventoryScreen({
                   {(def.category === "consumable" ||
                     def.category === "abilityScroll" ||
                     def.category === "recipeScroll" ||
-                    def.category === "socketPerforation") && (
+                    def.category === "socketPerforation" ||
+                    def.category === "gemExtraction") && (
                     <button
-                      onClick={() =>
-                        def.category === "socketPerforation"
-                          ? setPerforatingScrollIndex(group.firstIndex)
-                          : onUse(group.firstIndex)
-                      }
+                      onClick={() => {
+                        if (def.category === "socketPerforation") {
+                          setPerforatingScrollIndex(group.firstIndex);
+                        } else if (def.category === "gemExtraction") {
+                          setExtractingScrollIndex(group.firstIndex);
+                        } else {
+                          onUse(group.firstIndex);
+                        }
+                      }}
                       style={{
                         padding: "4px 10px",
                         fontSize: 11,
@@ -1159,7 +1194,8 @@ export default function InventoryScreen({
                 test: (def) =>
                   def.category === "abilityScroll" ||
                   def.category === "recipeScroll" ||
-                  def.category === "socketPerforation",
+                  def.category === "socketPerforation" ||
+                  def.category === "gemExtraction",
               },
               {
                 key: "consumable",
@@ -1442,13 +1478,29 @@ export default function InventoryScreen({
               Choisir une gemme (insertion définitive)
             </h4>
             {(() => {
-              const ownedGems = groupedItems.filter(
-                (g) => resolveItemDef(g.itemId).category === "gem",
+              // restriction par categorie d'objet (cf. gemSockets.socketGem,
+              // qui refuse aussi ce cas cote logique) : une pioche/hache
+              // (slot "tool") ne propose que les gemmes de minage/
+              // bucheronnage (gemUsage "tool"), une arme/armure que les
+              // gemmes de combat.
+              const targetInstance = inventory.find(
+                (i) => i.instanceId === socketingSocket.instanceId,
               );
+              const targetDef = targetInstance
+                ? resolveItemDef(targetInstance.itemId)
+                : null;
+              const isTargetTool = targetDef?.slot === "tool";
+              const ownedGems = groupedItems.filter((g) => {
+                const gemDef = resolveItemDef(g.itemId);
+                if (gemDef.category !== "gem") return false;
+                return (gemDef.gemUsage === "tool") === isTargetTool;
+              });
               if (ownedGems.length === 0) {
                 return (
                   <div style={{ fontSize: 11, color: "#c9b896" }}>
-                    Aucune gemme en inventaire.
+                    {isTargetTool
+                      ? "Aucune gemme de minage/bûcheronnage en inventaire."
+                      : "Aucune gemme de combat en inventaire."}
                   </div>
                 );
               }
@@ -1558,9 +1610,7 @@ export default function InventoryScreen({
                 >
                   {targets.map((inst) => {
                     const targetDef = resolveItemDef(inst.itemId);
-                    const filled = (inst.sockets || []).filter(
-                      Boolean,
-                    ).length;
+                    const filled = (inst.sockets || []).filter(Boolean).length;
                     return (
                       <button
                         key={inst.instanceId}
@@ -1587,8 +1637,8 @@ export default function InventoryScreen({
                       >
                         <ItemIcon itemId={inst.itemId} scale={1.2} />
                         <span>
-                          {inst.customName || targetDef.name} (
-                          {filled}/{inst.gemSlots || 0} sockets)
+                          {inst.customName || targetDef.name} ({filled}/
+                          {inst.gemSlots || 0} sockets)
                         </span>
                       </button>
                     );
@@ -1598,6 +1648,121 @@ export default function InventoryScreen({
             })()}
             <button
               onClick={() => setPerforatingScrollIndex(null)}
+              style={{
+                marginTop: 10,
+                fontSize: 11,
+                padding: "3px 8px",
+                borderRadius: 5,
+                border: "1px solid #8a7050",
+                background: "none",
+                color: "#f0e6d0",
+                cursor: "pointer",
+              }}
+            >
+              Annuler
+            </button>
+          </div>
+        </div>
+      )}
+
+      {extractingScrollIndex !== null && (
+        <div
+          onClick={() => setExtractingScrollIndex(null)}
+          style={{
+            position: "absolute",
+            inset: 0,
+            zIndex: 30,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            background: "rgba(0,0,0,0.6)",
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: "#2a2015",
+              border: "1px solid #8a7050",
+              borderRadius: 8,
+              padding: 14,
+              minWidth: 220,
+              maxWidth: 300,
+              maxHeight: "70%",
+              overflowY: "auto",
+              color: "#f0e6d0",
+            }}
+          >
+            <h4 style={{ margin: "0 0 10px", fontSize: 13 }}>
+              Choisir la gemme à extraire
+            </h4>
+            {(() => {
+              // seuls les exemplaires ayant au moins une gemme socketee ont
+              // quelque chose a extraire - liste aplatie objet+socket (un
+              // objet a plusieurs sockets remplis apparait une fois par
+              // gemme) pour choisir directement LAQUELLE retirer.
+              const rows = inventory
+                .filter(
+                  (i) =>
+                    i.instanceId &&
+                    resolveItemDef(i.itemId).category === "equipment" &&
+                    (i.sockets || []).some(Boolean),
+                )
+                .flatMap((inst) =>
+                  (inst.sockets || [])
+                    .map((gemId, socketIndex) => ({ inst, gemId, socketIndex }))
+                    .filter((row) => row.gemId),
+                );
+              if (rows.length === 0) {
+                return (
+                  <div style={{ fontSize: 11, color: "#c9b896" }}>
+                    Aucun équipement avec une gemme socketée.
+                  </div>
+                );
+              }
+              return (
+                <div
+                  style={{ display: "flex", flexDirection: "column", gap: 6 }}
+                >
+                  {rows.map(({ inst, gemId, socketIndex }) => {
+                    const targetDef = resolveItemDef(inst.itemId);
+                    const gemDef = resolveItemDef(gemId);
+                    return (
+                      <button
+                        key={`${inst.instanceId}-${socketIndex}`}
+                        onClick={() => {
+                          onAttemptGemExtraction(
+                            extractingScrollIndex,
+                            inst.instanceId,
+                            socketIndex,
+                          );
+                          setExtractingScrollIndex(null);
+                        }}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 8,
+                          padding: "4px 8px",
+                          fontSize: 11,
+                          borderRadius: 5,
+                          border: "1px solid #8a7050",
+                          background: "rgba(120,100,70,0.2)",
+                          color: "#f0e6d0",
+                          cursor: "pointer",
+                          textAlign: "left",
+                        }}
+                      >
+                        <ItemIcon itemId={inst.itemId} scale={1.2} />
+                        <span>
+                          {inst.customName || targetDef.name} — {gemDef.name}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              );
+            })()}
+            <button
+              onClick={() => setExtractingScrollIndex(null)}
               style={{
                 marginTop: 10,
                 fontSize: 11,

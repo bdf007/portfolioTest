@@ -1,15 +1,10 @@
 import { resolveAbilityDef, ABILITY_DEFS } from "../abilityDefs";
 import { resolveItemDef } from "../itemDefs";
-import {
-  computeDamage,
-  applyElementalResistance,
-} from "../combat";
+import { findEquipmentInstance } from "../gemSockets";
+import { computeDamage, applyElementalResistance } from "../combat";
 import { hasClearLineOfSight, computeVisibleTiles } from "../fogOfWar";
 import { WALL } from "./floorRenderer";
-import {
-  rollStatusEffect,
-  applyStatusEffect,
-} from "./statusEffects";
+import { rollStatusEffect, applyStatusEffect } from "./statusEffects";
 import { performSummonAbility } from "./summons";
 
 import { TILE_SIZE, MAX_SUMMONS } from "./gameConstants";
@@ -27,10 +22,7 @@ export function performAbility(scene, abilityId) {
     );
     return;
   }
-  if (
-    def.disabledBiomes &&
-    def.disabledBiomes.includes(scene.currentBiomeId)
-  ) {
+  if (def.disabledBiomes && def.disabledBiomes.includes(scene.currentBiomeId)) {
     scene.showLootToast(`${def.name} est désactivée sur ce type de niveau`);
     return;
   }
@@ -84,6 +76,44 @@ export function performAbility(scene, abilityId) {
     return;
   }
 
+  const handled = performAbilityEffect(scene, def);
+  if (!handled) {
+    scene.showLootToast(`${def.name} : effet pas encore implémenté`);
+    return;
+  }
+
+  if (def.staminaCost) {
+    scene.playerStamina -= def.staminaCost;
+    scene.events.emit("player-stamina-changed", {
+      stamina: scene.playerStamina,
+      maxStamina: scene.playerMaxStamina,
+    });
+  }
+  if (def.manaCost) {
+    scene.playerMana -= def.manaCost;
+    scene.events.emit("player-mana-changed", {
+      mana: scene.playerMana,
+      maxMana: scene.playerMaxMana,
+    });
+  }
+
+  scene.abilityCooldowns[abilityId] = now + def.cooldownMs;
+  scene.events.emit("hotbar-cooldown-started", {
+    key: `ability:${abilityId}`,
+    cooldownMs: def.cooldownMs,
+    startedAt: Date.now(),
+  });
+}
+
+/**
+ * Aiguille def.effectType vers la fonction perform*Ability correspondante
+ * (le gros if/else auparavant inline dans performAbility). Extrait pour
+ * pouvoir etre appele directement par triggerAbilityEffect ci-dessous, sans
+ * repasser par les verifications de performAbility (deblocage, cooldown,
+ * cout en mana/stamina) - utilise par les gemmes reactives. Retourne false
+ * si l'effectType n'est pas reconnu, true sinon.
+ */
+export function performAbilityEffect(scene, def) {
   if (def.effectType === "aoe") {
     performAoeAbility(scene, def);
   } else if (def.effectType === "projectileAoe") {
@@ -145,31 +175,28 @@ export function performAbility(scene, abilityId) {
   } else if (def.effectType === "detectSecret") {
     performDetectSecretAbility(scene, def);
   } else {
-    scene.showLootToast(`${def.name} : effet pas encore implémenté`);
-    return;
+    return false;
   }
+  return true;
+}
 
-  if (def.staminaCost) {
-    scene.playerStamina -= def.staminaCost;
-    scene.events.emit("player-stamina-changed", {
-      stamina: scene.playerStamina,
-      maxStamina: scene.playerMaxStamina,
-    });
-  }
-  if (def.manaCost) {
-    scene.playerMana -= def.manaCost;
-    scene.events.emit("player-mana-changed", {
-      mana: scene.playerMana,
-      maxMana: scene.playerMaxMana,
-    });
-  }
-
-  scene.abilityCooldowns[abilityId] = now + def.cooldownMs;
-  scene.events.emit("hotbar-cooldown-started", {
-    key: `ability:${abilityId}`,
-    cooldownMs: def.cooldownMs,
-    startedAt: Date.now(),
-  });
+/**
+ * Declenche l'effet d'une ability directement par son id, en contournant
+ * TOUTES les verifications de performAbility (deblocage via
+ * unlockedAbilities, hpThresholdPercent, disabledBiomes, cooldown, cout en
+ * mana/stamina) et sans jamais demarrer son cooldown normal ni consommer
+ * de ressource. C'est le point d'entree utilise par les gemmes reactives
+ * (reactiveEffect.kind === "ability" dans itemDefs.js) : la gemme accorde
+ * l'effet independamment de ce que le joueur a debloque, gratuitement, et
+ * c'est applyReactiveGemEffects (ai.js) qui regule le declenchement via la
+ * chance% et le cooldown propres a la gemme (reactiveEffect.cooldownMs).
+ * Retourne false si l'abilityId est inconnu ou si son effectType n'est pas
+ * gere par performAbilityEffect, true si l'effet a bien ete applique.
+ */
+export function triggerAbilityEffect(scene, abilityId) {
+  const def = resolveAbilityDef(abilityId);
+  if (!def) return false;
+  return performAbilityEffect(scene, def);
 }
 
 export function performAoeStunAbility(scene, def) {
@@ -188,7 +215,13 @@ export function performAoeStunAbility(scene, def) {
     });
   }
 
-  const circle = scene.add.circle(scene.hero.x, scene.hero.y, 10, 0xffff00, 0.4);
+  const circle = scene.add.circle(
+    scene.hero.x,
+    scene.hero.y,
+    10,
+    0xffff00,
+    0.4,
+  );
   circle.setDepth(14);
   scene.tweens.add({
     targets: circle,
@@ -225,7 +258,13 @@ export function performRepelAbility(scene, def) {
     );
   }
 
-  const circle = scene.add.circle(scene.hero.x, scene.hero.y, 10, 0xaaaaff, 0.4);
+  const circle = scene.add.circle(
+    scene.hero.x,
+    scene.hero.y,
+    10,
+    0xaaaaff,
+    0.4,
+  );
   circle.setDepth(14);
   scene.tweens.add({
     targets: circle,
@@ -237,8 +276,17 @@ export function performRepelAbility(scene, def) {
 }
 
 export function performShieldBashAbility(scene, def) {
-  const shieldDef = scene.equipped.offHand
-    ? resolveItemDef(scene.equipped.offHand)
+  // scene.equipped.offHand est desormais un instanceId (objets
+  // d'equipement instancies, cf. gemSockets.js) - il faut retrouver
+  // l'exemplaire pour en resoudre l'itemId, plutot que d'appeler
+  // resolveItemDef directement dessus (qui echouerait silencieusement
+  // sur un instanceId et ferait toujours echouer la verification du
+  // bouclier, quel que soit ce qui est equipe).
+  const offHandInstance = scene.equipped.offHand
+    ? findEquipmentInstance(scene, scene.equipped.offHand)
+    : null;
+  const shieldDef = offHandInstance
+    ? resolveItemDef(offHandInstance.itemId)
     : null;
   if (def.requiresShield && (!shieldDef || !shieldDef.isShield)) {
     scene.showLootToast("Nécessite un bouclier équipé");
@@ -280,7 +328,13 @@ export function performTauntAbility(scene, def) {
     }
   }
 
-  const circle = scene.add.circle(scene.hero.x, scene.hero.y, 10, 0xffcc00, 0.4);
+  const circle = scene.add.circle(
+    scene.hero.x,
+    scene.hero.y,
+    10,
+    0xffcc00,
+    0.4,
+  );
   circle.setDepth(14);
   scene.tweens.add({
     targets: circle,
@@ -311,7 +365,13 @@ export function performAoeAbility(scene, def) {
     }
   }
 
-  const circle = scene.add.circle(scene.hero.x, scene.hero.y, 10, 0xff6600, 0.5);
+  const circle = scene.add.circle(
+    scene.hero.x,
+    scene.hero.y,
+    10,
+    0xff6600,
+    0.5,
+  );
   circle.setDepth(14);
   scene.tweens.add({
     targets: circle,
@@ -339,10 +399,7 @@ export function performProjectileAoeAbility(scene, def) {
   const sprite = scene.add.circle(scene.hero.x, scene.hero.y, 8, 0xff6600);
   scene.physics.add.existing(sprite);
   sprite.setDepth(12);
-  sprite.body.setVelocity(
-    v.x * def.projectileSpeed,
-    v.y * def.projectileSpeed,
-  );
+  sprite.body.setVelocity(v.x * def.projectileSpeed, v.y * def.projectileSpeed);
 
   scene.abilityProjectiles.push({
     sprite,
@@ -354,9 +411,7 @@ export function performProjectileAoeAbility(scene, def) {
 
 export function performWeaponImbueAbility(scene, def) {
   scene.pendingWeaponImbue = def;
-  scene.showLootToast(
-    `${def.name} activée - le prochain coup sera renforcé !`,
-  );
+  scene.showLootToast(`${def.name} activée - le prochain coup sera renforcé !`);
 }
 
 export function performPierceAbility(scene, def) {
@@ -376,10 +431,7 @@ export function performPierceAbility(scene, def) {
   const sprite = scene.add.circle(scene.hero.x, scene.hero.y, 6, 0xffdd44);
   scene.physics.add.existing(sprite);
   sprite.setDepth(12);
-  sprite.body.setVelocity(
-    v.x * def.projectileSpeed,
-    v.y * def.projectileSpeed,
-  );
+  sprite.body.setVelocity(v.x * def.projectileSpeed, v.y * def.projectileSpeed);
 
   scene.abilityProjectiles.push({
     sprite,
@@ -417,7 +469,13 @@ export function performAoeDebuffAbility(scene, def) {
     });
   }
 
-  const circle = scene.add.circle(scene.hero.x, scene.hero.y, 10, 0x4488ff, 0.4);
+  const circle = scene.add.circle(
+    scene.hero.x,
+    scene.hero.y,
+    10,
+    0x4488ff,
+    0.4,
+  );
   circle.setDepth(14);
   scene.tweens.add({
     targets: circle,
@@ -445,8 +503,7 @@ export function performFogPulseAbility(scene, def) {
     for (let y = minY; y <= maxY; y++) {
       for (let x = minX; x <= maxX; x++) {
         const key = x + "," + y;
-        if (Math.hypot(x - centerTileX, y - centerTileY) > def.radius)
-          continue;
+        if (Math.hypot(x - centerTileX, y - centerTileY) > def.radius) continue;
         if (bossRoomTiles.has(key)) continue;
         revealed.add(key);
       }
@@ -636,7 +693,13 @@ export function performAoeCurseAbility(scene, def) {
       durationMs: def.durationMs,
     });
   }
-  const circle = scene.add.circle(scene.hero.x, scene.hero.y, 10, 0x882299, 0.4);
+  const circle = scene.add.circle(
+    scene.hero.x,
+    scene.hero.y,
+    10,
+    0x882299,
+    0.4,
+  );
   circle.setDepth(14);
   scene.tweens.add({
     targets: circle,

@@ -17,6 +17,8 @@ import {
   getEffectiveEnemyDamage,
   getEffectivePlayerDefense,
 } from "./statusEffects";
+import { resolveAllEquippedReactiveEffectSources } from "../gemSockets";
+import { triggerAbilityEffect } from "./abilities";
 
 import {
   TILE_SIZE,
@@ -40,7 +42,66 @@ const ENEMY_STOP_DISTANCE = 28;
 const ENEMY_RANGED_RETREAT_DISTANCE = 100;
 const ENEMY_ATTACK_RANGE = 34;
 
-export function isPlayerBehindEnemy(scene, enemy, ex, ey, playerTileX, playerTileY) {
+/**
+ * Declenche les gemmes REACTIVES de tout l'equipement porte (hasteGem/
+ * repelGem, et les gemmes "d'ability" comme parryGem/riposteGem, cf.
+ * itemDefs.js et resolveAllEquippedReactiveEffectSources dans
+ * gemSockets.js) quand le JOUEUR encaisse un coup d'un ennemi - appelee
+ * juste apres avoir applique les degats au joueur, jamais pour un coup
+ * subi par une invocation (resolveTarget.isSummon). `attackerEnemy` est
+ * l'ennemi a repousser pour une gemme "repel" - null pour une attaque a
+ * distance (le projectile ne garde pas de reference vers l'ennemi qui l'a
+ * tire, cf. updateEnemyProjectiles), auquel cas seuls les effets qui ne
+ * ciblent pas l'ennemi (haste, ability) peuvent se declencher.
+ */
+function applyReactiveGemEffects(scene, attackerEnemy) {
+  const sources = resolveAllEquippedReactiveEffectSources(scene);
+  for (const gemDef of sources) {
+    const effect = gemDef.reactiveEffect;
+    if (Math.random() >= (effect.chance || 0)) continue;
+
+    if (effect.kind === "modifier") {
+      applyStatusEffect(scene, scene.playerStatusEffects, {
+        type: effect.type,
+        kind: "modifier",
+        statModifiers: effect.statModifiers,
+        durationMs: effect.durationMs,
+      });
+    } else if (effect.kind === "knockback" && attackerEnemy) {
+      const dx = attackerEnemy.sprite.x - scene.hero.x;
+      const dy = attackerEnemy.sprite.y - scene.hero.y;
+      const dist = Math.hypot(dx, dy) || 1;
+      scene.knockbackEnemyIfClear(
+        attackerEnemy,
+        (dx / dist) * effect.distance,
+        (dy / dist) * effect.distance,
+      );
+    } else if (effect.kind === "ability" && effect.abilityId) {
+      // Gemmes "reactives d'ability" (ex: gemme de parade -> ability
+      // parry) : regulees par leur propre cooldown de gemme
+      // (reactiveEffect.cooldownMs, independant du cooldown normal de
+      // l'ability), et declenchees via triggerAbilityEffect qui
+      // contourne le deblocage/cout/cooldown habituels de l'ability -
+      // cf. abilities.js.
+      const readyAt = scene.reactiveGemCooldowns[gemDef.id] || 0;
+      if (scene.time.now < readyAt) continue;
+      const handled = triggerAbilityEffect(scene, effect.abilityId);
+      if (handled && effect.cooldownMs) {
+        scene.reactiveGemCooldowns[gemDef.id] =
+          scene.time.now + effect.cooldownMs;
+      }
+    }
+  }
+}
+
+export function isPlayerBehindEnemy(
+  scene,
+  enemy,
+  ex,
+  ey,
+  playerTileX,
+  playerTileY,
+) {
   const facing = ENEMY_DIR_VECTORS[enemy.lastDir] || ENEMY_DIR_VECTORS.down;
   const dx = playerTileX - ex;
   const dy = playerTileY - ey;
@@ -101,8 +162,7 @@ export function updateEnemyDecisions(scene, playerTileX, playerTileY) {
       targetTileX,
       targetTileY,
     );
-    const arrivedAtHome =
-      Math.hypot(ex - enemy.home.x, ey - enemy.home.y) < 1;
+    const arrivedAtHome = Math.hypot(ex - enemy.home.x, ey - enemy.home.y) < 1;
     const isPlayerBehind =
       targetType === "player"
         ? isPlayerBehindEnemy(scene, enemy, ex, ey, playerTileX, playerTileY)
@@ -172,10 +232,7 @@ export function updateEnemyMovement(scene) {
 
     if (scene.isEnemyStunned(enemy) || scene.isEnemyRooted(enemy)) {
       enemy.sprite.setVelocity(0, 0);
-      enemy.sprite.anims.play(
-        enemy.spriteKey + "-idle-" + enemy.lastDir,
-        true,
-      );
+      enemy.sprite.anims.play(enemy.spriteKey + "-idle-" + enemy.lastDir, true);
       continue;
     }
 
@@ -305,8 +362,7 @@ export function updateEnemyMovement(scene) {
             // ennemi injoignable = softlock garanti pour le joueur.
             enemy.stuckJitterAttempts = (enemy.stuckJitterAttempts || 0) + 1;
             if (
-              enemy.stuckJitterAttempts >=
-              ENEMY_STUCK_TELEPORT_JITTER_ATTEMPTS
+              enemy.stuckJitterAttempts >= ENEMY_STUCK_TELEPORT_JITTER_ATTEMPTS
             ) {
               const tx = scene.hero.x + (Math.random() - 0.5) * 80;
               const ty = scene.hero.y + (Math.random() - 0.5) * 80;
@@ -348,10 +404,7 @@ export function updateEnemyMovement(scene) {
         jitterY = Math.sin(jitterAngle) * ENEMY_STUCK_JITTER_SPEED;
       }
 
-      const step = scene.followPathStep(
-        enemy,
-        getEffectiveEnemySpeed(enemy),
-      );
+      const step = scene.followPathStep(enemy, getEffectiveEnemySpeed(enemy));
       if (step) {
         enemy.sprite.setVelocity(step.vx + jitterX, step.vy + jitterY);
         enemy.lastDir =
@@ -388,8 +441,7 @@ export function updateEnemyMovement(scene) {
         () => {
           if (
             enemy.patrolIndex + enemy.patrolDirection < 0 ||
-            enemy.patrolIndex + enemy.patrolDirection >=
-              enemy.patrolPath.length
+            enemy.patrolIndex + enemy.patrolDirection >= enemy.patrolPath.length
           ) {
             enemy.patrolDirection *= -1;
           }
@@ -517,7 +569,10 @@ export function updateEnemyAttacks(scene, now) {
           enemy.sprite.x - summon.sprite.x,
           enemy.sprite.y - summon.sprite.y,
         );
-        if (summonDist <= ENEMY_RANGED_ATTACK_RANGE && summonDist < rangedDist) {
+        if (
+          summonDist <= ENEMY_RANGED_ATTACK_RANGE &&
+          summonDist < rangedDist
+        ) {
           rangedTarget = { isSummon: true, summon };
           rangedDist = summonDist;
         }
@@ -699,10 +754,12 @@ export function updateEnemyAttacks(scene, now) {
           scene.damageEnemy(enemy, dmg * scene.riposteReflectPercent);
         }
 
-        applyStatusEffect(scene,
+        applyStatusEffect(
+          scene,
           scene.playerStatusEffects,
           rollStatusEffect(enemy),
         );
+        applyReactiveGemEffects(scene, enemy);
 
         scene.hero.setTint(0xff8888).setTintMode(Phaser.TintModes.FILL);
         scene.time.delayedCall(100, () => {
@@ -728,10 +785,7 @@ export function updateEnemyProjectiles(scene) {
     const tileX = Math.floor(proj.sprite.x / TILE_SIZE);
     const tileY = Math.floor(proj.sprite.y / TILE_SIZE);
     const outOfBounds =
-      tileX < 0 ||
-      tileY < 0 ||
-      tileY >= grid.length ||
-      tileX >= grid[0].length;
+      tileX < 0 || tileY < 0 || tileY >= grid.length || tileX >= grid[0].length;
     const hitWall = !outOfBounds && grid[tileY][tileX] === WALL;
 
     const fogState = scene.fogState.state;
@@ -799,10 +853,16 @@ export function updateEnemyProjectiles(scene) {
         maxHp: scene.playerMaxHp,
       });
 
-      applyStatusEffect(scene,
+      applyStatusEffect(
+        scene,
         scene.playerStatusEffects,
         rollStatusEffect({ inflictsEffect: proj.inflictsEffect }),
       );
+      // pas de reference vers l'ennemi tireur sur un projectile (cf.
+      // enemyProjectiles.push plus haut) : seule une gemme "haste"
+      // (kind "modifier", ne cible pas l'ennemi) peut se declencher ici,
+      // une gemme "repel" (kind "knockback") n'a personne a repousser.
+      applyReactiveGemEffects(scene, null);
 
       scene.hero.setTint(0xff8888).setTintMode(Phaser.TintModes.FILL);
       scene.time.delayedCall(100, () => {

@@ -19,6 +19,7 @@ import {
   generateInstanceId,
   socketGem as socketGemImpl,
   attemptSocketPerforation as attemptSocketPerforationImpl,
+  attemptGemExtraction as attemptGemExtractionImpl,
 } from "../gemSockets";
 import {
   descendStairs,
@@ -131,7 +132,7 @@ import {
   updateZones as updateZonesImpl,
   updateTraps as updateTrapsImpl,
   updateBoomerangs as updateBoomerangsImpl,
-  useFury as useFuryImpl,
+  useFury as furyImpl,
 } from "./playerCombat";
 import {
   TILE_SIZE,
@@ -524,6 +525,7 @@ export default class MainScene extends Phaser.Scene {
     this.touchFuryRequested = false;
     this.hotbarSlots = new Array(9).fill(null);
     this.abilityCooldowns = {};
+    this.reactiveGemCooldowns = {}; // cooldown propre aux gemmes reactives "ability" (cf. applyReactiveGemEffects dans ai.js), independant de scene.abilityCooldowns
     this.itemCooldowns = {};
     this.activeDialogQuestKey = null;
     this.activeTalkingNpc = null;
@@ -589,6 +591,15 @@ export default class MainScene extends Phaser.Scene {
 
   attemptSocketPerforation(scrollIndex, targetInstanceId) {
     return attemptSocketPerforationImpl(this, scrollIndex, targetInstanceId);
+  }
+
+  attemptGemExtraction(scrollIndex, targetInstanceId, socketIndex) {
+    return attemptGemExtractionImpl(
+      this,
+      scrollIndex,
+      targetInstanceId,
+      socketIndex,
+    );
   }
 
   renameEquipmentInstance(instanceId, newName) {
@@ -1649,7 +1660,7 @@ export default class MainScene extends Phaser.Scene {
   }
 
   useFury() {
-    useFuryImpl(this);
+    furyImpl(this);
   }
   damageEnemy(enemy, amount) {
     if (enemy.state !== "chase") {

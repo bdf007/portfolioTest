@@ -571,6 +571,16 @@ export default function Arpg() {
     if (scene) scene.attemptSocketPerforation(scrollIndex, targetInstanceId);
   };
 
+  const handleAttemptGemExtraction = (
+    scrollIndex,
+    targetInstanceId,
+    socketIndex,
+  ) => {
+    const scene = gameRef.current?.scene.getScene("MainScene");
+    if (scene)
+      scene.attemptGemExtraction(scrollIndex, targetInstanceId, socketIndex);
+  };
+
   const handleOpenInventory = useCallback(() => {
     hideMinimapForOverlay();
     closeOtherOverlays("inventory");
@@ -805,6 +815,16 @@ export default function Arpg() {
   useEffect(() => {
     function handleGlobalKeyDown(e) {
       if (!gameRef.current) return;
+
+      // ignore les raccourcis globaux tant qu'un champ de texte (ex: le
+      // renommage d'objet) a le focus, sinon taper "i" ferme l'inventaire etc.
+      const activeTag = document.activeElement?.tagName;
+      const isEditableField =
+        activeTag === "INPUT" ||
+        activeTag === "TEXTAREA" ||
+        document.activeElement?.isContentEditable;
+      if (isEditableField) return;
+
       const key = e.key.toLowerCase();
 
       // navigation au clavier dans un dialogue actif - prioritaire sur
@@ -1890,6 +1910,7 @@ export default function Arpg() {
             onSocketGem={handleSocketGem}
             onRename={handleRenameEquipment}
             onAttemptPerforation={handleAttemptPerforation}
+            onAttemptGemExtraction={handleAttemptGemExtraction}
             onClose={handleCloseInventory}
           />
         )}
@@ -1938,6 +1959,7 @@ export default function Arpg() {
             unlockedRecipes={unlockedRecipes}
             discoveredLockedRecipes={discoveredLockedRecipes}
             inventory={inventory}
+            equipped={equipped}
             isMobile={isMobile}
             onCraft={handleCraftItem}
             onFreeCraft={handleAttemptFreeCraft}

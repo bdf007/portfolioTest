@@ -144,10 +144,10 @@ const BIOMES = [
     //   ],
     // },
     generatorParams: {
-      width: 30,
-      height: 30,
-      wallProbability: 0.3,
-      minFloorRatio: 0.4,
+      width: 40,
+      height: 40,
+      // wallProbability: 0.3,
+      // minFloorRatio: 0.4,
     },
   },
   // {
@@ -283,10 +283,10 @@ const BIOMES = [
     //   ],
     // },
     generatorParams: {
-      width: 30,
-      height: 30,
-      wallProbability: 0.35,
-      minFloorRatio: 0.35,
+      width: 50,
+      height: 50,
+      // wallProbability: 0.35,
+      // minFloorRatio: 0.35,
     },
   },
   {
@@ -354,10 +354,10 @@ const BIOMES = [
     //   ],
     // },
     generatorParams: {
-      width: 50,
-      height: 50,
-      wallProbability: 0.4,
-      minFloorRatio: 0.35,
+      width: 60,
+      height: 60,
+      // wallProbability: 0.4,
+      // minFloorRatio: 0.35,
     },
   },
   {
@@ -428,10 +428,10 @@ const BIOMES = [
       ],
     },
     generatorParams: {
-      width: 30,
-      height: 30,
-      wallProbability: 0.35,
-      minFloorRatio: 0.4,
+      width: 70,
+      height: 70,
+      // wallProbability: 0.35,
+      // minFloorRatio: 0.4,
     },
   },
   {
@@ -495,10 +495,10 @@ const BIOMES = [
       ],
     },
     generatorParams: {
-      width: 30,
-      height: 30,
-      wallProbability: 0.35,
-      minFloorRatio: 0.35,
+      width: 80,
+      height: 80,
+      // wallProbability: 0.35,
+      // minFloorRatio: 0.35,
     },
   },
   {

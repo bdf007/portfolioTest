@@ -46,6 +46,7 @@ export default function CraftingScreen({
   unlockedRecipes,
   discoveredLockedRecipes = [],
   inventory,
+  equipped = {},
   isMobile = false,
   onCraft,
   onFreeCraft,
@@ -55,6 +56,17 @@ export default function CraftingScreen({
   const [flexAllocations, setFlexAllocations] = useState({}); // recettes connues : { "recipeId:ingIndex": { itemId: quantity } }
   const [activeCategory, setActiveCategory] = useState("all"); // onglet de categorie actif, page "Recettes connues"
   const [baseInstanceSelections, setBaseInstanceSelections] = useState({}); // recettes d'evolution : { recipeId: instanceId } - quel exemplaire precis fait evoluer
+
+  // Les objets d'equipement instancies restent en permanence dans
+  // `inventory` meme une fois equipes (equipped[slot] n'est qu'une
+  // reference instanceId, cf. gemSockets.js) - il faut donc les exclure
+  // explicitement de tout ce qui sert au craft (recettes connues ET
+  // combinaison libre) : un objet equipe doit d'abord etre retire par le
+  // joueur avant de pouvoir servir d'ingredient.
+  const equippedInstanceIds = new Set(Object.values(equipped).filter(Boolean));
+  const craftableInventory = inventory.filter(
+    (i) => !i.instanceId || !equippedInstanceIds.has(i.instanceId),
+  );
 
   // Vrai si cet ingredient est l'"objet de base" d'une recette d'evolution
   // (arme/armure qui monte de palier, ex: copperDagger + ironIngot ->
@@ -75,11 +87,13 @@ export default function CraftingScreen({
   // evoluer, plutot qu'un choix automatique qui pourrait sacrifier son
   // meilleur exemplaire socketé.
   function getInstancesForItem(itemId) {
-    return inventory.filter((i) => i.itemId === itemId && i.instanceId);
+    return craftableInventory.filter(
+      (i) => i.itemId === itemId && i.instanceId,
+    );
   }
 
   function getQuantity(itemId) {
-    return inventory
+    return craftableInventory
       .filter((i) => i.itemId === itemId)
       .reduce((sum, i) => sum + i.quantity, 0);
   }
@@ -200,7 +214,7 @@ export default function CraftingScreen({
   // garder qu'une entree par itemId unique.
   const combinableEntries = Array.from(
     new Set(
-      inventory
+      craftableInventory
         .filter((i) => i.itemId !== "gold" && getQuantity(i.itemId) > 0)
         .map((i) => i.itemId),
     ),
@@ -462,7 +476,10 @@ export default function CraftingScreen({
                           // exemplaire fait evoluer (sockets/gemmes/nom
                           // conserves, cf. craftingSystem.js) des qu'il en
                           // possede plus d'un.
-                          if (ing.quantity === 1 && ingDef.category === "equipment") {
+                          if (
+                            ing.quantity === 1 &&
+                            ingDef.category === "equipment"
+                          ) {
                             const instances = getInstancesForItem(ing.itemId);
                             const selected =
                               baseInstanceSelections[recipe.id] ||
@@ -519,8 +536,7 @@ export default function CraftingScreen({
                                               setBaseInstanceSelections(
                                                 (prev) => ({
                                                   ...prev,
-                                                  [recipe.id]:
-                                                    inst.instanceId,
+                                                  [recipe.id]: inst.instanceId,
                                                 }),
                                               )
                                             }
@@ -784,8 +800,8 @@ export default function CraftingScreen({
           >
             Pour un équipement à sockets possédé en plusieurs exemplaires,
             l'exemplaire le moins avantagé (sockets vides en priorité) est
-            utilisé automatiquement - pour choisir précisément lequel, passe
-            par une recette connue (page de gauche).
+            utilisé automatiquement - pour choisir précisément lequel, passe par
+            une recette connue (page de gauche).
           </div>
 
           {selectionEntries.length > 0 && (

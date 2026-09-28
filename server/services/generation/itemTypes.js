@@ -975,6 +975,15 @@ const ITEM_TYPES = {
     stackable: true,
     price: 5,
   },
+
+  slimeBlob: {
+    id: "slimeBlob",
+    category: "craftingMaterial",
+    name: "Blob de slime",
+    description:
+      "Une masse gélatineuse provenant d'un slime, utilisée pour l'artisanat.",
+    stackable: true,
+  },
   // unique monster cores
   angryBrownMushroomCore: {
     id: "angryBrownMushroomCore",
@@ -3150,6 +3159,7 @@ const LOOT_TABLES = {
   yellowSlimeDrop: [
     { itemId: null, weight: 50 },
     { itemId: "gold", weight: 50, quantityRange: [1, 3] },
+    { itemId: "slimeBlob", weight: 50 },
     { itemId: "yellowSlimeCore", weight: 50 },
   ],
   blueSlimeDrop: [

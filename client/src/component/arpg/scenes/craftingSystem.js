@@ -18,6 +18,23 @@ function isEquipmentBaseIngredient(ing) {
 }
 
 /**
+ * Vrai si cette entree d'inventaire est l'exemplaire actuellement equipe
+ * (equipped[slot] n'est qu'une reference instanceId, l'exemplaire reste en
+ * permanence dans scene.inventory - cf. gemSockets.js). Un objet equipe ne
+ * doit jamais pouvoir servir d'ingredient de craft (recette connue OU
+ * combinaison libre) : le joueur doit d'abord le retirer. Verification
+ * faite ici cote logique (en plus du filtre deja applique cote UI dans
+ * CraftingScreen.js) pour rester valable meme si craftItem/attemptFreeCraft
+ * sont appeles autrement que depuis cet ecran.
+ */
+function isEquippedEntry(scene, entry) {
+  return (
+    !!entry.instanceId &&
+    Object.values(scene.equipped).includes(entry.instanceId)
+  );
+}
+
+/**
  * Choisit automatiquement l'exemplaire le MOINS avantage (le moins de
  * sockets remplis, puis le moins de gemSlots) parmi les instances
  * possedees d'un itemId - utilise uniquement par la combinaison libre
@@ -28,7 +45,7 @@ function isEquipmentBaseIngredient(ing) {
  */
 function pickLeastAdvantagedInstance(scene, itemId) {
   const candidates = scene.inventory.filter(
-    (e) => e.itemId === itemId && e.instanceId,
+    (e) => e.itemId === itemId && e.instanceId && !isEquippedEntry(scene, e),
   );
   if (candidates.length === 0) return null;
   return candidates.reduce((best, current) => {
@@ -137,7 +154,7 @@ export function attemptFreeCraft(scene, selectedItems) {
   // simple.
   for (const { itemId, quantity } of selectedItems) {
     const have = scene.inventory
-      .filter((x) => x.itemId === itemId)
+      .filter((x) => x.itemId === itemId && !isEquippedEntry(scene, x))
       .reduce((s, x) => s + x.quantity, 0);
     if (have < quantity) {
       scene.showLootToast("Il manque des ingrédients pour cette combinaison");
@@ -165,6 +182,7 @@ export function attemptFreeCraft(scene, selectedItems) {
       const entry = scene.inventory[i];
       if (entry.itemId !== itemId) continue;
       if (entry === transferInstance) continue;
+      if (isEquippedEntry(scene, entry)) continue;
       const take = Math.min(entry.quantity, remaining);
       entry.quantity -= take;
       remaining -= take;
@@ -195,7 +213,9 @@ export function attemptFreeCraft(scene, selectedItems) {
     scene.events.emit("locked-recipes-updated", [
       ...scene.discoveredLockedRecipes,
     ]);
-    scene.showLootToast(`Nouvelle recette découverte : ${matchedRecipe.name} !`);
+    scene.showLootToast(
+      `Nouvelle recette découverte : ${matchedRecipe.name} !`,
+    );
   } else {
     scene.showLootToast(
       transferInstance
@@ -285,7 +305,12 @@ export function decraftItem(scene, inventoryIndex) {
   scene.persistProgress();
 }
 
-export function craftItem(scene, recipeId, flexAllocations = {}, baseInstanceId = null) {
+export function craftItem(
+  scene,
+  recipeId,
+  flexAllocations = {},
+  baseInstanceId = null,
+) {
   // flexAllocations: { indexIngredient: { itemId: quantite } } - la
   // repartition choisie par le joueur pour chaque ingredient FLEXIBLE
   // (acceptedItemIds) - ignoree pour les ingredients simples.
@@ -307,7 +332,10 @@ export function craftItem(scene, recipeId, flexAllocations = {}, baseInstanceId 
   const baseIngredient = recipe.ingredients.find(isEquipmentBaseIngredient);
   if (baseIngredient) {
     const candidates = scene.inventory.filter(
-      (e) => e.itemId === baseIngredient.itemId && e.instanceId,
+      (e) =>
+        e.itemId === baseIngredient.itemId &&
+        e.instanceId &&
+        !isEquippedEntry(scene, e),
     );
     if (candidates.length === 0) {
       scene.showLootToast(`Il manque des ingrédients pour ${recipe.name}`);
@@ -342,7 +370,7 @@ export function craftItem(scene, recipeId, flexAllocations = {}, baseInstanceId 
       }
       for (const [itemId, qty] of Object.entries(allocation)) {
         const have = scene.inventory
-          .filter((x) => x.itemId === itemId)
+          .filter((x) => x.itemId === itemId && !isEquippedEntry(scene, x))
           .reduce((s, x) => s + x.quantity, 0);
         if (have < qty) {
           scene.showLootToast(`Il manque des ingrédients pour ${recipe.name}`);
@@ -351,7 +379,7 @@ export function craftItem(scene, recipeId, flexAllocations = {}, baseInstanceId 
       }
     } else {
       const have = scene.inventory
-        .filter((x) => x.itemId === ing.itemId)
+        .filter((x) => x.itemId === ing.itemId && !isEquippedEntry(scene, x))
         .reduce((s, x) => s + x.quantity, 0);
       if (have < ing.quantity) {
         scene.showLootToast(`Il manque des ingrédients pour ${recipe.name}`);
@@ -372,6 +400,7 @@ export function craftItem(scene, recipeId, flexAllocations = {}, baseInstanceId 
       for (let j = scene.inventory.length - 1; j >= 0 && remaining > 0; j--) {
         const entry = scene.inventory[j];
         if (entry.itemId !== itemId) continue;
+        if (isEquippedEntry(scene, entry)) continue;
         const take = Math.min(entry.quantity, remaining);
         entry.quantity -= take;
         remaining -= take;

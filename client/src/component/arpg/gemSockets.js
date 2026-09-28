@@ -123,7 +123,9 @@ function stripModifierPrefix(itemId) {
  */
 export function resolveSocketBand(itemId) {
   const stripped = stripModifierPrefix(itemId);
-  const match = MATERIAL_BANDS.find((entry) => stripped.startsWith(entry.material));
+  const match = MATERIAL_BANDS.find((entry) =>
+    stripped.startsWith(entry.material),
+  );
   return match ? match.band : "low";
 }
 
@@ -206,21 +208,43 @@ export function resolveInstanceComboFamily(instance) {
 }
 
 /**
- * Somme les permanentModifiers de toutes les gemmes socketees sur cet
+ * Somme les bonus de stats de toutes les gemmes socketees sur cet
  * exemplaire d'objet, majoree de COMBO_BONUS_MULTIPLIER si le combo de
  * famille est actif. Utilise par equipment.js en plus du statBonus de
  * base de l'objet.
+ *
+ * Les gemmes de combat expriment desormais leur bonus en POURCENTAGE
+ * (percentModifiers) du statBonus PROPRE de l'objet sur lequel elles sont
+ * socketees, plutot qu'en valeur fixe (permanentModifiers, conserve pour
+ * d'eventuelles gemmes futures qui voudraient un vrai bonus plat) : une
+ * gemme n'etant jamais retirable autrement que par le parchemin
+ * d'extraction (risque de destruction, cf. attemptGemExtraction plus bas),
+ * un bonus fixe socketee tot devenait derisoire une fois l'objet monte de
+ * plusieurs paliers de craft (le statBonus de base grandit, pas la gemme).
+ * Le pourcentage scale automatiquement avec chaque montee de palier. Une
+ * gemme dont le pourcentage porte sur une stat absente du statBonus de cet
+ * objet (ex: gemme de defense socketee sur une arme sans defense propre)
+ * n'apporte logiquement rien sur cette stat.
  */
 export function computeInstanceGemBonuses(instance) {
   const bonuses = {};
   if (!instance || !instance.sockets) return bonuses;
 
+  const baseStatBonus = resolveItemDef(instance.itemId).statBonus || {};
+
   for (const gemId of instance.sockets) {
     if (!gemId) continue;
     const gemDef = resolveItemDef(gemId);
-    if (!gemDef.permanentModifiers) continue;
-    for (const [key, value] of Object.entries(gemDef.permanentModifiers)) {
-      bonuses[key] = (bonuses[key] || 0) + value;
+    if (gemDef.permanentModifiers) {
+      for (const [key, value] of Object.entries(gemDef.permanentModifiers)) {
+        bonuses[key] = (bonuses[key] || 0) + value;
+      }
+    }
+    if (gemDef.percentModifiers) {
+      for (const [key, percent] of Object.entries(gemDef.percentModifiers)) {
+        const base = baseStatBonus[key] || 0;
+        bonuses[key] = (bonuses[key] || 0) + base * percent;
+      }
     }
   }
 
@@ -247,6 +271,65 @@ export function resolveInstanceGemEffectSources(instance) {
     .filter((def) => def.inflictsEffect);
 }
 
+/**
+ * Meme principe que resolveInstanceGemEffectSources ci-dessus, mais
+ * cumule les gemmes a inflictsEffect de TOUT l'equipement actuellement
+ * porte (arme(s), armure, bottes, anneaux...), pas uniquement l'arme.
+ * Necessaire car certaines gemmes de combat (slowGem, stunGem) portent un
+ * bonus de stat plutot destine a une armure/botte (maxHp, moveSpeed - cf.
+ * percentModifiers) EN PLUS de leur inflictsEffect : si seule l'arme etait
+ * consultee, une telle gemme socketee sur une armure (la ou son bonus de
+ * stat a du sens) ne declencherait jamais son effet au corps a corps/a
+ * distance. Le carquois (munitions, jamais instancie) est ignore comme
+ * partout ailleurs. Utilise par playerCombat.js a la place d'un appel
+ * limite a l'arme equipee.
+ */
+export function resolveAllEquippedGemEffectSources(scene) {
+  const sources = [];
+  for (const [slot, ref] of Object.entries(scene.equipped)) {
+    if (slot === "quiver" || !ref) continue;
+    const instance = findEquipmentInstance(scene, ref);
+    if (instance) sources.push(...resolveInstanceGemEffectSources(instance));
+  }
+  return sources;
+}
+
+/**
+ * Meme principe que resolveAllEquippedGemEffectSources ci-dessus, mais
+ * pour les gemmes REACTIVES (reactiveEffect, ex: hasteGem/repelGem), qui
+ * se declenchent quand le JOUEUR encaisse un coup plutot que quand il en
+ * porte un - typiquement pensees pour une armure. Utilise par ai.js
+ * (enemy attaque le joueur, corps a corps ET a distance).
+ */
+export function resolveAllEquippedReactiveEffectSources(scene) {
+  const sources = [];
+  for (const [slot, ref] of Object.entries(scene.equipped)) {
+    if (slot === "quiver" || !ref) continue;
+    const instance = findEquipmentInstance(scene, ref);
+    if (!instance || !instance.sockets) continue;
+    for (const gemId of instance.sockets) {
+      if (!gemId) continue;
+      const gemDef = resolveItemDef(gemId);
+      if (gemDef.reactiveEffect) sources.push(gemDef);
+    }
+  }
+  return sources;
+}
+
+/**
+ * Equivalent de resolveInstanceGemEffectSources ci-dessus, mais pour les
+ * gemmes d'outil (toolEffect au lieu d'inflictsEffect) - utilise par
+ * exploration.js (forageNode/mineRock) pour appliquer les bonus de
+ * minage/bucheronnage des gemmes socketees sur la pioche/hache equipee.
+ */
+export function resolveInstanceToolEffectSources(instance) {
+  if (!instance || !instance.sockets) return [];
+  return instance.sockets
+    .filter(Boolean)
+    .map((gemId) => resolveItemDef(gemId))
+    .filter((def) => def.toolEffect);
+}
+
 // ===== Socketage =====
 
 /**
@@ -265,6 +348,25 @@ export function socketGem(scene, instanceId, gemItemId, socketIndex) {
 
   const gemDef = resolveItemDef(gemItemId);
   if (gemDef.category !== "gem") return false;
+
+  // Restriction par categorie d'objet : les pioches/haches (slot "tool")
+  // n'ont rien a faire d'un bonus de degats/effet de statut (gemUsage
+  // "combat", cf. itemDefs.js) et inversement, une arme/armure ne peut pas
+  // recevoir une gemme de minage/bucheronnage (gemUsage "tool"). Un objet
+  // qui recoit des sockets par le tirage habituel (bandes de materiaux
+  // metal/bois partagees avec les armes) mais n'est ni un outil ni une
+  // arme/armure classique reste traite comme "combat" par defaut.
+  const targetDef = resolveItemDef(instance.itemId);
+  const isTargetTool = targetDef.slot === "tool";
+  const isGemForTool = gemDef.gemUsage === "tool";
+  if (isTargetTool !== isGemForTool) {
+    scene.showLootToast(
+      isTargetTool
+        ? "Cette gemme ne convient qu'aux armes/armures, pas aux outils"
+        : "Cette gemme ne convient qu'aux outils (pioches/haches)",
+    );
+    return false;
+  }
 
   const gemIndex = scene.inventory.findIndex(
     (entry) => entry.itemId === gemItemId && entry.quantity > 0,
@@ -355,7 +457,9 @@ const PERFORATION_MATERIAL_BY_NAME = {
  */
 export function resolvePerforationMaterialId(itemId) {
   const stripped = stripModifierPrefix(itemId);
-  const match = MATERIAL_BANDS.find((entry) => stripped.startsWith(entry.material));
+  const match = MATERIAL_BANDS.find((entry) =>
+    stripped.startsWith(entry.material),
+  );
   return (match && PERFORATION_MATERIAL_BY_NAME[match.material]) || "wood";
 }
 
@@ -434,6 +538,112 @@ export function attemptSocketPerforation(scene, scrollIndex, targetInstanceId) {
     outcome = "fail";
     scene.showLootToast(
       "Échec de la perforation - les matériaux sont perdus, l'objet est intact",
+    );
+  } else {
+    outcome = "destroyed";
+    const destroyedName = resolveItemDef(target.itemId).name;
+    const instanceIndex = scene.inventory.indexOf(target);
+    if (instanceIndex !== -1) scene.inventory.splice(instanceIndex, 1);
+    for (const [slot, ref] of Object.entries(scene.equipped)) {
+      if (ref === targetInstanceId) scene.equipped[slot] = null;
+    }
+    scene.showLootToast(`Échec critique : ${destroyedName} a été détruit !`);
+  }
+
+  scene.events.emit("inventory-updated", [...scene.inventory]);
+  if (
+    outcome === "destroyed" ||
+    Object.values(scene.equipped).includes(targetInstanceId)
+  ) {
+    scene.recalculatePlayerStats();
+    scene.events.emit("equipment-updated", { ...scene.equipped });
+  }
+  scene.persistProgress();
+
+  return { success: true, outcome };
+}
+
+// ===== Parchemin d'extraction =====
+// A la difference du parchemin de perforation, le risque ne porte pas sur
+// "la gemme est perdue ou pas" : extraire une gemme la detruit TOUJOURS
+// (c'est le cout de l'extraction, qui libere le socket pour une autre
+// gemme) - c'est l'OBJET porteur qui risque la destruction totale, avec le
+// meme taux que la destruction de la perforation (5%).
+const EXTRACTION_DESTROY_CHANCE = 0.05;
+
+/**
+ * Tente de retirer la gemme d'un socket precis d'un exemplaire
+ * d'equipement via un parchemin d'extraction. Consomme TOUJOURS le
+ * parchemin + un exemplaire du materiau brut correspondant au palier
+ * exact de l'objet cible (meme materiau que la perforation, cf.
+ * resolvePerforationMaterialId) + LA GEMME ELLE-MEME (toujours detruite,
+ * jamais recuperee), des que la tentative est engagee - les garde-fous de
+ * disponibilite sont tous verifies AVANT toute consommation. Deux issues
+ * possibles une fois la tentative engagee :
+ * - 95% reussite : le socket est libere (gemme detruite), l'objet reste
+ *   intact et peut recevoir une autre gemme ;
+ * - 5% destruction : l'exemplaire cible est retire definitivement de
+ *   l'inventaire (et desequipe au besoin), gemme deja perdue de toute facon.
+ * Renvoie {success:false, reason} si la tentative est refusee avant toute
+ * consommation (socket vide, materiau manquant...), ou {success:true,
+ * outcome: "success"|"destroyed"} une fois jouee.
+ */
+export function attemptGemExtraction(
+  scene,
+  scrollIndex,
+  targetInstanceId,
+  socketIndex,
+) {
+  const scrollEntry = scene.inventory[scrollIndex];
+  if (
+    !scrollEntry ||
+    resolveItemDef(scrollEntry.itemId).category !== "gemExtraction"
+  ) {
+    return { success: false, reason: "invalid-scroll" };
+  }
+
+  const target = findEquipmentInstance(scene, targetInstanceId);
+  if (!target) return { success: false, reason: "invalid-target" };
+
+  const gemId = target.sockets?.[socketIndex];
+  if (!gemId) {
+    scene.showLootToast("Ce socket est vide");
+    return { success: false, reason: "empty-socket" };
+  }
+
+  const materialId = resolvePerforationMaterialId(target.itemId);
+  const hasMaterial = scene.inventory.some(
+    (entry) => entry.itemId === materialId && entry.quantity > 0,
+  );
+  if (!hasMaterial) {
+    scene.showLootToast(
+      `Il manque le matériau requis : ${resolveItemDef(materialId).name}`,
+    );
+    return { success: false, reason: "missing-material" };
+  }
+
+  // consommation - a partir d'ici la tentative est engagee, quoi qu'il arrive
+  scrollEntry.quantity -= 1;
+  if (scrollEntry.quantity <= 0) scene.inventory.splice(scrollIndex, 1);
+
+  const materialEntry = scene.inventory.find(
+    (entry) => entry.itemId === materialId && entry.quantity > 0,
+  );
+  materialEntry.quantity -= 1;
+  if (materialEntry.quantity <= 0) {
+    scene.inventory.splice(scene.inventory.indexOf(materialEntry), 1);
+  }
+
+  // la gemme est detruite dans tous les cas, quelle que soit l'issue -
+  // c'est le cout de l'extraction, seul l'objet porteur est en jeu ci-dessous.
+  const gemName = resolveItemDef(gemId).name;
+  let outcome;
+
+  if (Math.random() >= EXTRACTION_DESTROY_CHANCE) {
+    outcome = "success";
+    target.sockets[socketIndex] = null;
+    scene.showLootToast(
+      `Extraction réussie : ${gemName} détruite, le socket est libre.`,
     );
   } else {
     outcome = "destroyed";

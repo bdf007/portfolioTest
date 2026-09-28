@@ -29,12 +29,24 @@ export function rollStatusEffect(sourceDef) {
     };
   }
 
+  // Les defs d'effets "dot" (itemDefs.js) expriment leur duree totale via
+  // durationMs, jamais via un nombre de ticks direct - inflict.ticks n'existe
+  // nulle part dans itemDefs.js. Le lire directement donnait ticksRemaining:
+  // undefined, et updateStatusEffects rejetait aussitot l'effet (NaN/undefined
+  // > 0 est faux), avant meme le premier tick : l'effet disparaissait sans
+  // jamais infliger de degats. On derive donc le nombre de ticks depuis
+  // durationMs / tickIntervalMs (avec inflict.ticks garde en priorite si
+  // jamais une def future le fournit explicitement).
+  const ticksRemaining =
+    inflict.ticks ??
+    Math.max(1, Math.round(inflict.durationMs / inflict.tickIntervalMs));
+
   return {
     type: inflict.type,
     kind: "dot",
     damagePerTick: inflict.damagePerTick,
     tickIntervalMs: inflict.tickIntervalMs,
-    ticksRemaining: inflict.ticks,
+    ticksRemaining,
   };
 }
 
