@@ -54,6 +54,29 @@ export default function CraftingScreen({
   const [selection, setSelection] = useState({}); // combinaison libre : { itemId: quantity }
   const [flexAllocations, setFlexAllocations] = useState({}); // recettes connues : { "recipeId:ingIndex": { itemId: quantity } }
   const [activeCategory, setActiveCategory] = useState("all"); // onglet de categorie actif, page "Recettes connues"
+  const [baseInstanceSelections, setBaseInstanceSelections] = useState({}); // recettes d'evolution : { recipeId: instanceId } - quel exemplaire precis fait evoluer
+
+  // Vrai si cet ingredient est l'"objet de base" d'une recette d'evolution
+  // (arme/armure qui monte de palier, ex: copperDagger + ironIngot ->
+  // ironDagger) - meme definition que isEquipmentBaseIngredient cote
+  // craftingSystem.js, dupliquee ici car ce composant n'a pas acces a
+  // scene (fonction pure sur ing seul).
+  function findEquipmentIngredient(recipe) {
+    return recipe.ingredients.find(
+      (ing) =>
+        !ing.acceptedItemIds &&
+        ing.quantity === 1 &&
+        resolveItemDef(ing.itemId).category === "equipment",
+    );
+  }
+
+  // tous les exemplaires possedes (instances a sockets) d'un itemId -
+  // necessaire pour laisser le joueur choisir PRECISEMENT lequel fait
+  // evoluer, plutot qu'un choix automatique qui pourrait sacrifier son
+  // meilleur exemplaire socketé.
+  function getInstancesForItem(itemId) {
+    return inventory.filter((i) => i.itemId === itemId && i.instanceId);
+  }
 
   function getQuantity(itemId) {
     return inventory
@@ -113,7 +136,19 @@ export default function CraftingScreen({
   }
 
   function canCraft(recipe) {
+    const baseIngredient = findEquipmentIngredient(recipe);
+    if (baseIngredient) {
+      const instances = getInstancesForItem(baseIngredient.itemId);
+      if (instances.length === 0) return false;
+      // plusieurs exemplaires possedes : le joueur DOIT en choisir un
+      // explicitement (cf. le selecteur dans le rendu des ingredients)
+      // avant de pouvoir lancer la recette.
+      if (instances.length > 1 && !baseInstanceSelections[recipe.id]) {
+        return false;
+      }
+    }
     return recipe.ingredients.every((ing, ingIndex) => {
+      if (ing === baseIngredient) return true; // deja verifie ci-dessus
       if (ing.acceptedItemIds) {
         return getFlexTotal(recipe.id, ingIndex) >= ing.quantity;
       }
@@ -128,12 +163,27 @@ export default function CraftingScreen({
         payload[ingIndex] = getFlexAllocation(recipe.id, ingIndex);
       }
     });
-    onCraft(recipe.id, payload);
+
+    const baseIngredient = findEquipmentIngredient(recipe);
+    const instances = baseIngredient
+      ? getInstancesForItem(baseIngredient.itemId)
+      : [];
+    const baseInstanceId = baseIngredient
+      ? baseInstanceSelections[recipe.id] ||
+        (instances.length === 1 ? instances[0].instanceId : null)
+      : null;
+
+    onCraft(recipe.id, payload, baseInstanceId);
     setFlexAllocations((prev) => {
       const next = { ...prev };
       recipe.ingredients.forEach(
         (_, ingIndex) => delete next[flexKey(recipe.id, ingIndex)],
       );
+      return next;
+    });
+    setBaseInstanceSelections((prev) => {
+      const next = { ...prev };
+      delete next[recipe.id];
       return next;
     });
   }
@@ -404,9 +454,94 @@ export default function CraftingScreen({
                     >
                       {recipe.ingredients.map((ing, ingIndex) => {
                         if (!ing.acceptedItemIds) {
+                          const ingDef = resolveItemDef(ing.itemId);
+
+                          // ingredient "objet de base" d'une recette
+                          // d'evolution : au lieu d'un simple compteur, on
+                          // laisse le joueur choisir PRECISEMENT quel
+                          // exemplaire fait evoluer (sockets/gemmes/nom
+                          // conserves, cf. craftingSystem.js) des qu'il en
+                          // possede plus d'un.
+                          if (ing.quantity === 1 && ingDef.category === "equipment") {
+                            const instances = getInstancesForItem(ing.itemId);
+                            const selected =
+                              baseInstanceSelections[recipe.id] ||
+                              (instances.length === 1
+                                ? instances[0].instanceId
+                                : null);
+                            return (
+                              <div key={ingIndex} style={{ marginBottom: 2 }}>
+                                <div
+                                  style={{
+                                    color:
+                                      instances.length > 0
+                                        ? "#3f6b4f"
+                                        : "#a34848",
+                                    marginBottom: instances.length > 1 ? 3 : 0,
+                                  }}
+                                >
+                                  {ingDef.name} : {instances.length} en stock
+                                </div>
+                                {instances.length > 1 && (
+                                  <div
+                                    style={{
+                                      display: "flex",
+                                      flexDirection: "column",
+                                      gap: 2,
+                                    }}
+                                  >
+                                    {instances.map((inst) => {
+                                      const filled = (
+                                        inst.sockets || []
+                                      ).filter(Boolean).length;
+                                      const isSelected =
+                                        selected === inst.instanceId;
+                                      return (
+                                        <label
+                                          key={inst.instanceId}
+                                          style={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            gap: 4,
+                                            padding: "2px 4px",
+                                            borderRadius: 4,
+                                            background: isSelected
+                                              ? "rgba(120,100,70,0.3)"
+                                              : "transparent",
+                                            cursor: "pointer",
+                                          }}
+                                        >
+                                          <input
+                                            type="radio"
+                                            name={`base-instance-${recipe.id}`}
+                                            checked={isSelected}
+                                            onChange={() =>
+                                              setBaseInstanceSelections(
+                                                (prev) => ({
+                                                  ...prev,
+                                                  [recipe.id]:
+                                                    inst.instanceId,
+                                                }),
+                                              )
+                                            }
+                                          />
+                                          <span>
+                                            {inst.customName || ingDef.name}
+                                            {inst.gemSlots > 0
+                                              ? ` (${filled}/${inst.gemSlots} gemmes)`
+                                              : ""}
+                                          </span>
+                                        </label>
+                                      );
+                                    })}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          }
+
                           const have = getQuantity(ing.itemId);
                           const enough = have >= ing.quantity;
-                          const ingDef = resolveItemDef(ing.itemId);
                           return (
                             <div
                               key={ingIndex}
@@ -636,9 +771,21 @@ export default function CraftingScreen({
           }}
         >
           <h3 style={{ margin: "0 0 6px", fontSize: 15 }}>Combinaison libre</h3>
-          <div style={{ color: "#4a3a28", marginBottom: 10 }}>
+          <div style={{ color: "#4a3a28", marginBottom: 6 }}>
             Choisis des objets et tente ta chance - rien n'est perdu en cas
             d'échec.
+          </div>
+          <div
+            style={{
+              color: "#6a5940",
+              fontStyle: "italic",
+              marginBottom: 10,
+            }}
+          >
+            Pour un équipement à sockets possédé en plusieurs exemplaires,
+            l'exemplaire le moins avantagé (sockets vides en priorité) est
+            utilisé automatiquement - pour choisir précisément lequel, passe
+            par une recette connue (page de gauche).
           </div>
 
           {selectionEntries.length > 0 && (
