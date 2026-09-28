@@ -556,6 +556,21 @@ export default function Arpg() {
     if (scene) scene.decraftItem(index);
   };
 
+  const handleSocketGem = (instanceId, gemItemId, socketIndex) => {
+    const scene = gameRef.current?.scene.getScene("MainScene");
+    if (scene) scene.socketGem(instanceId, gemItemId, socketIndex);
+  };
+
+  const handleRenameEquipment = (instanceId, newName) => {
+    const scene = gameRef.current?.scene.getScene("MainScene");
+    if (scene) scene.renameEquipmentInstance(instanceId, newName);
+  };
+
+  const handleAttemptPerforation = (scrollIndex, targetInstanceId) => {
+    const scene = gameRef.current?.scene.getScene("MainScene");
+    if (scene) scene.attemptSocketPerforation(scrollIndex, targetInstanceId);
+  };
+
   const handleOpenInventory = useCallback(() => {
     hideMinimapForOverlay();
     closeOtherOverlays("inventory");
@@ -648,9 +663,9 @@ export default function Arpg() {
     if (scene) scene.unpauseGame("crafting");
   }, [restoreMinimapAfterOverlay]);
 
-  const handleCraftItem = (recipeId, flexAllocations) => {
+  const handleCraftItem = (recipeId, flexAllocations, baseInstanceId) => {
     const scene = gameRef.current?.scene.getScene("MainScene");
-    if (scene) scene.craftItem(recipeId, flexAllocations);
+    if (scene) scene.craftItem(recipeId, flexAllocations, baseInstanceId);
   };
 
   const handleAttemptFreeCraft = (selectedItems) => {
@@ -1872,6 +1887,9 @@ export default function Arpg() {
             onUnequip={handleUnequip}
             onUse={handleUseConsumable}
             onDecraft={handleDecraftItem}
+            onSocketGem={handleSocketGem}
+            onRename={handleRenameEquipment}
+            onAttemptPerforation={handleAttemptPerforation}
             onClose={handleCloseInventory}
           />
         )}
