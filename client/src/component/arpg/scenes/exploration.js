@@ -8,10 +8,7 @@ import { resolveCraftingRecipe } from "../craftingRecipes";
 import { CHEST_SPRITESHEET, CHEST_VARIANTS } from "../spriteRegistry";
 import { rollStatusEffect, applyStatusEffect, getEffectivePlayerDefense } from "./statusEffects";
 
-// TILE_SIZE duplique volontairement (identique a celui de MainScene.js) -
-// meme constante numerique des deux cotes, meme logique que dans
-// floorRenderer.js/floorEntities.js/abilities.js/summons.js/quests.js.
-const TILE_SIZE = 32;
+import { TILE_SIZE } from "./gameConstants";
 
 function pickWeightedGem(entries) {
   const totalWeight = entries.reduce((s, e) => s + (e.weight || 1), 0);
