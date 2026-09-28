@@ -1,44 +1,26 @@
 import Phaser from "phaser";
 import EasyStar from "easystarjs";
-import { fetchLevel } from "../../../api/arpgClient";
 import { createRng } from "../rng";
-import { createFogState } from "../fogOfWar";
 import { createEnemyBehavior } from "../enemyBehavior";
-import {
-  computeDamage,
-  applyDamage,
-  createCooldown,
-  rollCritical,
-  CRIT_MULTIPLIER,
-  applyDiceVariance,
-  applyElementalResistance,
-} from "../combat";
-import { computeLevelFromXp, getPlayerStatsForLevel } from "../leveling";
+import { applyDamage, createCooldown } from "../combat";
+import { getPlayerStatsForLevel } from "../leveling";
 import {
   SPRITE_REGISTRY,
   resolveEnemySprite,
   resolveHeroStatsOverride,
-  LEVER_SPRITESHEET,
 } from "../spriteRegistry";
 import { resolveItemDef } from "../itemDefs";
 import {
   computeEquipmentBonuses,
   computeEquipmentResistances,
 } from "../equipment";
-import { ABILITY_DEFS } from "../abilityDefs";
-import { CRAFTING_RECIPES } from "../craftingRecipes";
-import { resolveFuryDef } from "../furyDefs";
 import {
-  WALL,
-  buildFloorTilemap,
-  spawnFloorDecorations,
-} from "./floorRenderer";
-import {
-  spawnChests,
-  spawnTraps,
-  spawnMiningRocks,
-  spawnForageNodes,
-} from "./floorEntities";
+  rollGemSlotCount,
+  generateInstanceId,
+  socketGem as socketGemImpl,
+  attemptSocketPerforation as attemptSocketPerforationImpl,
+  attemptGemExtraction as attemptGemExtractionImpl,
+} from "../gemSockets";
 import {
   descendStairs,
   goToDepth,
@@ -58,8 +40,6 @@ import {
   craftItem as craftItemImpl,
 } from "./craftingSystem";
 import {
-  rollStatusEffect,
-  applyStatusEffect,
   updateStatusEffects,
   createEnemyVisualEffect,
   getEffectivePlayerMoveSpeed,
@@ -68,8 +48,6 @@ import {
   getEffectivePlayerVisionRadius,
 } from "./statusEffects";
 import {
-  computeFamiliarGrowthScale,
-  spawnSummonSprite,
   confirmResummon as confirmResummonImpl,
   cancelResummon as cancelResummonImpl,
   confirmSummonReplace as confirmSummonReplaceImpl,
@@ -78,8 +56,6 @@ import {
   updateSummonProjectiles,
 } from "./summons";
 import {
-  createQuestNpcs,
-  createAmbientNpcs,
   openQuestDialog,
   acceptQuest as acceptQuestImpl,
   turnInQuest as turnInQuestImpl,
@@ -114,10 +90,10 @@ import {
   consumeItem as consumeItemImpl,
   triggerHotbarSlot as triggerHotbarSlotImpl,
   assignHotbarSlot as assignHotbarSlotImpl,
+  renameEquipmentInstance as renameEquipmentInstanceImpl,
 } from "./inventory";
 import {
   toggleDebugTileIndices,
-  clearDebugTileIndices,
   getQuestNpcMinimapData,
   getSummonMinimapData,
   drawHpBars,
@@ -127,8 +103,45 @@ import {
   persistProgressAsync,
   saveAndQuit as saveAndQuitImpl,
 } from "./save";
-
-const TILE_SIZE = 32;
+import {
+  loadLevel as loadLevelImpl,
+  retryLevel as retryLevelImpl,
+} from "./levelLoader";
+import {
+  checkLevelUp as checkLevelUpImpl,
+  openLevelUpScreen as openLevelUpScreenImpl,
+  closeLevelUpScreen as closeLevelUpScreenImpl,
+  applyPendingLevelUp as applyPendingLevelUpImpl,
+  unlockAvailableAbilitiesAndRecipes as unlockAvailableAbilitiesAndRecipesImpl,
+  allocateAttributePoint as allocateAttributePointImpl,
+  deallocateAttributePoint as deallocateAttributePointImpl,
+  confirmAttributeAllocation as confirmAttributeAllocationImpl,
+} from "./playerProgression";
+import {
+  performMeleeAttack as performMeleeAttackImpl,
+  getActiveRangedWeaponDef as getActiveRangedWeaponDefImpl,
+  canUseRangedAttack as canUseRangedAttackImpl,
+  performRangedAttack as performRangedAttackImpl,
+  updateProjectiles as updateProjectilesImpl,
+  knockbackEnemyIfClear as knockbackEnemyIfClearImpl,
+  updateShieldBash as updateShieldBashImpl,
+  computeReachableFloorTiles as computeReachableFloorTilesImpl,
+  explodeAbilityProjectile as explodeAbilityProjectileImpl,
+  computeBossRoomTiles as computeBossRoomTilesImpl,
+  updateAbilityProjectiles as updateAbilityProjectilesImpl,
+  updateZones as updateZonesImpl,
+  updateTraps as updateTrapsImpl,
+  updateBoomerangs as updateBoomerangsImpl,
+  useFury as furyImpl,
+} from "./playerCombat";
+import {
+  TILE_SIZE,
+  ENEMY_ATTACK_COOLDOWN,
+  ATTACK_ANIM_DURATION_MS,
+  FURY_KILLS_REQUIRED,
+  DEFAULT_ATTRIBUTES,
+  resolveVisualEffect,
+} from "./gameConstants";
 
 const VISION_RADIUS_DEFAULT = 6; // repli si le profil d'archetype (cf. HERO_STATS_PROFILES) ne definit pas visionRadius
 
@@ -141,7 +154,6 @@ const PLAYER_MOVE_SPEED_DEFAULT = 150; // repli si le profil d'archetype ne defi
 // consideree "devant" - 0.5 = cone de ~120 degres (±60° autour du centre).
 // Un attaque au corps a corps ne doit toucher que devant le heros, pas
 // tout autour (cf. le rapport correspondant).
-const MELEE_CONE_DOT_THRESHOLD = 0.5;
 // regeneration PASSIVE (hors combat comme pendant), TRES faible par
 // design - grimpe legerement avec le niveau (base + croissance*n, meme
 // esprit que les autres stats). Globales plutot que par archetype pour
@@ -163,29 +175,11 @@ const STAMINA_REGEN_PER_SEC_GROWTH = 0.1;
 const PLAYER_MELEE_COOLDOWN = 420;
 const PLAYER_HARVEST_COOLDOWN = 600; // exemple de valeur, ajustable selon le design
 const PLAYER_RANGED_COOLDOWN = 650;
-const PROJECTILE_SPEED = 320;
 const PROJECTILE_MAX_DISTANCE_DEFAULT = 380; // repli si le profil d'archetype ne definit pas rangedRange
-const PROJECTILE_RADIUS = 5;
-const FURY_KILLS_REQUIRED = 10; // ajustable
-// combat ennemi
-const ENEMY_ATTACK_COOLDOWN = 900;
 
 // const WALL_CORNER_INDEX_TO_FRAME_FORTRESS2 = [
 //   32, 0, 32, 18, 34, 32, 33, 7, 2, 1, 34, 23, 16, 22, 6, 70,
 // ];
-
-const ATTACK_ANIM_DURATION_MS = 400;
-
-const ATTRIBUTE_POINTS_PER_LEVEL = 5;
-const DEFAULT_ATTRIBUTES = {
-  force: 0,
-  dexterite: 0,
-  intelligence: 0,
-  vitalite: 0,
-  constitution: 0,
-  endurance: 0,
-  chance: 0,
-};
 
 function createParticleTexture(scene, key, color) {
   if (scene.textures.exists(key)) return;
@@ -194,17 +188,6 @@ function createParticleTexture(scene, key, color) {
   g.fillCircle(4, 4, 4);
   g.generateTexture(key, 8, 8);
   g.destroy();
-}
-const INFLICTS_TO_VISUAL_EFFECT = {
-  burn: "fire",
-  acid: "gas",
-  slow: "ice",
-};
-
-function resolveVisualEffect(enemyData) {
-  if (enemyData.visualEffect) return enemyData.visualEffect;
-  const inflictsType = enemyData.inflictsEffect?.type;
-  return INFLICTS_TO_VISUAL_EFFECT[inflictsType] || null;
 }
 
 export default class MainScene extends Phaser.Scene {
@@ -542,6 +525,7 @@ export default class MainScene extends Phaser.Scene {
     this.touchFuryRequested = false;
     this.hotbarSlots = new Array(9).fill(null);
     this.abilityCooldowns = {};
+    this.reactiveGemCooldowns = {}; // cooldown propre aux gemmes reactives "ability" (cf. applyReactiveGemEffects dans ai.js), independant de scene.abilityCooldowns
     this.itemCooldowns = {};
     this.activeDialogQuestKey = null;
     this.activeTalkingNpc = null;
@@ -577,6 +561,20 @@ export default class MainScene extends Phaser.Scene {
       const existing = this.inventory.find((i) => i.itemId === itemId);
       if (existing) existing.quantity += quantity;
       else this.inventory.push({ itemId, quantity });
+    } else if (def.category === "equipment") {
+      // objets equipables instancies (cf. gemSockets.js) : chaque
+      // exemplaire recoit un instanceId propre et un nombre de sockets
+      // tire une seule fois, a la creation - necessaire pour que deux
+      // armes identiques puissent porter des gemmes differentes.
+      for (let i = 0; i < quantity; i++) {
+        this.inventory.push({
+          itemId,
+          quantity: 1,
+          instanceId: generateInstanceId(),
+          gemSlots: rollGemSlotCount(itemId),
+          sockets: [],
+        });
+      }
     } else {
       for (let i = 0; i < quantity; i++) {
         this.inventory.push({ itemId, quantity: 1 });
@@ -585,6 +583,27 @@ export default class MainScene extends Phaser.Scene {
 
     this.events.emit("inventory-updated", [...this.inventory]);
     this.persistProgress();
+  }
+
+  socketGem(instanceId, gemItemId, socketIndex) {
+    return socketGemImpl(this, instanceId, gemItemId, socketIndex);
+  }
+
+  attemptSocketPerforation(scrollIndex, targetInstanceId) {
+    return attemptSocketPerforationImpl(this, scrollIndex, targetInstanceId);
+  }
+
+  attemptGemExtraction(scrollIndex, targetInstanceId, socketIndex) {
+    return attemptGemExtractionImpl(
+      this,
+      scrollIndex,
+      targetInstanceId,
+      socketIndex,
+    );
+  }
+
+  renameEquipmentInstance(instanceId, newName) {
+    return renameEquipmentInstanceImpl(this, instanceId, newName);
   }
 
   showLootToast(text) {
@@ -635,7 +654,7 @@ export default class MainScene extends Phaser.Scene {
 
     const base = getPlayerStatsForLevel(this.playerLevel, heroProfile);
 
-    const bonus = computeEquipmentBonuses(this.equipped);
+    const bonus = computeEquipmentBonuses(this.equipped, this.inventory);
     this.equipmentBonuses = bonus;
     const attrBonus = this.computeAttributeBonuses();
 
@@ -645,7 +664,10 @@ export default class MainScene extends Phaser.Scene {
     this.playerRangedDamage =
       base.rangedDamage + bonus.rangedDamage + attrBonus.rangedDamage;
     this.playerDefense = base.defense + bonus.defense + attrBonus.defense;
-    this.playerResistances = computeEquipmentResistances(this.equipped);
+    this.playerResistances = computeEquipmentResistances(
+      this.equipped,
+      this.inventory,
+    );
 
     this.playerMaxMana = base.mana + bonus.mana + attrBonus.maxMana;
     this.playerMaxStamina =
@@ -767,695 +789,27 @@ export default class MainScene extends Phaser.Scene {
     savedEphemeralChests = [],
     savedForageNodesState = [],
   ) {
-    this.currentFloorChestRemainingLoot = savedChestRemainingLoot || {};
-    this.currentFloorTriggeredTraps = savedTriggeredTraps || [];
-    this.currentFloorRevealedTraps = savedRevealedTraps || [];
-
-    if (this.fogState?.state && this.currentDepth != null) {
-      const discoveredTiles = [];
-      for (let y = 0; y < this.fogState.state.length; y++) {
-        for (let x = 0; x < this.fogState.state[y].length; x++) {
-          if (this.fogState.state[y][x] !== 0)
-            discoveredTiles.push(`${x},${y}`);
-        }
-      }
-      this.floorFogCache[this.currentDepth] = discoveredTiles;
-    }
-
-    this.events.emit("level-loading", { depth });
-    const effectiveLootSeed = lootSeed || `${Date.now()}-${Math.random()}`;
-    this.currentFloorLootSeed = effectiveLootSeed;
-
-    let data;
-    try {
-      const previousFloors = this.visitedFloors
-        .filter((f) => f.depth < depth)
-        .map((f) => ({ depth: f.depth, seed: f.seed }));
-      data = await fetchLevel(
-        depth,
-        seed,
-        effectiveLootSeed,
-        previousFloors,
-        this.discoveredSecretRoomDepths,
-        this.obtainedUniqueItems,
-      );
-    } catch (err) {
-      this.events.emit("level-load-error", { depth, error: err.message });
-      return;
-    }
-
-    const {
-      grid,
-      playerSpawn,
-      exitTile,
-      upstairsTile,
-      boss,
-      bossDoorTile,
-      travelHubTile,
-      shop,
-      ambientNpcs: ambientNpcData,
-      enemies,
-      chests,
-      traps,
-      tileset,
-    } = data;
-
-    const effectiveSavedFogState =
-      savedFogState || this.floorFogCache[depth] || null;
-
-    this.currentDepth = depth;
-    this.currentBiomeId = data.biome;
-    this.currentSeed = data.seed;
-    if (!this.discoveredLandmarks[depth]) {
-      this.discoveredLandmarks[depth] = {
-        exitTile: exitTile ? { ...exitTile } : null,
-        exitDiscovered: false,
-
-        upstairsTile: upstairsTile ? { ...upstairsTile } : null,
-        upstairsDiscovered: false,
-
-        questNpcs: {},
-      };
-    } else {
-      this.discoveredLandmarks[depth].exitTile = exitTile
-        ? { ...exitTile }
-        : null;
-
-      this.discoveredLandmarks[depth].upstairsTile = upstairsTile
-        ? { ...upstairsTile }
-        : null;
-    }
-    this.fogGrid = grid;
-    this.currentFloorKills = [...killedIndices];
-    this.currentFloorOpenedChests = [...openedChestIndices];
-    this.bossData = boss || null;
-    this.travelHubTile = travelHubTile || null;
-    this.shopData = shop || null;
-    this.bossDoorTile = bossDoorTile || null;
-    this.bossRoomOpen = false;
-    this.bossAlive = this.bossData ? true : null;
-
-    if (!this.visitedFloors.find((f) => f.depth === depth)) {
-      this.visitedFloors.push({ depth, seed: data.seed });
-    }
-
-    this.levelColliders.forEach((c) => c.destroy());
-    this.levelColliders = [];
-
-    if (this.layer) {
-      this.layer.destroy();
-      this.layer = null;
-    }
-    if (this.fogLayer) {
-      this.fogLayer.destroy();
-      this.fogLayer = null;
-    }
-    if (this.map) {
-      this.map.destroy();
-      this.map = null;
-    }
-    if (this.hero) {
-      this.hero.destroy();
-      this.hero = null;
-    }
-    if (this.exitMarker) {
-      this.exitMarker.destroy();
-      this.exitMarker = null;
-    }
-    if (this.upstairsMarker) {
-      this.upstairsMarker.destroy();
-      this.upstairsMarker = null;
-    }
-    if (this.bossDoorMarker) {
-      this.bossDoorMarker.destroy();
-      this.bossDoorMarker = null;
-    }
-    if (this.travelHubMarker) {
-      this.travelHubMarker.destroy();
-      this.travelHubMarker = null;
-    }
-    if (this.shopMarker) {
-      this.shopMarker.destroy();
-      this.shopMarker = null;
-    }
-    if (this.questNpcs) {
-      this.questNpcs.forEach((n) => n.sprite.destroy());
-    }
-    this.questNpcs = [];
-    if (this.ambientNpcs) {
-      this.ambientNpcs.forEach((n) => n.sprite.destroy());
-    }
-    this.ambientNpcs = [];
-    this.activeTalkingNpc = null;
-    if (this.chests) {
-      this.chests.forEach((c) => {
-        if (c.sprite) c.sprite.destroy();
-      });
-    }
-    this.chests = [];
-    this.nextLootChestId = 0;
-    this.activeChest = null;
-    this.floorTraps.forEach((t) => {
-      t.sprite.destroy();
-      t.spikeSprite.destroy();
-    });
-    this.floorTraps = [];
-    this.townHouseSprites.forEach((s) => s.destroy());
-    this.townHouseSprites = [];
-    this.secretLevers.forEach((l) => l.sprite.destroy());
-    this.secretLevers = [];
-    if (this.secretWallMarker) {
-      this.secretWallMarker.destroy();
-      this.secretWallMarker = null;
-    }
-    this.miningRocks.forEach((r) => {
-      if (r.sprite) r.sprite.destroy();
-    });
-    this.miningRocks = [];
-    this.forageNodes.forEach((n) => {
-      if (n.sprite) n.sprite.destroy();
-    });
-    this.forageNodes = [];
-    this.decorationSprites.forEach((s) => s.destroy());
-    this.decorationSprites = [];
-    this.secretRoomData = null;
-    this.secretDoorOpened = false;
-    this.dialogOpen = false;
-    this.gamePaused = false;
-    this.pauseReasons.clear();
-    this.enemies.forEach((e) => {
-      if (e.visualEmitter) e.visualEmitter.destroy();
-      e.sprite.destroy();
-    });
-    if (this.enemyGroup) this.enemyGroup.clear(false, false);
-    this.enemies = [];
-    this.projectiles.forEach((p) => p.sprite.destroy());
-    this.projectiles = [];
-    this.enemyProjectiles.forEach((p) => p.sprite.destroy());
-    this.enemyProjectiles = [];
-    this.abilityProjectiles.forEach((p) => p.sprite.destroy());
-    this.abilityProjectiles = [];
-    this.summonProjectiles.forEach((p) => p.sprite.destroy());
-    this.summonProjectiles = [];
-    if (this.summonGroup) this.summonGroup.clear(false, false);
-    const persistentSummons = this.summons.filter((s) => s.persistent);
-    this.summons.forEach((s) => {
-      s.sprite.destroy(); // detruit TOUJOURS l'ancien sprite - meme pour un persistant, qui en recevra un nouveau juste apres (spawnSummonSprite)
-    });
-    this.summons = [];
-    this.playerStatusEffects = [];
-    this.pendingWeaponImbue = null;
-    this.zones.forEach((z) => z.sprite.destroy());
-    this.zones = [];
-    this.traps.forEach((t) => t.sprite.destroy());
-    this.traps = [];
-    this.boomerangs.forEach((b) => b.sprite.destroy());
-    this.boomerangs = [];
-    this.stealthUntil = 0;
-    this.riposteUntil = 0;
-    this.parryUntil = 0;
-    this.visionBonusUntil = 0;
-
-    clearDebugTileIndices(this);
-
-    this.playerHp =
-      typeof hpOverride === "number"
-        ? Math.min(hpOverride, this.playerMaxHp)
-        : Math.min(this.playerHp, this.playerMaxHp);
-    this.isDead = false;
-    this.events.emit("player-hp-changed", {
-      hp: this.playerHp,
-      maxHp: this.playerMaxHp,
-    });
-    this.events.emit("player-mana-changed", {
-      mana: this.playerMana,
-      maxMana: this.playerMaxMana,
-    });
-    this.events.emit("player-stamina-changed", {
-      stamina: this.playerStamina,
-      maxStamina: this.playerMaxStamina,
-    });
-
-    const worldW = grid[0].length * TILE_SIZE;
-    const worldH = grid.length * TILE_SIZE;
-
-    buildFloorTilemap(this, { grid, tileset, data, depth });
-
-    const startPosition = savedPlayerPosition || playerSpawn;
-
-    const heroSprite = SPRITE_REGISTRY[this.heroSpriteKey];
-
-    this.hero = this.physics.add.sprite(
-      startPosition.x * TILE_SIZE + TILE_SIZE / 2,
-      startPosition.y * TILE_SIZE + TILE_SIZE / 2,
-      heroSprite.key,
-      heroSprite.animations.idleDown,
+    return loadLevelImpl(
+      this,
+      depth,
+      seed,
+      hpOverride,
+      killedIndices,
+      openedChestIndices,
+      lootSeed,
+      savedFogState,
+      savedPlayerPosition,
+      savedChestRemainingLoot,
+      savedTriggeredTraps,
+      savedRevealedTraps,
+      savedLeverActivations,
+      savedMiningRocksState,
+      savedEphemeralChests,
+      savedForageNodesState,
     );
-
-    this.lastPlayerTile = {
-      x: startPosition.x,
-      y: startPosition.y,
-    };
-    for (const ps of persistentSummons) {
-      ps.sprite = spawnSummonSprite(
-        this,
-        ps.spriteKey,
-        playerSpawn.x * TILE_SIZE + TILE_SIZE / 2,
-        playerSpawn.y * TILE_SIZE + TILE_SIZE / 2,
-      );
-      this.summons.push(ps);
-    }
-    this.hero.setScale(heroSprite.scale);
-    this.hero.setCollideWorldBounds(true);
-    const hb = heroSprite.hitbox;
-    this.hero.body
-      .setSize(hb.width, hb.height)
-      .setOffset(hb.offsetX, hb.offsetY);
-    this.hero.setDepth(10);
-    this.hero.anims.play(this.heroSpriteKey + "-idle-down");
-    this.lastDir = "down";
-    this.lastAimVector = { x: 0, y: 1 };
-
-    this.levelColliders.push(this.physics.add.collider(this.hero, this.layer));
-    this.levelColliders.push(
-      this.physics.add.collider(this.enemyGroup, this.layer),
-    );
-    this.physics.world.setBounds(0, 0, worldW, worldH);
-    this.cameras.main.setBounds(0, 0, worldW, worldH);
-    this.cameras.main.startFollow(this.hero, true, 0.1, 0.1);
-
-    if (this.registry.get("isMobile")) {
-      const visionDiameterPx = this.playerVisionRadius * TILE_SIZE * 2;
-      const targetFraction = 0.85;
-      const smallerDimension = Math.min(
-        this.cameras.main.width,
-        this.cameras.main.height,
-      );
-      this.cameras.main.setZoom(
-        (smallerDimension * targetFraction) / visionDiameterPx,
-      );
-    }
-
-    this.exitTile = exitTile;
-    this.exitMarker = this.add.image(
-      exitTile.x * TILE_SIZE + TILE_SIZE / 2,
-      exitTile.y * TILE_SIZE + TILE_SIZE / 2,
-      "stair_up",
-    );
-    this.exitMarker.setDepth(2);
-
-    this.upstairsTile = upstairsTile;
-    if (upstairsTile) {
-      this.upstairsMarker = this.add.image(
-        upstairsTile.x * TILE_SIZE + TILE_SIZE / 2,
-        upstairsTile.y * TILE_SIZE + TILE_SIZE / 2,
-        "stair_down",
-      );
-      this.upstairsMarker.setDepth(2);
-    }
-
-    if (this.bossDoorTile) {
-      this.bossDoorMarker = this.add.circle(
-        this.bossDoorTile.x * TILE_SIZE + TILE_SIZE / 2,
-        this.bossDoorTile.y * TILE_SIZE + TILE_SIZE / 2,
-        10,
-        0x6a1b9a,
-      );
-      this.bossDoorMarker.setDepth(2);
-      this.bossDoorMarker.setStrokeStyle(2, 0xffffff);
-      this.tweens.add({
-        targets: this.bossDoorMarker,
-        scale: { from: 0.7, to: 1.15 },
-        alpha: { from: 0.6, to: 1 },
-        duration: 700,
-        yoyo: true,
-        repeat: -1,
-      });
-    }
-    if (this.pendingBossRoomOpen && this.bossDoorTile) {
-      this.bossRoomOpen = true;
-      const { x, y } = this.bossDoorTile;
-      this.layer.putTileAt(this.currentFloorTileIndex ?? 0, x, y);
-      this.fogGrid[y][x] = 0;
-      if (this.bossDoorMarker) {
-        this.bossDoorMarker.destroy();
-        this.bossDoorMarker = null;
-      }
-      if (this.pendingBossAlive === false) {
-        this.bossAlive = false; // deja vaincu avant l'interruption - ne jamais le refaire apparaitre
-      } else {
-        // porte deja ouverte ET boss pas encore vaincu au moment de la
-        // sauvegarde - il faut le recreer explicitement ici : bossRoomOpen
-        // etant deja a true, le declenchement habituel (enemies.length===0)
-        // ne se produira plus jamais, donc rien d'autre ne le ferait
-        // reapparaitre
-        this.spawnBossEncounter(
-          this.pendingBossHp,
-          this.pendingBossPosition,
-          this.pendingBossState,
-        );
-      }
-    }
-    this.pendingBossRoomOpen = false;
-    this.pendingBossAlive = null;
-    this.pendingBossHp = null;
-    this.pendingBossPosition = null;
-    this.pendingBossState = null;
-
-    this.buildPathfindingGrid();
-
-    if (this.travelHubTile) {
-      this.travelHubMarker = this.add.circle(
-        this.travelHubTile.x * TILE_SIZE + TILE_SIZE / 2,
-        this.travelHubTile.y * TILE_SIZE + TILE_SIZE / 2,
-        10,
-        0x1ba8c9,
-      );
-      this.travelHubMarker.setDepth(2);
-      this.travelHubMarker.setStrokeStyle(2, 0xffffff);
-      this.tweens.add({
-        targets: this.travelHubMarker,
-        scale: { from: 0.7, to: 1.15 },
-        alpha: { from: 0.6, to: 1 },
-        duration: 700,
-        yoyo: true,
-        repeat: -1,
-      });
-    }
-
-    if (this.shopData) {
-      this.shopMarker = this.add.circle(
-        this.shopData.x * TILE_SIZE + TILE_SIZE / 2,
-        this.shopData.y * TILE_SIZE + TILE_SIZE / 2,
-        10,
-        0xd4af37,
-      );
-      this.shopMarker.setDepth(2);
-      this.shopMarker.setStrokeStyle(2, 0xffffff);
-      this.tweens.add({
-        targets: this.shopMarker,
-        scale: { from: 0.7, to: 1.15 },
-        alpha: { from: 0.6, to: 1 },
-        duration: 700,
-        yoyo: true,
-        repeat: -1,
-      });
-    }
-
-    const behaviorRng = createRng(data.seed + "-behaviors");
-    enemies.forEach((enemyData, spawnIndex) => {
-      const spawnPos = { x: enemyData.x, y: enemyData.y };
-
-      const behavior = createEnemyBehavior(grid, spawnPos, behaviorRng);
-
-      if (this.currentFloorKills.includes(spawnIndex)) return;
-
-      const { entry: enemySprite, spriteKey } = resolveEnemySprite(
-        enemyData.type,
-      );
-
-      const sprite = this.enemyGroup.create(
-        spawnPos.x * TILE_SIZE + TILE_SIZE / 2,
-        spawnPos.y * TILE_SIZE + TILE_SIZE / 2,
-        enemySprite.key,
-        enemySprite.animations.idleDown,
-      );
-      sprite.setScale(enemySprite.scale);
-      const ehb = enemySprite.hitbox;
-      sprite.body
-        .setSize(ehb.width, ehb.height)
-        .setOffset(ehb.offsetX, ehb.offsetY);
-      sprite.setDepth(8);
-      sprite.anims.play(spriteKey + "-idle-down");
-      const resolvedEffect = resolveVisualEffect(enemyData);
-      const visualEmitter = resolvedEffect
-        ? createEnemyVisualEffect(this, sprite, resolvedEffect)
-        : null;
-      this.enemies.push({
-        sprite,
-        spriteKey,
-        spawnIndex,
-        archetype: enemyData.type,
-        type: behavior.type,
-        state: behavior.state,
-        home: behavior.home,
-        aggroRadius: behavior.aggroRadius,
-        patrolPath: behavior.patrolPath,
-        patrolIndex: 0,
-        patrolDirection: 1,
-        path: null,
-        pathIndex: 0,
-        lastDir: "down",
-        hp: enemyData.hp,
-        maxHp: enemyData.maxHp,
-        damage: enemyData.damage,
-        defense: enemyData.defense,
-        xpReward: enemyData.xpReward,
-        attackType: enemyData.attackType || "melee",
-        questLoot: enemyData.questLoot || null,
-        inflictsEffect: enemyData.inflictsEffect || null,
-        resistances: enemyData.resistances || {},
-        damageType: enemyData.damageType || "physical",
-        visualEmitter,
-        statusEffects: [],
-        drops: enemyData.drops || [],
-        attackCooldown: createCooldown(ENEMY_ATTACK_COOLDOWN),
-      });
-    });
-
-    spawnChests(this, { chests, savedEphemeralChests });
-    spawnTraps(this, { traps });
-    spawnMiningRocks(this, { data, savedMiningRocksState });
-    spawnForageNodes(this, { data, savedForageNodesState });
-
-    spawnFloorDecorations(this, data);
-
-    this.secretRoomData = data.secretRoom || null;
-    const alreadyDiscovered = this.discoveredSecretRoomDepths.includes(depth);
-
-    if (this.secretRoomData && !this.floorsWithSecretRoom.includes(depth)) {
-      this.floorsWithSecretRoom.push(depth);
-    }
-
-    if (this.secretRoomData) {
-      if (alreadyDiscovered) {
-        // deja trouvee au moins une fois - la salle reste DEFINITIVEMENT
-        // ouverte, ne se referme jamais : ni levier ni combat a refaire,
-        // juste une partie normale de l'etage desormais
-        this.secretDoorOpened = true;
-      } else if (this.secretRoomData.triggerType === "lever") {
-        for (const leverTile of this.secretRoomData.leverTiles) {
-          const wasActivated = savedLeverActivations.includes(
-            `${leverTile.x},${leverTile.y}`,
-          );
-          const sprite = this.add.sprite(
-            leverTile.x * TILE_SIZE + TILE_SIZE / 2,
-            leverTile.y * TILE_SIZE + TILE_SIZE / 2,
-            LEVER_SPRITESHEET.key,
-            wasActivated ? 2 : 0, // 0 = position de repos, 2 = actionne (etat final apres animation)
-          );
-          sprite.setScale(TILE_SIZE / 16);
-          sprite.setDepth(4);
-          sprite.setVisible(true);
-          sprite.setAlpha(wasActivated ? 1 : 0.22);
-          this.secretLevers.push({
-            sprite,
-            x: leverTile.x,
-            y: leverTile.y,
-            activated: wasActivated,
-          });
-        }
-        if (
-          this.secretLevers.length > 0 &&
-          this.secretLevers.every((l) => l.activated)
-        ) {
-          this.secretDoorOpened = true;
-        }
-      } else if (this.secretRoomData.triggerType === "wall") {
-        const door = this.secretRoomData.doorTile;
-        const marker = this.add.circle(
-          door.x * TILE_SIZE + TILE_SIZE / 2,
-          door.y * TILE_SIZE + TILE_SIZE / 2,
-          5,
-          0xffcc00,
-        );
-        marker.setDepth(4);
-        marker.setAlpha(0.22); // meme discretion que les leviers - PLACEHOLDER, remplace par une texture de fissure sur le mur une fois identifiee sur une planche
-        this.secretWallMarker = marker;
-      } else if (this.secretRoomData.triggerType === "combat") {
-        const secretRoomEnemyRng = createRng(
-          `${this.currentSeed}-secret-room-enemies`,
-        );
-        for (const enemyData of this.secretRoomData.enemySpawns) {
-          const { entry: enemySprite, spriteKey } = resolveEnemySprite(
-            enemyData.type,
-          );
-          const sprite = this.enemyGroup.create(
-            enemyData.x * TILE_SIZE + TILE_SIZE / 2,
-            enemyData.y * TILE_SIZE + TILE_SIZE / 2,
-            enemySprite.key,
-            enemySprite.animations.idleDown,
-          );
-          sprite.setScale(enemySprite.scale);
-          const ehb = enemySprite.hitbox;
-          sprite.body
-            .setSize(ehb.width, ehb.height)
-            .setOffset(ehb.offsetX, ehb.offsetY);
-          sprite.setDepth(8);
-          sprite.anims.play(spriteKey + "-idle-down");
-
-          const behavior = createEnemyBehavior(
-            this.fogGrid,
-            { x: enemyData.x, y: enemyData.y },
-            secretRoomEnemyRng,
-            { guard: 1 },
-          );
-
-          this.enemies.push({
-            sprite,
-            spriteKey,
-            spawnIndex: -1,
-            archetype: enemyData.type,
-            type: behavior.type,
-            state: behavior.state,
-            home: behavior.home,
-            aggroRadius: behavior.aggroRadius,
-            patrolPath: null,
-            patrolIndex: 0,
-            patrolDirection: 1,
-            path: null,
-            pathIndex: 0,
-            lastDir: "down",
-            hp: enemyData.hp,
-            maxHp: enemyData.maxHp,
-            damage: enemyData.damage,
-            defense: enemyData.defense,
-            xpReward: enemyData.xpReward,
-            attackType: enemyData.attackType || "melee",
-            questLoot: null,
-            inflictsEffect: null,
-            resistances: enemyData.resistances || {},
-            damageType: enemyData.damageType || "physical",
-            statusEffects: [],
-            drops: [],
-            attackCooldown: createCooldown(ENEMY_ATTACK_COOLDOWN),
-            isSecretRoomGuard: true,
-          });
-        }
-        this.secretRewardLocked = true;
-      }
-    }
-
-    if (data.questNpcs && data.questNpcs.length > 0) {
-      createQuestNpcs(this, data.questNpcs);
-    }
-
-    if (ambientNpcData && ambientNpcData.length > 0) {
-      createAmbientNpcs(this, ambientNpcData);
-    }
-
-    this.fogState = createFogState(grid);
-
-    if (effectiveSavedFogState) {
-      for (const tile of effectiveSavedFogState) {
-        const [x, y] = tile.split(",").map(Number);
-
-        if (
-          y >= 0 &&
-          y < this.fogState.state.length &&
-          x >= 0 &&
-          x < this.fogState.state[y].length
-        ) {
-          this.fogState.state[y][x] = 1;
-        }
-      }
-    }
-    this.lastPlayerTile = { x: startPosition.x, y: startPosition.y };
-
-    this.fogDisabled = data.tileset === "town";
-
-    const fogTileset = this.map.addTilesetImage(
-      this.fogTilesetKey,
-      this.fogTilesetKey,
-      TILE_SIZE,
-      TILE_SIZE,
-      0,
-      0,
-    );
-
-    this.fogLayer = this.map.createBlankLayer("fog", fogTileset, 0, 0);
-    this.fogLayer.fill(0);
-    this.fogLayer.setDepth(5);
-
-    if (this.fogDisabled) {
-      const allChanges = [];
-
-      for (let y = 0; y < grid.length; y++) {
-        for (let x = 0; x < grid[0].length; x++) {
-          this.fogState.state[y][x] = 2;
-          allChanges.push({ x, y });
-        }
-      }
-
-      this.applyFogChanges(allChanges);
-    } else {
-      if (effectiveSavedFogState) {
-        for (const tile of effectiveSavedFogState) {
-          const [x, y] = tile.split(",").map(Number);
-
-          if (
-            y >= 0 &&
-            y < this.fogState.state.length &&
-            x >= 0 &&
-            x < this.fogState.state[y].length
-          ) {
-            this.fogState.state[y][x] = 1;
-            this.fogLayer.putTileAt(1, x, y);
-          }
-        }
-      }
-
-      const initialChanges = this.fogState.update(
-        startPosition.x,
-        startPosition.y,
-        getEffectivePlayerVisionRadius(this),
-      );
-
-      this.applyFogChanges(initialChanges);
-    }
-
-    this.events.emit("level-loaded", { depth, biome: data.biome });
-    this.events.emit("inventory-updated", [...this.inventory]);
-    this.events.emit("equipment-updated", { ...this.equipped });
-    this.events.emit("hotbar-updated", [...this.hotbarSlots]);
-    this.events.emit("recipes-updated", [...this.unlockedRecipes]);
-    this.events.emit("locked-recipes-updated", [
-      ...this.discoveredLockedRecipes,
-    ]);
-    this.events.emit("fury-progress", {
-      count: this.furyKillCount,
-      required: FURY_KILLS_REQUIRED,
-    });
-    this.events.emit("abilities-updated", [...this.unlockedAbilities]);
-    this.events.emit("attributes-updated", {
-      attributes: { ...this.playerAttributes },
-      unspent: this.unspentAttributePoints,
-    });
-    this.persistProgress();
   }
-
   retryLevel() {
-    this.playerHp = this.playerMaxHp;
-    delete this.floorFogCache[this.currentDepth];
-    const newLootSeed = "retry-" + Date.now();
-    this.loadLevel(
-      this.currentDepth,
-      this.currentSeed,
-      null,
-      [],
-      [],
-      newLootSeed,
-    );
+    retryLevelImpl(this);
   }
 
   travelToDepth(targetDepth) {
@@ -2227,333 +1581,23 @@ export default class MainScene extends Phaser.Scene {
   }
 
   performMeleeAttack(now) {
-    if (!this.meleeCooldown.isReady(now)) return;
-    this.meleeCooldown.trigger(now);
-
-    const meleeWeaponDef = this.equipped.mainHand
-      ? resolveItemDef(this.equipped.mainHand)
-      : null;
-
-    this.playAttackAnim(now);
-
-    const imbue = this.pendingWeaponImbue;
-    this.pendingWeaponImbue = null;
-    // direction figee au moment du swing (celle utilisee par l'anim
-    // lancee dans playAttackAnim) - pas celle au moment de la resolution,
-    // sinon tourner sur soi pendant l'anim changerait retroactivement le cone de frappe
-    const aimVector = { x: this.lastAimVector.x, y: this.lastAimVector.y };
-
-    // les degats sont resolus a la FIN de l'anim (pas au lancer du coup),
-    // pour laisser le temps a la cible de sortir de portee/du cone et
-    // esquiver - coherent avec le mouvement de l'animation d'attaque
-    this.time.delayedCall(ATTACK_ANIM_DURATION_MS, () => {
-      if (!this.hero) return; // scene/etage change entre-temps
-
-      let anyHit = false;
-
-      for (const enemy of this.enemies) {
-        const dx = enemy.sprite.x - this.hero.x;
-        const dy = enemy.sprite.y - this.hero.y;
-        const dist = Math.hypot(dx, dy);
-        if (dist > this.playerMeleeRange || !this.isEnemyVisible(enemy))
-          continue;
-
-        if (dist > 0.001) {
-          const nx = dx / dist;
-          const ny = dy / dist;
-          const dot = nx * aimVector.x + ny * aimVector.y;
-          if (dot < MELEE_CONE_DOT_THRESHOLD) continue;
-        }
-
-        const isCrit = rollCritical(
-          enemy.state !== "chase",
-          imbue?.critChanceBonus || 0,
-        );
-        let rawDamage =
-          getEffectivePlayerMeleeDamage(this) * (isCrit ? CRIT_MULTIPLIER : 1);
-
-        if (meleeWeaponDef?.varianceDice) {
-          rawDamage = applyDiceVariance(rawDamage, meleeWeaponDef.varianceDice);
-        }
-        rawDamage = applyElementalResistance(
-          rawDamage,
-          meleeWeaponDef?.damageType,
-          enemy.resistances,
-        );
-        if (
-          imbue?.executeThreshold &&
-          enemy.hp / enemy.maxHp <= imbue.executeThreshold
-        ) {
-          rawDamage *= imbue.executeBonusMultiplier;
-        }
-        if (imbue) rawDamage += imbue.bonusDamage;
-
-        const dealt = computeDamage(rawDamage, enemy.defense);
-        this.damageEnemy(enemy, dealt);
-        anyHit = true;
-
-        if (imbue?.healPercent) {
-          this.playerHp = Math.min(
-            this.playerMaxHp,
-            this.playerHp + dealt * imbue.healPercent,
-          );
-          this.events.emit("player-hp-changed", {
-            hp: this.playerHp,
-            maxHp: this.playerMaxHp,
-          });
-        }
-
-        if (enemy.hp > 0) {
-          applyStatusEffect(
-            this,
-            enemy.statusEffects,
-            rollStatusEffect(meleeWeaponDef),
-          );
-          if (imbue) {
-            applyStatusEffect(
-              this,
-              enemy.statusEffects,
-              rollStatusEffect(imbue),
-            );
-          }
-        }
-      }
-
-      if (imbue && !anyHit) {
-        this.pendingWeaponImbue = imbue;
-      }
-    });
+    performMeleeAttackImpl(this, now);
   }
 
   getActiveRangedWeaponDef() {
-    const mainDef = this.equipped.mainHand
-      ? resolveItemDef(this.equipped.mainHand)
-      : null;
-    if (mainDef && mainDef.grantsRanged) return mainDef;
-    const offDef = this.equipped.offHand
-      ? resolveItemDef(this.equipped.offHand)
-      : null;
-    if (offDef && offDef.grantsRanged) return offDef;
-    return null;
+    return getActiveRangedWeaponDefImpl(this);
   }
 
   canUseRangedAttack() {
-    return !!this.getActiveRangedWeaponDef();
+    return canUseRangedAttackImpl(this);
   }
 
   performRangedAttack(now) {
-    if (!this.rangedCooldown.isReady(now)) return;
-    const weaponDef = this.getActiveRangedWeaponDef();
-    if (!weaponDef) {
-      this.showLootToast("Aucune arme à distance équipée");
-      return;
-    }
-
-    if (weaponDef.requiresAmmo) {
-      const requiredAmmoId = weaponDef.requiresAmmo;
-
-      if (!this.equipped.quiver) {
-        this.showLootToast("Aucune munition équipée");
-        return;
-      }
-
-      const ammoAllowed = Array.isArray(requiredAmmoId)
-        ? requiredAmmoId.includes(this.equipped.quiver)
-        : this.equipped.quiver === requiredAmmoId;
-
-      if (!ammoAllowed) {
-        this.showLootToast("Mauvaise munition équipée");
-        return;
-      }
-
-      const ammoEntry = this.inventory.find(
-        (i) => i.itemId === this.equipped.quiver,
-      );
-
-      if (!ammoEntry || ammoEntry.quantity <= 0) {
-        this.showLootToast("Plus de munitions !");
-        return;
-      }
-
-      ammoEntry.quantity -= 1;
-
-      if (ammoEntry.quantity <= 0) {
-        const idx = this.inventory.indexOf(ammoEntry);
-        this.inventory.splice(idx, 1);
-        this.equipped.quiver = null;
-
-        const oldMaxHp = this.playerMaxHp;
-        this.recalculatePlayerStats();
-        this.adjustHpAfterMaxHpChange(oldMaxHp);
-        this.events.emit("equipment-updated", { ...this.equipped });
-      }
-
-      this.events.emit("inventory-updated", [...this.inventory]);
-    }
-
-    if (weaponDef.manaCost) {
-      if (this.playerMana < weaponDef.manaCost) {
-        this.showLootToast("Plus assez de mana !");
-        return;
-      }
-      this.playerMana -= weaponDef.manaCost;
-      this.events.emit("player-mana-changed", {
-        mana: this.playerMana,
-        maxMana: this.playerMaxMana,
-      });
-    }
-
-    this.rangedCooldown.trigger(now);
-    const hasAttackAnim = this.anims.exists(
-      this.heroSpriteKey + "-attack-" + this.lastDir,
-    );
-    if (hasAttackAnim) {
-      this.hero.anims.play(
-        this.heroSpriteKey + "-attack-" + this.lastDir,
-        true,
-      );
-      this.attackAnimUntil = now + ATTACK_ANIM_DURATION_MS;
-    }
-
-    const ammoDef = this.equipped.quiver
-      ? resolveItemDef(this.equipped.quiver)
-      : null;
-    const imbue = this.pendingWeaponImbue;
-    this.pendingWeaponImbue = null;
-
-    // munitions/mana/cooldown deja consommes ci-dessus (l'action est
-    // engagee des le debut de l'anim) - seul le TIR effectif (spawn du
-    // projectile) est repousse a la fin de l'anim, pour que la fleche/le
-    // sort parte visuellement au moment ou le geste se termine plutot
-    // qu'instantanement au clic
-    this.time.delayedCall(ATTACK_ANIM_DURATION_MS, () => {
-      if (!this.hero) return; // scene/etage change entre-temps
-
-      let v = this.lastAimVector;
-      let nearestDist = Infinity;
-      for (const enemy of this.enemies) {
-        if (!this.isEnemyVisible(enemy)) continue;
-        const dx = enemy.sprite.x - this.hero.x;
-        const dy = enemy.sprite.y - this.hero.y;
-        const dist = Math.hypot(dx, dy);
-        if (dist > this.playerRangedRange || dist >= nearestDist) continue;
-        nearestDist = dist;
-        const mag = dist || 1;
-        v = { x: dx / mag, y: dy / mag };
-      }
-
-      const sprite = this.add.circle(
-        this.hero.x,
-        this.hero.y,
-        PROJECTILE_RADIUS,
-        0x66ccff,
-      );
-      this.physics.add.existing(sprite);
-      sprite.setDepth(12);
-      sprite.body.setVelocity(v.x * PROJECTILE_SPEED, v.y * PROJECTILE_SPEED);
-
-      this.projectiles.push({
-        sprite,
-        startX: this.hero.x,
-        startY: this.hero.y,
-        weaponDef,
-        ammoDef,
-        imbue,
-      });
-    });
+    performRangedAttackImpl(this, now);
   }
 
   updateProjectiles() {
-    const grid = this.fogGrid;
-    const remaining = [];
-
-    for (const proj of this.projectiles) {
-      const traveled = Math.hypot(
-        proj.sprite.x - proj.startX,
-        proj.sprite.y - proj.startY,
-      );
-      const tileX = Math.floor(proj.sprite.x / TILE_SIZE);
-      const tileY = Math.floor(proj.sprite.y / TILE_SIZE);
-      const outOfBounds =
-        tileX < 0 ||
-        tileY < 0 ||
-        tileY >= grid.length ||
-        tileX >= grid[0].length;
-      const hitWall = !outOfBounds && grid[tileY][tileX] === WALL;
-
-      const fogState = this.fogState.state;
-      const projVisible = !outOfBounds && fogState[tileY][tileX] === 2;
-      proj.sprite.setVisible(projVisible);
-
-      if (traveled >= this.playerRangedRange || outOfBounds || hitWall) {
-        proj.sprite.destroy();
-        if (proj.imbue && !this.pendingWeaponImbue) {
-          this.pendingWeaponImbue = proj.imbue;
-        }
-        continue;
-      }
-
-      let hit = false;
-      for (const enemy of this.enemies) {
-        const dist = Math.hypot(
-          enemy.sprite.x - proj.sprite.x,
-          enemy.sprite.y - proj.sprite.y,
-        );
-        if (dist <= PROJECTILE_RADIUS + 14 && this.isEnemyVisible(enemy)) {
-          const isCrit = rollCritical(
-            enemy.state !== "chase",
-            proj.imbue?.critChanceBonus || 0,
-          );
-          let rawDamage =
-            getEffectivePlayerRangedDamage(this) *
-            (isCrit ? CRIT_MULTIPLIER : 1);
-
-          if (proj.weaponDef?.varianceDice) {
-            rawDamage = applyDiceVariance(
-              rawDamage,
-              proj.weaponDef.varianceDice,
-            );
-          }
-
-          rawDamage = applyElementalResistance(
-            rawDamage,
-            proj.weaponDef?.damageType,
-            enemy.resistances,
-          );
-
-          this.damageEnemy(enemy, computeDamage(rawDamage, enemy.defense));
-
-          if (enemy.hp > 0) {
-            applyStatusEffect(
-              this,
-              enemy.statusEffects,
-              rollStatusEffect(proj.weaponDef),
-            );
-            applyStatusEffect(
-              this,
-              enemy.statusEffects,
-              rollStatusEffect(proj.ammoDef),
-            );
-            if (proj.imbue)
-              applyStatusEffect(
-                this,
-                enemy.statusEffects,
-                rollStatusEffect(proj.imbue),
-              );
-          }
-          hit = true;
-          break;
-        }
-      }
-      if (hit) {
-        proj.sprite.destroy();
-        continue;
-      }
-
-      remaining.push(proj);
-    }
-
-    this.projectiles = remaining;
+    updateProjectilesImpl(this);
   }
 
   useHotbarSlot(slotIndex) {
@@ -2577,437 +1621,47 @@ export default class MainScene extends Phaser.Scene {
   }
 
   knockbackEnemyIfClear(enemy, dx, dy) {
-    const newX = enemy.sprite.x + dx;
-    const newY = enemy.sprite.y + dy;
-    const tileX = Math.floor(newX / TILE_SIZE);
-    const tileY = Math.floor(newY / TILE_SIZE);
-    const grid = this.fogGrid;
-    if (
-      tileY < 0 ||
-      tileX < 0 ||
-      tileY >= grid.length ||
-      tileX >= grid[0].length
-    )
-      return;
-    if (grid[tileY][tileX] === WALL) return;
-    enemy.sprite.x = newX;
-    enemy.sprite.y = newY;
+    knockbackEnemyIfClearImpl(this, enemy, dx, dy);
   }
 
   updateShieldBash() {
-    const ds = this.dashState;
-    const traveled = Math.hypot(
-      this.hero.x - ds.startX,
-      this.hero.y - ds.startY,
-    );
-    const abilityDamage = this.computeAbilityDamage(ds.def);
-
-    for (const enemy of this.enemies) {
-      if (ds.hitEnemyIds.has(enemy)) continue;
-      const dist = Math.hypot(
-        enemy.sprite.x - this.hero.x,
-        enemy.sprite.y - this.hero.y,
-      );
-      if (dist <= 24) {
-        const rawDamage = applyElementalResistance(
-          abilityDamage,
-          ds.def.damageType,
-          enemy.resistances,
-        );
-        this.damageEnemy(enemy, computeDamage(rawDamage, enemy.defense));
-        ds.hitEnemyIds.add(enemy);
-        this.knockbackEnemyIfClear(
-          enemy,
-          ds.dirX * ds.def.knockbackDistance,
-          ds.dirY * ds.def.knockbackDistance,
-        );
-      }
-    }
-
-    const stoppedByWall =
-      this.hero.body.velocity.x === 0 && this.hero.body.velocity.y === 0;
-    if (traveled >= ds.def.dashDistance || stoppedByWall) {
-      this.hero.setVelocity(0, 0);
-      this.dashState = null;
-    }
+    updateShieldBashImpl(this);
   }
 
   computeReachableFloorTiles(originX, originY) {
-    const grid = this.fogGrid;
-    const height = grid.length;
-    const width = grid[0].length;
-    const visited = new Set();
-    const queue = [{ x: originX, y: originY }];
-    visited.add(originX + "," + originY);
-
-    while (queue.length > 0) {
-      const { x, y } = queue.shift();
-      for (const [dx, dy] of [
-        [0, -1],
-        [0, 1],
-        [-1, 0],
-        [1, 0],
-      ]) {
-        const nx = x + dx,
-          ny = y + dy;
-        if (nx < 0 || ny < 0 || nx >= width || ny >= height) continue;
-        const key = nx + "," + ny;
-        if (visited.has(key) || grid[ny][nx] === WALL) continue;
-        visited.add(key);
-        queue.push({ x: nx, y: ny });
-      }
-    }
-    return visited;
+    return computeReachableFloorTilesImpl(this, originX, originY);
   }
 
   explodeAbilityProjectile(def, x, y) {
-    const abilityDamage = this.computeAbilityDamage(def);
-    for (const enemy of this.enemies) {
-      if (!this.isEnemyVisible(enemy)) continue;
-      const dist = Math.hypot(enemy.sprite.x - x, enemy.sprite.y - y);
-      if (dist > def.radius) continue;
-      const rawDamage = applyElementalResistance(
-        abilityDamage,
-        def.damageType,
-        enemy.resistances,
-      );
-      this.damageEnemy(enemy, computeDamage(rawDamage, enemy.defense));
-      if (enemy.hp > 0) {
-        applyStatusEffect(this, enemy.statusEffects, rollStatusEffect(def));
-      }
-    }
-
-    const circle = this.add.circle(x, y, 10, 0xff6600, 0.5);
-    circle.setDepth(14);
-    this.tweens.add({
-      targets: circle,
-      radius: def.radius,
-      alpha: 0,
-      duration: 300,
-      onComplete: () => circle.destroy(),
-    });
+    explodeAbilityProjectileImpl(this, def, x, y);
   }
 
   computeBossRoomTiles() {
-    if (!this.bossDoorTile || this.bossRoomOpen) return new Set();
-
-    const centerTileX = Math.floor(this.hero.x / TILE_SIZE);
-    const centerTileY = Math.floor(this.hero.y / TILE_SIZE);
-
-    const reachableNow = this.computeReachableFloorTiles(
-      centerTileX,
-      centerTileY,
-    );
-
-    const { x: dx, y: dy } = this.bossDoorTile;
-    const original = this.fogGrid[dy][dx];
-    this.fogGrid[dy][dx] = 0;
-    const reachableIfOpen = this.computeReachableFloorTiles(
-      centerTileX,
-      centerTileY,
-    );
-    this.fogGrid[dy][dx] = original;
-
-    const bossRoomTiles = new Set();
-    for (const key of reachableIfOpen) {
-      if (!reachableNow.has(key)) bossRoomTiles.add(key);
-    }
-    return bossRoomTiles;
+    return computeBossRoomTilesImpl(this);
   }
 
   updateAbilityProjectiles() {
-    const grid = this.fogGrid;
-    const remaining = [];
-
-    for (const proj of this.abilityProjectiles) {
-      const traveled = Math.hypot(
-        proj.sprite.x - proj.startX,
-        proj.sprite.y - proj.startY,
-      );
-      const tileX = Math.floor(proj.sprite.x / TILE_SIZE);
-      const tileY = Math.floor(proj.sprite.y / TILE_SIZE);
-      const outOfBounds =
-        tileX < 0 ||
-        tileY < 0 ||
-        tileY >= grid.length ||
-        tileX >= grid[0].length;
-      const hitWall = !outOfBounds && grid[tileY][tileX] === WALL;
-
-      const fogState = this.fogState.state;
-      proj.sprite.setVisible(!outOfBounds && fogState[tileY][tileX] === 2);
-
-      if (
-        traveled >= (proj.def.maxDistance ?? this.playerRangedRange) ||
-        outOfBounds ||
-        hitWall
-      ) {
-        proj.sprite.destroy();
-        continue;
-      }
-
-      if (proj.def.effectType === "pierce") {
-        for (const enemy of this.enemies) {
-          if (proj.hitEnemyIds.has(enemy)) continue;
-          const dist = Math.hypot(
-            enemy.sprite.x - proj.sprite.x,
-            enemy.sprite.y - proj.sprite.y,
-          );
-          if (dist <= 14 && this.isEnemyVisible(enemy)) {
-            const abilityDamage = this.computeAbilityDamage(proj.def);
-            const rawDamage = applyElementalResistance(
-              abilityDamage,
-              proj.def.damageType,
-              enemy.resistances,
-            );
-            this.damageEnemy(enemy, computeDamage(rawDamage, enemy.defense));
-            if (enemy.hp > 0) {
-              applyStatusEffect(
-                this,
-                enemy.statusEffects,
-                rollStatusEffect(proj.def),
-              );
-            }
-            proj.hitEnemyIds.add(enemy);
-            proj.pierceCount++;
-          }
-        }
-        if (
-          proj.def.maxPierceCount &&
-          proj.pierceCount >= proj.def.maxPierceCount
-        ) {
-          proj.sprite.destroy();
-          continue;
-        }
-        remaining.push(proj);
-        continue;
-      }
-
-      let hit = false;
-      for (const enemy of this.enemies) {
-        const dist = Math.hypot(
-          enemy.sprite.x - proj.sprite.x,
-          enemy.sprite.y - proj.sprite.y,
-        );
-        if (dist <= 14 && this.isEnemyVisible(enemy)) {
-          this.explodeAbilityProjectile(proj.def, proj.sprite.x, proj.sprite.y);
-          hit = true;
-          break;
-        }
-      }
-      if (hit) {
-        proj.sprite.destroy();
-        continue;
-      }
-
-      remaining.push(proj);
-    }
-
-    this.abilityProjectiles = remaining;
+    updateAbilityProjectilesImpl(this);
   }
 
   updateZones(now) {
-    const remaining = [];
-    for (const zone of this.zones) {
-      if (now >= zone.expiresAt) {
-        zone.sprite.destroy();
-        continue;
-      }
-      if (now >= zone.nextTickAt) {
-        zone.nextTickAt = now + zone.tickIntervalMs;
-        for (const enemy of this.enemies) {
-          const dist = Math.hypot(
-            enemy.sprite.x - zone.x,
-            enemy.sprite.y - zone.y,
-          );
-          if (dist <= zone.radius) {
-            const dmg = applyElementalResistance(
-              zone.damagePerTick,
-              zone.damageType,
-              enemy.resistances,
-            );
-            this.damageEnemy(enemy, dmg);
-          }
-        }
-      }
-      remaining.push(zone);
-    }
-    this.zones = remaining;
+    updateZonesImpl(this, now);
   }
 
   updateTraps(now) {
-    const remaining = [];
-    for (const trap of this.traps) {
-      if (now >= trap.expiresAt) {
-        trap.sprite.destroy();
-        continue;
-      }
-      let triggered = false;
-      for (const enemy of this.enemies) {
-        const dist = Math.hypot(
-          enemy.sprite.x - trap.x,
-          enemy.sprite.y - trap.y,
-        );
-        if (dist <= trap.triggerRadius) {
-          applyStatusEffect(
-            this,
-            enemy.statusEffects,
-            rollStatusEffect({ inflictsEffect: trap.inflictsEffect }),
-          );
-          trap.sprite.destroy();
-          triggered = true;
-          break;
-        }
-      }
-      if (!triggered) remaining.push(trap);
-    }
-    this.traps = remaining;
+    updateTrapsImpl(this, now);
   }
 
   updateBoomerangs() {
-    const remaining = [];
-    for (const b of this.boomerangs) {
-      if (!b.returning) {
-        const traveled = Math.hypot(
-          b.sprite.x - b.startX,
-          b.sprite.y - b.startY,
-        );
-        if (traveled >= b.def.maxDistance) b.returning = true;
-      } else {
-        const dx = this.hero.x - b.sprite.x;
-        const dy = this.hero.y - b.sprite.y;
-        const dist = Math.hypot(dx, dy);
-        if (dist < 20) {
-          b.sprite.destroy();
-          continue;
-        }
-        const mag = dist || 1;
-        b.sprite.body.setVelocity(
-          (dx / mag) * b.def.projectileSpeed,
-          (dy / mag) * b.def.projectileSpeed,
-        );
-      }
-      for (const enemy of this.enemies) {
-        if (b.hitEnemyIds.has(enemy)) continue;
-        const dist = Math.hypot(
-          enemy.sprite.x - b.sprite.x,
-          enemy.sprite.y - b.sprite.y,
-        );
-        if (dist <= 14 && this.isEnemyVisible(enemy)) {
-          const abilityDamage = this.computeAbilityDamage(b.def);
-          const rawDamage = applyElementalResistance(
-            abilityDamage,
-            b.def.damageType,
-            enemy.resistances,
-          );
-          this.damageEnemy(enemy, computeDamage(rawDamage, enemy.defense));
-          b.hitEnemyIds.add(enemy);
-        }
-      }
-      remaining.push(b);
-    }
-    this.boomerangs = remaining;
+    updateBoomerangsImpl(this);
   }
-
   assignHotbarSlot(slotIndex, payload) {
     assignHotbarSlotImpl(this, slotIndex, payload);
   }
 
   useFury() {
-    if (this.furyKillCount < FURY_KILLS_REQUIRED) {
-      this.showLootToast(
-        `Furie pas encore prête (${this.furyKillCount}/${FURY_KILLS_REQUIRED} ennemis)`,
-      );
-      return;
-    }
-
-    const heroArchetype = resolveHeroStatsOverride(
-      this.heroSpriteKey,
-    )?.archetype;
-    const fury = resolveFuryDef(heroArchetype);
-    if (!fury) {
-      this.showLootToast("Aucune furie pour cet archétype");
-      return;
-    }
-
-    this.furyKillCount = 0;
-    this.events.emit("fury-progress", {
-      count: 0,
-      required: FURY_KILLS_REQUIRED,
-    });
-
-    if (fury.aoeDamage) {
-      for (const enemy of this.enemies) {
-        if (!this.isEnemyVisible(enemy)) continue;
-        const dist = Math.hypot(
-          enemy.sprite.x - this.hero.x,
-          enemy.sprite.y - this.hero.y,
-        );
-        if (dist > fury.aoeRadius) continue;
-        const rawDamage = applyElementalResistance(
-          fury.aoeDamage,
-          fury.damageType,
-          enemy.resistances,
-        );
-        this.damageEnemy(enemy, computeDamage(rawDamage, enemy.defense));
-      }
-      const circle = this.add.circle(
-        this.hero.x,
-        this.hero.y,
-        10,
-        0xff2200,
-        0.5,
-      );
-      circle.setDepth(14);
-      this.tweens.add({
-        targets: circle,
-        radius: fury.aoeRadius,
-        alpha: 0,
-        duration: 400,
-        onComplete: () => circle.destroy(),
-      });
-    }
-
-    if (fury.buffStatModifiers) {
-      applyStatusEffect(this, this.playerStatusEffects, {
-        type: fury.id,
-        kind: "modifier",
-        statModifiers: fury.buffStatModifiers,
-        durationMs: fury.buffDurationMs,
-      });
-    }
-
-    if (fury.healPercent) {
-      this.playerHp = Math.min(
-        this.playerMaxHp,
-        this.playerHp + (this.playerMaxHp - this.playerHp) * fury.healPercent,
-      );
-      this.playerMana = Math.min(
-        this.playerMaxMana,
-        this.playerMana +
-          (this.playerMaxMana - this.playerMana) * fury.healPercent,
-      );
-      this.playerStamina = Math.min(
-        this.playerMaxStamina,
-        this.playerStamina +
-          (this.playerMaxStamina - this.playerStamina) * fury.healPercent,
-      );
-      this.events.emit("player-hp-changed", {
-        hp: this.playerHp,
-        maxHp: this.playerMaxHp,
-      });
-      this.events.emit("player-mana-changed", {
-        mana: this.playerMana,
-        maxMana: this.playerMaxMana,
-      });
-      this.events.emit("player-stamina-changed", {
-        stamina: this.playerStamina,
-        maxStamina: this.playerMaxStamina,
-      });
-    }
-
-    this.showLootToast(`${fury.name} déclenchée !`);
+    furyImpl(this);
   }
-
   damageEnemy(enemy, amount) {
     if (enemy.state !== "chase") {
       enemy.state = "chase";
@@ -3169,237 +1823,36 @@ export default class MainScene extends Phaser.Scene {
   }
 
   checkLevelUp() {
-    const { level } = computeLevelFromXp(this.xp);
-    if (level <= this.playerLevel) return;
-    this.events.emit("levelup-available", { available: true });
+    checkLevelUpImpl(this);
   }
 
   openLevelUpScreen() {
-    const inCombat = this.enemies.some((e) => e.state === "chase");
-    if (inCombat) {
-      this.showLootToast("Impossible en plein combat");
-      return;
-    }
-
-    const { level } = computeLevelFromXp(this.xp);
-    if (level > this.playerLevel) {
-      this.applyPendingLevelUp(level);
-    }
-
-    this.draftAttributes = { ...this.playerAttributes };
-    this.draftUnspentPoints = this.unspentAttributePoints;
-
-    this.pauseGame("levelup");
-    this.events.emit("levelup-screen-open", {
-      attributes: { ...this.playerAttributes }, // confirme - le plancher pour le bouton "-"
-      draftAttributes: { ...this.draftAttributes },
-      unspent: this.draftUnspentPoints,
-      level: this.playerLevel,
-    });
+    openLevelUpScreenImpl(this);
   }
 
   closeLevelUpScreen() {
-    this.unpauseGame("levelup");
-    this.events.emit("levelup-screen-open", null);
+    closeLevelUpScreenImpl(this);
   }
 
   applyPendingLevelUp(level) {
-    const levelsGained = level - this.playerLevel;
-    this.playerLevel = level;
-    this.unspentAttributePoints += ATTRIBUTE_POINTS_PER_LEVEL * levelsGained;
-    this.recalculatePlayerStats();
-    this.playerHp = this.playerMaxHp;
-    this.playerMana = this.playerMaxMana;
-    this.playerStamina = this.playerMaxStamina;
-
-    let anyAbilityUnlocked = false;
-    const heroArchetype = resolveHeroStatsOverride(
-      this.heroSpriteKey,
-    )?.archetype;
-    for (const def of Object.values(ABILITY_DEFS)) {
-      if (
-        def.archetypes &&
-        def.archetypes.length > 0 &&
-        !def.archetypes.includes(heroArchetype)
-      )
-        continue;
-      if (def.unlockLevel == null || def.unlockLevel > level) continue;
-      if (this.unlockedAbilities.includes(def.id)) continue;
-      if (def.staminaCost && this.playerMaxStamina <= 0) continue;
-      if (def.manaCost && this.playerMaxMana <= 0) continue;
-      this.unlockedAbilities.push(def.id);
-      anyAbilityUnlocked = true;
-      this.showLootToast(`Nouvelle compétence débloquée : ${def.name} !`);
-    }
-    if (anyAbilityUnlocked)
-      this.events.emit("abilities-updated", [...this.unlockedAbilities]);
-    let anyRecipeUnlocked = false;
-    for (const recipe of Object.values(CRAFTING_RECIPES)) {
-      if (recipe.unlockLevel == null || recipe.unlockLevel > level) continue;
-      if (recipe.discoveryOnly) continue;
-      if (this.unlockedRecipes.includes(recipe.id)) continue;
-      this.unlockedRecipes.push(recipe.id);
-      anyRecipeUnlocked = true;
-      this.showLootToast(`Nouvelle recette débloquée : ${recipe.name} !`);
-    }
-    if (anyRecipeUnlocked)
-      this.events.emit("recipes-updated", [...this.unlockedRecipes]);
-
-    const stillLocked = this.discoveredLockedRecipes.filter(
-      (id) => !this.unlockedRecipes.includes(id),
-    );
-    if (stillLocked.length !== this.discoveredLockedRecipes.length) {
-      this.discoveredLockedRecipes = stillLocked;
-      this.events.emit("locked-recipes-updated", [
-        ...this.discoveredLockedRecipes,
-      ]);
-    }
-
-    this.events.emit("player-hp-changed", {
-      hp: this.playerHp,
-      maxHp: this.playerMaxHp,
-    });
-    this.events.emit("player-mana-changed", {
-      mana: this.playerMana,
-      maxMana: this.playerMaxMana,
-    });
-    this.events.emit("player-stamina-changed", {
-      stamina: this.playerStamina,
-      maxStamina: this.playerMaxStamina,
-    });
-    for (const summon of this.summons) {
-      if (summon.growthConfig) {
-        const growthScale = computeFamiliarGrowthScale(
-          this,
-          summon.growthConfig,
-        );
-        const baseSpriteInfo = SPRITE_REGISTRY[summon.spriteKey];
-        if (baseSpriteInfo)
-          summon.sprite.setScale(baseSpriteInfo.scale * growthScale);
-      }
-    }
-
-    this.events.emit("level-up", { level });
-    this.events.emit("levelup-available", { available: false });
-    this.persistProgress();
+    applyPendingLevelUpImpl(this, level);
   }
-  /**
-   * Debloque tout ce qui a unlockLevel <= niveau actuel - separee
-   * d'applyPendingLevelUp car appelee aussi a la CREATION du personnage
-   * (niveau 1), moment ou aucune vraie "montee de niveau" ne se produit
-   * jamais (on demarre deja a ce niveau, on ne le "franchit" pas).
-   */
+
   unlockAvailableAbilitiesAndRecipes() {
-    const heroArchetype = resolveHeroStatsOverride(
-      this.heroSpriteKey,
-    )?.archetype;
-    for (const def of Object.values(ABILITY_DEFS)) {
-      if (
-        def.archetypes &&
-        def.archetypes.length > 0 &&
-        !def.archetypes.includes(heroArchetype)
-      )
-        continue;
-      if (def.unlockLevel == null || def.unlockLevel > this.playerLevel)
-        continue;
-      if (this.unlockedAbilities.includes(def.id)) continue;
-      if (def.staminaCost && this.playerMaxStamina <= 0) continue;
-      if (def.manaCost && this.playerMaxMana <= 0) continue;
-      this.unlockedAbilities.push(def.id);
-    }
-    for (const recipe of Object.values(CRAFTING_RECIPES)) {
-      if (recipe.unlockLevel == null || recipe.unlockLevel > this.playerLevel)
-        continue;
-      if (recipe.discoveryOnly) continue; // <-- nouveau, meme garde qu'applyPendingLevelUp
-      if (this.unlockedRecipes.includes(recipe.id)) continue;
-      this.unlockedRecipes.push(recipe.id);
-    }
+    unlockAvailableAbilitiesAndRecipesImpl(this);
   }
 
   allocateAttributePoint(attribute) {
-    if (this.draftUnspentPoints <= 0) return;
-    if (!(attribute in this.draftAttributes)) return;
-    const inCombat = this.enemies.some((e) => e.state === "chase");
-    if (inCombat) {
-      this.showLootToast("Impossible en plein combat");
-      return;
-    }
-
-    this.draftAttributes[attribute]++;
-    this.draftUnspentPoints--;
-
-    this.events.emit("levelup-draft-updated", {
-      attributes: { ...this.draftAttributes },
-      unspent: this.draftUnspentPoints,
-    });
+    allocateAttributePointImpl(this, attribute);
   }
 
-  /**
-   * Retire un point du brouillon - UNIQUEMENT si ce point a ete ajoute
-   * CETTE session (jamais en dessous de this.playerAttributes, deja
-   * confirme lors d'une session precedente).
-   */
   deallocateAttributePoint(attribute) {
-    if (!(attribute in this.draftAttributes)) return;
-    if (this.draftAttributes[attribute] <= this.playerAttributes[attribute])
-      return;
-
-    this.draftAttributes[attribute]--;
-    this.draftUnspentPoints++;
-
-    this.events.emit("levelup-draft-updated", {
-      attributes: { ...this.draftAttributes },
-      unspent: this.draftUnspentPoints,
-    });
+    deallocateAttributePointImpl(this, attribute);
   }
 
-  /**
-   * Applique reellement le brouillon - stats recalculees (proportions de
-   * ressources preservees, meme principe qu'avant), sauvegarde. Tant que
-   * cette methode n'est pas appelee, rien n'est definitif - fermer l'ecran
-   * sans valider abandonne silencieusement le brouillon (this.playerAttributes
-   * n'a jamais ete touche entre-temps).
-   */
   confirmAttributeAllocation() {
-    this.playerAttributes = { ...this.draftAttributes };
-    this.unspentAttributePoints = this.draftUnspentPoints;
-
-    const previousHpRatio = this.playerHp / this.playerMaxHp;
-    const previousManaRatio =
-      this.playerMaxMana > 0 ? this.playerMana / this.playerMaxMana : 1;
-    const previousStaminaRatio =
-      this.playerMaxStamina > 0
-        ? this.playerStamina / this.playerMaxStamina
-        : 1;
-
-    this.recalculatePlayerStats();
-
-    this.playerHp = Math.round(this.playerMaxHp * previousHpRatio);
-    this.playerMana = Math.round(this.playerMaxMana * previousManaRatio);
-    this.playerStamina = Math.round(
-      this.playerMaxStamina * previousStaminaRatio,
-    );
-
-    this.events.emit("player-hp-changed", {
-      hp: this.playerHp,
-      maxHp: this.playerMaxHp,
-    });
-    this.events.emit("player-mana-changed", {
-      mana: this.playerMana,
-      maxMana: this.playerMaxMana,
-    });
-    this.events.emit("player-stamina-changed", {
-      stamina: this.playerStamina,
-      maxStamina: this.playerMaxStamina,
-    });
-    this.events.emit("attributes-updated", {
-      attributes: { ...this.playerAttributes },
-      unspent: this.unspentAttributePoints,
-    });
-    this.showLootToast("Attributs confirmés !");
-    this.persistProgress();
+    confirmAttributeAllocationImpl(this);
   }
-
   attemptFreeCraft(selectedItems) {
     return attemptFreeCraftImpl(this, selectedItems);
   }
@@ -3408,8 +1861,8 @@ export default class MainScene extends Phaser.Scene {
     decraftItemImpl(this, inventoryIndex);
   }
 
-  craftItem(recipeId, flexAllocations = {}) {
-    craftItemImpl(this, recipeId, flexAllocations);
+  craftItem(recipeId, flexAllocations = {}, baseInstanceId = null) {
+    craftItemImpl(this, recipeId, flexAllocations, baseInstanceId);
   }
 
   showDamageNumber(sprite, amount, color = "#ffffff", prefix = "-") {

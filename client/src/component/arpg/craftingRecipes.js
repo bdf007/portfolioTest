@@ -3269,6 +3269,32 @@ export const CRAFTING_RECIPES = {
     discoveryOnly: true,
   },
 
+  socketPerforationScrollRecipe: {
+    id: "socketPerforationScrollRecipe",
+    name: "Recette de sort : perforation de socket",
+    resultItemId: "socketPerforationScroll",
+    resultQuantity: 1,
+    ingredients: [
+      { itemId: "blanckScroll", quantity: 1 },
+      { itemId: "coalOre", quantity: 1 },
+      { itemId: "manaPotion", quantity: 1 },
+    ],
+    discoveryOnly: true,
+  },
+
+  gemExtractionScrollRecipe: {
+    id: "gemExtractionScrollRecipe",
+    name: "Recette de sort : extraction de gemme",
+    resultItemId: "gemExtractionScroll",
+    resultQuantity: 1,
+    ingredients: [
+      { itemId: "blanckScroll", quantity: 1 },
+      { itemId: "copperOre", quantity: 1 },
+      { itemId: "healthPotion", quantity: 1 },
+    ],
+    discoveryOnly: true,
+  },
+
   detectTrapsScrollRecipe: {
     id: "detectTrapsScrollRecipe",
     name: "Recette de sort : détection",
@@ -3431,29 +3457,29 @@ export const CRAFTING_RECIPES = {
     // unlockLevel: 6,
     discoveryOnly: true,
   },
-
-  sharpIronDaggerRecipe: {
-    id: "sharpIronDaggerRecipe",
-    name: "Recette de dague en fer aiguisée",
-    resultItemId: "sharpIronDagger",
+  // gemmes
+  miningYieldGemRecipe: {
+    id: "miningYieldGemRecipe",
+    name: "Recette de gemme de rendement minier",
+    resultItemId: "miningYieldGem",
     resultQuantity: 1,
     ingredients: [
-      { itemId: "ironDagger", quantity: 1 },
-      { itemId: "whetstone", quantity: 1 },
+      // à modifier
+      { itemId: "copperOre", quantity: 1 },
+      { itemId: "copperIngot", quantity: 1 },
+      { itemId: "gnomeFurTuft", quantity: 1 },
     ],
-    // unlockLevel: 3,
     discoveryOnly: true,
   },
-  sharpIronSwordRecipe: {
-    id: "sharpIronSwordRecipe",
-    name: "Recette d'épée en fer aiguisée",
-    resultItemId: "sharpIronSword",
+  burnGemRecipe: {
+    id: "burnGemRecipe",
+    name: "Recette de gemme de brûlure",
+    resultItemId: "burnGem",
     resultQuantity: 1,
     ingredients: [
-      { itemId: "ironSword", quantity: 1 },
-      { itemId: "whetstone", quantity: 1 },
+      { itemId: "ruby", quantity: 1 },
+      { itemId: "wood", quantity: 1 },
     ],
-    // unlockLevel: 3,
     discoveryOnly: true,
   },
 

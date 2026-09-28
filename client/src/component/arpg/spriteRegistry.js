@@ -5021,7 +5021,11 @@ const HERO_STATS_PROFILES = {
       "woodenDagger",
       "woodenPickaxe",
       "woodenAxe",
-      { itemId: "copperIngot", quantity: 3 },
+      "socketPerforationScroll",
+      "burnGem",
+      "randomTeleportGem",
+      "slimeBlobLeatherHelmet",
+      "slimeBlob",
     ],
     startingAmmo: null,
     startingAbilities: [

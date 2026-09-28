@@ -9,19 +9,7 @@ import { resolveHeroStatsOverride, CHEST_VARIANTS } from "../spriteRegistry";
 import { createCooldown } from "../combat";
 import { ABILITY_DEFS } from "../abilityDefs";
 
-// ENEMY_ATTACK_COOLDOWN et DEFAULT_ATTRIBUTES dupliques volontairement
-// (identiques a ceux de MainScene.js) - meme logique que dans
-// summons.js/quests.js/exploration.js/ai.js/inventory.js/hud.js.
-const ENEMY_ATTACK_COOLDOWN = 900;
-const DEFAULT_ATTRIBUTES = {
-  force: 0,
-  dexterite: 0,
-  intelligence: 0,
-  vitalite: 0,
-  constitution: 0,
-  endurance: 0,
-  chance: 0,
-};
+import { ENEMY_ATTACK_COOLDOWN, DEFAULT_ATTRIBUTES } from "./gameConstants";
 
 export async function startGame(scene) {
   const resumeSave = scene.registry.get("resumeSave");

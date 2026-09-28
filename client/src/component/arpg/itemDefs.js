@@ -40,7 +40,7 @@ export const ITEM_DEFS = {
     category: "equipment",
     slot: "mainHand",
     name: "Dague en cuivre",
-    description: "Dague de base en cuivre.",
+    description: "+5 dégât au corps à corps.",
     statBonus: { meleeDamage: 5 },
     stackable: false,
     archetypes: ["voleur", "assassin"],
@@ -51,7 +51,7 @@ export const ITEM_DEFS = {
     category: "equipment",
     slot: "mainHand",
     name: "Dague en fer",
-    description: "Dague de base en fer.",
+    description: "+7 dégât au corps à corps.",
     statBonus: { meleeDamage: 7 },
     stackable: false,
     archetypes: ["voleur", "assassin"],
@@ -62,7 +62,7 @@ export const ITEM_DEFS = {
     category: "equipment",
     slot: "mainHand",
     name: "Dague en argent",
-    description: "Dague de base en argent.",
+    description: "+9 dégât au corps à corps.",
     statBonus: { meleeDamage: 9 },
     stackable: false,
     archetypes: ["voleur", "assassin"],
@@ -73,7 +73,7 @@ export const ITEM_DEFS = {
     category: "equipment",
     slot: "mainHand",
     name: "Dague en acier",
-    description: "Dague de base en acier.",
+    description: "+11 dégât au corps à corps.",
     statBonus: { meleeDamage: 11 },
     stackable: false,
     archetypes: ["voleur", "assassin"],
@@ -84,7 +84,7 @@ export const ITEM_DEFS = {
     category: "equipment",
     slot: "mainHand",
     name: "Dague en or",
-    description: "Dague de base en or.",
+    description: "+13 dégât au corps à corps.",
     statBonus: { meleeDamage: 13 },
     stackable: false,
     archetypes: ["voleur", "assassin"],
@@ -95,7 +95,7 @@ export const ITEM_DEFS = {
     category: "equipment",
     slot: "mainHand",
     name: "Dague en platine",
-    description: "Dague de base en platine.",
+    description: "+15 dégât au corps à corps.",
     statBonus: { meleeDamage: 15 },
     stackable: false,
     archetypes: ["voleur", "assassin"],
@@ -106,7 +106,7 @@ export const ITEM_DEFS = {
     category: "equipment",
     slot: "mainHand",
     name: "Dague en cobalt",
-    description: "Dague de base en cobalt.",
+    description: "+17 dégât au corps à corps.",
     statBonus: { meleeDamage: 17 },
     stackable: false,
     archetypes: ["voleur", "assassin"],
@@ -117,7 +117,7 @@ export const ITEM_DEFS = {
     category: "equipment",
     slot: "mainHand",
     name: "Dague en adamantine",
-    description: "Dague de base en adamantine.",
+    description: "+19 dégât au corps à corps.",
     statBonus: { meleeDamage: 19 },
     stackable: false,
     archetypes: ["voleur", "assassin"],
@@ -128,7 +128,7 @@ export const ITEM_DEFS = {
     category: "equipment",
     slot: "mainHand",
     name: "Dague angélique",
-    description: "Dague de base angélique.",
+    description: "+21 dégât au corps à corps.",
     statBonus: { meleeDamage: 21 },
     stackable: false,
     archetypes: ["voleur", "assassin"],
@@ -139,7 +139,7 @@ export const ITEM_DEFS = {
     category: "equipment",
     slot: "mainHand",
     name: "Dague fatale",
-    description: "Dague de base fatale.",
+    description: "+23 dégât au corps à corps.",
     statBonus: { meleeDamage: 23 },
     stackable: false,
     archetypes: ["voleur", "assassin"],
@@ -150,7 +150,7 @@ export const ITEM_DEFS = {
     category: "equipment",
     slot: "mainHand",
     name: "Dague de nova",
-    description: "Dague de base de nova.",
+    description: "+25 dégât au corps à corps.",
     statBonus: { meleeDamage: 25 },
     stackable: false,
     archetypes: ["voleur", "assassin"],
@@ -162,8 +162,9 @@ export const ITEM_DEFS = {
     slot: "mainHand",
     twoHanded: false,
     grantsRanged: false,
-    name: "Dague en cuivre aiguisée. Inflige un saignement à l'ennemi.",
-    description: "+4 dégâts au corps à corps.",
+    name: "Dague en cuivre aiguisée",
+    description:
+      "Inflige un saignement à l'ennemi. +4 dégâts au corps à corps.",
     statBonus: { meleeDamage: 4 },
     stackable: false,
     archetypes: ["voleur", "guerrier", "archer", "mage"],
@@ -183,8 +184,9 @@ export const ITEM_DEFS = {
     slot: "mainHand",
     twoHanded: false,
     grantsRanged: false,
-    name: "Dague en fer aiguisée. Inflige un saignement à l'ennemi.",
-    description: "+5 dégâts au corps à corps.",
+    name: "Dague en fer aiguisée",
+    description:
+      "Inflige un saignement à l'ennemi. +5 dégâts au corps à corps.",
     statBonus: { meleeDamage: 5 },
     stackable: false,
     archetypes: ["voleur", "guerrier", "archer", "mage"],
@@ -204,8 +206,9 @@ export const ITEM_DEFS = {
     slot: "mainHand",
     twoHanded: false,
     grantsRanged: false,
-    name: "Dague en acier aiguisée. Inflige un saignement à l'ennemi.",
-    description: "+6 dégâts au corps à corps.",
+    name: "Dague en acier aiguisée",
+    description:
+      "Inflige un saignement à l'ennemi. +6 dégâts au corps à corps.",
     statBonus: { meleeDamage: 6 },
     stackable: false,
     archetypes: ["voleur", "guerrier", "archer", "mage"],
@@ -225,8 +228,9 @@ export const ITEM_DEFS = {
     slot: "mainHand",
     twoHanded: false,
     grantsRanged: false,
-    name: "Dague en argent aiguisée. Inflige un saignement à l'ennemi.",
-    description: "+7 dégâts au corps à corps.",
+    name: "Dague en argent aiguisée",
+    description:
+      "Inflige un saignement à l'ennemi. +7 dégâts au corps à corps.",
     statBonus: { meleeDamage: 7 },
     stackable: false,
     archetypes: ["voleur", "guerrier", "archer", "mage"],
@@ -246,8 +250,9 @@ export const ITEM_DEFS = {
     slot: "mainHand",
     twoHanded: false,
     grantsRanged: false,
-    name: "Dague en or aiguisée. Inflige un saignement à l'ennemi.",
-    description: "+8 dégâts au corps à corps.",
+    name: "Dague en or aiguisée",
+    description:
+      "Inflige un saignement à l'ennemi. +8 dégâts au corps à corps.",
     statBonus: { meleeDamage: 8 },
     stackable: false,
     archetypes: ["voleur", "guerrier", "archer", "mage"],
@@ -267,8 +272,9 @@ export const ITEM_DEFS = {
     slot: "mainHand",
     twoHanded: false,
     grantsRanged: false,
-    name: "Dague en platine aiguisée. Inflige un saignement à l'ennemi.",
-    description: "+9 dégâts au corps à corps.",
+    name: "Dague en platine aiguisée",
+    description:
+      "Inflige un saignement à l'ennemi. +9 dégâts au corps à corps.",
     statBonus: { meleeDamage: 9 },
     stackable: false,
     archetypes: ["voleur", "guerrier", "archer", "mage"],
@@ -288,8 +294,9 @@ export const ITEM_DEFS = {
     slot: "mainHand",
     twoHanded: false,
     grantsRanged: false,
-    name: "Dague en cobalt aiguisée. Inflige un saignement à l'ennemi.",
-    description: "+10 dégâts au corps à corps.",
+    name: "Dague en cobalt aiguisée",
+    description:
+      "Inflige un saignement à l'ennemi. +10 dégâts au corps à corps.",
     statBonus: { meleeDamage: 10 },
     stackable: false,
     archetypes: ["voleur", "guerrier", "archer", "mage"],
@@ -309,8 +316,9 @@ export const ITEM_DEFS = {
     slot: "mainHand",
     twoHanded: false,
     grantsRanged: false,
-    name: "Dague en adamantine aiguisée. Inflige un saignement à l'ennemi.",
-    description: "+11 dégâts au corps à corps.",
+    name: "Dague en adamantine aiguisée",
+    description:
+      "Inflige un saignement à l'ennemi. +11 dégâts au corps à corps.",
     statBonus: { meleeDamage: 11 },
     stackable: false,
     archetypes: ["voleur", "guerrier", "archer", "mage"],
@@ -330,8 +338,9 @@ export const ITEM_DEFS = {
     slot: "mainHand",
     twoHanded: false,
     grantsRanged: false,
-    name: "Dague en cramoisi aiguisée. Inflige un saignement à l'ennemi.",
-    description: "+12 dégâts au corps à corps.",
+    name: "Dague en cramoisi aiguisée",
+    description:
+      "Inflige un saignement à l'ennemi. +12 dégâts au corps à corps.",
     statBonus: { meleeDamage: 12 },
     stackable: false,
     archetypes: ["voleur", "guerrier", "archer", "mage"],
@@ -351,8 +360,9 @@ export const ITEM_DEFS = {
     slot: "mainHand",
     twoHanded: false,
     grantsRanged: false,
-    name: "Dague angélique aiguisée. Inflige un saignement à l'ennemi.",
-    description: "+13 dégâts au corps à corps.",
+    name: "Dague angélique aiguisée",
+    description:
+      "Inflige un saignement à l'ennemi. +13 dégâts au corps à corps.",
     statBonus: { meleeDamage: 13 },
     stackable: false,
     archetypes: ["voleur", "guerrier", "archer", "mage"],
@@ -372,8 +382,9 @@ export const ITEM_DEFS = {
     slot: "mainHand",
     twoHanded: false,
     grantsRanged: false,
-    name: "Dague fatidique aiguisée. Inflige un saignement à l'ennemi.",
-    description: "+14 dégâts au corps à corps.",
+    name: "Dague fatidique aiguisée",
+    description:
+      "Inflige un saignement à l'ennemi. +14 dégâts au corps à corps.",
     statBonus: { meleeDamage: 14 },
     stackable: false,
     archetypes: ["voleur", "guerrier", "archer", "mage"],
@@ -393,7 +404,7 @@ export const ITEM_DEFS = {
     slot: "mainHand",
     twoHanded: false,
     grantsRanged: false,
-    name: "Dague nova aiguisée. Inflige un saignement à l'ennemi.",
+    name: "Inflige un saignement à l'ennemi.",
     description: "+15 dégâts au corps à corps.",
     statBonus: { meleeDamage: 15 },
     stackable: false,
@@ -13108,6 +13119,466 @@ export const ITEM_DEFS = {
     price: 500,
   },
 
+  /** Gemmes de socket **/
+  // Gemmes socketables sur les armes/armures ayant des sockets libres
+  // (cf. gemSlots tire aleatoirement a la creation de l'objet dans
+  // gemSockets.js). category "gem" : simples objets empilables tant
+  // qu'ils ne sont pas socketes (comme un consommable classique). Une
+  // fois socketee dans un objet instancie, la gemme est retiree de
+  // l'inventaire (consommee definitivement) et son effet
+  // (permanentModifiers + inflictsEffect) devient permanent sur CET
+  // exemplaire d'objet (cf. socketGem dans gemSockets.js).
+  // gemFamily reutilise directement les types d'effet de statut deja
+  // existants (burn/bleed/acid/slow/stun) - sert aussi a determiner le
+  // bonus de combo (actif quand tous les sockets d'un objet sont de la
+  // meme famille). Valeurs d'exemple, a ajuster selon l'equilibrage.
+  burnGem: {
+    id: "burnGem",
+    category: "gem",
+    name: "Gemme de braise",
+    description:
+      "+10% des dégâts de base au corps à corps de l'arme. Chance d'infliger une brûlure (dégâts sur la durée).",
+    gemFamily: "burn",
+    gemUsage: "combat",
+    percentModifiers: { meleeDamage: 0.1 },
+    inflictsEffect: {
+      type: "burn",
+      kind: "dot",
+      chance: 1,
+      damagePerTick: 2,
+      tickIntervalMs: 1000,
+      durationMs: 4000,
+    },
+    stackable: true,
+    price: 80,
+  },
+  bleedGem: {
+    id: "bleedGem",
+    category: "gem",
+    name: "Gemme d'épine",
+    description:
+      "+10% des dégâts de base à distance de l'arme. Chance d'infliger un saignement (dégâts sur la durée).",
+    gemFamily: "bleed",
+    gemUsage: "combat",
+    percentModifiers: { rangedDamage: 0.1 },
+    inflictsEffect: {
+      type: "bleed",
+      kind: "dot",
+      chance: 0.25,
+      damagePerTick: 2,
+      tickIntervalMs: 1000,
+      durationMs: 4000,
+    },
+    stackable: true,
+    price: 80,
+  },
+  acidGem: {
+    id: "acidGem",
+    category: "gem",
+    name: "Gemme corrosive",
+    description:
+      "+10% de la défense de base de l'objet. Chance d'infliger de l'acide (dégâts sur la durée).",
+    gemFamily: "acid",
+    gemUsage: "combat",
+    percentModifiers: { defense: 0.1 },
+    inflictsEffect: {
+      type: "acid",
+      kind: "dot",
+      chance: 0.25,
+      damagePerTick: 2,
+      tickIntervalMs: 1000,
+      durationMs: 4000,
+    },
+    stackable: true,
+    price: 80,
+  },
+  slowGem: {
+    id: "slowGem",
+    category: "gem",
+    name: "Gemme de givre",
+    description:
+      "+10% des PV max de base de l'objet. Chance de ralentir l'ennemi touché.",
+    gemFamily: "slow",
+    gemUsage: "combat",
+    percentModifiers: { maxHp: 0.1 },
+    inflictsEffect: {
+      type: "slow",
+      kind: "modifier",
+      chance: 0.25,
+      statModifiers: { moveSpeedPercent: -0.3 },
+      durationMs: 2000,
+    },
+    stackable: true,
+    price: 80,
+  },
+  stunGem: {
+    id: "stunGem",
+    category: "gem",
+    name: "Gemme de foudre",
+    description:
+      "+10% de la vitesse de déplacement de base de l'objet. Chance d'étourdir l'ennemi touché.",
+    gemFamily: "stun",
+    gemUsage: "combat",
+    percentModifiers: { moveSpeed: 0.1 },
+    inflictsEffect: {
+      type: "stun",
+      kind: "modifier",
+      chance: 0.15,
+      statModifiers: { stunned: true },
+      durationMs: 1200,
+    },
+    stackable: true,
+    price: 100,
+  },
+
+  // Gemmes de combat REACTIVES - a la difference des 5 ci-dessus
+  // (inflictsEffect, declenchees quand le JOUEUR porte un coup), celles-ci
+  // se declenchent quand le JOUEUR EN ENCAISSE un (reactiveEffect),
+  // typiquement pensees pour une armure/botte plutot qu'une arme - meme
+  // gemUsage "combat" (aucune restriction supplementaire par slot), mais
+  // consommees par ai.js (attaque ennemie sur le joueur) plutot que par
+  // playerCombat.js. Meme principe de bonus de stat permanent en %
+  // (percentModifiers) que les gemmes ci-dessus.
+  hasteGem: {
+    id: "hasteGem",
+    category: "gem",
+    name: "Gemme de vif-argent",
+    description:
+      "+10% de la défense de base de l'objet une fois socketée. Chance, en encaissant un coup, de gagner un bref regain de vitesse de déplacement.",
+    gemFamily: "surge",
+    gemUsage: "combat",
+    percentModifiers: { defense: 0.1 },
+    reactiveEffect: {
+      type: "haste",
+      kind: "modifier",
+      chance: 0.25,
+      statModifiers: { moveSpeedPercent: 0.3 },
+      durationMs: 2000,
+    },
+    stackable: true,
+    price: 90,
+  },
+  repelGem: {
+    id: "repelGem",
+    category: "gem",
+    name: "Gemme de répulsion",
+    description:
+      "+10% de la défense de base de l'objet une fois socketée. Chance, en encaissant un coup au corps à corps, de repousser l'assaillant.",
+    gemFamily: "repel",
+    gemUsage: "combat",
+    percentModifiers: { defense: 0.1 },
+    reactiveEffect: {
+      type: "repel",
+      kind: "knockback",
+      chance: 0.25,
+      distance: 48,
+    },
+    stackable: true,
+    price: 90,
+  },
+
+  // Gemmes "d'ability reactive" : meme principe que hasteGem/repelGem
+  // ci-dessus (reactiveEffect declenche quand le JOUEUR encaisse un coup),
+  // mais au lieu de coder un effet ad hoc, kind: "ability" + abilityId
+  // declenche directement l'ability correspondante de ABILITY_DEFS via
+  // triggerAbilityEffect (abilities.js) - l'ability garde tous ses
+  // parametres propres (rayon, duree, degats...), la gemme ne fait que
+  // fournir la chance% et un cooldown de gemme independant
+  // (reactiveEffect.cooldownMs) pour eviter le spam, cf. ai.js. Gratuites
+  // (pas de cout mana/stamina) et fonctionnent meme si l'ability
+  // correspondante n'a pas ete debloquee par le joueur.
+  slowWardGem: {
+    id: "slowWardGem",
+    category: "gem",
+    name: "Gemme de ralentissement",
+    description:
+      "+10% de la défense de base de l'objet une fois socketée. Chance, en encaissant un coup, de ralentir fortement tous les ennemis proches.",
+    gemFamily: "slow",
+    gemUsage: "combat",
+    percentModifiers: { defense: 0.1 },
+    reactiveEffect: {
+      type: "slow",
+      kind: "ability",
+      abilityId: "slow",
+      chance: 0.3,
+      cooldownMs: 7000,
+    },
+    stackable: true,
+    price: 100,
+  },
+  stunWardGem: {
+    id: "stunWardGem",
+    category: "gem",
+    name: "Gemme d'étourdissement",
+    description:
+      "+10% de la défense de base de l'objet une fois socketée. Chance, en encaissant un coup, d'étourdir tous les ennemis proches.",
+    gemFamily: "stunWard",
+    gemUsage: "combat",
+    percentModifiers: { defense: 0.1 },
+    reactiveEffect: {
+      type: "stun",
+      kind: "ability",
+      abilityId: "stun",
+      chance: 0.2,
+      cooldownMs: 12000,
+    },
+    stackable: true,
+    price: 130,
+  },
+  randomTeleportGem: {
+    id: "randomTeleportGem",
+    category: "gem",
+    name: "Gemme de fuite",
+    description:
+      "+10% de la défense de base de l'objet une fois socketée. Chance, en encaissant un coup, de te téléporter instantanément vers un point aléatoire de l'étage.",
+    gemFamily: "teleportWard",
+    gemUsage: "combat",
+    percentModifiers: { defense: 0.1 },
+    reactiveEffect: {
+      type: "randomTeleport",
+      kind: "ability",
+      abilityId: "randomTeleport",
+      chance: 1, // a modifier selon l'équilibrage du jeu
+      cooldownMs: 14000,
+    },
+    stackable: true,
+    price: 130,
+  },
+  staticStormWardGem: {
+    id: "staticStormWardGem",
+    category: "gem",
+    name: "Gemme de tempête statique",
+    description:
+      "+10% de la défense de base de l'objet une fois socketée. Chance, en encaissant un coup, de déclencher une tempête électrique autour de toi.",
+    gemFamily: "staticStormWard",
+    gemUsage: "combat",
+    percentModifiers: { defense: 0.1 },
+    reactiveEffect: {
+      type: "staticStorm",
+      kind: "ability",
+      abilityId: "staticStorm",
+      chance: 0.2,
+      cooldownMs: 12000,
+    },
+    stackable: true,
+    price: 120,
+  },
+  thornsWardGem: {
+    id: "thornsWardGem",
+    category: "gem",
+    name: "Gemme d'épines",
+    description:
+      "+10% de la défense de base de l'objet une fois socketée. Chance, en encaissant un coup, de faire jaillir des épines empoisonnées devant toi.",
+    gemFamily: "thornsWard",
+    gemUsage: "combat",
+    percentModifiers: { defense: 0.1 },
+    reactiveEffect: {
+      type: "thorns",
+      kind: "ability",
+      abilityId: "thorns",
+      chance: 0.3,
+      cooldownMs: 5000,
+    },
+    stackable: true,
+    price: 100,
+  },
+  sporesWardGem: {
+    id: "sporesWardGem",
+    category: "gem",
+    name: "Gemme de spores",
+    description:
+      "+10% de la défense de base de l'objet une fois socketée. Chance, en encaissant un coup, de libérer un nuage de spores engourdissant les ennemis proches.",
+    gemFamily: "sporesWard",
+    gemUsage: "combat",
+    percentModifiers: { defense: 0.1 },
+    reactiveEffect: {
+      type: "spores",
+      kind: "ability",
+      abilityId: "spores",
+      chance: 0.3,
+      cooldownMs: 7000,
+    },
+    stackable: true,
+    price: 100,
+  },
+  curseWardGem: {
+    id: "curseWardGem",
+    category: "gem",
+    name: "Gemme de malédiction",
+    description:
+      "+10% de la défense de base de l'objet une fois socketée. Chance, en encaissant un coup, de maudire les ennemis proches et réduire leurs dégâts.",
+    gemFamily: "curseWard",
+    gemUsage: "combat",
+    percentModifiers: { defense: 0.1 },
+    reactiveEffect: {
+      type: "curse",
+      kind: "ability",
+      abilityId: "curse",
+      chance: 0.2,
+      cooldownMs: 11000,
+    },
+    stackable: true,
+    price: 120,
+  },
+  riposteGem: {
+    id: "riposteGem",
+    category: "gem",
+    name: "Gemme de riposte",
+    description:
+      "+10% de la défense de base de l'objet une fois socketée. Chance, en encaissant un coup, de renvoyer une partie des dégâts subis pendant un court instant.",
+    gemFamily: "riposte",
+    gemUsage: "combat",
+    percentModifiers: { defense: 0.1 },
+    reactiveEffect: {
+      type: "riposte",
+      kind: "ability",
+      abilityId: "riposte",
+      chance: 0.25,
+      cooldownMs: 9000,
+    },
+    stackable: true,
+    price: 120,
+  },
+  parryGem: {
+    id: "parryGem",
+    category: "gem",
+    name: "Gemme de parade",
+    description:
+      "+10% de la défense de base de l'objet une fois socketée. Chance, en encaissant un coup, de réduire fortement les dégâts subis pendant un court instant.",
+    gemFamily: "parry",
+    gemUsage: "combat",
+    percentModifiers: { defense: 0.1 },
+    reactiveEffect: {
+      type: "parry",
+      kind: "ability",
+      abilityId: "parry",
+      chance: 0.25,
+      cooldownMs: 7000,
+    },
+    stackable: true,
+    price: 120,
+  },
+  freezeWardGem: {
+    id: "freezeWardGem",
+    category: "gem",
+    name: "Gemme de gel",
+    description:
+      "+10% de la défense de base de l'objet une fois socketée. Chance, en encaissant un coup, de projeter un éclat de glace qui gèle les ennemis touchés.",
+    gemFamily: "freezeWard",
+    gemUsage: "combat",
+    percentModifiers: { defense: 0.1 },
+    reactiveEffect: {
+      type: "freeze",
+      kind: "ability",
+      abilityId: "freeze",
+      chance: 0.25,
+      cooldownMs: 6000,
+    },
+    stackable: true,
+    price: 110,
+  },
+  rootWardGem: {
+    id: "rootWardGem",
+    category: "gem",
+    name: "Gemme de racines",
+    description:
+      "+10% de la défense de base de l'objet une fois socketée. Chance, en encaissant un coup, d'enraciner tous les ennemis proches.",
+    gemFamily: "rootWard",
+    gemUsage: "combat",
+    percentModifiers: { defense: 0.1 },
+    reactiveEffect: {
+      type: "root",
+      kind: "ability",
+      abilityId: "root",
+      chance: 0.3,
+      cooldownMs: 8000,
+    },
+    stackable: true,
+    price: 100,
+  },
+  shockwaveGem: {
+    id: "shockwaveGem",
+    category: "gem",
+    name: "Gemme d'onde de choc",
+    description:
+      "+10% de la défense de base de l'objet une fois socketée. Chance, en encaissant un coup, de déclencher une onde de choc qui blesse et repousse les ennemis proches.",
+    gemFamily: "shockwave",
+    gemUsage: "combat",
+    percentModifiers: { defense: 0.1 },
+    reactiveEffect: {
+      type: "shockwave",
+      kind: "ability",
+      abilityId: "shockwave",
+      chance: 0.2,
+      cooldownMs: 7000,
+    },
+    stackable: true,
+    price: 130,
+  },
+
+  // Gemmes d'outil (minage/bûcheronnage) - reservees aux objets de slot
+  // "tool" (pioches/haches, cf. gemSockets.socketGem qui refuse tout
+  // croisement avec les gemmes de combat ci-dessus, et inversement).
+  // Aucun permanentModifiers/inflictsEffect ici (ca n'a pas de sens sur un
+  // outil) : l'effet passe par toolEffect, consomme par exploration.js via
+  // resolveInstanceToolEffectSources (gemSockets.js).
+  miningSpeedGem: {
+    id: "miningSpeedGem",
+    category: "gem",
+    name: "Gemme de célérité",
+    description:
+      "Une fois socketée sur un outil : chance qu'un coup de récolte n'entame pas le temps de récupération (récolte plus rapide).",
+    gemFamily: "haste",
+    gemUsage: "tool",
+    toolEffect: { type: "fastHarvest", chance: 0.25 },
+    stackable: true,
+    price: 80,
+  },
+  miningYieldGem: {
+    id: "miningYieldGem",
+    category: "gem",
+    name: "Gemme d'abondance",
+    description:
+      "Une fois socketée sur un outil : chance d'obtenir une ressource supplémentaire en minant/récoltant.",
+    gemFamily: "yield",
+    gemUsage: "tool",
+    toolEffect: { type: "bonusYield", chance: 0.25 },
+    stackable: true,
+    price: 80,
+  },
+  miningLuckGem: {
+    id: "miningLuckGem",
+    category: "gem",
+    name: "Gemme de fortune",
+    description:
+      "Une fois socketée sur un outil : augmente la chance de trouvaille rare en minant/récoltant.",
+    gemFamily: "luck",
+    gemUsage: "tool",
+    toolEffect: { type: "rareLuck", bonusChance: 0.15 },
+    stackable: true,
+    price: 100,
+  },
+
+  /** Parchemins d'amélioration **/
+  socketPerforationScroll: {
+    id: "socketPerforationScroll",
+    category: "socketPerforation",
+    name: "Parchemin de perforation",
+    description:
+      "Tente d'ajouter un socket supplémentaire à un équipement (jusqu'au maximum de son palier). Consomme aussi un matériau du même palier que la cible. Risque d'échec : perte des matériaux sans effet sur l'objet, ou très rarement destruction totale de celui-ci.",
+    stackable: true,
+    price: 150,
+  },
+  gemExtractionScroll: {
+    id: "gemExtractionScroll",
+    category: "gemExtraction",
+    name: "Parchemin d'extraction",
+    description:
+      "Libère un socket d'un équipement en détruisant la gemme qui y est insérée (pour en insérer une autre à la place). Consomme aussi un matériau du même palier que la cible. Risque très faible que l'objet entier soit détruit dans l'opération.",
+    stackable: true,
+    price: 150,
+  },
+
   /** Potions **/
 
   healthPotion: {
@@ -16376,7 +16847,8 @@ export const ITEM_DEFS = {
     id: "ghostEctoplasm",
     category: "craftingMaterial",
     name: "Ectoplasme de fantôme",
-    description: "L'ectoplasme résiduel d'un fantôme, utilisé pour l'artisanat.",
+    description:
+      "L'ectoplasme résiduel d'un fantôme, utilisé pour l'artisanat.",
     stackable: true,
   },
   monsterCore: {
@@ -16400,7 +16872,8 @@ export const ITEM_DEFS = {
     id: "mistWood",
     category: "craftingMaterial",
     name: "Bois de brume",
-    description: "Un bois léger et vaporeux, presque translucide dans la brume.",
+    description:
+      "Un bois léger et vaporeux, presque translucide dans la brume.",
     stackable: true,
   },
   runeWood: {
@@ -16428,7 +16901,8 @@ export const ITEM_DEFS = {
     id: "starWood",
     category: "craftingMaterial",
     name: "Bois d'étoile",
-    description: "Un bois rarissime, scintillant comme de la poussière d'étoile.",
+    description:
+      "Un bois rarissime, scintillant comme de la poussière d'étoile.",
     stackable: true,
   },
 

@@ -1,16 +1,13 @@
 import { resolveAbilityDef, ABILITY_DEFS } from "../abilityDefs";
 import { resolveItemDef } from "../itemDefs";
+import { findEquipmentInstance } from "../gemSockets";
 import { computeDamage, applyElementalResistance } from "../combat";
 import { hasClearLineOfSight, computeVisibleTiles } from "../fogOfWar";
 import { WALL } from "./floorRenderer";
 import { rollStatusEffect, applyStatusEffect } from "./statusEffects";
 import { performSummonAbility } from "./summons";
 
-// TILE_SIZE et MAX_SUMMONS dupliques volontairement (identiques a ceux de
-// MainScene.js) - memes constantes numeriques des deux cotes, meme logique
-// que dans floorRenderer.js/floorEntities.js.
-const TILE_SIZE = 32;
-const MAX_SUMMONS = 3;
+import { TILE_SIZE, MAX_SUMMONS } from "./gameConstants";
 
 export function performAbility(scene, abilityId) {
   if (!scene.unlockedAbilities.includes(abilityId)) return;
@@ -79,6 +76,44 @@ export function performAbility(scene, abilityId) {
     return;
   }
 
+  const handled = performAbilityEffect(scene, def);
+  if (!handled) {
+    scene.showLootToast(`${def.name} : effet pas encore implémenté`);
+    return;
+  }
+
+  if (def.staminaCost) {
+    scene.playerStamina -= def.staminaCost;
+    scene.events.emit("player-stamina-changed", {
+      stamina: scene.playerStamina,
+      maxStamina: scene.playerMaxStamina,
+    });
+  }
+  if (def.manaCost) {
+    scene.playerMana -= def.manaCost;
+    scene.events.emit("player-mana-changed", {
+      mana: scene.playerMana,
+      maxMana: scene.playerMaxMana,
+    });
+  }
+
+  scene.abilityCooldowns[abilityId] = now + def.cooldownMs;
+  scene.events.emit("hotbar-cooldown-started", {
+    key: `ability:${abilityId}`,
+    cooldownMs: def.cooldownMs,
+    startedAt: Date.now(),
+  });
+}
+
+/**
+ * Aiguille def.effectType vers la fonction perform*Ability correspondante
+ * (le gros if/else auparavant inline dans performAbility). Extrait pour
+ * pouvoir etre appele directement par triggerAbilityEffect ci-dessous, sans
+ * repasser par les verifications de performAbility (deblocage, cooldown,
+ * cout en mana/stamina) - utilise par les gemmes reactives. Retourne false
+ * si l'effectType n'est pas reconnu, true sinon.
+ */
+export function performAbilityEffect(scene, def) {
   if (def.effectType === "aoe") {
     performAoeAbility(scene, def);
   } else if (def.effectType === "projectileAoe") {
@@ -140,31 +175,28 @@ export function performAbility(scene, abilityId) {
   } else if (def.effectType === "detectSecret") {
     performDetectSecretAbility(scene, def);
   } else {
-    scene.showLootToast(`${def.name} : effet pas encore implémenté`);
-    return;
+    return false;
   }
+  return true;
+}
 
-  if (def.staminaCost) {
-    scene.playerStamina -= def.staminaCost;
-    scene.events.emit("player-stamina-changed", {
-      stamina: scene.playerStamina,
-      maxStamina: scene.playerMaxStamina,
-    });
-  }
-  if (def.manaCost) {
-    scene.playerMana -= def.manaCost;
-    scene.events.emit("player-mana-changed", {
-      mana: scene.playerMana,
-      maxMana: scene.playerMaxMana,
-    });
-  }
-
-  scene.abilityCooldowns[abilityId] = now + def.cooldownMs;
-  scene.events.emit("hotbar-cooldown-started", {
-    key: `ability:${abilityId}`,
-    cooldownMs: def.cooldownMs,
-    startedAt: Date.now(),
-  });
+/**
+ * Declenche l'effet d'une ability directement par son id, en contournant
+ * TOUTES les verifications de performAbility (deblocage via
+ * unlockedAbilities, hpThresholdPercent, disabledBiomes, cooldown, cout en
+ * mana/stamina) et sans jamais demarrer son cooldown normal ni consommer
+ * de ressource. C'est le point d'entree utilise par les gemmes reactives
+ * (reactiveEffect.kind === "ability" dans itemDefs.js) : la gemme accorde
+ * l'effet independamment de ce que le joueur a debloque, gratuitement, et
+ * c'est applyReactiveGemEffects (ai.js) qui regule le declenchement via la
+ * chance% et le cooldown propres a la gemme (reactiveEffect.cooldownMs).
+ * Retourne false si l'abilityId est inconnu ou si son effectType n'est pas
+ * gere par performAbilityEffect, true si l'effet a bien ete applique.
+ */
+export function triggerAbilityEffect(scene, abilityId) {
+  const def = resolveAbilityDef(abilityId);
+  if (!def) return false;
+  return performAbilityEffect(scene, def);
 }
 
 export function performAoeStunAbility(scene, def) {
@@ -244,8 +276,17 @@ export function performRepelAbility(scene, def) {
 }
 
 export function performShieldBashAbility(scene, def) {
-  const shieldDef = scene.equipped.offHand
-    ? resolveItemDef(scene.equipped.offHand)
+  // scene.equipped.offHand est desormais un instanceId (objets
+  // d'equipement instancies, cf. gemSockets.js) - il faut retrouver
+  // l'exemplaire pour en resoudre l'itemId, plutot que d'appeler
+  // resolveItemDef directement dessus (qui echouerait silencieusement
+  // sur un instanceId et ferait toujours echouer la verification du
+  // bouclier, quel que soit ce qui est equipe).
+  const offHandInstance = scene.equipped.offHand
+    ? findEquipmentInstance(scene, scene.equipped.offHand)
+    : null;
+  const shieldDef = offHandInstance
+    ? resolveItemDef(offHandInstance.itemId)
     : null;
   if (def.requiresShield && (!shieldDef || !shieldDef.isShield)) {
     scene.showLootToast("Nécessite un bouclier équipé");

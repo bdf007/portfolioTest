@@ -6,18 +6,17 @@ import {
   getEffectivePlayerRangedDamage,
 } from "./statusEffects";
 
-// Constantes dupliquees volontairement (identiques a celles de
-// MainScene.js) - memes valeurs numeriques des deux cotes, meme logique
-// que dans floorRenderer.js/floorEntities.js/abilities.js.
-const TILE_SIZE = 32;
-const MAX_SUMMONS = 3;
-const ENEMY_ATTACK_COOLDOWN = 900;
-const ENEMY_RANGED_STOP_DISTANCE = 180;
-const ENEMY_RANGED_ATTACK_RANGE = 260;
-const ENEMY_PROJECTILE_SPEED = 220;
-const ENEMY_PROJECTILE_MAX_DISTANCE = 300;
-const PROJECTILE_RADIUS = 5;
-const ATTACK_ANIM_DURATION_MS = 400;
+import {
+  TILE_SIZE,
+  MAX_SUMMONS,
+  ENEMY_ATTACK_COOLDOWN,
+  ENEMY_RANGED_STOP_DISTANCE,
+  ENEMY_RANGED_ATTACK_RANGE,
+  ENEMY_PROJECTILE_SPEED,
+  ENEMY_PROJECTILE_MAX_DISTANCE,
+  PROJECTILE_RADIUS,
+  ATTACK_ANIM_DURATION_MS,
+} from "./gameConstants";
 
 export function computeFamiliarGrowthScale(scene, growthConfig) {
   if (!growthConfig) return 1;

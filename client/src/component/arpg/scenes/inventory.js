@@ -4,6 +4,11 @@ import { resolveCraftingRecipe } from "../craftingRecipes";
 import { resolveHeroStatsOverride } from "../spriteRegistry";
 import { applyStatusEffect } from "./statusEffects";
 import {
+  findEquipmentInstance,
+  generateInstanceId,
+  rollGemSlotCount,
+} from "../gemSockets";
+import {
   performAoeAbility,
   performAoeStunAbility,
   performProjectileAoeAbility,
@@ -20,6 +25,48 @@ import {
 // que dans floorRenderer.js/floorEntities.js/abilities.js/summons.js/
 // quests.js/exploration.js/ai.js.
 const CONSUMABLE_COOLDOWN_MS = 2000; // ajustable - meme delai pour toutes les potions pour l'instant
+
+/**
+ * Garantit qu'un exemplaire d'equipement a bien un instanceId/gemSlots/
+ * sockets - filet de securite pour les objets deja presents en
+ * inventaire AVANT l'introduction du systeme de sockets (tout NOUVEL
+ * objet les recoit directement a la creation, cf.
+ * MainScene.addItemToInventory).
+ */
+function ensureInstanceFields(item) {
+  if (!item.instanceId) {
+    item.instanceId = generateInstanceId();
+    if (item.gemSlots === undefined) item.gemSlots = rollGemSlotCount(item.itemId);
+    if (!item.sockets) item.sockets = [];
+  }
+}
+
+const MAX_CUSTOM_NAME_LENGTH = 24;
+
+/**
+ * Renomme un exemplaire d'equipement - purement cosmetique (aucun effet
+ * sur les stats), gratuit et illimite. Un nom vide/blanc reinitialise au
+ * nom generique de l'objet (suppression du champ customName plutot que
+ * de stocker une chaine vide, pour que resolveItemDef(...).name reste la
+ * seule source de verite quand il n'y a pas de nom personnalise).
+ */
+export function renameEquipmentInstance(scene, instanceId, newName) {
+  const instance = findEquipmentInstance(scene, instanceId);
+  if (!instance) return;
+
+  const trimmed = (newName || "").trim().slice(0, MAX_CUSTOM_NAME_LENGTH);
+  if (trimmed) {
+    instance.customName = trimmed;
+  } else {
+    delete instance.customName;
+  }
+
+  scene.events.emit("inventory-updated", [...scene.inventory]);
+  if (Object.values(scene.equipped).includes(instanceId)) {
+    scene.events.emit("equipment-updated", { ...scene.equipped });
+  }
+  scene.persistProgress();
+}
 
 export function giveStartingKit(scene) {
   const profile = resolveHeroStatsOverride(scene.heroSpriteKey);
@@ -88,6 +135,8 @@ export function equipItem(scene, index) {
 
   if (def.category !== "equipment" || !def.slot) return;
 
+  ensureInstanceFields(item);
+
   let targetSlot = def.slot;
 
   if (targetSlot === "ring") {
@@ -99,9 +148,11 @@ export function equipItem(scene, index) {
   }
 
   if (targetSlot === "mainHand" && !def.twoHanded) {
-    const mainOccupantId = scene.equipped.mainHand;
-    const mainOccupantDef = mainOccupantId
-      ? resolveItemDef(mainOccupantId)
+    const mainOccupantInstance = scene.equipped.mainHand
+      ? findEquipmentInstance(scene, scene.equipped.mainHand)
+      : null;
+    const mainOccupantDef = mainOccupantInstance
+      ? resolveItemDef(mainOccupantInstance.itemId)
       : null;
     const mainHandHoldsCompatibleWeapon =
       mainOccupantDef && !mainOccupantDef.twoHanded;
@@ -110,32 +161,33 @@ export function equipItem(scene, index) {
     }
   }
 
-  const itemsToReturnToInventory = [];
-  const previousInTarget = scene.equipped[targetSlot];
-  if (previousInTarget) itemsToReturnToInventory.push(previousInTarget);
-
+  // contrairement a l'ancien systeme (itemId generique), un exemplaire
+  // d'equipement ne quitte plus JAMAIS this.inventory - ni au moment ou
+  // il est equipe, ni quand un autre objet prend sa place dans le meme
+  // emplacement. scene.equipped[slot] n'est plus qu'une reference vers
+  // son instanceId, exactement comme le carquois le fait deja pour les
+  // munitions (cf. InventoryScreen : groupInventory filtre deja
+  // equipped.quiver). Necessaire pour retrouver les sockets de l'objet
+  // une fois equipe via gemSockets.findEquipmentInstance - il n'y a donc
+  // plus rien a "repousser" en inventaire lors d'un swap : l'ancien
+  // objet y est deja toujours present, juste plus reference.
   if (def.twoHanded && targetSlot === "mainHand") {
-    const previousOffHand = scene.equipped.offHand;
-    if (previousOffHand) itemsToReturnToInventory.push(previousOffHand);
     scene.equipped.offHand = null;
   }
 
   if (targetSlot === "offHand") {
-    const mainHandItemId = scene.equipped.mainHand;
-    if (mainHandItemId) {
-      const mainHandDef = resolveItemDef(mainHandItemId);
+    const mainHandInstance = scene.equipped.mainHand
+      ? findEquipmentInstance(scene, scene.equipped.mainHand)
+      : null;
+    if (mainHandInstance) {
+      const mainHandDef = resolveItemDef(mainHandInstance.itemId);
       if (mainHandDef.twoHanded) {
-        itemsToReturnToInventory.push(mainHandItemId);
         scene.equipped.mainHand = null;
       }
     }
   }
 
-  scene.inventory.splice(index, 1);
-  for (const returnedId of itemsToReturnToInventory) {
-    scene.inventory.push({ itemId: returnedId, quantity: 1 });
-  }
-  scene.equipped[targetSlot] = item.itemId;
+  scene.equipped[targetSlot] = item.instanceId;
 
   const oldMaxHp = scene.playerMaxHp;
   scene.recalculatePlayerStats();
@@ -147,13 +199,14 @@ export function equipItem(scene, index) {
 }
 
 export function unequipItem(scene, slot) {
-  const itemId = scene.equipped[slot];
-  if (!itemId) return;
+  const equippedRef = scene.equipped[slot];
+  if (!equippedRef) return;
   scene.equipped[slot] = null;
 
-  if (slot !== "quiver") {
-    scene.inventory.push({ itemId, quantity: 1 });
-  }
+  // ni les munitions (deja le cas avant ce systeme) ni les objets
+  // d'equipement (desormais identifies par instanceId, cf. equipItem) ne
+  // quittent jamais reellement this.inventory pendant qu'ils sont
+  // equipes - rien a repousser ici.
 
   const oldMaxHp = scene.playerMaxHp;
   scene.recalculatePlayerStats();
@@ -331,7 +384,9 @@ export function triggerHotbarSlot(scene, slotIndex) {
       return;
     }
 
-    const invIndex = scene.inventory.findIndex((i) => i.itemId === slot.itemId);
+    const invIndex = scene.inventory.findIndex(
+      (i) => i.itemId === slot.itemId,
+    );
     if (invIndex === -1) {
       scene.showLootToast("Objet épuisé");
       return;

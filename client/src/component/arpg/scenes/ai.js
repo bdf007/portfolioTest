@@ -17,12 +17,20 @@ import {
   getEffectiveEnemyDamage,
   getEffectivePlayerDefense,
 } from "./statusEffects";
+import { resolveAllEquippedReactiveEffectSources } from "../gemSockets";
+import { triggerAbilityEffect } from "./abilities";
 
-// Constantes dupliquees volontairement (identiques a celles de
-// MainScene.js) - memes valeurs numeriques des deux cotes, meme logique
-// que dans floorRenderer.js/floorEntities.js/abilities.js/summons.js/
-// quests.js/exploration.js.
-const TILE_SIZE = 32;
+import {
+  TILE_SIZE,
+  ENEMY_ATTACK_COOLDOWN,
+  ATTACK_ANIM_DURATION_MS,
+  PROJECTILE_RADIUS,
+  ENEMY_RANGED_STOP_DISTANCE,
+  ENEMY_RANGED_ATTACK_RANGE,
+  ENEMY_PROJECTILE_SPEED,
+  ENEMY_PROJECTILE_MAX_DISTANCE,
+} from "./gameConstants";
+
 const DETECTION_BEHIND_DOT_THRESHOLD = -0.5;
 const ENEMY_DIR_VECTORS = {
   up: { x: 0, y: -1 },
@@ -31,15 +39,60 @@ const ENEMY_DIR_VECTORS = {
   right: { x: 1, y: 0 },
 };
 const ENEMY_STOP_DISTANCE = 28;
-const ENEMY_RANGED_STOP_DISTANCE = 180;
 const ENEMY_RANGED_RETREAT_DISTANCE = 100;
 const ENEMY_ATTACK_RANGE = 34;
-const ENEMY_RANGED_ATTACK_RANGE = 260;
-const ENEMY_ATTACK_COOLDOWN = 900;
-const ENEMY_PROJECTILE_SPEED = 220;
-const ENEMY_PROJECTILE_MAX_DISTANCE = 300;
-const PROJECTILE_RADIUS = 5;
-const ATTACK_ANIM_DURATION_MS = 400;
+
+/**
+ * Declenche les gemmes REACTIVES de tout l'equipement porte (hasteGem/
+ * repelGem, et les gemmes "d'ability" comme parryGem/riposteGem, cf.
+ * itemDefs.js et resolveAllEquippedReactiveEffectSources dans
+ * gemSockets.js) quand le JOUEUR encaisse un coup d'un ennemi - appelee
+ * juste apres avoir applique les degats au joueur, jamais pour un coup
+ * subi par une invocation (resolveTarget.isSummon). `attackerEnemy` est
+ * l'ennemi a repousser pour une gemme "repel" - null pour une attaque a
+ * distance (le projectile ne garde pas de reference vers l'ennemi qui l'a
+ * tire, cf. updateEnemyProjectiles), auquel cas seuls les effets qui ne
+ * ciblent pas l'ennemi (haste, ability) peuvent se declencher.
+ */
+function applyReactiveGemEffects(scene, attackerEnemy) {
+  const sources = resolveAllEquippedReactiveEffectSources(scene);
+  for (const gemDef of sources) {
+    const effect = gemDef.reactiveEffect;
+    if (Math.random() >= (effect.chance || 0)) continue;
+
+    if (effect.kind === "modifier") {
+      applyStatusEffect(scene, scene.playerStatusEffects, {
+        type: effect.type,
+        kind: "modifier",
+        statModifiers: effect.statModifiers,
+        durationMs: effect.durationMs,
+      });
+    } else if (effect.kind === "knockback" && attackerEnemy) {
+      const dx = attackerEnemy.sprite.x - scene.hero.x;
+      const dy = attackerEnemy.sprite.y - scene.hero.y;
+      const dist = Math.hypot(dx, dy) || 1;
+      scene.knockbackEnemyIfClear(
+        attackerEnemy,
+        (dx / dist) * effect.distance,
+        (dy / dist) * effect.distance,
+      );
+    } else if (effect.kind === "ability" && effect.abilityId) {
+      // Gemmes "reactives d'ability" (ex: gemme de parade -> ability
+      // parry) : regulees par leur propre cooldown de gemme
+      // (reactiveEffect.cooldownMs, independant du cooldown normal de
+      // l'ability), et declenchees via triggerAbilityEffect qui
+      // contourne le deblocage/cout/cooldown habituels de l'ability -
+      // cf. abilities.js.
+      const readyAt = scene.reactiveGemCooldowns[gemDef.id] || 0;
+      if (scene.time.now < readyAt) continue;
+      const handled = triggerAbilityEffect(scene, effect.abilityId);
+      if (handled && effect.cooldownMs) {
+        scene.reactiveGemCooldowns[gemDef.id] =
+          scene.time.now + effect.cooldownMs;
+      }
+    }
+  }
+}
 
 export function isPlayerBehindEnemy(
   scene,
@@ -706,6 +759,7 @@ export function updateEnemyAttacks(scene, now) {
           scene.playerStatusEffects,
           rollStatusEffect(enemy),
         );
+        applyReactiveGemEffects(scene, enemy);
 
         scene.hero.setTint(0xff8888).setTintMode(Phaser.TintModes.FILL);
         scene.time.delayedCall(100, () => {
@@ -804,6 +858,11 @@ export function updateEnemyProjectiles(scene) {
         scene.playerStatusEffects,
         rollStatusEffect({ inflictsEffect: proj.inflictsEffect }),
       );
+      // pas de reference vers l'ennemi tireur sur un projectile (cf.
+      // enemyProjectiles.push plus haut) : seule une gemme "haste"
+      // (kind "modifier", ne cible pas l'ennemi) peut se declencher ici,
+      // une gemme "repel" (kind "knockback") n'a personne a repousser.
+      applyReactiveGemEffects(scene, null);
 
       scene.hero.setTint(0xff8888).setTintMode(Phaser.TintModes.FILL);
       scene.time.delayedCall(100, () => {

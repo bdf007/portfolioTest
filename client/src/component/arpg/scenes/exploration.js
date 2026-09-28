@@ -1,17 +1,19 @@
 import { createRng } from "../rng";
-import {
-  computeDamage,
-  applyElementalResistance,
-} from "../combat";
+import { computeDamage, applyElementalResistance } from "../combat";
 import { resolveItemDef, ITEM_DEFS } from "../itemDefs";
 import { resolveCraftingRecipe } from "../craftingRecipes";
 import { CHEST_SPRITESHEET, CHEST_VARIANTS } from "../spriteRegistry";
-import { rollStatusEffect, applyStatusEffect, getEffectivePlayerDefense } from "./statusEffects";
+import {
+  rollStatusEffect,
+  applyStatusEffect,
+  getEffectivePlayerDefense,
+} from "./statusEffects";
+import {
+  findEquipmentInstance,
+  resolveInstanceToolEffectSources,
+} from "../gemSockets";
 
-// TILE_SIZE duplique volontairement (identique a celui de MainScene.js) -
-// meme constante numerique des deux cotes, meme logique que dans
-// floorRenderer.js/floorEntities.js/abilities.js/summons.js/quests.js.
-const TILE_SIZE = 32;
+import { TILE_SIZE } from "./gameConstants";
 
 function pickWeightedGem(entries) {
   const totalWeight = entries.reduce((s, e) => s + (e.weight || 1), 0);
@@ -145,6 +147,36 @@ export function markSecretRoomDiscovered(scene) {
   scene.persistProgress();
 }
 
+/**
+ * Resout les 3 effets possibles des gemmes d'outil (miningSpeedGem/
+ * miningYieldGem/miningLuckGem, cf. itemDefs.js) socketees sur la pioche/
+ * hache equipee - utilise par forageNode/mineRock ci-dessous. Chaque
+ * source (une gemme peut etre cumulee avec d'autres, meme famille ou non)
+ * est resolue independamment :
+ * - fastHarvest : tire au moment du coup, cumulable (une seule gemme peut
+ *   suffire a declencher la recolte rapide) ;
+ * - bonusYield : idem, une ressource supplementaire par gemme qui procke ;
+ * - rareLuck : bonus additif au taux de trouvaille rare (bonusChance/
+ *   gemChance du noeud/gisement), cumule entre gemmes.
+ */
+function resolveToolGemEffects(scene, toolInstance) {
+  const sources = resolveInstanceToolEffectSources(toolInstance);
+  let luckBonus = 0;
+  let fastHarvestCount = 0;
+  let bonusYieldCount = 0;
+  for (const gemDef of sources) {
+    const effect = gemDef.toolEffect;
+    if (effect.type === "rareLuck") {
+      luckBonus += effect.bonusChance || 0;
+    } else if (effect.type === "fastHarvest") {
+      if (Math.random() < (effect.chance || 0)) fastHarvestCount += 1;
+    } else if (effect.type === "bonusYield") {
+      if (Math.random() < (effect.chance || 0)) bonusYieldCount += 1;
+    }
+  }
+  return { luckBonus, fastHarvestCount, bonusYieldCount };
+}
+
 export function forageNode(scene) {
   const heroX = scene.hero.body.center.x;
   const heroY = scene.hero.body.center.y;
@@ -153,14 +185,18 @@ export function forageNode(scene) {
     if (n.depleted) return false;
     const nodePx = n.data.x * TILE_SIZE + TILE_SIZE / 2;
     const nodePy = n.data.y * TILE_SIZE + TILE_SIZE / 2;
-    return (
-      Math.hypot(nodePx - heroX, nodePy - heroY) <= scene.playerMeleeRange
-    );
+    return Math.hypot(nodePx - heroX, nodePy - heroY) <= scene.playerMeleeRange;
   });
   if (!node) return false;
 
-  const toolId = scene.equipped.tool;
-  const toolDef = toolId ? resolveItemDef(toolId) : null;
+  // scene.equipped.tool est desormais un instanceId (objets d'equipement
+  // instancies, cf. gemSockets.js) - il faut retrouver l'exemplaire pour
+  // en resoudre l'itemId, plutot que d'appeler resolveItemDef directement
+  // dessus (qui echouerait silencieusement sur un instanceId).
+  const toolInstance = scene.equipped.tool
+    ? findEquipmentInstance(scene, scene.equipped.tool)
+    : null;
+  const toolDef = toolInstance ? resolveItemDef(toolInstance.itemId) : null;
   const toolTier = toolDef?.toolTier || 0;
   const toolType = toolDef?.toolType || null;
 
@@ -174,13 +210,19 @@ export function forageNode(scene) {
   }
 
   if (!scene.harvestCooldown.isReady(scene.time.now)) return true;
-  scene.harvestCooldown.trigger(scene.time.now);
+
+  const toolGemEffects = resolveToolGemEffects(scene, toolInstance);
+  // gemme de celerite : une recolte rapide ne declenche pas le temps de
+  // recuperation, le prochain coup est immediatement possible.
+  if (toolGemEffects.fastHarvestCount === 0) {
+    scene.harvestCooldown.trigger(scene.time.now);
+  }
 
   scene.playSlashEffect();
 
   node.hits -= 1;
 
-  const bonusChance = node.data.bonusChance || 0;
+  const bonusChance = (node.data.bonusChance || 0) + toolGemEffects.luckBonus;
   const bonusPool = node.data.bonusPool || [];
   const gotBonus = bonusPool.length > 0 && Math.random() < bonusChance;
   const grantedItemId = gotBonus
@@ -193,6 +235,18 @@ export function forageNode(scene) {
       ? `Trouvaille : ${resolveItemDef(grantedItemId).name} !`
       : `${resolveItemDef(grantedItemId).name} obtenu !`,
   );
+
+  // gemme d'abondance : une ressource de base supplementaire par gemme
+  // qui procke (independant du tirage de trouvaille rare ci-dessus).
+  if (toolGemEffects.bonusYieldCount > 0) {
+    scene.addItemToInventory(
+      node.data.resourceItemId,
+      toolGemEffects.bonusYieldCount,
+    );
+    scene.showLootToast(
+      `Récolte abondante : +${toolGemEffects.bonusYieldCount} ${resolveItemDef(node.data.resourceItemId).name} !`,
+    );
+  }
 
   if (node.hits <= 0) {
     node.sprite.destroy();
@@ -213,14 +267,18 @@ export function mineRock(scene) {
     if (r.depleted) return false;
     const rockPx = r.data.x * TILE_SIZE + TILE_SIZE / 2;
     const rockPy = r.data.y * TILE_SIZE + TILE_SIZE / 2;
-    return (
-      Math.hypot(rockPx - heroX, rockPy - heroY) <= scene.playerMeleeRange
-    );
+    return Math.hypot(rockPx - heroX, rockPy - heroY) <= scene.playerMeleeRange;
   });
   if (!rock) return false;
 
-  const toolId = scene.equipped.tool;
-  const toolDef = toolId ? resolveItemDef(toolId) : null;
+  // scene.equipped.tool est desormais un instanceId (objets d'equipement
+  // instancies, cf. gemSockets.js) - il faut retrouver l'exemplaire pour
+  // en resoudre l'itemId, plutot que d'appeler resolveItemDef directement
+  // dessus (qui echouerait silencieusement sur un instanceId).
+  const toolInstance = scene.equipped.tool
+    ? findEquipmentInstance(scene, scene.equipped.tool)
+    : null;
+  const toolDef = toolInstance ? resolveItemDef(toolInstance.itemId) : null;
   const toolTier = toolDef?.toolTier || 0;
 
   const toolType = toolDef?.toolType || null;
@@ -229,20 +287,24 @@ export function mineRock(scene) {
     return true;
   }
   if (toolTier < rock.data.requiredTier) {
-    scene.showLootToast(
-      "Ta pioche n'est pas assez puissante pour ce gisement",
-    );
+    scene.showLootToast("Ta pioche n'est pas assez puissante pour ce gisement");
     return true;
   }
 
   if (!scene.harvestCooldown.isReady(scene.time.now)) return true;
-  scene.harvestCooldown.trigger(scene.time.now);
+
+  const toolGemEffects = resolveToolGemEffects(scene, toolInstance);
+  // gemme de celerite : une recolte rapide ne declenche pas le temps de
+  // recuperation, le prochain coup est immediatement possible.
+  if (toolGemEffects.fastHarvestCount === 0) {
+    scene.harvestCooldown.trigger(scene.time.now);
+  }
 
   scene.playSlashEffect();
 
   rock.hits -= 1;
 
-  const gemChance = rock.data.gemChance || 0;
+  const gemChance = (rock.data.gemChance || 0) + toolGemEffects.luckBonus;
   const gemPool = rock.data.gemPool || [];
   const gotGem = gemPool.length > 0 && Math.random() < gemChance;
   const grantedItemId = gotGem
@@ -255,6 +317,18 @@ export function mineRock(scene) {
       ? `Trouvaille rare : ${resolveItemDef(grantedItemId).name} !`
       : `${resolveItemDef(grantedItemId).name} obtenu !`,
   );
+
+  // gemme d'abondance : une ressource de base supplementaire par gemme
+  // qui procke (independant du tirage de trouvaille rare ci-dessus).
+  if (toolGemEffects.bonusYieldCount > 0) {
+    scene.addItemToInventory(
+      rock.data.resourceItemId,
+      toolGemEffects.bonusYieldCount,
+    );
+    scene.showLootToast(
+      `Récolte abondante : +${toolGemEffects.bonusYieldCount} ${resolveItemDef(rock.data.resourceItemId).name} !`,
+    );
+  }
 
   if (rock.hits <= 0) {
     rock.sprite.destroy();
@@ -322,7 +396,8 @@ export function triggerFloorTrap(scene, trap, target) {
       hp: scene.playerHp,
       maxHp: scene.playerMaxHp,
     });
-    applyStatusEffect(scene,
+    applyStatusEffect(
+      scene,
       scene.playerStatusEffects,
       rollStatusEffect({ inflictsEffect: trap.inflictsEffect }),
     );

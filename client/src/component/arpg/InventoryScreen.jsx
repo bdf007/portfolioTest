@@ -48,6 +48,134 @@ const SLOT_LABELS = {
 };
 
 const PREVIEW_SCALE = 3; // meme echelle que CharacterSelectScreen, pour un portrait coherent
+
+// couleurs des pastilles de socket, par famille de gemme (gemFamily,
+// cf. itemDefs.js) - reprend les memes teintes que STATUS_EFFECT_COLORS
+// dans statusEffects.js pour rester coherent avec les flashs de degats
+// affiches en jeu.
+const GEM_FAMILY_COLORS = {
+  burn: "#ff8800",
+  bleed: "#cc0000",
+  acid: "#88ff00",
+  slow: "#4488ff",
+  stun: "#ffff00",
+};
+
+/**
+ * Pastilles de sockets d'un exemplaire d'equipement instancie - une
+ * pastille pleine (couleur de la famille de la gemme, cf.
+ * GEM_FAMILY_COLORS) par socket occupe, une pastille vide et cliquable
+ * par socket libre (ouvre le panneau de selection de gemme). Insertion
+ * definitive : un socket deja plein n'est plus cliquable (cf.
+ * gemSockets.socketGem cote MainScene, qui refuse aussi ce cas).
+ */
+function SocketPips({ instance, onOpenPicker }) {
+  if (!instance || !instance.gemSlots) return null;
+  return (
+    <div style={{ display: "flex", gap: 3, marginTop: 4 }}>
+      {Array.from({ length: instance.gemSlots }).map((_, i) => {
+        const gemId = instance.sockets?.[i];
+        const gemDef = gemId ? resolveItemDef(gemId) : null;
+        return (
+          <div
+            key={i}
+            onClick={() => !gemDef && onOpenPicker(instance.instanceId, i)}
+            title={
+              gemDef
+                ? gemDef.description
+                : "Socket vide - cliquer pour insérer une gemme"
+            }
+            style={{
+              width: 10,
+              height: 10,
+              borderRadius: "50%",
+              border: "1px solid #8a7050",
+              background: gemDef
+                ? GEM_FAMILY_COLORS[gemDef.gemFamily] || "#ccc"
+                : "rgba(120,100,70,0.15)",
+              cursor: gemDef ? "default" : "pointer",
+              flexShrink: 0,
+            }}
+          />
+        );
+      })}
+    </div>
+  );
+}
+/**
+ * Nom d'un exemplaire d'equipement, cliquable pour le renommer -
+ * purement cosmetique (cf. inventory.renameEquipmentInstance), gratuit
+ * et illimite. Un champ vide au valide reinitialise au nom generique de
+ * l'objet.
+ */
+function NameEditor({ instance, defaultName, onRename }) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(instance.customName || "");
+
+  if (!editing) {
+    return (
+      <span
+        onClick={() => {
+          setDraft(instance.customName || "");
+          setEditing(true);
+        }}
+        title="Cliquer pour renommer"
+        style={{ cursor: "pointer", borderBottom: "1px dotted #8a7050" }}
+      >
+        {instance.customName || defaultName}
+      </span>
+    );
+  }
+
+  function confirm() {
+    onRename(instance.instanceId, draft);
+    setEditing(false);
+  }
+
+  return (
+    <span
+      style={{ display: "inline-flex", alignItems: "center", gap: 3 }}
+      onClick={(e) => e.stopPropagation()}
+    >
+      <input
+        autoFocus
+        value={draft}
+        maxLength={24}
+        placeholder={defaultName}
+        onChange={(e) => setDraft(e.target.value)}
+        onKeyDown={(e) => {
+          // Phaser capture ses touches de jeu (Z/Q/S/D, W/A, E, X - cf.
+          // this.keys dans MainScene.js) via un listener natif sur window en
+          // phase de bulles et appelle preventDefault() dessus, ce qui bloque
+          // la saisie de ces lettres dans CE champ meme s'il a le focus (le
+          // filtre document.activeElement ajoute dans Arpg.js ne protege que
+          // les raccourcis globaux React, pas la capture clavier de Phaser).
+          // stopPropagation() empeche l'evenement natif d'atteindre ce
+          // listener de Phaser, donc la frappe s'insere normalement.
+          e.stopPropagation();
+          if (e.key === "Enter") confirm();
+          if (e.key === "Escape") setEditing(false);
+        }}
+        onKeyUp={(e) => e.stopPropagation()}
+        style={{ fontSize: 11, width: 100, padding: "1px 3px" }}
+      />
+      <button
+        onClick={confirm}
+        title="Valider"
+        style={{
+          fontSize: 10,
+          padding: "0 4px",
+          cursor: "pointer",
+          border: "1px solid #8a7050",
+          borderRadius: 3,
+          background: "#eee2cc",
+        }}
+      >
+        ✓
+      </button>
+    </span>
+  );
+}
 // const SHEET_COLS = 12;
 // const SHEET_ROWS = 8;
 // const ICON_SHEET_COLS = 10;
@@ -69,9 +197,42 @@ const PREVIEW_SCALE = 3; // meme echelle que CharacterSelectScreen, pour un port
  * LEQUEL des exemplaires identiques est equipe/utilise en premier, ils
  * sont interchangeables par definition).
  */
-export function groupInventory(inventory) {
+export function groupInventory(inventory, equipped = {}) {
+  // les objets d'equipement (armes/armures) sont desormais instancies
+  // (instanceId + sockets propres, cf. gemSockets.js) et ne quittent
+  // plus jamais this.inventory quand ils sont equipes - exactement
+  // comme le carquois le faisait deja pour les munitions. Il faut donc
+  // exclure explicitement toute instance actuellement equipee de la
+  // liste "Objets" (elle est deja affichee sur le mannequin).
+  const equippedInstanceIds = new Set(
+    Object.entries(equipped)
+      .filter(([slot]) => slot !== "quiver")
+      .map(([, ref]) => ref)
+      .filter(Boolean),
+  );
+
   const groups = new Map();
+  const singles = [];
   inventory.forEach((entry, index) => {
+    if (entry.instanceId && equippedInstanceIds.has(entry.instanceId)) return;
+    if (entry.itemId === equipped.quiver) return; // munitions equipees : deja affichees case Carquois
+
+    if (entry.gemSlots > 0 || entry.customName) {
+      // objet a sockets OU renomme : jamais regroupe avec un autre
+      // exemplaire, meme identique - ses sockets/son nom lui sont
+      // propres (cf. inventory.renameEquipmentInstance).
+      singles.push({
+        itemId: entry.itemId,
+        totalQuantity: 1,
+        firstIndex: index,
+        instanceId: entry.instanceId,
+        gemSlots: entry.gemSlots,
+        sockets: entry.sockets || [],
+        customName: entry.customName || null,
+      });
+      return;
+    }
+
     if (!groups.has(entry.itemId)) {
       groups.set(entry.itemId, {
         itemId: entry.itemId,
@@ -81,7 +242,7 @@ export function groupInventory(inventory) {
     }
     groups.get(entry.itemId).totalQuantity += entry.quantity;
   });
-  return [...groups.values()];
+  return [...groups.values(), ...singles];
 }
 
 function TintedItemIcon({
@@ -611,9 +772,24 @@ export default function InventoryScreen({
   onUnequip,
   onUse,
   onDecraft,
+  onSocketGem,
+  onRename,
+  onAttemptPerforation,
+  onAttemptGemExtraction,
   onClose,
 }) {
   console.log(stats);
+  // {instanceId, socketIndex} de l'objet en cours de socketage, ou null
+  // - ouvre le panneau de selection de gemme (cf. plus bas).
+  const [socketingSocket, setSocketingSocket] = useState(null);
+  // index (dans `inventory`) du parchemin de perforation en cours
+  // d'utilisation, ou null - ouvre le panneau de selection de la cible
+  // (cf. plus bas).
+  const [perforatingScrollIndex, setPerforatingScrollIndex] = useState(null);
+  // index (dans `inventory`) du parchemin d'extraction en cours
+  // d'utilisation, ou null - ouvre le panneau de selection de la cible ET
+  // du socket precis a extraire (cf. plus bas).
+  const [extractingScrollIndex, setExtractingScrollIndex] = useState(null);
   const heroEntry = SPRITE_REGISTRY[heroId] || SPRITE_REGISTRY.hero1;
   const sheetCols = heroEntry.sheetCols || 12;
   const sheetRows = heroEntry.sheetRows || 8;
@@ -625,13 +801,24 @@ export default function InventoryScreen({
   const sheetH = heroEntry.frameHeight * sheetRows;
 
   function renderSlot(slot, fullWidth = false) {
-    const itemId = equipped[slot];
+    // equipped[slot] est un instanceId pour tout objet d'equipement -
+    // seul le carquois (munitions, non instanciees) stocke encore un
+    // itemId direct (cf. inventory.equipItem).
+    const ref = equipped[slot];
+    const instance =
+      slot !== "quiver" && ref
+        ? inventory.find((i) => i.instanceId === ref)
+        : null;
+    const itemId = slot === "quiver" ? ref : instance?.itemId;
     const def = itemId ? resolveItemDef(itemId) : null;
 
-    const mainHandDef =
+    const mainHandInstance =
       slot === "offHand" && equipped.mainHand
-        ? resolveItemDef(equipped.mainHand)
+        ? inventory.find((i) => i.instanceId === equipped.mainHand)
         : null;
+    const mainHandDef = mainHandInstance
+      ? resolveItemDef(mainHandInstance.itemId)
+      : null;
     const lockedByTwoHanded = mainHandDef && mainHandDef.twoHanded;
 
     const quiverQuantity =
@@ -661,49 +848,68 @@ export default function InventoryScreen({
           <div
             style={{
               display: "flex",
+              flexDirection: "column",
               alignItems: "center",
-              justifyContent: "center",
-              gap: 4,
+              gap: 2,
               position: "relative",
             }}
             title={def.description}
           >
-            <div style={{ position: "relative" }}>
-              <ItemIcon itemId={itemId} scale={1.1} />
-              {quiverQuantity !== null && (
-                <div
-                  style={{
-                    position: "absolute",
-                    bottom: -4,
-                    right: -4,
-                    fontSize: 8,
-                    background: "#eee2cc",
-                    border: "1px solid #8a7050",
-                    borderRadius: 3,
-                    padding: "0 2px",
-                    color: "#5a4a35",
-                  }}
-                >
-                  x{quiverQuantity}
-                </div>
-              )}
+            <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+              <div style={{ position: "relative" }}>
+                <ItemIcon itemId={itemId} scale={1.1} />
+                {quiverQuantity !== null && (
+                  <div
+                    style={{
+                      position: "absolute",
+                      bottom: -4,
+                      right: -4,
+                      fontSize: 8,
+                      background: "#eee2cc",
+                      border: "1px solid #8a7050",
+                      borderRadius: 3,
+                      padding: "0 2px",
+                      color: "#5a4a35",
+                    }}
+                  >
+                    x{quiverQuantity}
+                  </div>
+                )}
+              </div>
+              <button
+                onClick={() => onUnequip(slot)}
+                title="Retirer"
+                style={{
+                  padding: "1px 4px",
+                  fontSize: 11,
+                  lineHeight: 1,
+                  borderRadius: 4,
+                  border: "1px solid #8a7050",
+                  background: "none",
+                  color: "#5a4a35",
+                  cursor: "pointer",
+                }}
+              >
+                ✕
+              </button>
             </div>
-            <button
-              onClick={() => onUnequip(slot)}
-              title="Retirer"
-              style={{
-                padding: "1px 4px",
-                fontSize: 11,
-                lineHeight: 1,
-                borderRadius: 4,
-                border: "1px solid #8a7050",
-                background: "none",
-                color: "#5a4a35",
-                cursor: "pointer",
-              }}
-            >
-              ✕
-            </button>
+            {instance && (
+              <div style={{ fontSize: 9, textAlign: "center" }}>
+                <NameEditor
+                  instance={instance}
+                  defaultName={def.name}
+                  onRename={onRename}
+                />
+              </div>
+            )}
+            {instance && (
+              <SocketPips
+                instance={instance}
+                onOpenPicker={(instanceId, socketIndex) =>
+                  setSocketingSocket({ instanceId, socketIndex })
+                }
+              />
+            )}
           </div>
         ) : (
           <>
@@ -725,17 +931,12 @@ export default function InventoryScreen({
     );
   }
 
-  // les flèches equipees (cf. equipped.quiver) ne quittent JAMAIS
-  // reellement this.inventory (contrairement a un objet d'equipement
-  // classique - cf. MainScene.equipItem, categorie 'ammo') - sans ce
-  // filtre, elles apparaitraient a la fois dans la case Carquois ET
-  // dans "Objets", alors que tout le reste de l'equipement disparait de
-  // cette liste une fois equipe. Le filtre se base sur l'itemId (pas la
-  // categorie generique) : si un jour un autre type de munition existe,
-  // il faudra le meme traitement pour son propre emplacement.
-  const groupedItems = groupInventory(inventory).filter(
-    (group) => group.itemId !== equipped.quiver,
-  );
+  // ni les munitions equipees (equipped.quiver) ni, desormais, aucun
+  // objet d'equipement equipe (armes/armures instanciees, cf.
+  // gemSockets.js) ne quittent JAMAIS reellement this.inventory - sans
+  // ce filtre (fait directement dans groupInventory), ils
+  // apparaitraient a la fois dans "Objets" ET sur le mannequin.
+  const groupedItems = groupInventory(inventory, equipped);
 
   const containerRef = useRef(null);
   const [bookSize, setBookSize] = useState({ width: 800, height: 500 });
@@ -831,7 +1032,7 @@ export default function InventoryScreen({
               const def = resolveItemDef(group.itemId);
               return (
                 <div
-                  key={group.itemId}
+                  key={group.instanceId || group.itemId}
                   style={{
                     display: "flex",
                     flexDirection: isMobile ? "column" : "row",
@@ -857,7 +1058,15 @@ export default function InventoryScreen({
 
                     <div>
                       <div style={{ fontSize: 12 }}>
-                        {def.name}
+                        {group.instanceId ? (
+                          <NameEditor
+                            instance={group}
+                            defaultName={def.name}
+                            onRename={onRename}
+                          />
+                        ) : (
+                          def.name
+                        )}
                         {group.totalQuantity > 1
                           ? ` x${group.totalQuantity}`
                           : ""}
@@ -868,6 +1077,30 @@ export default function InventoryScreen({
                       >
                         {def.description}
                       </div>
+
+                      {group.gemSlots > 0 && (
+                        <SocketPips
+                          instance={group}
+                          onOpenPicker={(instanceId, socketIndex) =>
+                            setSocketingSocket({ instanceId, socketIndex })
+                          }
+                        />
+                      )}
+
+                      {(group.sockets || []).some(Boolean) && (
+                        <div
+                          style={{
+                            fontSize: 9,
+                            color: "#6a5a3f",
+                            marginTop: 2,
+                          }}
+                        >
+                          {(group.sockets || [])
+                            .filter(Boolean)
+                            .map((gemId) => resolveItemDef(gemId).description)
+                            .join(" • ")}
+                        </div>
+                      )}
                     </div>
                   </div>
                   {(def.category === "equipment" ||
@@ -890,9 +1123,19 @@ export default function InventoryScreen({
                   )}
                   {(def.category === "consumable" ||
                     def.category === "abilityScroll" ||
-                    def.category === "recipeScroll") && (
+                    def.category === "recipeScroll" ||
+                    def.category === "socketPerforation" ||
+                    def.category === "gemExtraction") && (
                     <button
-                      onClick={() => onUse(group.firstIndex)}
+                      onClick={() => {
+                        if (def.category === "socketPerforation") {
+                          setPerforatingScrollIndex(group.firstIndex);
+                        } else if (def.category === "gemExtraction") {
+                          setExtractingScrollIndex(group.firstIndex);
+                        } else {
+                          onUse(group.firstIndex);
+                        }
+                      }}
                       style={{
                         padding: "4px 10px",
                         fontSize: 11,
@@ -950,7 +1193,9 @@ export default function InventoryScreen({
                 label: "Parchemins & recettes",
                 test: (def) =>
                   def.category === "abilityScroll" ||
-                  def.category === "recipeScroll",
+                  def.category === "recipeScroll" ||
+                  def.category === "socketPerforation" ||
+                  def.category === "gemExtraction",
               },
               {
                 key: "consumable",
@@ -1203,6 +1448,338 @@ export default function InventoryScreen({
           )}
         </div>
       </div>
+
+      {socketingSocket && (
+        <div
+          onClick={() => setSocketingSocket(null)}
+          style={{
+            position: "absolute",
+            inset: 0,
+            zIndex: 30,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            background: "rgba(0,0,0,0.6)",
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: "#2a2015",
+              border: "1px solid #8a7050",
+              borderRadius: 8,
+              padding: 14,
+              minWidth: 220,
+              maxWidth: 280,
+              color: "#f0e6d0",
+            }}
+          >
+            <h4 style={{ margin: "0 0 10px", fontSize: 13 }}>
+              Choisir une gemme (insertion définitive)
+            </h4>
+            {(() => {
+              // restriction par categorie d'objet (cf. gemSockets.socketGem,
+              // qui refuse aussi ce cas cote logique) : une pioche/hache
+              // (slot "tool") ne propose que les gemmes de minage/
+              // bucheronnage (gemUsage "tool"), une arme/armure que les
+              // gemmes de combat.
+              const targetInstance = inventory.find(
+                (i) => i.instanceId === socketingSocket.instanceId,
+              );
+              const targetDef = targetInstance
+                ? resolveItemDef(targetInstance.itemId)
+                : null;
+              const isTargetTool = targetDef?.slot === "tool";
+              const ownedGems = groupedItems.filter((g) => {
+                const gemDef = resolveItemDef(g.itemId);
+                if (gemDef.category !== "gem") return false;
+                return (gemDef.gemUsage === "tool") === isTargetTool;
+              });
+              if (ownedGems.length === 0) {
+                return (
+                  <div style={{ fontSize: 11, color: "#c9b896" }}>
+                    {isTargetTool
+                      ? "Aucune gemme de minage/bûcheronnage en inventaire."
+                      : "Aucune gemme de combat en inventaire."}
+                  </div>
+                );
+              }
+              return (
+                <div
+                  style={{ display: "flex", flexDirection: "column", gap: 6 }}
+                >
+                  {ownedGems.map((gem) => (
+                    <button
+                      key={gem.itemId}
+                      onClick={() => {
+                        onSocketGem(
+                          socketingSocket.instanceId,
+                          gem.itemId,
+                          socketingSocket.socketIndex,
+                        );
+                        setSocketingSocket(null);
+                      }}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 8,
+                        padding: "4px 8px",
+                        fontSize: 11,
+                        borderRadius: 5,
+                        border: "1px solid #8a7050",
+                        background: "rgba(120,100,70,0.2)",
+                        color: "#f0e6d0",
+                        cursor: "pointer",
+                        textAlign: "left",
+                      }}
+                    >
+                      <ItemIcon itemId={gem.itemId} scale={1.2} />
+                      <span>
+                        {resolveItemDef(gem.itemId).name} x{gem.totalQuantity}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              );
+            })()}
+            <button
+              onClick={() => setSocketingSocket(null)}
+              style={{
+                marginTop: 10,
+                fontSize: 11,
+                padding: "3px 8px",
+                borderRadius: 5,
+                border: "1px solid #8a7050",
+                background: "none",
+                color: "#f0e6d0",
+                cursor: "pointer",
+              }}
+            >
+              Annuler
+            </button>
+          </div>
+        </div>
+      )}
+
+      {perforatingScrollIndex !== null && (
+        <div
+          onClick={() => setPerforatingScrollIndex(null)}
+          style={{
+            position: "absolute",
+            inset: 0,
+            zIndex: 30,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            background: "rgba(0,0,0,0.6)",
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: "#2a2015",
+              border: "1px solid #8a7050",
+              borderRadius: 8,
+              padding: 14,
+              minWidth: 220,
+              maxWidth: 300,
+              maxHeight: "70%",
+              overflowY: "auto",
+              color: "#f0e6d0",
+            }}
+          >
+            <h4 style={{ margin: "0 0 10px", fontSize: 13 }}>
+              Choisir l'objet à perforer
+            </h4>
+            {(() => {
+              const targets = inventory.filter(
+                (i) =>
+                  i.instanceId &&
+                  resolveItemDef(i.itemId).category === "equipment",
+              );
+              if (targets.length === 0) {
+                return (
+                  <div style={{ fontSize: 11, color: "#c9b896" }}>
+                    Aucun équipement en inventaire.
+                  </div>
+                );
+              }
+              return (
+                <div
+                  style={{ display: "flex", flexDirection: "column", gap: 6 }}
+                >
+                  {targets.map((inst) => {
+                    const targetDef = resolveItemDef(inst.itemId);
+                    const filled = (inst.sockets || []).filter(Boolean).length;
+                    return (
+                      <button
+                        key={inst.instanceId}
+                        onClick={() => {
+                          onAttemptPerforation(
+                            perforatingScrollIndex,
+                            inst.instanceId,
+                          );
+                          setPerforatingScrollIndex(null);
+                        }}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 8,
+                          padding: "4px 8px",
+                          fontSize: 11,
+                          borderRadius: 5,
+                          border: "1px solid #8a7050",
+                          background: "rgba(120,100,70,0.2)",
+                          color: "#f0e6d0",
+                          cursor: "pointer",
+                          textAlign: "left",
+                        }}
+                      >
+                        <ItemIcon itemId={inst.itemId} scale={1.2} />
+                        <span>
+                          {inst.customName || targetDef.name} ({filled}/
+                          {inst.gemSlots || 0} sockets)
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              );
+            })()}
+            <button
+              onClick={() => setPerforatingScrollIndex(null)}
+              style={{
+                marginTop: 10,
+                fontSize: 11,
+                padding: "3px 8px",
+                borderRadius: 5,
+                border: "1px solid #8a7050",
+                background: "none",
+                color: "#f0e6d0",
+                cursor: "pointer",
+              }}
+            >
+              Annuler
+            </button>
+          </div>
+        </div>
+      )}
+
+      {extractingScrollIndex !== null && (
+        <div
+          onClick={() => setExtractingScrollIndex(null)}
+          style={{
+            position: "absolute",
+            inset: 0,
+            zIndex: 30,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            background: "rgba(0,0,0,0.6)",
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: "#2a2015",
+              border: "1px solid #8a7050",
+              borderRadius: 8,
+              padding: 14,
+              minWidth: 220,
+              maxWidth: 300,
+              maxHeight: "70%",
+              overflowY: "auto",
+              color: "#f0e6d0",
+            }}
+          >
+            <h4 style={{ margin: "0 0 10px", fontSize: 13 }}>
+              Choisir la gemme à extraire
+            </h4>
+            {(() => {
+              // seuls les exemplaires ayant au moins une gemme socketee ont
+              // quelque chose a extraire - liste aplatie objet+socket (un
+              // objet a plusieurs sockets remplis apparait une fois par
+              // gemme) pour choisir directement LAQUELLE retirer.
+              const rows = inventory
+                .filter(
+                  (i) =>
+                    i.instanceId &&
+                    resolveItemDef(i.itemId).category === "equipment" &&
+                    (i.sockets || []).some(Boolean),
+                )
+                .flatMap((inst) =>
+                  (inst.sockets || [])
+                    .map((gemId, socketIndex) => ({ inst, gemId, socketIndex }))
+                    .filter((row) => row.gemId),
+                );
+              if (rows.length === 0) {
+                return (
+                  <div style={{ fontSize: 11, color: "#c9b896" }}>
+                    Aucun équipement avec une gemme socketée.
+                  </div>
+                );
+              }
+              return (
+                <div
+                  style={{ display: "flex", flexDirection: "column", gap: 6 }}
+                >
+                  {rows.map(({ inst, gemId, socketIndex }) => {
+                    const targetDef = resolveItemDef(inst.itemId);
+                    const gemDef = resolveItemDef(gemId);
+                    return (
+                      <button
+                        key={`${inst.instanceId}-${socketIndex}`}
+                        onClick={() => {
+                          onAttemptGemExtraction(
+                            extractingScrollIndex,
+                            inst.instanceId,
+                            socketIndex,
+                          );
+                          setExtractingScrollIndex(null);
+                        }}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 8,
+                          padding: "4px 8px",
+                          fontSize: 11,
+                          borderRadius: 5,
+                          border: "1px solid #8a7050",
+                          background: "rgba(120,100,70,0.2)",
+                          color: "#f0e6d0",
+                          cursor: "pointer",
+                          textAlign: "left",
+                        }}
+                      >
+                        <ItemIcon itemId={inst.itemId} scale={1.2} />
+                        <span>
+                          {inst.customName || targetDef.name} — {gemDef.name}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              );
+            })()}
+            <button
+              onClick={() => setExtractingScrollIndex(null)}
+              style={{
+                marginTop: 10,
+                fontSize: 11,
+                padding: "3px 8px",
+                borderRadius: 5,
+                border: "1px solid #8a7050",
+                background: "none",
+                color: "#f0e6d0",
+                cursor: "pointer",
+              }}
+            >
+              Annuler
+            </button>
+          </div>
+        </div>
+      )}
+
       <style>{`
   .book-page-scroll::-webkit-scrollbar {
     width: 7px;

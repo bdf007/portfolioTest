@@ -1,8 +1,4 @@
-// TILE_SIZE duplique volontairement (identique a celui de MainScene.js) -
-// meme constante numerique des deux cotes, meme logique que dans
-// floorRenderer.js/floorEntities.js/abilities.js/summons.js/quests.js/
-// exploration.js/ai.js/inventory.js.
-const TILE_SIZE = 32;
+import { TILE_SIZE } from "./gameConstants";
 
 export function toggleDebugTileIndices(scene) {
   scene.debugTileIndicesVisible = !scene.debugTileIndicesVisible;
@@ -148,4 +144,3 @@ export function drawHpBars(scene) {
     g.fillRect(bx, by, barW * ratio, barH);
   }
 }
-
