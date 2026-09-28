@@ -22,12 +22,15 @@ import { resolveItemDef } from "../itemDefs";
 import { resolveHeroStatsOverride } from "../spriteRegistry";
 import { resolveFuryDef } from "../furyDefs";
 
-const TILE_SIZE = 32;
+import {
+  TILE_SIZE,
+  PROJECTILE_RADIUS,
+  FURY_KILLS_REQUIRED,
+  ATTACK_ANIM_DURATION_MS,
+} from "./gameConstants";
+
 const MELEE_CONE_DOT_THRESHOLD = 0.5;
 const PROJECTILE_SPEED = 320;
-const PROJECTILE_RADIUS = 5;
-const FURY_KILLS_REQUIRED = 10; // ajustable
-const ATTACK_ANIM_DURATION_MS = 400;
 
 export function performMeleeAttack(scene, now) {
   if (!scene.meleeCooldown.isReady(now)) return;
