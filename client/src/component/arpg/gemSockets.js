@@ -154,6 +154,19 @@ export function rollGemSlotCount(itemId) {
   return weightedPick(SOCKET_COUNT_WEIGHTS[band]);
 }
 
+/**
+ * Plafond de sockets d'un objet - identique au plafond utilise au tirage
+ * initial (longueur du tableau de poids de sa bande, moins 1). Reutilise
+ * par le parchemin de perforation (cf. attemptSocketPerforation plus
+ * bas) comme garde-fou : la perforation permet seulement d'ATTEINDRE ce
+ * plafond si le tirage initial ne l'avait pas atteint, jamais de le
+ * depasser.
+ */
+export function getMaxSocketsForItem(itemId) {
+  const band = resolveSocketBand(itemId);
+  return SOCKET_COUNT_WEIGHTS[band].length - 1;
+}
+
 // ===== Identifiant d'instance =====
 let instanceIdCounter = 0;
 
@@ -274,4 +287,174 @@ export function socketGem(scene, instanceId, gemItemId, socketIndex) {
   scene.persistProgress();
 
   return true;
+}
+
+// ===== Materiau requis pour une tentative de perforation =====
+// Le parchemin de perforation consomme, en plus de lui-meme, un
+// materiau brut correspondant au palier/branche EXACT de l'objet cible -
+// les memes materiaux que ceux deja utilises par les recettes
+// d'evolution de craftingRecipes.js (lingots pour la branche metal,
+// essences pour la branche bois, depouilles pour la branche cuir), pour
+// rester coherent avec l'economie de craft existante plutot que
+// d'inventer une nouvelle ressource dediee. Pas de collision de cle
+// entre branches (le seul nom partage, "wooden", pointe vers le meme
+// materiau "wood" des deux cotes), un objet fusionne suffit donc.
+const PERFORATION_MATERIAL_BY_NAME = {
+  // branche metal
+  wooden: "wood",
+  copper: "copperIngot",
+  iron: "ironIngot",
+  steel: "steelIngot",
+  silver: "silverIngot",
+  gold: "goldIngot",
+  platinium: "platiniumIngot",
+  cobalt: "cobaltIngot",
+  adamantine: "adamantineIngot",
+  crimson: "crimsonIngot",
+  angelic: "angelicIngot",
+  fateful: "fatefulIngot",
+  nova: "novaIngot",
+  // branche bois (Bow/Staff)
+  oak: "oakWood",
+  ash: "ashWood",
+  yew: "yewWood",
+  ebony: "ebonyWood",
+  petrified: "petrifiedWood",
+  mistwood: "mistwood",
+  runewood: "runewood",
+  skywood: "skywood",
+  scarletwood: "scarletwood",
+  sacred: "sacredWood",
+  eternal: "eternalWood",
+  starwood: "starwood",
+  // branche cuir/materiaux de monstres
+  slimeBlob: "slimeBlob",
+  bearPelt: "bearPelt",
+  spiderLeg: "spiderLeg",
+  greyMonsterScale: "greyMonsterScale",
+  crabClaw: "crabClaw",
+  blackBearPelt: "blackBearPelt",
+  turtleShell: "turtleShell",
+  greenMonsterScale: "greenMonsterScale",
+  batWings: "batWings",
+  dragonScale: "dragonScale",
+  ghostEctoplasm: "ghostEctoplasm",
+  monsterCore: "monsterCore",
+};
+
+/**
+ * Determine le materiau brut (itemId, category "craftingMaterial" dans
+ * itemDefs.js) correspondant EXACTEMENT au palier de l'objet cible -
+ * contrairement a resolveSocketBand qui ne renvoie que la bande
+ * (low/mid/top), necessaire ici pour savoir PRECISEMENT quel materiau
+ * consommer. Reutilise MATERIAL_BANDS (deja trie du nom le plus long au
+ * plus court, cf. plus haut) pour eviter toute incoherence avec
+ * resolveSocketBand. Repli sur "wood" (materiau de base le plus faible)
+ * pour un objet de depart sans materiau reconnu dans son id - meme repli
+ * que resolveSocketBand sur la bande "low".
+ */
+export function resolvePerforationMaterialId(itemId) {
+  const stripped = stripModifierPrefix(itemId);
+  const match = MATERIAL_BANDS.find((entry) => stripped.startsWith(entry.material));
+  return (match && PERFORATION_MATERIAL_BY_NAME[match.material]) || "wood";
+}
+
+// ===== Parchemin de perforation =====
+const PERFORATION_OUTCOME_WEIGHTS = [0.65, 0.3, 0.05]; // reussite / echec simple / destruction
+
+/**
+ * Tente d'ajouter un socket supplementaire a un exemplaire d'equipement
+ * via un parchemin de perforation. Consomme TOUJOURS le parchemin
+ * (scrollIndex dans scene.inventory) + un exemplaire du materiau brut
+ * correspondant au palier exact de l'objet cible (cf.
+ * resolvePerforationMaterialId), des que la tentative est engagee - les
+ * garde-fous de disponibilite sont tous verifies AVANT toute
+ * consommation. Trois issues possibles une fois la tentative engagee :
+ * - 65% reussite : gemSlots +1 (jamais au-dela du plafond de la bande,
+ *   cf. getMaxSocketsForItem - garde-fou verifie en amont) ;
+ * - 30% echec simple : rien ne change sur l'objet, seuls le parchemin et
+ *   le materiau sont perdus ;
+ * - 5% destruction : l'exemplaire cible est retire definitivement de
+ *   l'inventaire (et desequipe au besoin).
+ * Renvoie {success:false, reason} si la tentative est refusee avant
+ * toute consommation (objet deja au plafond, materiau manquant...), ou
+ * {success:true, outcome: "success"|"fail"|"destroyed"} une fois jouee.
+ */
+export function attemptSocketPerforation(scene, scrollIndex, targetInstanceId) {
+  const scrollEntry = scene.inventory[scrollIndex];
+  if (
+    !scrollEntry ||
+    resolveItemDef(scrollEntry.itemId).category !== "socketPerforation"
+  ) {
+    return { success: false, reason: "invalid-scroll" };
+  }
+
+  const target = findEquipmentInstance(scene, targetInstanceId);
+  if (!target) return { success: false, reason: "invalid-target" };
+
+  const maxSockets = getMaxSocketsForItem(target.itemId);
+  if ((target.gemSlots || 0) >= maxSockets) {
+    scene.showLootToast("Cet objet a déjà atteint son maximum de sockets");
+    return { success: false, reason: "already-max" };
+  }
+
+  const materialId = resolvePerforationMaterialId(target.itemId);
+  const hasMaterial = scene.inventory.some(
+    (entry) => entry.itemId === materialId && entry.quantity > 0,
+  );
+  if (!hasMaterial) {
+    scene.showLootToast(
+      `Il manque le matériau requis : ${resolveItemDef(materialId).name}`,
+    );
+    return { success: false, reason: "missing-material" };
+  }
+
+  // consommation - a partir d'ici la tentative est engagee, quoi qu'il arrive
+  scrollEntry.quantity -= 1;
+  if (scrollEntry.quantity <= 0) scene.inventory.splice(scrollIndex, 1);
+
+  // retrouve le materiau par recherche plutot que par index precalcule -
+  // le splice ci-dessus peut avoir decale les index suivants.
+  const materialEntry = scene.inventory.find(
+    (entry) => entry.itemId === materialId && entry.quantity > 0,
+  );
+  materialEntry.quantity -= 1;
+  if (materialEntry.quantity <= 0) {
+    scene.inventory.splice(scene.inventory.indexOf(materialEntry), 1);
+  }
+
+  const outcomeRoll = weightedPick(PERFORATION_OUTCOME_WEIGHTS);
+  let outcome;
+
+  if (outcomeRoll === 0) {
+    outcome = "success";
+    target.gemSlots = (target.gemSlots || 0) + 1;
+    scene.showLootToast("Perforation réussie : un socket a été ajouté !");
+  } else if (outcomeRoll === 1) {
+    outcome = "fail";
+    scene.showLootToast(
+      "Échec de la perforation - les matériaux sont perdus, l'objet est intact",
+    );
+  } else {
+    outcome = "destroyed";
+    const destroyedName = resolveItemDef(target.itemId).name;
+    const instanceIndex = scene.inventory.indexOf(target);
+    if (instanceIndex !== -1) scene.inventory.splice(instanceIndex, 1);
+    for (const [slot, ref] of Object.entries(scene.equipped)) {
+      if (ref === targetInstanceId) scene.equipped[slot] = null;
+    }
+    scene.showLootToast(`Échec critique : ${destroyedName} a été détruit !`);
+  }
+
+  scene.events.emit("inventory-updated", [...scene.inventory]);
+  if (
+    outcome === "destroyed" ||
+    Object.values(scene.equipped).includes(targetInstanceId)
+  ) {
+    scene.recalculatePlayerStats();
+    scene.events.emit("equipment-updated", { ...scene.equipped });
+  }
+  scene.persistProgress();
+
+  return { success: true, outcome };
 }
