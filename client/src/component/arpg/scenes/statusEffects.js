@@ -1,9 +1,6 @@
 import Phaser from "phaser";
 
-// ENEMY_SPEED duplique volontairement (identique a celui de MainScene.js,
-// egal a 90 des deux cotes) - simple constante numerique, meme logique que
-// TILE_SIZE dans floorRenderer.js/floorEntities.js.
-const ENEMY_SPEED = 90;
+import { ENEMY_SPEED } from "./gameConstants";
 
 const STATUS_EFFECT_COLORS = {
   burn: 0xff8800, // orange
