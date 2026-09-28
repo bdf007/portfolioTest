@@ -34,21 +34,12 @@ import {
 import { spawnSummonSprite } from "./summons";
 import { clearDebugTileIndices } from "./hud";
 
-const TILE_SIZE = 32;
-const ENEMY_ATTACK_COOLDOWN = 900;
-const FURY_KILLS_REQUIRED = 10; // ajustable
-
-const INFLICTS_TO_VISUAL_EFFECT = {
-  burn: "fire",
-  acid: "gas",
-  slow: "ice",
-};
-
-function resolveVisualEffect(enemyData) {
-  if (enemyData.visualEffect) return enemyData.visualEffect;
-  const inflictsType = enemyData.inflictsEffect?.type;
-  return INFLICTS_TO_VISUAL_EFFECT[inflictsType] || null;
-}
+import {
+  TILE_SIZE,
+  ENEMY_ATTACK_COOLDOWN,
+  FURY_KILLS_REQUIRED,
+  resolveVisualEffect,
+} from "./gameConstants";
 
 export async function loadLevel(
   scene,
