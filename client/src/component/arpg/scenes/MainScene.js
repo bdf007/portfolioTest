@@ -15,6 +15,11 @@ import {
   computeEquipmentResistances,
 } from "../equipment";
 import {
+  rollGemSlotCount,
+  generateInstanceId,
+  socketGem as socketGemImpl,
+} from "../gemSockets";
+import {
   descendStairs,
   goToDepth,
   openTravelHub,
@@ -552,6 +557,20 @@ export default class MainScene extends Phaser.Scene {
       const existing = this.inventory.find((i) => i.itemId === itemId);
       if (existing) existing.quantity += quantity;
       else this.inventory.push({ itemId, quantity });
+    } else if (def.category === "equipment") {
+      // objets equipables instancies (cf. gemSockets.js) : chaque
+      // exemplaire recoit un instanceId propre et un nombre de sockets
+      // tire une seule fois, a la creation - necessaire pour que deux
+      // armes identiques puissent porter des gemmes differentes.
+      for (let i = 0; i < quantity; i++) {
+        this.inventory.push({
+          itemId,
+          quantity: 1,
+          instanceId: generateInstanceId(),
+          gemSlots: rollGemSlotCount(itemId),
+          sockets: [],
+        });
+      }
     } else {
       for (let i = 0; i < quantity; i++) {
         this.inventory.push({ itemId, quantity: 1 });
@@ -560,6 +579,10 @@ export default class MainScene extends Phaser.Scene {
 
     this.events.emit("inventory-updated", [...this.inventory]);
     this.persistProgress();
+  }
+
+  socketGem(instanceId, gemItemId, socketIndex) {
+    return socketGemImpl(this, instanceId, gemItemId, socketIndex);
   }
 
   showLootToast(text) {
@@ -610,7 +633,7 @@ export default class MainScene extends Phaser.Scene {
 
     const base = getPlayerStatsForLevel(this.playerLevel, heroProfile);
 
-    const bonus = computeEquipmentBonuses(this.equipped);
+    const bonus = computeEquipmentBonuses(this.equipped, this.inventory);
     this.equipmentBonuses = bonus;
     const attrBonus = this.computeAttributeBonuses();
 
@@ -620,7 +643,10 @@ export default class MainScene extends Phaser.Scene {
     this.playerRangedDamage =
       base.rangedDamage + bonus.rangedDamage + attrBonus.rangedDamage;
     this.playerDefense = base.defense + bonus.defense + attrBonus.defense;
-    this.playerResistances = computeEquipmentResistances(this.equipped);
+    this.playerResistances = computeEquipmentResistances(
+      this.equipped,
+      this.inventory,
+    );
 
     this.playerMaxMana = base.mana + bonus.mana + attrBonus.maxMana;
     this.playerMaxStamina =
