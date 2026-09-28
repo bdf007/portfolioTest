@@ -126,8 +126,14 @@ import {
   updateBoomerangs as updateBoomerangsImpl,
   useFury as useFuryImpl,
 } from "./playerCombat";
-
-const TILE_SIZE = 32;
+import {
+  TILE_SIZE,
+  ENEMY_ATTACK_COOLDOWN,
+  ATTACK_ANIM_DURATION_MS,
+  FURY_KILLS_REQUIRED,
+  DEFAULT_ATTRIBUTES,
+  resolveVisualEffect,
+} from "./gameConstants";
 
 const VISION_RADIUS_DEFAULT = 6; // repli si le profil d'archetype (cf. HERO_STATS_PROFILES) ne definit pas visionRadius
 
@@ -162,25 +168,10 @@ const PLAYER_MELEE_COOLDOWN = 420;
 const PLAYER_HARVEST_COOLDOWN = 600; // exemple de valeur, ajustable selon le design
 const PLAYER_RANGED_COOLDOWN = 650;
 const PROJECTILE_MAX_DISTANCE_DEFAULT = 380; // repli si le profil d'archetype ne definit pas rangedRange
-const FURY_KILLS_REQUIRED = 10; // ajustable
-// combat ennemi
-const ENEMY_ATTACK_COOLDOWN = 900;
 
 // const WALL_CORNER_INDEX_TO_FRAME_FORTRESS2 = [
 //   32, 0, 32, 18, 34, 32, 33, 7, 2, 1, 34, 23, 16, 22, 6, 70,
 // ];
-
-const ATTACK_ANIM_DURATION_MS = 400;
-
-const DEFAULT_ATTRIBUTES = {
-  force: 0,
-  dexterite: 0,
-  intelligence: 0,
-  vitalite: 0,
-  constitution: 0,
-  endurance: 0,
-  chance: 0,
-};
 
 function createParticleTexture(scene, key, color) {
   if (scene.textures.exists(key)) return;
@@ -189,17 +180,6 @@ function createParticleTexture(scene, key, color) {
   g.fillCircle(4, 4, 4);
   g.generateTexture(key, 8, 8);
   g.destroy();
-}
-const INFLICTS_TO_VISUAL_EFFECT = {
-  burn: "fire",
-  acid: "gas",
-  slow: "ice",
-};
-
-function resolveVisualEffect(enemyData) {
-  if (enemyData.visualEffect) return enemyData.visualEffect;
-  const inflictsType = enemyData.inflictsEffect?.type;
-  return INFLICTS_TO_VISUAL_EFFECT[inflictsType] || null;
 }
 
 export default class MainScene extends Phaser.Scene {
