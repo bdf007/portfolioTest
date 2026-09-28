@@ -41,6 +41,33 @@ function ensureInstanceFields(item) {
   }
 }
 
+const MAX_CUSTOM_NAME_LENGTH = 24;
+
+/**
+ * Renomme un exemplaire d'equipement - purement cosmetique (aucun effet
+ * sur les stats), gratuit et illimite. Un nom vide/blanc reinitialise au
+ * nom generique de l'objet (suppression du champ customName plutot que
+ * de stocker une chaine vide, pour que resolveItemDef(...).name reste la
+ * seule source de verite quand il n'y a pas de nom personnalise).
+ */
+export function renameEquipmentInstance(scene, instanceId, newName) {
+  const instance = findEquipmentInstance(scene, instanceId);
+  if (!instance) return;
+
+  const trimmed = (newName || "").trim().slice(0, MAX_CUSTOM_NAME_LENGTH);
+  if (trimmed) {
+    instance.customName = trimmed;
+  } else {
+    delete instance.customName;
+  }
+
+  scene.events.emit("inventory-updated", [...scene.inventory]);
+  if (Object.values(scene.equipped).includes(instanceId)) {
+    scene.events.emit("equipment-updated", { ...scene.equipped });
+  }
+  scene.persistProgress();
+}
+
 export function giveStartingKit(scene) {
   const profile = resolveHeroStatsOverride(scene.heroSpriteKey);
   if (!profile) return;
