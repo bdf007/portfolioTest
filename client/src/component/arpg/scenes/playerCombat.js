@@ -21,6 +21,7 @@ import {
 import { resolveItemDef } from "../itemDefs";
 import { resolveHeroStatsOverride } from "../spriteRegistry";
 import { resolveFuryDef } from "../furyDefs";
+import { resolveInstanceGemEffectSources } from "../gemSockets";
 
 import {
   TILE_SIZE,
@@ -32,13 +33,30 @@ import {
 const MELEE_CONE_DOT_THRESHOLD = 0.5;
 const PROJECTILE_SPEED = 320;
 
+/**
+ * scene.equipped[slot] stocke desormais un instanceId (cf.
+ * inventory.equipItem) - il faut retrouver l'exemplaire complet dans
+ * this.inventory pour connaitre a la fois son itemId (def de base) ET
+ * ses sockets/gemmes (cf. gemSockets.js). Ne s'applique pas a "quiver"
+ * (munitions, jamais instanciees - reste un itemId direct).
+ */
+function resolveEquippedInstance(scene, slot) {
+  const ref = scene.equipped[slot];
+  if (!ref) return null;
+  return scene.inventory.find((entry) => entry.instanceId === ref) || null;
+}
+
 export function performMeleeAttack(scene, now) {
   if (!scene.meleeCooldown.isReady(now)) return;
   scene.meleeCooldown.trigger(now);
 
-  const meleeWeaponDef = scene.equipped.mainHand
-    ? resolveItemDef(scene.equipped.mainHand)
+  const meleeWeaponInstance = resolveEquippedInstance(scene, "mainHand");
+  const meleeWeaponDef = meleeWeaponInstance
+    ? resolveItemDef(meleeWeaponInstance.itemId)
     : null;
+  const meleeGemEffectSources = resolveInstanceGemEffectSources(
+    meleeWeaponInstance,
+  );
 
   scene.playAttackAnim(now);
 
@@ -114,6 +132,15 @@ export function performMeleeAttack(scene, now) {
           enemy.statusEffects,
           rollStatusEffect(meleeWeaponDef),
         );
+        // effet(s) elementaire(s) des gemmes socketees - se CUMULE avec
+        // celui de l'arme elle-meme (une gemme ne remplace jamais
+        // l'effet propre de l'arme, cf. gemSockets.js).
+        for (const gemSource of meleeGemEffectSources) {
+          applyStatusEffect(scene,
+            enemy.statusEffects,
+            rollStatusEffect(gemSource),
+          );
+        }
         if (imbue) {
           applyStatusEffect(scene,
             enemy.statusEffects,
@@ -129,16 +156,19 @@ export function performMeleeAttack(scene, now) {
   });
 }
 
-export function getActiveRangedWeaponDef(scene) {
-  const mainDef = scene.equipped.mainHand
-    ? resolveItemDef(scene.equipped.mainHand)
-    : null;
-  if (mainDef && mainDef.grantsRanged) return mainDef;
-  const offDef = scene.equipped.offHand
-    ? resolveItemDef(scene.equipped.offHand)
-    : null;
-  if (offDef && offDef.grantsRanged) return offDef;
+export function getActiveRangedWeaponInstance(scene) {
+  const mainInstance = resolveEquippedInstance(scene, "mainHand");
+  const mainDef = mainInstance ? resolveItemDef(mainInstance.itemId) : null;
+  if (mainDef && mainDef.grantsRanged) return mainInstance;
+  const offInstance = resolveEquippedInstance(scene, "offHand");
+  const offDef = offInstance ? resolveItemDef(offInstance.itemId) : null;
+  if (offDef && offDef.grantsRanged) return offInstance;
   return null;
+}
+
+export function getActiveRangedWeaponDef(scene) {
+  const instance = getActiveRangedWeaponInstance(scene);
+  return instance ? resolveItemDef(instance.itemId) : null;
 }
 
 export function canUseRangedAttack(scene) {
@@ -147,11 +177,13 @@ export function canUseRangedAttack(scene) {
 
 export function performRangedAttack(scene, now) {
   if (!scene.rangedCooldown.isReady(now)) return;
-  const weaponDef = getActiveRangedWeaponDef(scene);
+  const weaponInstance = getActiveRangedWeaponInstance(scene);
+  const weaponDef = weaponInstance ? resolveItemDef(weaponInstance.itemId) : null;
   if (!weaponDef) {
     scene.showLootToast("Aucune arme à distance équipée");
     return;
   }
+  const weaponGemEffectSources = resolveInstanceGemEffectSources(weaponInstance);
 
   if (weaponDef.requiresAmmo) {
     const requiredAmmoId = weaponDef.requiresAmmo;
@@ -263,6 +295,7 @@ export function performRangedAttack(scene, now) {
       weaponDef,
       ammoDef,
       imbue,
+      weaponGemEffectSources,
     });
   });
 }
@@ -336,6 +369,15 @@ export function updateProjectiles(scene) {
             enemy.statusEffects,
             rollStatusEffect(proj.ammoDef),
           );
+          // effet(s) elementaire(s) des gemmes socketees sur l'arme a
+          // distance - se CUMULE avec celui de l'arme et celui de la
+          // munition (meme logique qu'au corps a corps).
+          for (const gemSource of proj.weaponGemEffectSources || []) {
+            applyStatusEffect(scene,
+              enemy.statusEffects,
+              rollStatusEffect(gemSource),
+            );
+          }
           if (proj.imbue)
             applyStatusEffect(scene,
               enemy.statusEffects,
