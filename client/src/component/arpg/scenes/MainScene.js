@@ -2,15 +2,7 @@ import Phaser from "phaser";
 import EasyStar from "easystarjs";
 import { createRng } from "../rng";
 import { createEnemyBehavior } from "../enemyBehavior";
-import {
-  computeDamage,
-  applyDamage,
-  createCooldown,
-  rollCritical,
-  CRIT_MULTIPLIER,
-  applyDiceVariance,
-  applyElementalResistance,
-} from "../combat";
+import { applyDamage, createCooldown } from "../combat";
 import { getPlayerStatsForLevel } from "../leveling";
 import {
   SPRITE_REGISTRY,
@@ -22,8 +14,6 @@ import {
   computeEquipmentBonuses,
   computeEquipmentResistances,
 } from "../equipment";
-import { resolveFuryDef } from "../furyDefs";
-import { WALL } from "./floorRenderer";
 import {
   descendStairs,
   goToDepth,
@@ -43,8 +33,6 @@ import {
   craftItem as craftItemImpl,
 } from "./craftingSystem";
 import {
-  rollStatusEffect,
-  applyStatusEffect,
   updateStatusEffects,
   createEnemyVisualEffect,
   getEffectivePlayerMoveSpeed,
@@ -121,6 +109,23 @@ import {
   deallocateAttributePoint as deallocateAttributePointImpl,
   confirmAttributeAllocation as confirmAttributeAllocationImpl,
 } from "./playerProgression";
+import {
+  performMeleeAttack as performMeleeAttackImpl,
+  getActiveRangedWeaponDef as getActiveRangedWeaponDefImpl,
+  canUseRangedAttack as canUseRangedAttackImpl,
+  performRangedAttack as performRangedAttackImpl,
+  updateProjectiles as updateProjectilesImpl,
+  knockbackEnemyIfClear as knockbackEnemyIfClearImpl,
+  updateShieldBash as updateShieldBashImpl,
+  computeReachableFloorTiles as computeReachableFloorTilesImpl,
+  explodeAbilityProjectile as explodeAbilityProjectileImpl,
+  computeBossRoomTiles as computeBossRoomTilesImpl,
+  updateAbilityProjectiles as updateAbilityProjectilesImpl,
+  updateZones as updateZonesImpl,
+  updateTraps as updateTrapsImpl,
+  updateBoomerangs as updateBoomerangsImpl,
+  useFury as useFuryImpl,
+} from "./playerCombat";
 
 const TILE_SIZE = 32;
 
@@ -135,7 +140,6 @@ const PLAYER_MOVE_SPEED_DEFAULT = 150; // repli si le profil d'archetype ne defi
 // consideree "devant" - 0.5 = cone de ~120 degres (±60° autour du centre).
 // Un attaque au corps a corps ne doit toucher que devant le heros, pas
 // tout autour (cf. le rapport correspondant).
-const MELEE_CONE_DOT_THRESHOLD = 0.5;
 // regeneration PASSIVE (hors combat comme pendant), TRES faible par
 // design - grimpe legerement avec le niveau (base + croissance*n, meme
 // esprit que les autres stats). Globales plutot que par archetype pour
@@ -157,9 +161,7 @@ const STAMINA_REGEN_PER_SEC_GROWTH = 0.1;
 const PLAYER_MELEE_COOLDOWN = 420;
 const PLAYER_HARVEST_COOLDOWN = 600; // exemple de valeur, ajustable selon le design
 const PLAYER_RANGED_COOLDOWN = 650;
-const PROJECTILE_SPEED = 320;
 const PROJECTILE_MAX_DISTANCE_DEFAULT = 380; // repli si le profil d'archetype ne definit pas rangedRange
-const PROJECTILE_RADIUS = 5;
 const FURY_KILLS_REQUIRED = 10; // ajustable
 // combat ennemi
 const ENEMY_ATTACK_COOLDOWN = 900;
@@ -1552,328 +1554,23 @@ export default class MainScene extends Phaser.Scene {
   }
 
   performMeleeAttack(now) {
-    if (!this.meleeCooldown.isReady(now)) return;
-    this.meleeCooldown.trigger(now);
-
-    const meleeWeaponDef = this.equipped.mainHand
-      ? resolveItemDef(this.equipped.mainHand)
-      : null;
-
-    this.playAttackAnim(now);
-
-    const imbue = this.pendingWeaponImbue;
-    this.pendingWeaponImbue = null;
-    // direction figee au moment du swing (celle utilisee par l'anim
-    // lancee dans playAttackAnim) - pas celle au moment de la resolution,
-    // sinon tourner sur soi pendant l'anim changerait retroactivement le cone de frappe
-    const aimVector = { x: this.lastAimVector.x, y: this.lastAimVector.y };
-
-    // les degats sont resolus a la FIN de l'anim (pas au lancer du coup),
-    // pour laisser le temps a la cible de sortir de portee/du cone et
-    // esquiver - coherent avec le mouvement de l'animation d'attaque
-    this.time.delayedCall(ATTACK_ANIM_DURATION_MS, () => {
-      if (!this.hero) return; // scene/etage change entre-temps
-
-      let anyHit = false;
-
-      for (const enemy of this.enemies) {
-        const dx = enemy.sprite.x - this.hero.x;
-        const dy = enemy.sprite.y - this.hero.y;
-        const dist = Math.hypot(dx, dy);
-        if (dist > this.playerMeleeRange || !this.isEnemyVisible(enemy))
-          continue;
-
-        if (dist > 0.001) {
-          const nx = dx / dist;
-          const ny = dy / dist;
-          const dot = nx * aimVector.x + ny * aimVector.y;
-          if (dot < MELEE_CONE_DOT_THRESHOLD) continue;
-        }
-
-        const isCrit = rollCritical(
-          enemy.state !== "chase",
-          imbue?.critChanceBonus || 0,
-        );
-        let rawDamage =
-          getEffectivePlayerMeleeDamage(this) * (isCrit ? CRIT_MULTIPLIER : 1);
-
-        if (meleeWeaponDef?.varianceDice) {
-          rawDamage = applyDiceVariance(rawDamage, meleeWeaponDef.varianceDice);
-        }
-        rawDamage = applyElementalResistance(
-          rawDamage,
-          meleeWeaponDef?.damageType,
-          enemy.resistances,
-        );
-        if (
-          imbue?.executeThreshold &&
-          enemy.hp / enemy.maxHp <= imbue.executeThreshold
-        ) {
-          rawDamage *= imbue.executeBonusMultiplier;
-        }
-        if (imbue) rawDamage += imbue.bonusDamage;
-
-        const dealt = computeDamage(rawDamage, enemy.defense);
-        this.damageEnemy(enemy, dealt);
-        anyHit = true;
-
-        if (imbue?.healPercent) {
-          this.playerHp = Math.min(
-            this.playerMaxHp,
-            this.playerHp + dealt * imbue.healPercent,
-          );
-          this.events.emit("player-hp-changed", {
-            hp: this.playerHp,
-            maxHp: this.playerMaxHp,
-          });
-        }
-
-        if (enemy.hp > 0) {
-          applyStatusEffect(this,
-            enemy.statusEffects,
-            rollStatusEffect(meleeWeaponDef),
-          );
-          if (imbue) {
-            applyStatusEffect(this,
-              enemy.statusEffects,
-              rollStatusEffect(imbue),
-            );
-          }
-        }
-      }
-
-      if (imbue && !anyHit) {
-        this.pendingWeaponImbue = imbue;
-      }
-    });
+    performMeleeAttackImpl(this, now);
   }
 
   getActiveRangedWeaponDef() {
-    const mainDef = this.equipped.mainHand
-      ? resolveItemDef(this.equipped.mainHand)
-      : null;
-    if (mainDef && mainDef.grantsRanged) return mainDef;
-    const offDef = this.equipped.offHand
-      ? resolveItemDef(this.equipped.offHand)
-      : null;
-    if (offDef && offDef.grantsRanged) return offDef;
-    return null;
+    return getActiveRangedWeaponDefImpl(this);
   }
 
   canUseRangedAttack() {
-    return !!this.getActiveRangedWeaponDef();
+    return canUseRangedAttackImpl(this);
   }
 
   performRangedAttack(now) {
-    if (!this.rangedCooldown.isReady(now)) return;
-    const weaponDef = this.getActiveRangedWeaponDef();
-    if (!weaponDef) {
-      this.showLootToast("Aucune arme à distance équipée");
-      return;
-    }
-
-    if (weaponDef.requiresAmmo) {
-      const requiredAmmoId = weaponDef.requiresAmmo;
-
-      if (!this.equipped.quiver) {
-        this.showLootToast("Aucune munition équipée");
-        return;
-      }
-
-      const ammoAllowed = Array.isArray(requiredAmmoId)
-        ? requiredAmmoId.includes(this.equipped.quiver)
-        : this.equipped.quiver === requiredAmmoId;
-
-      if (!ammoAllowed) {
-        this.showLootToast("Mauvaise munition équipée");
-        return;
-      }
-
-      const ammoEntry = this.inventory.find(
-        (i) => i.itemId === this.equipped.quiver,
-      );
-
-      if (!ammoEntry || ammoEntry.quantity <= 0) {
-        this.showLootToast("Plus de munitions !");
-        return;
-      }
-
-      ammoEntry.quantity -= 1;
-
-      if (ammoEntry.quantity <= 0) {
-        const idx = this.inventory.indexOf(ammoEntry);
-        this.inventory.splice(idx, 1);
-        this.equipped.quiver = null;
-
-        const oldMaxHp = this.playerMaxHp;
-        this.recalculatePlayerStats();
-        this.adjustHpAfterMaxHpChange(oldMaxHp);
-        this.events.emit("equipment-updated", { ...this.equipped });
-      }
-
-      this.events.emit("inventory-updated", [...this.inventory]);
-    }
-
-    if (weaponDef.manaCost) {
-      if (this.playerMana < weaponDef.manaCost) {
-        this.showLootToast("Plus assez de mana !");
-        return;
-      }
-      this.playerMana -= weaponDef.manaCost;
-      this.events.emit("player-mana-changed", {
-        mana: this.playerMana,
-        maxMana: this.playerMaxMana,
-      });
-    }
-
-    this.rangedCooldown.trigger(now);
-    const hasAttackAnim = this.anims.exists(
-      this.heroSpriteKey + "-attack-" + this.lastDir,
-    );
-    if (hasAttackAnim) {
-      this.hero.anims.play(
-        this.heroSpriteKey + "-attack-" + this.lastDir,
-        true,
-      );
-      this.attackAnimUntil = now + ATTACK_ANIM_DURATION_MS;
-    }
-
-    const ammoDef = this.equipped.quiver
-      ? resolveItemDef(this.equipped.quiver)
-      : null;
-    const imbue = this.pendingWeaponImbue;
-    this.pendingWeaponImbue = null;
-
-    // munitions/mana/cooldown deja consommes ci-dessus (l'action est
-    // engagee des le debut de l'anim) - seul le TIR effectif (spawn du
-    // projectile) est repousse a la fin de l'anim, pour que la fleche/le
-    // sort parte visuellement au moment ou le geste se termine plutot
-    // qu'instantanement au clic
-    this.time.delayedCall(ATTACK_ANIM_DURATION_MS, () => {
-      if (!this.hero) return; // scene/etage change entre-temps
-
-      let v = this.lastAimVector;
-      let nearestDist = Infinity;
-      for (const enemy of this.enemies) {
-        if (!this.isEnemyVisible(enemy)) continue;
-        const dx = enemy.sprite.x - this.hero.x;
-        const dy = enemy.sprite.y - this.hero.y;
-        const dist = Math.hypot(dx, dy);
-        if (dist > this.playerRangedRange || dist >= nearestDist) continue;
-        nearestDist = dist;
-        const mag = dist || 1;
-        v = { x: dx / mag, y: dy / mag };
-      }
-
-      const sprite = this.add.circle(
-        this.hero.x,
-        this.hero.y,
-        PROJECTILE_RADIUS,
-        0x66ccff,
-      );
-      this.physics.add.existing(sprite);
-      sprite.setDepth(12);
-      sprite.body.setVelocity(v.x * PROJECTILE_SPEED, v.y * PROJECTILE_SPEED);
-
-      this.projectiles.push({
-        sprite,
-        startX: this.hero.x,
-        startY: this.hero.y,
-        weaponDef,
-        ammoDef,
-        imbue,
-      });
-    });
+    performRangedAttackImpl(this, now);
   }
 
   updateProjectiles() {
-    const grid = this.fogGrid;
-    const remaining = [];
-
-    for (const proj of this.projectiles) {
-      const traveled = Math.hypot(
-        proj.sprite.x - proj.startX,
-        proj.sprite.y - proj.startY,
-      );
-      const tileX = Math.floor(proj.sprite.x / TILE_SIZE);
-      const tileY = Math.floor(proj.sprite.y / TILE_SIZE);
-      const outOfBounds =
-        tileX < 0 ||
-        tileY < 0 ||
-        tileY >= grid.length ||
-        tileX >= grid[0].length;
-      const hitWall = !outOfBounds && grid[tileY][tileX] === WALL;
-
-      const fogState = this.fogState.state;
-      const projVisible = !outOfBounds && fogState[tileY][tileX] === 2;
-      proj.sprite.setVisible(projVisible);
-
-      if (traveled >= this.playerRangedRange || outOfBounds || hitWall) {
-        proj.sprite.destroy();
-        if (proj.imbue && !this.pendingWeaponImbue) {
-          this.pendingWeaponImbue = proj.imbue;
-        }
-        continue;
-      }
-
-      let hit = false;
-      for (const enemy of this.enemies) {
-        const dist = Math.hypot(
-          enemy.sprite.x - proj.sprite.x,
-          enemy.sprite.y - proj.sprite.y,
-        );
-        if (dist <= PROJECTILE_RADIUS + 14 && this.isEnemyVisible(enemy)) {
-          const isCrit = rollCritical(
-            enemy.state !== "chase",
-            proj.imbue?.critChanceBonus || 0,
-          );
-          let rawDamage =
-            getEffectivePlayerRangedDamage(this) *
-            (isCrit ? CRIT_MULTIPLIER : 1);
-
-          if (proj.weaponDef?.varianceDice) {
-            rawDamage = applyDiceVariance(
-              rawDamage,
-              proj.weaponDef.varianceDice,
-            );
-          }
-
-          rawDamage = applyElementalResistance(
-            rawDamage,
-            proj.weaponDef?.damageType,
-            enemy.resistances,
-          );
-
-          this.damageEnemy(enemy, computeDamage(rawDamage, enemy.defense));
-
-          if (enemy.hp > 0) {
-            applyStatusEffect(this,
-              enemy.statusEffects,
-              rollStatusEffect(proj.weaponDef),
-            );
-            applyStatusEffect(this,
-              enemy.statusEffects,
-              rollStatusEffect(proj.ammoDef),
-            );
-            if (proj.imbue)
-              applyStatusEffect(this,
-                enemy.statusEffects,
-                rollStatusEffect(proj.imbue),
-              );
-          }
-          hit = true;
-          break;
-        }
-      }
-      if (hit) {
-        proj.sprite.destroy();
-        continue;
-      }
-
-      remaining.push(proj);
-    }
-
-    this.projectiles = remaining;
+    updateProjectilesImpl(this);
   }
 
   useHotbarSlot(slotIndex) {
@@ -1897,435 +1594,47 @@ export default class MainScene extends Phaser.Scene {
   }
 
   knockbackEnemyIfClear(enemy, dx, dy) {
-    const newX = enemy.sprite.x + dx;
-    const newY = enemy.sprite.y + dy;
-    const tileX = Math.floor(newX / TILE_SIZE);
-    const tileY = Math.floor(newY / TILE_SIZE);
-    const grid = this.fogGrid;
-    if (
-      tileY < 0 ||
-      tileX < 0 ||
-      tileY >= grid.length ||
-      tileX >= grid[0].length
-    )
-      return;
-    if (grid[tileY][tileX] === WALL) return;
-    enemy.sprite.x = newX;
-    enemy.sprite.y = newY;
+    knockbackEnemyIfClearImpl(this, enemy, dx, dy);
   }
 
   updateShieldBash() {
-    const ds = this.dashState;
-    const traveled = Math.hypot(
-      this.hero.x - ds.startX,
-      this.hero.y - ds.startY,
-    );
-    const abilityDamage = this.computeAbilityDamage(ds.def);
-
-    for (const enemy of this.enemies) {
-      if (ds.hitEnemyIds.has(enemy)) continue;
-      const dist = Math.hypot(
-        enemy.sprite.x - this.hero.x,
-        enemy.sprite.y - this.hero.y,
-      );
-      if (dist <= 24) {
-        const rawDamage = applyElementalResistance(
-          abilityDamage,
-          ds.def.damageType,
-          enemy.resistances,
-        );
-        this.damageEnemy(enemy, computeDamage(rawDamage, enemy.defense));
-        ds.hitEnemyIds.add(enemy);
-        this.knockbackEnemyIfClear(
-          enemy,
-          ds.dirX * ds.def.knockbackDistance,
-          ds.dirY * ds.def.knockbackDistance,
-        );
-      }
-    }
-
-    const stoppedByWall =
-      this.hero.body.velocity.x === 0 && this.hero.body.velocity.y === 0;
-    if (traveled >= ds.def.dashDistance || stoppedByWall) {
-      this.hero.setVelocity(0, 0);
-      this.dashState = null;
-    }
+    updateShieldBashImpl(this);
   }
 
   computeReachableFloorTiles(originX, originY) {
-    const grid = this.fogGrid;
-    const height = grid.length;
-    const width = grid[0].length;
-    const visited = new Set();
-    const queue = [{ x: originX, y: originY }];
-    visited.add(originX + "," + originY);
-
-    while (queue.length > 0) {
-      const { x, y } = queue.shift();
-      for (const [dx, dy] of [
-        [0, -1],
-        [0, 1],
-        [-1, 0],
-        [1, 0],
-      ]) {
-        const nx = x + dx,
-          ny = y + dy;
-        if (nx < 0 || ny < 0 || nx >= width || ny >= height) continue;
-        const key = nx + "," + ny;
-        if (visited.has(key) || grid[ny][nx] === WALL) continue;
-        visited.add(key);
-        queue.push({ x: nx, y: ny });
-      }
-    }
-    return visited;
+    return computeReachableFloorTilesImpl(this, originX, originY);
   }
 
   explodeAbilityProjectile(def, x, y) {
-    const abilityDamage = this.computeAbilityDamage(def);
-    for (const enemy of this.enemies) {
-      if (!this.isEnemyVisible(enemy)) continue;
-      const dist = Math.hypot(enemy.sprite.x - x, enemy.sprite.y - y);
-      if (dist > def.radius) continue;
-      const rawDamage = applyElementalResistance(
-        abilityDamage,
-        def.damageType,
-        enemy.resistances,
-      );
-      this.damageEnemy(enemy, computeDamage(rawDamage, enemy.defense));
-      if (enemy.hp > 0) {
-        applyStatusEffect(this, enemy.statusEffects, rollStatusEffect(def));
-      }
-    }
-
-    const circle = this.add.circle(x, y, 10, 0xff6600, 0.5);
-    circle.setDepth(14);
-    this.tweens.add({
-      targets: circle,
-      radius: def.radius,
-      alpha: 0,
-      duration: 300,
-      onComplete: () => circle.destroy(),
-    });
+    explodeAbilityProjectileImpl(this, def, x, y);
   }
 
   computeBossRoomTiles() {
-    if (!this.bossDoorTile || this.bossRoomOpen) return new Set();
-
-    const centerTileX = Math.floor(this.hero.x / TILE_SIZE);
-    const centerTileY = Math.floor(this.hero.y / TILE_SIZE);
-
-    const reachableNow = this.computeReachableFloorTiles(
-      centerTileX,
-      centerTileY,
-    );
-
-    const { x: dx, y: dy } = this.bossDoorTile;
-    const original = this.fogGrid[dy][dx];
-    this.fogGrid[dy][dx] = 0;
-    const reachableIfOpen = this.computeReachableFloorTiles(
-      centerTileX,
-      centerTileY,
-    );
-    this.fogGrid[dy][dx] = original;
-
-    const bossRoomTiles = new Set();
-    for (const key of reachableIfOpen) {
-      if (!reachableNow.has(key)) bossRoomTiles.add(key);
-    }
-    return bossRoomTiles;
+    return computeBossRoomTilesImpl(this);
   }
 
   updateAbilityProjectiles() {
-    const grid = this.fogGrid;
-    const remaining = [];
-
-    for (const proj of this.abilityProjectiles) {
-      const traveled = Math.hypot(
-        proj.sprite.x - proj.startX,
-        proj.sprite.y - proj.startY,
-      );
-      const tileX = Math.floor(proj.sprite.x / TILE_SIZE);
-      const tileY = Math.floor(proj.sprite.y / TILE_SIZE);
-      const outOfBounds =
-        tileX < 0 ||
-        tileY < 0 ||
-        tileY >= grid.length ||
-        tileX >= grid[0].length;
-      const hitWall = !outOfBounds && grid[tileY][tileX] === WALL;
-
-      const fogState = this.fogState.state;
-      proj.sprite.setVisible(!outOfBounds && fogState[tileY][tileX] === 2);
-
-      if (
-        traveled >= (proj.def.maxDistance ?? this.playerRangedRange) ||
-        outOfBounds ||
-        hitWall
-      ) {
-        proj.sprite.destroy();
-        continue;
-      }
-
-      if (proj.def.effectType === "pierce") {
-        for (const enemy of this.enemies) {
-          if (proj.hitEnemyIds.has(enemy)) continue;
-          const dist = Math.hypot(
-            enemy.sprite.x - proj.sprite.x,
-            enemy.sprite.y - proj.sprite.y,
-          );
-          if (dist <= 14 && this.isEnemyVisible(enemy)) {
-            const abilityDamage = this.computeAbilityDamage(proj.def);
-            const rawDamage = applyElementalResistance(
-              abilityDamage,
-              proj.def.damageType,
-              enemy.resistances,
-            );
-            this.damageEnemy(enemy, computeDamage(rawDamage, enemy.defense));
-            if (enemy.hp > 0) {
-              applyStatusEffect(this,
-                enemy.statusEffects,
-                rollStatusEffect(proj.def),
-              );
-            }
-            proj.hitEnemyIds.add(enemy);
-            proj.pierceCount++;
-          }
-        }
-        if (
-          proj.def.maxPierceCount &&
-          proj.pierceCount >= proj.def.maxPierceCount
-        ) {
-          proj.sprite.destroy();
-          continue;
-        }
-        remaining.push(proj);
-        continue;
-      }
-
-      let hit = false;
-      for (const enemy of this.enemies) {
-        const dist = Math.hypot(
-          enemy.sprite.x - proj.sprite.x,
-          enemy.sprite.y - proj.sprite.y,
-        );
-        if (dist <= 14 && this.isEnemyVisible(enemy)) {
-          this.explodeAbilityProjectile(proj.def, proj.sprite.x, proj.sprite.y);
-          hit = true;
-          break;
-        }
-      }
-      if (hit) {
-        proj.sprite.destroy();
-        continue;
-      }
-
-      remaining.push(proj);
-    }
-
-    this.abilityProjectiles = remaining;
+    updateAbilityProjectilesImpl(this);
   }
 
   updateZones(now) {
-    const remaining = [];
-    for (const zone of this.zones) {
-      if (now >= zone.expiresAt) {
-        zone.sprite.destroy();
-        continue;
-      }
-      if (now >= zone.nextTickAt) {
-        zone.nextTickAt = now + zone.tickIntervalMs;
-        for (const enemy of this.enemies) {
-          const dist = Math.hypot(
-            enemy.sprite.x - zone.x,
-            enemy.sprite.y - zone.y,
-          );
-          if (dist <= zone.radius) {
-            const dmg = applyElementalResistance(
-              zone.damagePerTick,
-              zone.damageType,
-              enemy.resistances,
-            );
-            this.damageEnemy(enemy, dmg);
-          }
-        }
-      }
-      remaining.push(zone);
-    }
-    this.zones = remaining;
+    updateZonesImpl(this, now);
   }
 
   updateTraps(now) {
-    const remaining = [];
-    for (const trap of this.traps) {
-      if (now >= trap.expiresAt) {
-        trap.sprite.destroy();
-        continue;
-      }
-      let triggered = false;
-      for (const enemy of this.enemies) {
-        const dist = Math.hypot(
-          enemy.sprite.x - trap.x,
-          enemy.sprite.y - trap.y,
-        );
-        if (dist <= trap.triggerRadius) {
-          applyStatusEffect(this,
-            enemy.statusEffects,
-            rollStatusEffect({ inflictsEffect: trap.inflictsEffect }),
-          );
-          trap.sprite.destroy();
-          triggered = true;
-          break;
-        }
-      }
-      if (!triggered) remaining.push(trap);
-    }
-    this.traps = remaining;
+    updateTrapsImpl(this, now);
   }
 
   updateBoomerangs() {
-    const remaining = [];
-    for (const b of this.boomerangs) {
-      if (!b.returning) {
-        const traveled = Math.hypot(
-          b.sprite.x - b.startX,
-          b.sprite.y - b.startY,
-        );
-        if (traveled >= b.def.maxDistance) b.returning = true;
-      } else {
-        const dx = this.hero.x - b.sprite.x;
-        const dy = this.hero.y - b.sprite.y;
-        const dist = Math.hypot(dx, dy);
-        if (dist < 20) {
-          b.sprite.destroy();
-          continue;
-        }
-        const mag = dist || 1;
-        b.sprite.body.setVelocity(
-          (dx / mag) * b.def.projectileSpeed,
-          (dy / mag) * b.def.projectileSpeed,
-        );
-      }
-      for (const enemy of this.enemies) {
-        if (b.hitEnemyIds.has(enemy)) continue;
-        const dist = Math.hypot(
-          enemy.sprite.x - b.sprite.x,
-          enemy.sprite.y - b.sprite.y,
-        );
-        if (dist <= 14 && this.isEnemyVisible(enemy)) {
-          const abilityDamage = this.computeAbilityDamage(b.def);
-          const rawDamage = applyElementalResistance(
-            abilityDamage,
-            b.def.damageType,
-            enemy.resistances,
-          );
-          this.damageEnemy(enemy, computeDamage(rawDamage, enemy.defense));
-          b.hitEnemyIds.add(enemy);
-        }
-      }
-      remaining.push(b);
-    }
-    this.boomerangs = remaining;
+    updateBoomerangsImpl(this);
   }
-
   assignHotbarSlot(slotIndex, payload) {
     assignHotbarSlotImpl(this, slotIndex, payload);
   }
 
   useFury() {
-    if (this.furyKillCount < FURY_KILLS_REQUIRED) {
-      this.showLootToast(
-        `Furie pas encore prête (${this.furyKillCount}/${FURY_KILLS_REQUIRED} ennemis)`,
-      );
-      return;
-    }
-
-    const heroArchetype = resolveHeroStatsOverride(
-      this.heroSpriteKey,
-    )?.archetype;
-    const fury = resolveFuryDef(heroArchetype);
-    if (!fury) {
-      this.showLootToast("Aucune furie pour cet archétype");
-      return;
-    }
-
-    this.furyKillCount = 0;
-    this.events.emit("fury-progress", {
-      count: 0,
-      required: FURY_KILLS_REQUIRED,
-    });
-
-    if (fury.aoeDamage) {
-      for (const enemy of this.enemies) {
-        if (!this.isEnemyVisible(enemy)) continue;
-        const dist = Math.hypot(
-          enemy.sprite.x - this.hero.x,
-          enemy.sprite.y - this.hero.y,
-        );
-        if (dist > fury.aoeRadius) continue;
-        const rawDamage = applyElementalResistance(
-          fury.aoeDamage,
-          fury.damageType,
-          enemy.resistances,
-        );
-        this.damageEnemy(enemy, computeDamage(rawDamage, enemy.defense));
-      }
-      const circle = this.add.circle(
-        this.hero.x,
-        this.hero.y,
-        10,
-        0xff2200,
-        0.5,
-      );
-      circle.setDepth(14);
-      this.tweens.add({
-        targets: circle,
-        radius: fury.aoeRadius,
-        alpha: 0,
-        duration: 400,
-        onComplete: () => circle.destroy(),
-      });
-    }
-
-    if (fury.buffStatModifiers) {
-      applyStatusEffect(this, this.playerStatusEffects, {
-        type: fury.id,
-        kind: "modifier",
-        statModifiers: fury.buffStatModifiers,
-        durationMs: fury.buffDurationMs,
-      });
-    }
-
-    if (fury.healPercent) {
-      this.playerHp = Math.min(
-        this.playerMaxHp,
-        this.playerHp + (this.playerMaxHp - this.playerHp) * fury.healPercent,
-      );
-      this.playerMana = Math.min(
-        this.playerMaxMana,
-        this.playerMana +
-          (this.playerMaxMana - this.playerMana) * fury.healPercent,
-      );
-      this.playerStamina = Math.min(
-        this.playerMaxStamina,
-        this.playerStamina +
-          (this.playerMaxStamina - this.playerStamina) * fury.healPercent,
-      );
-      this.events.emit("player-hp-changed", {
-        hp: this.playerHp,
-        maxHp: this.playerMaxHp,
-      });
-      this.events.emit("player-mana-changed", {
-        mana: this.playerMana,
-        maxMana: this.playerMaxMana,
-      });
-      this.events.emit("player-stamina-changed", {
-        stamina: this.playerStamina,
-        maxStamina: this.playerMaxStamina,
-      });
-    }
-
-    this.showLootToast(`${fury.name} déclenchée !`);
+    useFuryImpl(this);
   }
-
   damageEnemy(enemy, amount) {
     if (enemy.state !== "chase") {
       enemy.state = "chase";
