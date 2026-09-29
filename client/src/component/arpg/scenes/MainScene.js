@@ -76,6 +76,7 @@ import {
   takeAllChestItems as takeAllChestItemsImpl,
   closeChestScreen as closeChestScreenImpl,
   spawnLootChest,
+  spawnLootCorpse,
 } from "./exploration";
 import {
   updateEnemyDecisions,
@@ -141,6 +142,7 @@ import {
   FURY_KILLS_REQUIRED,
   DEFAULT_ATTRIBUTES,
   resolveVisualEffect,
+  CORPSE_EMPTY_TINT,
 } from "./gameConstants";
 
 const VISION_RADIUS_DEFAULT = 6; // repli si le profil d'archetype (cf. HERO_STATS_PROFILES) ne definit pas visionRadius
@@ -282,6 +284,16 @@ export default class MainScene extends Phaser.Scene {
           frames: f.attackUp,
         }),
         frameRate: 10,
+        repeat: 0,
+      });
+    }
+    if (f.death) {
+      this.anims.create({
+        key: prefix + "death",
+        frames: this.anims.generateFrameNumbers(textureKey, {
+          frames: f.death,
+        }),
+        frameRate: 8,
         repeat: 0,
       });
     }
@@ -1695,6 +1707,35 @@ export default class MainScene extends Phaser.Scene {
           this.showLootToast("Furie prête !");
         }
       }
+
+      // Anim de mort : seulement pour les ennemis dont l'entree
+      // SPRITE_REGISTRY definit un champ "death" (createAnimationsForEntry
+      // ne cree l'anim prefix+"death" que dans ce cas). Si presente, le
+      // sprite de l'ennemi devient lui-meme le prop de butin permanent (a
+      // la place d'un coffre generique separe) via spawnLootCorpse - le
+      // cadavre est toujours cree (meme sans aucun butin) et ne disparait
+      // JAMAIS, contrairement a un coffre : il reste affiche a vie une
+      // fois pille, juste legerement grise (cf. plus bas et
+      // exploration.js) pour indiquer qu'il n'y a plus rien a prendre.
+      // corpseChest garde la reference vers l'entree scene.chests pour
+      // pouvoir y fusionner un 2e lot de butin (cas boss ci-dessous) sans
+      // jamais pousser deux fois le meme sprite dans scene.chests.
+      const hasDeathAnim = this.anims.exists(enemy.spriteKey + "-death");
+      let corpseChest = null;
+      if (hasDeathAnim) {
+        enemy.sprite.anims.play(enemy.spriteKey + "-death");
+        spawnLootCorpse(this, enemy, []);
+        corpseChest = this.chests[this.chests.length - 1];
+      }
+      const spawnOrMergeLoot = (items) => {
+        if (!items || items.length === 0) return;
+        if (corpseChest) {
+          corpseChest.lootItems.push(...items);
+        } else {
+          spawnLootChest(this, enemy.sprite.x, enemy.sprite.y, items);
+        }
+      };
+
       const lootItems = [...(enemy.drops || [])];
 
       if (!enemy.isBoss && enemy.questLoot) {
@@ -1713,9 +1754,7 @@ export default class MainScene extends Phaser.Scene {
         }
       }
 
-      if (lootItems.length > 0) {
-        spawnLootChest(this, enemy.sprite.x, enemy.sprite.y, lootItems);
-      }
+      spawnOrMergeLoot(lootItems);
 
       if (enemy.isSecretRoomGuard && this.secretRewardLocked) {
         const anyGuardAlive = this.enemies.some(
@@ -1754,8 +1793,12 @@ export default class MainScene extends Phaser.Scene {
           });
         }
         if (bossLootItems.length > 0) {
-          spawnLootChest(this, enemy.sprite.x, enemy.sprite.y, bossLootItems);
-          this.showLootToast("Le boss a laissé tomber un coffre de butin !");
+          spawnOrMergeLoot(bossLootItems);
+          this.showLootToast(
+            hasDeathAnim
+              ? "Le corps du boss contient du butin !"
+              : "Le boss a laissé tomber un coffre de butin !",
+          );
         }
 
         let anyDefeatBossUpdated = false;
@@ -1798,7 +1841,20 @@ export default class MainScene extends Phaser.Scene {
       }
       if (enemy.visualEmitter) enemy.visualEmitter.destroy();
 
-      enemy.sprite.destroy();
+      if (corpseChest) {
+        // le sprite de l'ennemi devient corpseChest.sprite (cf.
+        // spawnLootCorpse/exploration.js) - ne surtout pas le detruire ici,
+        // il reste affiche a vie (fige sur la derniere frame de "death"),
+        // avec ou sans butin. S'il n'y a rien a prendre (lootItems ET
+        // bossLootItems vides, merges dans corpseChest.lootItems ci-dessus),
+        // grise-le legerement pour indiquer qu'il n'y a plus rien a looter
+        // - meme teinte que le "deja pille" gere dans exploration.js.
+        if (corpseChest.lootItems.length === 0) {
+          corpseChest.sprite.setTint(CORPSE_EMPTY_TINT);
+        }
+      } else {
+        enemy.sprite.destroy();
+      }
       this.enemies = this.enemies.filter((e) => e !== enemy);
 
       if (enemy.isBoss) {

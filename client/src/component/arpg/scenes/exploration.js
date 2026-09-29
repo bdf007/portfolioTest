@@ -13,7 +13,7 @@ import {
   resolveInstanceToolEffectSources,
 } from "../gemSockets";
 
-import { TILE_SIZE } from "./gameConstants";
+import { TILE_SIZE, CORPSE_EMPTY_TINT } from "./gameConstants";
 
 function pickWeightedGem(entries) {
   const totalWeight = entries.reduce((s, e) => s + (e.weight || 1), 0);
@@ -431,6 +431,14 @@ export function openChestScreen(scene, chest) {
         chest.sprite.destroy();
         chest.sprite = null;
       }
+    } else if (chest.propType === "corpse") {
+      // un cadavre ne disparait JAMAIS, contrairement a une caisse/un
+      // coffre - meme sans aucun butin (verif de securite ici, deja gere
+      // normalement des la mort de l'ennemi dans MainScene.js
+      // damageEnemy) on se contente de le grise legerement
+      if (chest.lootItems.length === 0 && chest.sprite) {
+        chest.sprite.setTint(CORPSE_EMPTY_TINT);
+      }
     } else {
       chest.sprite.setFrame(chest.variant.openFrame);
     }
@@ -467,6 +475,8 @@ export function takeChestItem(scene, itemIndex) {
     if (chest.propType === "crate" && chest.sprite) {
       chest.sprite.destroy();
       chest.sprite = null;
+    } else if (chest.propType === "corpse" && chest.sprite) {
+      chest.sprite.setTint(CORPSE_EMPTY_TINT);
     }
     closeChestScreen(scene);
     return;
@@ -492,6 +502,8 @@ export function takeAllChestItems(scene) {
   if (chest.propType === "crate" && chest.sprite) {
     chest.sprite.destroy();
     chest.sprite = null;
+  } else if (chest.propType === "corpse" && chest.sprite) {
+    chest.sprite.setTint(CORPSE_EMPTY_TINT);
   }
   closeChestScreen(scene);
 }
@@ -538,6 +550,42 @@ export function spawnLootChest(scene, pixelX, pixelY, lootItems) {
     variant,
     ephemeral: true,
     propType: "chest",
+  });
+  scene.nextLootChestId++;
+}
+
+/**
+ * Variante de spawnLootChest pour les ennemis dont l'entree
+ * SPRITE_REGISTRY definit une animation "death" : au lieu de faire
+ * apparaitre un coffre generique separe, reutilise le sprite de l'ennemi
+ * (qui vient de jouer son animation de mort, cf. MainScene.js damageEnemy)
+ * comme prop de butin directement interactible - meme systeme d'ouverture
+ * que les coffres (openChestScreen/takeChestItem/takeAllChestItems), juste
+ * un propType different ("corpse") pour ne jamais tenter de lui appliquer
+ * une frame "ouverte" (aucun variant, contrairement a un vrai coffre).
+ * Contrairement a spawnLootChest, `lootItems` peut etre vide ([]) - le
+ * cadavre est cree dans tous les cas (meme sans butin du tout), jamais
+ * detruit ensuite (cf. openChestScreen/takeChestItem/takeAllChestItems),
+ * seulement grise via CORPSE_EMPTY_TINT quand il n'a plus rien dessus.
+ */
+export function spawnLootCorpse(scene, enemy, lootItems) {
+  const sprite = enemy.sprite;
+  // desactive la physique (collision avec enemyGroup/summonGroup, cf.
+  // MainScene.js create()) sans toucher a la visibilite ni detruire le
+  // sprite - un cadavre ne doit plus bloquer/pousser les ennemis et
+  // invocations encore vivants, contrairement a l'ennemi qu'il etait
+  if (sprite.body) sprite.body.enable = false;
+
+  scene.chests.push({
+    sprite,
+    index: -1 - scene.nextLootChestId,
+    opened: false,
+    lootItems,
+    x: Math.round(sprite.x / TILE_SIZE - 0.5),
+    y: Math.round(sprite.y / TILE_SIZE - 0.5),
+    variant: null,
+    ephemeral: true,
+    propType: "corpse",
   });
   scene.nextLootChestId++;
 }

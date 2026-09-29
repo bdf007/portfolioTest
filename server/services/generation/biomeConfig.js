@@ -29,7 +29,7 @@ const BIOMES = [
     generator: "drunkardwalk",
     tileset: ["muddyCave_0_0", "muddyCaveV2_0_0"],
     enemyBaseCount: 5,
-    enemyTypes: ["angryBrownMushroom", "gnome", "angryTrent", "yellowSlime"],
+    enemyTypes: ["grayGriblin", "gnome", "angryTrent", "silverSpectrelin"],
     decorationConfig: {
       count: [40, 60], // genereux - c'est fait pour remplir le biome
       decorTypes: [
@@ -93,7 +93,7 @@ const BIOMES = [
     generator: "cellular",
     tileset: ["muddyCave_0_0", "muddyCaveV2_0_0"],
     enemyBaseCount: 10,
-    enemyTypes: ["angryBrownMushroom", "gnome", "angryTrent", "yellowSlime"],
+    enemyTypes: ["redManditaure", "gnome", "angryTrent", "blackManditaure"],
     decorationConfig: {
       count: [40, 60], // genereux - c'est fait pour remplir le biome
       decorTypes: [

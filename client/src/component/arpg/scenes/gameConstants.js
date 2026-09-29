@@ -15,6 +15,11 @@ export const ENEMY_RANGED_STOP_DISTANCE = 180;
 export const ENEMY_RANGED_ATTACK_RANGE = 260;
 export const ENEMY_PROJECTILE_SPEED = 220;
 export const ENEMY_PROJECTILE_MAX_DISTANCE = 300;
+// teinte appliquee (Phaser setTint, multiplicatif) au cadavre d'un ennemi
+// (prop de butin permanent, cf. spawnLootCorpse dans exploration.js) une
+// fois qu'il n'y a plus aucun butin dessus - legerement grise, jamais
+// detruit contrairement a un coffre classique
+export const CORPSE_EMPTY_TINT = 0x999999;
 
 export const DEFAULT_ATTRIBUTES = {
   force: 0,

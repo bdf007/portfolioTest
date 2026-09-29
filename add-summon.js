@@ -213,12 +213,8 @@ async function main() {
   ).trim();
   const summonType = summonTypeInput || key;
 
-  const coreFrameIndex = (
-    await ask("Frame index du core dans MONSTER_LOOTS_FRAMES : ")
-  ).trim();
-  const scrollFrameIndex = (
-    await ask("Frame index du scroll dans ICON_SHEET_1_FRAMES : ")
-  ).trim();
+  const coreFrameIndex = "23";
+  const scrollFrameIndex = "91";
 
   const tintInput = (
     await ask(`Couleur de teinte (Entree = "${DEFAULT_TINT_COLOR}") : `)
