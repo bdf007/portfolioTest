@@ -23,7 +23,8 @@ function resolveHeroLabel(heroId) {
 /**
  * Écran "Parties en cours" - même pattern que StartScreen.jsx de Skip
  * the Dungeon : liste des parties en cours (reprendre/abandonner) plus
- * un bouton pour en démarrer une nouvelle.
+ * un bouton pour en démarrer une nouvelle, et les boutons Bestiaire /
+ * Biomes (outils de debug) juste en dessous.
  */
 export default function GameListScreen({
   games,
@@ -32,6 +33,8 @@ export default function GameListScreen({
   onAbandon,
   onDelete,
   onNewGame,
+  onOpenBestiary,
+  onOpenBiomes,
 }) {
   return (
     <div
@@ -140,6 +143,37 @@ export default function GameListScreen({
       >
         Nouvelle partie
       </button>
+
+      <div style={{ display: "flex", gap: 10 }}>
+        <button
+          onClick={onOpenBestiary}
+          style={{
+            padding: "8px 16px",
+            fontSize: 13,
+            borderRadius: 6,
+            border: "1px solid #8a7050",
+            background: "rgba(58,47,32,0.85)",
+            color: "#f0e6d0",
+            cursor: "pointer",
+          }}
+        >
+          📖 Bestiaire
+        </button>
+        <button
+          onClick={onOpenBiomes}
+          style={{
+            padding: "8px 16px",
+            fontSize: 13,
+            borderRadius: 6,
+            border: "1px solid #8a7050",
+            background: "rgba(58,47,32,0.85)",
+            color: "#f0e6d0",
+            cursor: "pointer",
+          }}
+        >
+          🗺️ Biomes
+        </button>
+      </div>
     </div>
   );
 }

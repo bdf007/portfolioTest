@@ -5,6 +5,8 @@ import MainScene from "./scenes/MainScene";
 import Minimap from "./Minimap";
 import CharacterSelectScreen from "./CharacterSelectScreen";
 import GameListScreen from "./GameListScreen";
+import BestiaryScreen from "./BestiaryScreen";
+import BiomeGalleryScreen from "./BiomeGalleryScreen";
 import InventoryScreen, { ItemIcon, hasIconFrame } from "./InventoryScreen";
 import QuestsScreen from "./QuestsScreen";
 import TravelHubScreen from "./TravelHubScreen";
@@ -1027,15 +1029,26 @@ export default function Arpg() {
 
   if (phase === "picker") {
     return (
-      <GameListScreen
-        games={games}
-        username={username}
-        onResume={handleResumeGame}
-        onAbandon={handleAbandonGame}
-        onDelete={handleDeleteGame}
-        onNewGame={handleNewGame}
-      />
+      <div style={{ position: "relative" }}>
+        <GameListScreen
+          games={games}
+          username={username}
+          onResume={handleResumeGame}
+          onAbandon={handleAbandonGame}
+          onDelete={handleDeleteGame}
+          onNewGame={handleNewGame}
+          onOpenBestiary={() => setPhase("bestiary")}
+          onOpenBiomes={() => setPhase("biomes")}
+        />
+      </div>
     );
+  }
+
+  if (phase === "bestiary") {
+    return <BestiaryScreen onClose={() => setPhase("picker")} />;
+  }
+  if (phase === "biomes") {
+    return <BiomeGalleryScreen onClose={() => setPhase("picker")} />;
   }
 
   if (phase === "select") {

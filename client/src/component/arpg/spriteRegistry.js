@@ -97,7 +97,6 @@ import mudGolemSpritesheet from "../../assets/ennemies/mud_golem.png";
 import redBeetleSpritesheet from "../../assets/ennemies/red_beetle.png";
 import pinkOgreSpritesheet from "../../assets/ennemies/pink_ogre.png";
 import alien1Spritesheet from "../../assets/ennemies/alien-1.png";
-import alien2Spritesheet from "../../assets/ennemies/alien-2.png";
 import alien3Spritesheet from "../../assets/ennemies/alien-3.png";
 import alien4Spritesheet from "../../assets/ennemies/alien-4.png";
 import alien5Spritesheet from "../../assets/ennemies/alien-5.png";
@@ -984,6 +983,7 @@ function makeHeroEntry(
 }
 
 export const SPRITE_REGISTRY = {
+  // hero
   hero1: makeHeroEntry(
     "hero1",
     minisHeroesSpritesheet,
@@ -1171,6 +1171,8 @@ export const SPRITE_REGISTRY = {
     16,
   ),
 
+  // enemy and familiar sprites
+
   enemyDefault: {
     key: "hero1",
     displayName: "Default Enemy",
@@ -1179,6 +1181,8 @@ export const SPRITE_REGISTRY = {
     frameHeight: HERO_FRAME_H,
     scale: 1,
     animations: STANDARD_ANIMATION_FRAMES,
+    sheetCols: 3,
+    sheetRows: 4,
     hitbox: computeSafeHitbox(HERO_FRAME_W, HERO_FRAME_H, 1),
   },
   wolfFamiliar: {
@@ -1193,6 +1197,7 @@ export const SPRITE_REGISTRY = {
     sheetRows: 16,
     hitbox: computeSafeHitbox(48, 48, 1),
   },
+
   angryTrent: {
     key: "angryTrent",
     displayName: "Angry Trent",
@@ -1282,19 +1287,6 @@ export const SPRITE_REGISTRY = {
     animations: FULL_ANIMATION_FRAMES,
     sheetCols: 4,
     sheetRows: 16,
-    hitbox: computeSafeHitbox(48, 48, 1),
-  },
-  alien2: {
-    key: "alien2",
-    displayName: "Alien 2",
-    path: alien2Spritesheet,
-    frameWidth: 48,
-    frameHeight: 48,
-    scale: 1,
-    lootTable: "alien2Drop",
-    sheetCols: 4,
-    sheetRows: 16,
-    animations: FULL_ANIMATION_FRAMES,
     hitbox: computeSafeHitbox(48, 48, 1),
   },
   alien3: {
@@ -1474,6 +1466,8 @@ export const SPRITE_REGISTRY = {
     frameHeight: 96,
     scale: 1,
     animations: FULL_ANIMATION_FRAMES,
+    sheetCols: 4,
+    sheetRows: 16,
     lootTable: "beequeenDrop",
     hitbox: computeSafeHitbox(96, 96, 1),
   },
@@ -3035,14 +3029,14 @@ export const SPRITE_REGISTRY = {
     key: "greenGemmacrabe",
     displayName: "Gemmacrabe",
     path: greenGemmacrabeSpritesheet,
-    frameWidth: 48,
-    frameHeight: 48,
-    scale: 1,
+    frameWidth: 96,
+    frameHeight: 96,
+    scale: 0.5,
     lootTable: "greenGemmacrabeDrop",
     sheetCols: 4,
     sheetRows: 16,
     animations: FULL_ANIMATION_FRAMES,
-    hitbox: computeSafeHitbox(48, 48, 1),
+    hitbox: computeSafeHitbox(96, 96, 0.5),
   },
   redGemmacrabe: {
     key: "redGemmacrabe",
@@ -3355,6 +3349,8 @@ export const SPRITE_REGISTRY = {
     scale: 0.7,
     lootTable: "monks1Drop",
     animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_1,
+    sheetCols: 12,
+    sheetRows: 4,
     hitbox: computeSafeHitbox(48, 48, 0.7),
   },
   monks2: {
@@ -3365,6 +3361,8 @@ export const SPRITE_REGISTRY = {
     frameHeight: 48,
     scale: 0.7,
     lootTable: "monks2Drop",
+    sheetCols: 12,
+    sheetRows: 4,
     animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_2,
     hitbox: computeSafeHitbox(48, 48, 0.7),
   },
@@ -3376,6 +3374,8 @@ export const SPRITE_REGISTRY = {
     frameHeight: 48,
     scale: 0.7,
     lootTable: "monks3Drop",
+    sheetCols: 12,
+    sheetRows: 4,
     animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_3,
     hitbox: computeSafeHitbox(48, 48, 0.7),
   },
@@ -3387,6 +3387,8 @@ export const SPRITE_REGISTRY = {
     frameHeight: 48,
     scale: 0.7,
     lootTable: "monks4Drop",
+    sheetCols: 12,
+    sheetRows: 4,
     animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_4,
     hitbox: computeSafeHitbox(48, 48, 0.7),
   },
@@ -3398,6 +3400,8 @@ export const SPRITE_REGISTRY = {
     frameHeight: 48,
     scale: 0.7,
     lootTable: "elementalFairy1Drop",
+    sheetCols: 12,
+    sheetRows: 8,
     animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_1,
     hitbox: computeSafeHitbox(48, 48, 0.7),
   },
@@ -3409,6 +3413,8 @@ export const SPRITE_REGISTRY = {
     frameHeight: 48,
     scale: 0.7,
     lootTable: "elementalFairy2Drop",
+    sheetCols: 12,
+    sheetRows: 8,
     animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_2,
     hitbox: computeSafeHitbox(48, 48, 0.7),
   },
@@ -3420,6 +3426,8 @@ export const SPRITE_REGISTRY = {
     frameHeight: 48,
     scale: 0.7,
     lootTable: "elementalFairy3Drop",
+    sheetCols: 12,
+    sheetRows: 8,
     animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_3,
     hitbox: computeSafeHitbox(48, 48, 0.7),
   },
@@ -3431,6 +3439,8 @@ export const SPRITE_REGISTRY = {
     frameHeight: 48,
     scale: 0.7,
     lootTable: "elementalFairy4Drop",
+    sheetCols: 12,
+    sheetRows: 8,
     animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_4,
     hitbox: computeSafeHitbox(48, 48, 0.7),
   },
@@ -3442,6 +3452,8 @@ export const SPRITE_REGISTRY = {
     frameHeight: 48,
     scale: 0.7,
     lootTable: "elementalFairy5Drop",
+    sheetCols: 12,
+    sheetRows: 8,
     animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_5,
     hitbox: computeSafeHitbox(48, 48, 0.7),
   },
@@ -3453,6 +3465,8 @@ export const SPRITE_REGISTRY = {
     frameHeight: 48,
     scale: 0.7,
     lootTable: "elementalFairy6Drop",
+    sheetCols: 12,
+    sheetRows: 8,
     animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_6,
     hitbox: computeSafeHitbox(48, 48, 0.7),
   },
@@ -3464,6 +3478,8 @@ export const SPRITE_REGISTRY = {
     frameHeight: 48,
     scale: 0.7,
     lootTable: "elementalFairy7Drop",
+    sheetCols: 12,
+    sheetRows: 8,
     animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_7,
     hitbox: computeSafeHitbox(48, 48, 0.7),
   },
@@ -3475,6 +3491,8 @@ export const SPRITE_REGISTRY = {
     frameHeight: 48,
     scale: 0.7,
     lootTable: "elementalFairy8Drop",
+    sheetCols: 12,
+    sheetRows: 8,
     animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_8,
     hitbox: computeSafeHitbox(48, 48, 0.7),
   },
@@ -3486,6 +3504,8 @@ export const SPRITE_REGISTRY = {
     frameHeight: 48,
     scale: 0.7,
     lootTable: "elementalFairy9Drop",
+    sheetCols: 12,
+    sheetRows: 8,
     animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_1,
     hitbox: computeSafeHitbox(48, 48, 0.7),
   },
@@ -3497,6 +3517,8 @@ export const SPRITE_REGISTRY = {
     frameHeight: 48,
     scale: 0.7,
     lootTable: "elementalFairy10Drop",
+    sheetCols: 12,
+    sheetRows: 8,
     animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_2,
     hitbox: computeSafeHitbox(48, 48, 0.7),
   },
@@ -3508,6 +3530,8 @@ export const SPRITE_REGISTRY = {
     frameHeight: 48,
     scale: 0.7,
     lootTable: "elementalFairy11Drop",
+    sheetCols: 12,
+    sheetRows: 8,
     animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_3,
     hitbox: computeSafeHitbox(48, 48, 0.7),
   },
@@ -3519,6 +3543,8 @@ export const SPRITE_REGISTRY = {
     frameHeight: 48,
     scale: 0.7,
     lootTable: "elementalFairy12Drop",
+    sheetCols: 12,
+    sheetRows: 8,
     animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_4,
     hitbox: computeSafeHitbox(48, 48, 0.7),
   },
@@ -3530,6 +3556,8 @@ export const SPRITE_REGISTRY = {
     frameHeight: 48,
     scale: 0.7,
     lootTable: "elementalFairy13Drop",
+    sheetCols: 12,
+    sheetRows: 8,
     animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_5,
     hitbox: computeSafeHitbox(48, 48, 0.7),
   },
@@ -3541,6 +3569,8 @@ export const SPRITE_REGISTRY = {
     frameHeight: 48,
     scale: 0.7,
     lootTable: "elementalFairy14Drop",
+    sheetCols: 12,
+    sheetRows: 8,
     animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_6,
     hitbox: computeSafeHitbox(48, 48, 0.7),
   },
@@ -3552,6 +3582,8 @@ export const SPRITE_REGISTRY = {
     frameHeight: 48,
     scale: 0.7,
     lootTable: "elementalFairy15Drop",
+    sheetCols: 12,
+    sheetRows: 8,
     animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_7,
     hitbox: computeSafeHitbox(48, 48, 0.7),
   },
@@ -3563,6 +3595,8 @@ export const SPRITE_REGISTRY = {
     frameHeight: 48,
     scale: 0.7,
     lootTable: "elementalFairy16Drop",
+    sheetCols: 12,
+    sheetRows: 8,
     animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_8,
     hitbox: computeSafeHitbox(48, 48, 0.7),
   },
@@ -3574,6 +3608,8 @@ export const SPRITE_REGISTRY = {
     frameHeight: 48,
     scale: 0.7,
     lootTable: "fairy1Drop",
+    sheetCols: 12,
+    sheetRows: 8,
     animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_1,
     hitbox: computeSafeHitbox(48, 48, 0.7),
   },
@@ -3585,6 +3621,8 @@ export const SPRITE_REGISTRY = {
     frameHeight: 48,
     scale: 0.7,
     lootTable: "fairy2Drop",
+    sheetCols: 12,
+    sheetRows: 8,
     animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_2,
     hitbox: computeSafeHitbox(48, 48, 0.7),
   },
@@ -3596,6 +3634,8 @@ export const SPRITE_REGISTRY = {
     frameHeight: 48,
     scale: 0.7,
     lootTable: "fairy3Drop",
+    sheetCols: 12,
+    sheetRows: 8,
     animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_3,
     hitbox: computeSafeHitbox(48, 48, 0.7),
   },
@@ -3607,6 +3647,8 @@ export const SPRITE_REGISTRY = {
     frameHeight: 48,
     scale: 0.7,
     lootTable: "fairy4Drop",
+    sheetCols: 12,
+    sheetRows: 8,
     animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_4,
     hitbox: computeSafeHitbox(48, 48, 0.7),
   },
@@ -3618,6 +3660,8 @@ export const SPRITE_REGISTRY = {
     frameHeight: 48,
     scale: 0.7,
     lootTable: "fairy5Drop",
+    sheetCols: 12,
+    sheetRows: 8,
     animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_5,
     hitbox: computeSafeHitbox(48, 48, 0.7),
   },
@@ -3629,6 +3673,8 @@ export const SPRITE_REGISTRY = {
     frameHeight: 48,
     scale: 0.7,
     lootTable: "fairy6Drop",
+    sheetCols: 12,
+    sheetRows: 8,
     animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_6,
     hitbox: computeSafeHitbox(48, 48, 0.7),
   },
@@ -3640,6 +3686,8 @@ export const SPRITE_REGISTRY = {
     frameHeight: 48,
     scale: 0.7,
     lootTable: "fairy7Drop",
+    sheetCols: 12,
+    sheetRows: 8,
     animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_7,
     hitbox: computeSafeHitbox(48, 48, 0.7),
   },
@@ -3651,6 +3699,8 @@ export const SPRITE_REGISTRY = {
     frameHeight: 48,
     scale: 0.7,
     lootTable: "fairy8Drop",
+    sheetCols: 12,
+    sheetRows: 8,
     animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_8,
     hitbox: computeSafeHitbox(48, 48, 0.7),
   },
@@ -3662,6 +3712,8 @@ export const SPRITE_REGISTRY = {
     frameHeight: 48,
     scale: 0.7,
     lootTable: "colorBat1Drop",
+    sheetCols: 12,
+    sheetRows: 8,
     animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_1,
     hitbox: computeSafeHitbox(48, 48, 0.7),
   },
@@ -3673,6 +3725,8 @@ export const SPRITE_REGISTRY = {
     frameHeight: 48,
     scale: 0.7,
     lootTable: "colorBat2Drop",
+    sheetCols: 12,
+    sheetRows: 8,
     animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_2,
     hitbox: computeSafeHitbox(48, 48, 0.7),
   },
@@ -3684,6 +3738,8 @@ export const SPRITE_REGISTRY = {
     frameHeight: 48,
     scale: 0.9,
     lootTable: "colorBat3Drop",
+    sheetCols: 12,
+    sheetRows: 8,
     animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_3,
     hitbox: computeSafeHitbox(48, 48, 0.9),
   },
@@ -3695,6 +3751,8 @@ export const SPRITE_REGISTRY = {
     frameHeight: 48,
     scale: 0.9,
     lootTable: "colorBat4Drop",
+    sheetCols: 12,
+    sheetRows: 8,
     animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_4,
     hitbox: computeSafeHitbox(48, 48, 0.9),
   },
@@ -3706,6 +3764,8 @@ export const SPRITE_REGISTRY = {
     frameHeight: 48,
     scale: 0.5,
     lootTable: "colorBat5Drop",
+    sheetCols: 12,
+    sheetRows: 8,
     animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_5,
     hitbox: computeSafeHitbox(48, 48, 0.5),
   },
@@ -3717,6 +3777,8 @@ export const SPRITE_REGISTRY = {
     frameHeight: 48,
     scale: 0.5,
     lootTable: "colorBat6Drop",
+    sheetCols: 12,
+    sheetRows: 8,
     animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_6,
     hitbox: computeSafeHitbox(48, 48, 0.5),
   },
@@ -3728,6 +3790,8 @@ export const SPRITE_REGISTRY = {
     frameHeight: 48,
     scale: 0.5,
     lootTable: "colorBat7Drop",
+    sheetCols: 12,
+    sheetRows: 8,
     animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_7,
     hitbox: computeSafeHitbox(48, 48, 0.5),
   },
@@ -3739,6 +3803,8 @@ export const SPRITE_REGISTRY = {
     frameHeight: 48,
     scale: 0.5,
     lootTable: "colorBat8Drop",
+    sheetCols: 12,
+    sheetRows: 8,
     animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_8,
     hitbox: computeSafeHitbox(48, 48, 0.5),
   },
@@ -3750,6 +3816,8 @@ export const SPRITE_REGISTRY = {
     frameHeight: 48,
     scale: 0.5,
     lootTable: "brownMushroomDrop",
+    sheetCols: 12,
+    sheetRows: 8,
     animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_1,
     hitbox: computeSafeHitbox(48, 48, 0.5),
   },
@@ -3775,6 +3843,8 @@ export const SPRITE_REGISTRY = {
     scale: 0.5,
     lootTable: "redMushroomDrop",
     animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_3,
+    sheetCols: 12,
+    sheetRows: 8,
     hitbox: computeSafeHitbox(48, 48, 0.5),
   },
   angryRedMushroom: {
@@ -3786,6 +3856,8 @@ export const SPRITE_REGISTRY = {
     scale: 0.5,
     lootTable: "angryRedMushroomDrop",
     animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_4,
+    sheetCols: 12,
+    sheetRows: 8,
     hitbox: computeSafeHitbox(48, 48, 0.5),
   },
   angryStump: {
@@ -3797,6 +3869,8 @@ export const SPRITE_REGISTRY = {
     lootTable: "angryStumpDrop",
     scale: 1,
     animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_5,
+    sheetCols: 12,
+    sheetRows: 8,
     hitbox: computeSafeHitbox(48, 48, 1),
   },
   armsAngryStumps: {
@@ -3808,6 +3882,8 @@ export const SPRITE_REGISTRY = {
     lootTable: "armsAngryStumpsDrop",
     scale: 1,
     animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_6,
+    sheetCols: 12,
+    sheetRows: 8,
     hitbox: computeSafeHitbox(48, 48, 1),
   },
   redEarthworms: {
@@ -3819,6 +3895,8 @@ export const SPRITE_REGISTRY = {
     scale: 0.5,
     lootTable: "redEarthwormsDrop",
     animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_7,
+    sheetCols: 12,
+    sheetRows: 8,
     hitbox: computeSafeHitbox(48, 48, 0.5),
   },
   blackBug: {
@@ -3830,6 +3908,8 @@ export const SPRITE_REGISTRY = {
     scale: 0.5,
     lootTable: "blackBugDrop",
     animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_8,
+    sheetCols: 12,
+    sheetRows: 8,
     hitbox: computeSafeHitbox(48, 48, 0.5),
   },
   demonLady1: {
@@ -3841,6 +3921,8 @@ export const SPRITE_REGISTRY = {
     scale: 0.7,
     lootTable: "demonLady1Drop",
     animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_1,
+    sheetCols: 12,
+    sheetRows: 8,
     hitbox: computeSafeHitbox(48, 48, 0.7),
   },
   demonLady2: {
@@ -3852,6 +3934,8 @@ export const SPRITE_REGISTRY = {
     scale: 0.7,
     lootTable: "demonLady2Drop",
     animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_2,
+    sheetCols: 12,
+    sheetRows: 8,
     hitbox: computeSafeHitbox(48, 48, 0.7),
   },
   demonLady3: {
@@ -3863,6 +3947,8 @@ export const SPRITE_REGISTRY = {
     scale: 0.7,
     lootTable: "demonLady3Drop",
     animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_3,
+    sheetCols: 12,
+    sheetRows: 8,
     hitbox: computeSafeHitbox(48, 48, 0.7),
   },
   demonLady4: {
@@ -3874,6 +3960,8 @@ export const SPRITE_REGISTRY = {
     scale: 0.7,
     lootTable: "demonLady4Drop",
     animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_4,
+    sheetCols: 12,
+    sheetRows: 8,
     hitbox: computeSafeHitbox(48, 48, 0.7),
   },
   demonLady5: {
@@ -3885,6 +3973,8 @@ export const SPRITE_REGISTRY = {
     scale: 0.7,
     lootTable: "demonLady5Drop",
     animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_5,
+    sheetCols: 12,
+    sheetRows: 8,
     hitbox: computeSafeHitbox(48, 48, 0.7),
   },
   demonLady6: {
@@ -3896,6 +3986,8 @@ export const SPRITE_REGISTRY = {
     scale: 0.7,
     lootTable: "demonLady6Drop",
     animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_6,
+    sheetCols: 12,
+    sheetRows: 8,
     hitbox: computeSafeHitbox(48, 48, 0.7),
   },
   demonLady7: {
@@ -3907,6 +3999,8 @@ export const SPRITE_REGISTRY = {
     scale: 0.7,
     lootTable: "demonLady7Drop",
     animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_7,
+    sheetCols: 12,
+    sheetRows: 8,
     hitbox: computeSafeHitbox(48, 48, 0.7),
   },
   demonLady8: {
@@ -3918,6 +4012,8 @@ export const SPRITE_REGISTRY = {
     scale: 0.7,
     lootTable: "demonLady8Drop",
     animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_8,
+    sheetCols: 12,
+    sheetRows: 8,
     hitbox: computeSafeHitbox(48, 48, 0.7),
   },
   gazer1: {
@@ -3929,6 +4025,8 @@ export const SPRITE_REGISTRY = {
     scale: 0.7,
     lootTable: "gazer1Drop",
     animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_1,
+    sheetCols: 12,
+    sheetRows: 8,
     hitbox: computeSafeHitbox(48, 48, 0.7),
   },
   gazer2: {
@@ -3940,6 +4038,8 @@ export const SPRITE_REGISTRY = {
     scale: 0.7,
     lootTable: "gazer2Drop",
     animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_2,
+    sheetCols: 12,
+    sheetRows: 8,
     hitbox: computeSafeHitbox(48, 48, 0.7),
   },
   gazer3: {
@@ -3951,6 +4051,8 @@ export const SPRITE_REGISTRY = {
     scale: 0.7,
     lootTable: "gazer3Drop",
     animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_3,
+    sheetCols: 12,
+    sheetRows: 8,
     hitbox: computeSafeHitbox(48, 48, 0.7),
   },
   gazer4: {
@@ -3962,6 +4064,8 @@ export const SPRITE_REGISTRY = {
     scale: 0.7,
     lootTable: "gazer4Drop",
     animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_4,
+    sheetCols: 12,
+    sheetRows: 8,
     hitbox: computeSafeHitbox(48, 48, 0.7),
   },
   gazer5: {
@@ -3973,6 +4077,8 @@ export const SPRITE_REGISTRY = {
     scale: 0.7,
     lootTable: "gazer5Drop",
     animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_5,
+    sheetCols: 12,
+    sheetRows: 8,
     hitbox: computeSafeHitbox(48, 48, 0.7),
   },
   soldier1: {
@@ -3984,6 +4090,8 @@ export const SPRITE_REGISTRY = {
     scale: 0.7,
     lootTable: "soldier1Drop",
     animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_1,
+    sheetCols: 12,
+    sheetRows: 8,
     hitbox: computeSafeHitbox(48, 48, 0.7),
   },
   soldier2: {
@@ -3995,6 +4103,8 @@ export const SPRITE_REGISTRY = {
     scale: 0.7,
     lootTable: "soldier2Drop",
     animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_2,
+    sheetCols: 12,
+    sheetRows: 8,
     hitbox: computeSafeHitbox(48, 48, 0.7),
   },
   soldier3: {
@@ -4006,6 +4116,8 @@ export const SPRITE_REGISTRY = {
     scale: 0.7,
     lootTable: "soldier3Drop",
     animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_3,
+    sheetCols: 12,
+    sheetRows: 8,
     hitbox: computeSafeHitbox(48, 48, 0.7),
   },
   soldier4: {
@@ -4017,6 +4129,8 @@ export const SPRITE_REGISTRY = {
     scale: 0.7,
     lootTable: "soldier4Drop",
     animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_4,
+    sheetCols: 12,
+    sheetRows: 8,
     hitbox: computeSafeHitbox(48, 48, 0.7),
   },
   soldier5: {
@@ -4028,6 +4142,8 @@ export const SPRITE_REGISTRY = {
     scale: 0.7,
     lootTable: "soldier5Drop",
     animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_5,
+    sheetCols: 12,
+    sheetRows: 8,
     hitbox: computeSafeHitbox(48, 48, 0.7),
   },
   soldier6: {
@@ -4039,6 +4155,8 @@ export const SPRITE_REGISTRY = {
     scale: 0.7,
     lootTable: "soldier6Drop",
     animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_6,
+    sheetCols: 12,
+    sheetRows: 8,
     hitbox: computeSafeHitbox(48, 48, 0.7),
   },
   soldier7: {
@@ -4050,6 +4168,8 @@ export const SPRITE_REGISTRY = {
     scale: 0.7,
     lootTable: "soldier7Drop",
     animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_7,
+    sheetCols: 12,
+    sheetRows: 8,
     hitbox: computeSafeHitbox(48, 48, 0.7),
   },
   soldier8: {
@@ -4061,6 +4181,8 @@ export const SPRITE_REGISTRY = {
     scale: 0.7,
     lootTable: "soldier8Drop",
     animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_8,
+    sheetCols: 12,
+    sheetRows: 8,
     hitbox: computeSafeHitbox(48, 48, 0.7),
   },
   soldier9: {
@@ -4072,6 +4194,8 @@ export const SPRITE_REGISTRY = {
     scale: 0.7,
     lootTable: "soldier9Drop",
     animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_1,
+    sheetCols: 12,
+    sheetRows: 8,
     hitbox: computeSafeHitbox(48, 48, 0.7),
   },
   soldier10: {
@@ -4083,6 +4207,8 @@ export const SPRITE_REGISTRY = {
     scale: 0.7,
     lootTable: "soldier10Drop",
     animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_2,
+    sheetCols: 12,
+    sheetRows: 8,
     hitbox: computeSafeHitbox(48, 48, 0.7),
   },
   soldier11: {
@@ -4094,6 +4220,8 @@ export const SPRITE_REGISTRY = {
     scale: 0.7,
     lootTable: "soldier11Drop",
     animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_3,
+    sheetCols: 12,
+    sheetRows: 8,
     hitbox: computeSafeHitbox(48, 48, 0.7),
   },
   soldier12: {
@@ -4105,6 +4233,8 @@ export const SPRITE_REGISTRY = {
     scale: 0.7,
     lootTable: "soldier12Drop",
     animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_4,
+    sheetCols: 12,
+    sheetRows: 8,
     hitbox: computeSafeHitbox(48, 48, 0.7),
   },
   soldier13: {
@@ -4116,6 +4246,8 @@ export const SPRITE_REGISTRY = {
     scale: 0.7,
     lootTable: "soldier13Drop",
     animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_5,
+    sheetCols: 12,
+    sheetRows: 8,
     hitbox: computeSafeHitbox(48, 48, 0.7),
   },
   soldier14: {
@@ -4127,6 +4259,8 @@ export const SPRITE_REGISTRY = {
     scale: 0.7,
     lootTable: "soldier14Drop",
     animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_6,
+    sheetCols: 12,
+    sheetRows: 8,
     hitbox: computeSafeHitbox(48, 48, 0.7),
   },
   soldier15: {
@@ -4138,6 +4272,8 @@ export const SPRITE_REGISTRY = {
     scale: 0.7,
     lootTable: "soldier15Drop",
     animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_7,
+    sheetCols: 12,
+    sheetRows: 8,
     hitbox: computeSafeHitbox(48, 48, 0.7),
   },
   soldier16: {
@@ -4149,6 +4285,8 @@ export const SPRITE_REGISTRY = {
     scale: 0.7,
     lootTable: "soldier16Drop",
     animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_8,
+    sheetCols: 12,
+    sheetRows: 8,
     hitbox: computeSafeHitbox(48, 48, 0.7),
   },
   enemy1: {
@@ -4160,6 +4298,8 @@ export const SPRITE_REGISTRY = {
     scale: 0.8,
     lootTable: "enemy1Drop",
     animations: STANDARD_ANIMATION_FRAMES,
+    sheetCols: 3,
+    sheetRows: 4,
     hitbox: computeSafeHitbox(32, 40, 0.8),
   },
   goblin: {
@@ -4171,6 +4311,8 @@ export const SPRITE_REGISTRY = {
     scale: 0.8,
     lootTable: "goblinDrop",
     animations: STANDARD_ANIMATION_FRAMES,
+    sheetCols: 3,
+    sheetRows: 4,
     hitbox: computeSafeHitbox(32, 40, 0.8),
   },
   goblin2: {
@@ -4182,6 +4324,8 @@ export const SPRITE_REGISTRY = {
     scale: 0.8,
     lootTable: "goblin2Drop",
     animations: STANDARD_ANIMATION_FRAMES,
+    sheetCols: 3,
+    sheetRows: 4,
     hitbox: computeSafeHitbox(32, 32, 0.8),
   },
   bat1: {
@@ -4193,6 +4337,8 @@ export const SPRITE_REGISTRY = {
     scale: 1.7,
     lootTable: "bat1Drop",
     animations: STANDARD_ANIMATION_FRAMES_4X4,
+    sheetCols: 4,
+    sheetRows: 4,
     hitbox: computeSafeHitbox(16, 16, 1.7),
   },
   bat1a: {
@@ -4204,6 +4350,8 @@ export const SPRITE_REGISTRY = {
     scale: 0.6,
     lootTable: "bat1aDrop",
     animations: STANDARD_ANIMATION_FRAMES,
+    sheetCols: 3,
+    sheetRows: 4,
     hitbox: computeSafeHitbox(32, 40, 0.6),
   },
   bee1: {
@@ -4215,6 +4363,8 @@ export const SPRITE_REGISTRY = {
     scale: 0.5,
     lootTable: "bee1Drop",
     animations: STANDARD_ANIMATION_FRAMES,
+    sheetCols: 3,
+    sheetRows: 4,
     hitbox: computeSafeHitbox(32, 40, 0.5),
   },
 
@@ -4227,6 +4377,8 @@ export const SPRITE_REGISTRY = {
     scale: 0.8,
     lootTable: "bird1Drop",
     animations: STANDARD_ANIMATION_FRAMES,
+    sheetCols: 3,
+    sheetRows: 4,
     hitbox: computeSafeHitbox(32, 40, 0.8),
   },
   bug1a: {
@@ -4238,6 +4390,8 @@ export const SPRITE_REGISTRY = {
     scale: 0.7,
     lootTable: "bug1aDrop",
     animations: STANDARD_ANIMATION_FRAMES,
+    sheetCols: 3,
+    sheetRows: 4,
     hitbox: computeSafeHitbox(32, 40, 0.7),
   },
   bug1b: {
@@ -4249,6 +4403,8 @@ export const SPRITE_REGISTRY = {
     scale: 0.7,
     lootTable: "bug1bDrop",
     animations: STANDARD_ANIMATION_FRAMES,
+    sheetCols: 3,
+    sheetRows: 4,
     hitbox: computeSafeHitbox(32, 40, 0.7),
   },
   cockatrice1: {
@@ -4260,6 +4416,8 @@ export const SPRITE_REGISTRY = {
     scale: 0.7,
     lootTable: "cockatrice1Drop",
     animations: STANDARD_ANIMATION_FRAMES,
+    sheetCols: 3,
+    sheetRows: 4,
     hitbox: computeSafeHitbox(32, 40, 0.7),
   },
   deer1: {
@@ -4271,6 +4429,8 @@ export const SPRITE_REGISTRY = {
     scale: 1.2,
     lootTable: "deer1Drop",
     animations: STANDARD_ANIMATION_FRAMES,
+    sheetCols: 3,
+    sheetRows: 4,
     hitbox: computeSafeHitbox(32, 40, 1.2),
   },
   deer2: {
@@ -4282,6 +4442,8 @@ export const SPRITE_REGISTRY = {
     scale: 1.2,
     lootTable: "deer2Drop",
     animations: STANDARD_ANIMATION_FRAMES,
+    sheetCols: 3,
+    sheetRows: 4,
     hitbox: computeSafeHitbox(32, 40, 1.2),
   },
   fox1: {
@@ -4293,6 +4455,8 @@ export const SPRITE_REGISTRY = {
     scale: 0.7,
     lootTable: "fox1Drop",
     animations: STANDARD_ANIMATION_FRAMES,
+    sheetCols: 3,
+    sheetRows: 4,
     hitbox: computeSafeHitbox(32, 40, 0.7),
   },
   fox2: {
@@ -4305,6 +4469,8 @@ export const SPRITE_REGISTRY = {
     scale: 0.7,
     lootTable: "fox2Drop",
     animations: STANDARD_ANIMATION_FRAMES,
+    sheetCols: 3,
+    sheetRows: 4,
     hitbox: computeSafeHitbox(48, 60, 0.7),
   },
   lizard: {
@@ -4316,6 +4482,8 @@ export const SPRITE_REGISTRY = {
     scale: 1.5,
     lootTable: "lizardDrop",
     animations: STANDARD_ANIMATION_FRAMES,
+    sheetCols: 3,
+    sheetRows: 4,
     hitbox: computeSafeHitbox(32, 40, 1.5),
   },
   raccoon1: {
@@ -4327,6 +4495,8 @@ export const SPRITE_REGISTRY = {
     scale: 1.5,
     lootTable: "raccoon1Drop",
     animations: STANDARD_ANIMATION_FRAMES,
+    sheetCols: 3,
+    sheetRows: 4,
     hitbox: computeSafeHitbox(32, 40, 1.5),
   },
   slime1: {
@@ -4338,6 +4508,8 @@ export const SPRITE_REGISTRY = {
     scale: 1.5,
     lootTable: "slime1Drop",
     animations: STANDARD_ANIMATION_FRAMES,
+    sheetCols: 3,
+    sheetRows: 4,
     hitbox: computeSafeHitbox(32, 40, 1.5),
   },
   snake1: {
@@ -4349,6 +4521,8 @@ export const SPRITE_REGISTRY = {
     scale: 1.5,
     lootTable: "snake1Drop",
     animations: STANDARD_ANIMATION_FRAMES,
+    sheetCols: 3,
+    sheetRows: 4,
     hitbox: computeSafeHitbox(32, 40, 1.5),
   },
   snake2: {
@@ -4360,6 +4534,8 @@ export const SPRITE_REGISTRY = {
     scale: 1.5,
     lootTable: "snake2Drop",
     animations: STANDARD_ANIMATION_FRAMES,
+    sheetCols: 3,
+    sheetRows: 4,
     hitbox: computeSafeHitbox(32, 32, 1.5),
   },
   snake3: {
@@ -4371,6 +4547,8 @@ export const SPRITE_REGISTRY = {
     scale: 1.5,
     lootTable: "snake3Drop",
     animations: STANDARD_ANIMATION_FRAMES,
+    sheetCols: 3,
+    sheetRows: 4,
     hitbox: computeSafeHitbox(32, 32, 1.5),
   },
   snake4: {
@@ -4382,6 +4560,8 @@ export const SPRITE_REGISTRY = {
     scale: 1.5,
     lootTable: "snake4Drop",
     animations: STANDARD_ANIMATION_FRAMES,
+    sheetCols: 3,
+    sheetRows: 4,
     hitbox: computeSafeHitbox(32, 32, 1.5),
   },
   spider1: {
@@ -4393,6 +4573,8 @@ export const SPRITE_REGISTRY = {
     scale: 1.5,
     lootTable: "spider1Drop",
     animations: STANDARD_ANIMATION_FRAMES,
+    sheetCols: 3,
+    sheetRows: 4,
     hitbox: computeSafeHitbox(32, 40, 1.5),
   },
   spider2: {
@@ -4404,6 +4586,8 @@ export const SPRITE_REGISTRY = {
     scale: 1.5,
     lootTable: "spider2Drop",
     animations: STANDARD_ANIMATION_FRAMES,
+    sheetCols: 3,
+    sheetRows: 4,
     hitbox: computeSafeHitbox(32, 40, 1.5),
   },
   spider3: {
@@ -4415,6 +4599,8 @@ export const SPRITE_REGISTRY = {
     scale: 1.5,
     lootTable: "spider3Drop",
     animations: STANDARD_ANIMATION_FRAMES,
+    sheetCols: 3,
+    sheetRows: 4,
     hitbox: computeSafeHitbox(32, 40, 1.5),
   },
   worm1: {
@@ -4426,6 +4612,8 @@ export const SPRITE_REGISTRY = {
     scale: 1.5,
     lootTable: "worm1Drop",
     animations: STANDARD_ANIMATION_FRAMES,
+    sheetCols: 3,
+    sheetRows: 4,
     hitbox: computeSafeHitbox(32, 40, 1.5),
   },
   miniDragon1: {
@@ -4436,6 +4624,8 @@ export const SPRITE_REGISTRY = {
     frameHeight: 32,
     scale: 1,
     lootTable: "miniDragon1Drop",
+    sheetCols: 3,
+    sheetRows: 4,
     animations: STANDARD_ANIMATION_FRAMES,
     hitbox: computeSafeHitbox(32, 32, 1),
   },
@@ -4447,6 +4637,8 @@ export const SPRITE_REGISTRY = {
     frameHeight: 32,
     scale: 1,
     lootTable: "miniDragon2Drop",
+    sheetCols: 3,
+    sheetRows: 4,
     animations: STANDARD_ANIMATION_FRAMES,
     hitbox: computeSafeHitbox(32, 32, 1),
   },
@@ -4458,6 +4650,8 @@ export const SPRITE_REGISTRY = {
     frameHeight: 32,
     scale: 1,
     lootTable: "miniDragon3Drop",
+    sheetCols: 3,
+    sheetRows: 4,
     animations: STANDARD_ANIMATION_FRAMES,
     hitbox: computeSafeHitbox(32, 32, 1),
   },
@@ -4469,6 +4663,8 @@ export const SPRITE_REGISTRY = {
     frameHeight: 32,
     scale: 1,
     lootTable: "miniDragon4Drop",
+    sheetCols: 3,
+    sheetRows: 4,
     animations: STANDARD_ANIMATION_FRAMES,
     hitbox: computeSafeHitbox(32, 32, 1),
   },
@@ -4480,6 +4676,8 @@ export const SPRITE_REGISTRY = {
     frameHeight: 32,
     scale: 1,
     lootTable: "miniDragon5Drop",
+    sheetCols: 3,
+    sheetRows: 4,
     animations: STANDARD_ANIMATION_FRAMES,
     hitbox: computeSafeHitbox(32, 32, 1),
   },
@@ -4491,6 +4689,8 @@ export const SPRITE_REGISTRY = {
     frameHeight: 32,
     scale: 1,
     lootTable: "miniDragon6Drop",
+    sheetCols: 3,
+    sheetRows: 4,
     animations: STANDARD_ANIMATION_FRAMES,
     hitbox: computeSafeHitbox(32, 32, 1),
   },
@@ -4502,6 +4702,8 @@ export const SPRITE_REGISTRY = {
     frameHeight: 32,
     scale: 1,
     lootTable: "plantMonster1Drop",
+    sheetCols: 3,
+    sheetRows: 4,
     animations: STANDARD_ANIMATION_FRAMES,
     hitbox: computeSafeHitbox(32, 32, 1),
   },
@@ -4513,6 +4715,8 @@ export const SPRITE_REGISTRY = {
     frameHeight: 32,
     scale: 1,
     lootTable: "plantMonster2Drop",
+    sheetCols: 3,
+    sheetRows: 4,
     animations: STANDARD_ANIMATION_FRAMES,
     hitbox: computeSafeHitbox(32, 32, 1),
   },
@@ -4525,6 +4729,8 @@ export const SPRITE_REGISTRY = {
     scale: 0.7,
     lootTable: "lamia1Drop",
     animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_6,
+    sheetCols: 12,
+    sheetRows: 8,
     hitbox: computeSafeHitbox(48, 48, 0.7),
   },
   lamia2: {
@@ -4536,6 +4742,8 @@ export const SPRITE_REGISTRY = {
     scale: 0.7,
     lootTable: "lamia2Drop",
     animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_2,
+    sheetCols: 12,
+    sheetRows: 8,
     hitbox: computeSafeHitbox(48, 48, 0.7),
   },
   lamia3: {
@@ -4547,6 +4755,8 @@ export const SPRITE_REGISTRY = {
     scale: 0.7,
     lootTable: "lamia3Drop",
     animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_3,
+    sheetCols: 12,
+    sheetRows: 8,
     hitbox: computeSafeHitbox(48, 48, 0.7),
   },
   lamia4: {
@@ -4558,6 +4768,8 @@ export const SPRITE_REGISTRY = {
     scale: 0.7,
     lootTable: "lamia4Drop",
     animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_8,
+    sheetCols: 12,
+    sheetRows: 8,
     hitbox: computeSafeHitbox(48, 48, 0.7),
   },
   lamia5: {
@@ -4569,6 +4781,8 @@ export const SPRITE_REGISTRY = {
     scale: 0.7,
     lootTable: "lamia5Drop",
     animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_1,
+    sheetCols: 12,
+    sheetRows: 8,
     hitbox: computeSafeHitbox(48, 48, 0.7),
   },
   lamia6: {
@@ -4580,6 +4794,8 @@ export const SPRITE_REGISTRY = {
     scale: 0.7,
     lootTable: "lamia6Drop",
     animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_4,
+    sheetCols: 12,
+    sheetRows: 8,
     hitbox: computeSafeHitbox(48, 48, 0.7),
   },
   vampire1: {
@@ -4591,6 +4807,8 @@ export const SPRITE_REGISTRY = {
     scale: 0.7,
     lootTable: "vampire1Drop",
     animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_1,
+    sheetCols: 12,
+    sheetRows: 8,
     hitbox: computeSafeHitbox(48, 48, 0.7),
   },
   vampire2: {
@@ -4602,6 +4820,8 @@ export const SPRITE_REGISTRY = {
     scale: 0.7,
     lootTable: "vampire2Drop",
     animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_2,
+    sheetCols: 12,
+    sheetRows: 8,
     hitbox: computeSafeHitbox(48, 48, 0.7),
   },
   vampire3: {
@@ -4613,6 +4833,8 @@ export const SPRITE_REGISTRY = {
     scale: 0.7,
     lootTable: "vampire3Drop",
     animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_3,
+    sheetCols: 12,
+    sheetRows: 8,
     hitbox: computeSafeHitbox(48, 48, 0.7),
   },
   vampire4: {
@@ -4624,6 +4846,8 @@ export const SPRITE_REGISTRY = {
     scale: 0.7,
     lootTable: "vampire4Drop",
     animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_4,
+    sheetCols: 12,
+    sheetRows: 8,
     hitbox: computeSafeHitbox(48, 48, 0.7),
   },
   vampire5: {
@@ -4635,6 +4859,8 @@ export const SPRITE_REGISTRY = {
     scale: 0.7,
     lootTable: "vampire5Drop",
     animations: STANDARD_ANIMATION_FRAMES_3X4_MULTI_5,
+    sheetCols: 12,
+    sheetRows: 8,
     hitbox: computeSafeHitbox(48, 48, 0.7),
   },
 
@@ -4647,6 +4873,8 @@ export const SPRITE_REGISTRY = {
     scale: 0.8,
     lootTable: "kobold1Drop",
     animations: STANDARD_ANIMATION_FRAMES,
+    sheetCols: 3,
+    sheetRows: 4,
     hitbox: computeSafeHitbox(32, 40, 0.8),
   },
   kobold2: {
@@ -4658,6 +4886,8 @@ export const SPRITE_REGISTRY = {
     scale: 0.8,
     lootTable: "kobold2Drop",
     animations: STANDARD_ANIMATION_FRAMES,
+    sheetCols: 3,
+    sheetRows: 4,
     hitbox: computeSafeHitbox(32, 40, 0.8),
   },
   kobold3: {
@@ -4669,6 +4899,8 @@ export const SPRITE_REGISTRY = {
     scale: 0.8,
     lootTable: "kobold3Drop",
     animations: STANDARD_ANIMATION_FRAMES,
+    sheetCols: 3,
+    sheetRows: 4,
     hitbox: computeSafeHitbox(32, 40, 0.8),
   },
   naga1: {
@@ -4680,6 +4912,8 @@ export const SPRITE_REGISTRY = {
     scale: 0.8,
     lootTable: "naga1Drop",
     animations: STANDARD_ANIMATION_FRAMES,
+    sheetCols: 3,
+    sheetRows: 4,
     hitbox: computeSafeHitbox(32, 40, 0.8),
   },
   naga2: {
@@ -4691,6 +4925,8 @@ export const SPRITE_REGISTRY = {
     scale: 0.8,
     lootTable: "naga2Drop",
     animations: STANDARD_ANIMATION_FRAMES,
+    sheetCols: 3,
+    sheetRows: 4,
     hitbox: computeSafeHitbox(32, 40, 0.8),
   },
   naga3: {
@@ -4702,6 +4938,8 @@ export const SPRITE_REGISTRY = {
     scale: 0.8,
     lootTable: "naga3Drop",
     animations: STANDARD_ANIMATION_FRAMES,
+    sheetCols: 3,
+    sheetRows: 4,
     hitbox: computeSafeHitbox(32, 40, 0.8),
   },
   naga4: {
@@ -4713,6 +4951,8 @@ export const SPRITE_REGISTRY = {
     scale: 0.8,
     lootTable: "naga4Drop",
     animations: STANDARD_ANIMATION_FRAMES,
+    sheetCols: 3,
+    sheetRows: 4,
     hitbox: computeSafeHitbox(32, 40, 0.8),
   },
   naga5: {
@@ -4724,6 +4964,8 @@ export const SPRITE_REGISTRY = {
     scale: 0.8,
     lootTable: "naga5Drop",
     animations: STANDARD_ANIMATION_FRAMES,
+    sheetCols: 3,
+    sheetRows: 4,
     hitbox: computeSafeHitbox(32, 40, 0.8),
   },
   naga6: {
@@ -4735,6 +4977,8 @@ export const SPRITE_REGISTRY = {
     scale: 0.8,
     lootTable: "naga6Drop",
     animations: STANDARD_ANIMATION_FRAMES,
+    sheetCols: 3,
+    sheetRows: 4,
     hitbox: computeSafeHitbox(32, 40, 0.8),
   },
   naga7: {
@@ -4746,6 +4990,8 @@ export const SPRITE_REGISTRY = {
     scale: 0.8,
     lootTable: "naga7Drop",
     animations: STANDARD_ANIMATION_FRAMES,
+    sheetCols: 3,
+    sheetRows: 4,
     hitbox: computeSafeHitbox(32, 40, 0.8),
   },
   orc1: {
@@ -4757,6 +5003,8 @@ export const SPRITE_REGISTRY = {
     scale: 1.2,
     lootTable: "orc1Drop",
     animations: STANDARD_ANIMATION_FRAMES,
+    sheetCols: 3,
+    sheetRows: 4,
     hitbox: computeSafeHitbox(32, 40, 1.2),
   },
   orc2: {
@@ -4768,6 +5016,8 @@ export const SPRITE_REGISTRY = {
     scale: 1.2,
     lootTable: "orc2Drop",
     animations: STANDARD_ANIMATION_FRAMES,
+    sheetCols: 3,
+    sheetRows: 4,
     hitbox: computeSafeHitbox(32, 40, 1.2),
   },
   orc3: {
@@ -4779,6 +5029,8 @@ export const SPRITE_REGISTRY = {
     scale: 1.2,
     lootTable: "orc3Drop",
     animations: STANDARD_ANIMATION_FRAMES,
+    sheetCols: 3,
+    sheetRows: 4,
     hitbox: computeSafeHitbox(32, 40, 1.2),
   },
   orc4: {
@@ -4790,6 +5042,8 @@ export const SPRITE_REGISTRY = {
     scale: 1.2,
     lootTable: "orc4Drop",
     animations: STANDARD_ANIMATION_FRAMES,
+    sheetCols: 3,
+    sheetRows: 4,
     hitbox: computeSafeHitbox(32, 40, 1.2),
   },
   orc5: {
@@ -4801,6 +5055,8 @@ export const SPRITE_REGISTRY = {
     scale: 1.2,
     lootTable: "orc5Drop",
     animations: STANDARD_ANIMATION_FRAMES,
+    sheetCols: 3,
+    sheetRows: 4,
     hitbox: computeSafeHitbox(32, 40, 1.2),
   },
   orc6: {
@@ -4812,6 +5068,8 @@ export const SPRITE_REGISTRY = {
     scale: 1.2,
     lootTable: "orc6Drop",
     animations: STANDARD_ANIMATION_FRAMES,
+    sheetCols: 3,
+    sheetRows: 4,
     hitbox: computeSafeHitbox(32, 40, 1.2),
   },
   orc7: {
@@ -4823,6 +5081,8 @@ export const SPRITE_REGISTRY = {
     scale: 1.2,
     lootTable: "orc7Drop",
     animations: STANDARD_ANIMATION_FRAMES,
+    sheetCols: 3,
+    sheetRows: 4,
     hitbox: computeSafeHitbox(32, 40, 1.2),
   },
   orc8: {
@@ -4834,6 +5094,8 @@ export const SPRITE_REGISTRY = {
     scale: 1.2,
     lootTable: "orc8Drop",
     animations: STANDARD_ANIMATION_FRAMES,
+    sheetCols: 3,
+    sheetRows: 4,
     hitbox: computeSafeHitbox(32, 40, 1.2),
   },
   // Boss
@@ -4844,6 +5106,8 @@ export const SPRITE_REGISTRY = {
     frameWidth: 32,
     frameHeight: 40,
     scale: 4,
+    sheetCols: 3,
+    sheetRows: 4,
     animations: STANDARD_ANIMATION_FRAMES,
     hitbox: computeSafeHitbox(32, 40, 4),
   },
@@ -4854,6 +5118,8 @@ export const SPRITE_REGISTRY = {
     frameWidth: 32,
     frameHeight: 40,
     scale: 1.5,
+    sheetCols: 3,
+    sheetRows: 4,
     animations: STANDARD_ANIMATION_FRAMES,
     hitbox: computeSafeHitbox(32, 40, 1.5),
   },
@@ -4864,6 +5130,8 @@ export const SPRITE_REGISTRY = {
     frameWidth: 48,
     frameHeight: 48,
     scale: 1.5,
+    sheetCols: 3,
+    sheetRows: 4,
     animations: STANDARD_ANIMATION_FRAMES,
     hitbox: computeSafeHitbox(48, 48, 1.5),
   },
@@ -4874,6 +5142,8 @@ export const SPRITE_REGISTRY = {
     frameWidth: 48,
     frameHeight: 48,
     scale: 1.5,
+    sheetCols: 3,
+    sheetRows: 4,
     animations: STANDARD_ANIMATION_FRAMES,
     hitbox: computeSafeHitbox(48, 48, 1.5),
   },
@@ -4884,6 +5154,8 @@ export const SPRITE_REGISTRY = {
     frameWidth: 48,
     frameHeight: 48,
     scale: 1.5,
+    sheetCols: 3,
+    sheetRows: 4,
     animations: STANDARD_ANIMATION_FRAMES,
     hitbox: computeSafeHitbox(48, 48, 1.5),
   },
@@ -4894,6 +5166,8 @@ export const SPRITE_REGISTRY = {
     frameWidth: 120,
     frameHeight: 120,
     scale: 1,
+    sheetCols: 3,
+    sheetRows: 4,
     animations: STANDARD_ANIMATION_FRAMES,
     hitbox: computeSafeHitbox(120, 120, 1),
   },
@@ -4904,6 +5178,8 @@ export const SPRITE_REGISTRY = {
     frameWidth: 48,
     frameHeight: 48,
     scale: 1.5,
+    sheetCols: 3,
+    sheetRows: 4,
     animations: STANDARD_ANIMATION_FRAMES,
     hitbox: computeSafeHitbox(48, 48, 1.5),
   },
@@ -4914,6 +5190,8 @@ export const SPRITE_REGISTRY = {
     frameWidth: 48,
     frameHeight: 48,
     scale: 1.5,
+    sheetCols: 3,
+    sheetRows: 4,
     animations: STANDARD_ANIMATION_FRAMES,
     hitbox: computeSafeHitbox(48, 48, 1.5),
   },
@@ -4924,6 +5202,8 @@ export const SPRITE_REGISTRY = {
     frameWidth: 32,
     frameHeight: 40,
     scale: 1.5,
+    sheetCols: 3,
+    sheetRows: 4,
     animations: STANDARD_ANIMATION_FRAMES,
     hitbox: computeSafeHitbox(32, 40, 1.5),
   },
@@ -4934,6 +5214,8 @@ export const SPRITE_REGISTRY = {
     frameWidth: 32,
     frameHeight: 40,
     scale: 3,
+    sheetCols: 3,
+    sheetRows: 4,
     animations: STANDARD_ANIMATION_FRAMES,
     hitbox: computeSafeHitbox(32, 40, 3),
   },
@@ -4945,6 +5227,8 @@ export const SPRITE_REGISTRY = {
     frameHeight: 60,
     spacing: 2,
     scale: 4,
+    sheetCols: 3,
+    sheetRows: 4,
     animations: STANDARD_ANIMATION_FRAMES,
     hitbox: computeSafeHitbox(48, 60, 4),
   },
@@ -4956,6 +5240,8 @@ export const SPRITE_REGISTRY = {
     frameWidth: 96,
     frameHeight: 96,
     scale: 2,
+    sheetCols: 4,
+    sheetRows: 16,
     animations: FULL_ANIMATION_FRAMES,
     lootTable: "zombiequeenDrop",
     hitbox: computeSafeHitbox(96, 96, 2),
@@ -4968,6 +5254,8 @@ export const SPRITE_REGISTRY = {
     frameWidth: 96,
     frameHeight: 96,
     scale: 2,
+    sheetCols: 4,
+    sheetRows: 16,
     animations: FULL_ANIMATION_FRAMES,
     lootTable: "beequeenDrop",
     hitbox: computeSafeHitbox(96, 96, 2),
@@ -5959,6 +6247,26 @@ export function resolveEnemyDisplayName(typeKey) {
   return (entry && entry.displayName) || typeKey;
 }
 
+/**
+ * Liste de toutes les entrées "vrais ennemis" de SPRITE_REGISTRY (tout ce
+ * qui a un lootTable - exclut le héros, les PNJ NPC_town*, les leviers,
+ * enemyDefault et les familiers non rencontrés en tant qu'ennemis comme
+ * wolfFamiliar) - utilisé par le bestiaire (BestiaryScreen.js).
+ *
+ * @returns {Array<{key: string, entry: Object}>}
+ */
+export function getBestiaryEntries() {
+  return Object.entries(SPRITE_REGISTRY)
+    .filter(([, entry]) => entry.lootTable)
+    .map(([key, entry]) => ({ key, entry }))
+    .sort((a, b) =>
+      (a.entry.displayName || a.key).localeCompare(
+        b.entry.displayName || b.key,
+        "fr",
+      ),
+    );
+}
+
 export function resolveHeroSprite(heroId) {
   if (SPRITE_REGISTRY[heroId]) {
     return { entry: SPRITE_REGISTRY[heroId], spriteKey: heroId };
@@ -6366,7 +6674,6 @@ export const ICON_SHEET_1_FRAMES = {
   summonRedBeetleScroll: 91,
   summonPinkOgreScroll: 91,
   summonAlien1Scroll: 91,
-  summonAlien2Scroll: 91,
   summonAlien3Scroll: 91,
   summonAlien4Scroll: 91,
   summonAlien5Scroll: 91,
@@ -6586,7 +6893,7 @@ export const MONSTER_LOOTS_FRAMES = {
   redBeetleCore: 23,
   pinkOgreCore: 23,
   alien1Core: 23,
-  alien2Core: 23,
+
   alien3Core: 23,
   alien4Core: 23,
   alien5Core: 23,

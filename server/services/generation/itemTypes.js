@@ -1201,22 +1201,6 @@ const ITEM_TYPES = {
     grantsAbility: "summonAlien1",
     stackable: false,
   },
-  alien2Core: {
-    id: "alien2Core",
-    category: "craftingMaterial",
-    name: "Noyau de alien 2",
-    description: "Le cœur d'un alien 2, utilisé pour l'artisanat.",
-    stackable: false,
-    unique: true,
-  },
-  summonAlien2Scroll: {
-    id: "summonAlien2Scroll",
-    category: "abilityScroll",
-    name: "Parchemin : Invocation : Alien 2",
-    description: "Apprend la compétence Invocation : Alien 2.",
-    grantsAbility: "summonAlien2",
-    stackable: false,
-  },
   alien3Core: {
     id: "alien3Core",
     category: "craftingMaterial",
@@ -2942,7 +2926,8 @@ const ITEM_TYPES = {
     id: "purpleManditaureCore",
     category: "craftingMaterial",
     name: "Noyau de manditaure améthyste",
-    description: "Le cœur d'une manditaure améthyste, utilisé pour l'artisanat.",
+    description:
+      "Le cœur d'une manditaure améthyste, utilisé pour l'artisanat.",
     stackable: false,
     unique: true,
   },
@@ -3198,11 +3183,6 @@ const LOOT_TABLES = {
     { itemId: null, weight: 50 },
     { itemId: "gold", weight: 50, quantityRange: [1, 3] },
     { itemId: "alien1Core", weight: 50 },
-  ],
-  alien2Drop: [
-    { itemId: null, weight: 50 },
-    { itemId: "gold", weight: 50, quantityRange: [1, 3] },
-    { itemId: "alien2Core", weight: 50 },
   ],
   alien3Drop: [
     { itemId: null, weight: 50 },

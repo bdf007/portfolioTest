@@ -14937,22 +14937,6 @@ export const ITEM_DEFS = {
     grantsAbility: "summonAlien1",
     stackable: false,
   },
-  alien2Core: {
-    id: "alien2Core",
-    category: "craftingMaterial",
-    name: "Noyau de alien 2",
-    description: "Le cœur d'un alien 2, utilisé pour l'artisanat.",
-    stackable: false,
-    unique: true,
-  },
-  summonAlien2Scroll: {
-    id: "summonAlien2Scroll",
-    category: "abilityScroll",
-    name: "Parchemin : Invocation : Alien 2",
-    description: "Apprend la compétence Invocation : Alien 2.",
-    grantsAbility: "summonAlien2",
-    stackable: false,
-  },
   alien3Core: {
     id: "alien3Core",
     category: "craftingMaterial",
@@ -17312,7 +17296,8 @@ export const ITEM_DEFS = {
     id: "purpleManditaureCore",
     category: "craftingMaterial",
     name: "Noyau de manditaure améthyste",
-    description: "Le cœur d'une manditaure améthyste, utilisé pour l'artisanat.",
+    description:
+      "Le cœur d'une manditaure améthyste, utilisé pour l'artisanat.",
     stackable: false,
     unique: true,
   },

@@ -1016,17 +1016,6 @@ const ENEMY_TYPES = {
     lootTable: "alien1Drop",
   },
 
-  alien2: {
-    attackType: "ranged",
-    base: { hp: 14, damage: 4, xpReward: 10 },
-    growthRate: { hp: 1.18, damage: 1.15, xpReward: 1.12 },
-    speedBase: 95,
-    speedMax: 150,
-    speedGrowthPerDepth: 3,
-    defenseGrowthEveryNDepths: 3,
-    lootTable: "alien2Drop",
-  },
-
   alien3: {
     attackType: "ranged",
     base: { hp: 16, damage: 5, xpReward: 12 },

@@ -3642,17 +3642,6 @@ export const CRAFTING_RECIPES = {
     ],
     discoveryOnly: true,
   },
-  summonAlien2Recipe: {
-    id: "summonAlien2Recipe",
-    name: "Recette de Parchemin : Invocation : Alien 2",
-    resultItemId: "summonAlien2Scroll",
-    resultQuantity: 1,
-    ingredients: [
-      { itemId: "alien2Core", quantity: 1 },
-      { itemId: "grimoire", quantity: 1 },
-    ],
-    discoveryOnly: true,
-  },
   summonAlien3Recipe: {
     id: "summonAlien3Recipe",
     name: "Recette de Parchemin : Invocation : Alien 3",

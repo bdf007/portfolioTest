@@ -364,8 +364,6 @@ const ICON_TINTS = {
   summonPinkOgreScroll: "#cccccc",
   alien1Core: "#cccccc",
   summonAlien1Scroll: "#cccccc",
-  alien2Core: "#cccccc",
-  summonAlien2Scroll: "#cccccc",
   alien3Core: "#cccccc",
   summonAlien3Scroll: "#cccccc",
   alien4Core: "#cccccc",
