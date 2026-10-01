@@ -824,6 +824,11 @@ export default function InventoryScreen({
   // d'utilisation, ou null - ouvre le panneau de selection de la cible ET
   // du socket precis a extraire (cf. plus bas).
   const [extractingScrollIndex, setExtractingScrollIndex] = useState(null);
+  // itemId de l'objet dont on affiche la description detaillee (panneau
+  // au clic), ou null - separe du tooltip `title` existant (def.description,
+  // toujours affiche au survol) : ce panneau montre EN PLUS def.loreText
+  // (texte long, indices de craft/jeu) quand il existe.
+  const [detailItemId, setDetailItemId] = useState(null);
   const heroEntry = SPRITE_REGISTRY[heroId] || SPRITE_REGISTRY.hero1;
   const sheetCols = heroEntry.sheetCols || 12;
   const sheetRows = heroEntry.sheetRows || 8;
@@ -890,7 +895,11 @@ export default function InventoryScreen({
             title={def.description}
           >
             <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-              <div style={{ position: "relative" }}>
+              <div
+                style={{ position: "relative", cursor: "pointer" }}
+                onClick={() => setDetailItemId(itemId)}
+                title="Cliquer pour la description détaillée"
+              >
                 <ItemIcon itemId={itemId} scale={1.1} />
                 {quiverQuantity !== null && (
                   <div
@@ -1088,7 +1097,13 @@ export default function InventoryScreen({
                       flexShrink: 1,
                     }}
                   >
-                    <ItemIcon itemId={group.itemId} scale={1.5} />
+                    <div
+                      style={{ cursor: "pointer" }}
+                      onClick={() => setDetailItemId(group.itemId)}
+                      title="Cliquer pour la description détaillée"
+                    >
+                      <ItemIcon itemId={group.itemId} scale={1.5} />
+                    </div>
 
                     <div>
                       <div style={{ fontSize: 12 }}>
@@ -1809,6 +1824,90 @@ export default function InventoryScreen({
               }}
             >
               Annuler
+            </button>
+          </div>
+        </div>
+      )}
+
+      {detailItemId && (
+        <div
+          onClick={() => setDetailItemId(null)}
+          style={{
+            position: "absolute",
+            inset: 0,
+            zIndex: 30,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            background: "rgba(0,0,0,0.6)",
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: "#2a2015",
+              border: "1px solid #8a7050",
+              borderRadius: 8,
+              padding: 16,
+              minWidth: 240,
+              maxWidth: 360,
+              maxHeight: "70%",
+              overflowY: "auto",
+              color: "#f0e6d0",
+            }}
+          >
+            {(() => {
+              const def = resolveItemDef(detailItemId);
+              if (!def) return null;
+              return (
+                <>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 10,
+                      marginBottom: 10,
+                    }}
+                  >
+                    <ItemIcon itemId={detailItemId} scale={2} />
+                    <h4 style={{ margin: 0, fontSize: 14 }}>{def.name}</h4>
+                  </div>
+                  <div
+                    style={{ fontSize: 12, color: "#e0d4ba", marginBottom: 10 }}
+                  >
+                    {def.description}
+                  </div>
+                  {def.loreText ? (
+                    <div
+                      style={{
+                        fontSize: 11,
+                        color: "#c9b896",
+                        fontStyle: "italic",
+                        borderTop: "1px solid rgba(138,112,80,0.4)",
+                        paddingTop: 10,
+                        whiteSpace: "pre-wrap",
+                      }}
+                    >
+                      {def.loreText}
+                    </div>
+                  ) : null}
+                </>
+              );
+            })()}
+            <button
+              onClick={() => setDetailItemId(null)}
+              style={{
+                marginTop: 12,
+                fontSize: 11,
+                padding: "3px 8px",
+                borderRadius: 5,
+                border: "1px solid #8a7050",
+                background: "none",
+                color: "#f0e6d0",
+                cursor: "pointer",
+              }}
+            >
+              Fermer
             </button>
           </div>
         </div>
