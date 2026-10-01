@@ -42,6 +42,15 @@ const ENEMY_STOP_DISTANCE = 28;
 const ENEMY_RANGED_RETREAT_DISTANCE = 100;
 const ENEMY_ATTACK_RANGE = 34;
 
+const ENEMY_STUCK_TELEPORT_MIN_DIST = 140;
+const ENEMY_STUCK_TELEPORT_MAX_DIST = 220;
+const ENEMY_STUCK_TELEPORT_MIN_TILES = Math.round(
+  ENEMY_STUCK_TELEPORT_MIN_DIST / TILE_SIZE,
+);
+const ENEMY_STUCK_TELEPORT_MAX_TILES = Math.round(
+  ENEMY_STUCK_TELEPORT_MAX_DIST / TILE_SIZE,
+);
+
 /**
  * Declenche les gemmes REACTIVES de tout l'equipement porte (hasteGem/
  * repelGem, et les gemmes "d'ability" comme parryGem/riposteGem, cf.
@@ -92,6 +101,83 @@ function applyReactiveGemEffects(scene, attackerEnemy) {
       }
     }
   }
+}
+
+/**
+ * Cherche une case praticable "a portee mais pas au contact" de
+ * (targetX, targetY), via un parcours en largeur (BFS) borne sur la
+ * grille plutot qu'une ligne droite - indispensable pour un niveau
+ * labyrinthe : une ligne de vue degagee y est presque toujours bloquee
+ * par une cloison meme a quelques cases, alors que le BFS suit les
+ * VRAIS couloirs (comme le ferait le pathfinding) et garantit donc que
+ * la case retenue est reellement accessible a pied depuis la cible,
+ * jamais de l'autre cote d'une poche separee (ex: salle de boss/salle
+ * secrete, les seules vraies poches isolees du jeu).
+ *
+ * Utilisee par le filet de securite anti-softlock d'updateEnemyMovement
+ * (ennemi bloque depuis trop longtemps) a la place de l'ancien
+ * comportement "+-40px autour du heros", qui l'envoyait quasi au contact
+ * immediat - source de l'encerclement brutal signale par plusieurs
+ * ennemis bloques en meme temps (frequent, ils se bloquent souvent ENTRE
+ * EUX) tous teleportes a la suite pres du heros.
+ *
+ * Renvoie null si aucune case dans la fourchette de distance n'est
+ * atteignable (coin tres encombre / cul-de-sac), auquel cas l'appelant
+ * retente au cycle suivant plutot que de teleporter au hasard dans une
+ * poche potentiellement separee.
+ */
+function findEnemyTeleportSpot(scene, targetX, targetY) {
+  const grid = scene.fogGrid;
+  const width = grid[0].length;
+  const height = grid.length;
+  const targetTileX = Math.floor(targetX / TILE_SIZE);
+  const targetTileY = Math.floor(targetY / TILE_SIZE);
+  if (
+    targetTileY < 0 ||
+    targetTileY >= height ||
+    targetTileX < 0 ||
+    targetTileX >= width ||
+    grid[targetTileY][targetTileX] === WALL
+  ) {
+    return null;
+  }
+
+  const visited = new Set([`${targetTileX},${targetTileY}`]);
+  const queue = [{ x: targetTileX, y: targetTileY, dist: 0 }];
+  const candidates = [];
+  const MAX_VISITED = 600; // garde-fou perf sur une tres grande zone ouverte
+
+  while (queue.length > 0 && visited.size < MAX_VISITED) {
+    const { x, y, dist } = queue.shift();
+    if (
+      dist >= ENEMY_STUCK_TELEPORT_MIN_TILES &&
+      dist <= ENEMY_STUCK_TELEPORT_MAX_TILES
+    ) {
+      candidates.push({ x, y });
+    }
+    if (dist >= ENEMY_STUCK_TELEPORT_MAX_TILES) continue;
+
+    const neighbours = [
+      [x + 1, y],
+      [x - 1, y],
+      [x, y + 1],
+      [x, y - 1],
+    ];
+    for (const [nx, ny] of neighbours) {
+      if (nx < 0 || ny < 0 || nx >= width || ny >= height) continue;
+      const key = `${nx},${ny}`;
+      if (visited.has(key) || grid[ny][nx] === WALL) continue;
+      visited.add(key);
+      queue.push({ x: nx, y: ny, dist: dist + 1 });
+    }
+  }
+
+  if (candidates.length === 0) return null;
+  const pick = candidates[Math.floor(Math.random() * candidates.length)];
+  return {
+    x: pick.x * TILE_SIZE + TILE_SIZE / 2,
+    y: pick.y * TILE_SIZE + TILE_SIZE / 2,
+  };
 }
 
 export function isPlayerBehindEnemy(
@@ -218,6 +304,7 @@ export function updateEnemyMovement(scene) {
   const ENEMY_STUCK_JITTER_STREAK = 3; // ~1.5s de blocage continu
   const ENEMY_STUCK_JITTER_SPEED = 90;
   const ENEMY_STUCK_TELEPORT_JITTER_ATTEMPTS = 3; // ~4-5s de blocage malgre plusieurs jitter+repath
+  const ENEMY_STUCK_TELEPORT_GLOBAL_COOLDOWN = 1200; // espace les teleportations d'urgence entre tous les ennemis
 
   for (const enemy of scene.enemies) {
     enemy.visible = scene.isEnemyVisible(enemy);
@@ -355,39 +442,42 @@ export function updateEnemyMovement(scene) {
             // de collision...). On compte les cycles de jitter
             // consecutifs qui n'ont pas resolu le blocage ; au bout de
             // ENEMY_STUCK_TELEPORT_JITTER_ATTEMPTS, on teleporte
-            // l'ennemi pres du joueur plutot que de le laisser
+            // l'ennemi pres de sa cible plutot que de le laisser
             // rebondir indefiniment contre la geometrie. Critique
             // devant une salle de boss : la porte reste verrouillee
             // tant que tous les ennemis ne sont pas elimines, donc un
             // ennemi injoignable = softlock garanti pour le joueur.
             enemy.stuckJitterAttempts = (enemy.stuckJitterAttempts || 0) + 1;
             if (
-              enemy.stuckJitterAttempts >= ENEMY_STUCK_TELEPORT_JITTER_ATTEMPTS
+              enemy.stuckJitterAttempts >=
+                ENEMY_STUCK_TELEPORT_JITTER_ATTEMPTS &&
+              now >= (scene.nextEnemyTeleportAllowedAt || 0)
             ) {
-              const tx = scene.hero.x + (Math.random() - 0.5) * 80;
-              const ty = scene.hero.y + (Math.random() - 0.5) * 80;
-              enemy.sprite.setPosition(tx, ty);
-              enemy.sprite.setVelocity(0, 0);
-              enemy.path = null;
-              enemy.pathIndex = 0;
-              enemy.stuckStreak = 0;
-              enemy.stuckJitterAttempts = 0;
-              enemy.stuckJitterUntil = 0;
-              enemy.stuckCheckPos = { x: tx, y: ty };
-              enemy.stuckCheckAt = now;
-              continue;
-            }
-            enemy.stuckJitterUntil = now + 300;
-            scene.requestPath(
-              enemy.sprite.x,
-              enemy.sprite.y,
-              targetX,
-              targetY,
-              (path) => {
-                enemy.path = path;
+              const landing = findEnemyTeleportSpot(scene, targetX, targetY);
+              if (landing) {
+                enemy.sprite.setPosition(landing.x, landing.y);
+                enemy.sprite.setVelocity(0, 0);
+                enemy.path = null;
                 enemy.pathIndex = 0;
-              },
-            );
+                enemy.stuckStreak = 0;
+                enemy.stuckJitterAttempts = 0;
+                enemy.stuckJitterUntil = 0;
+                enemy.stuckCheckPos = { x: landing.x, y: landing.y };
+                enemy.stuckCheckAt = now;
+                // espace les teleportations d'urgence entre elles - sans
+                // ca, plusieurs ennemis bloques en meme temps (frequent,
+                // ils se bloquent souvent ENTRE EUX) pouvaient tous
+                // debarquer a la suite autour du heros, qui se
+                // retrouvait encercle d'un coup
+                scene.nextEnemyTeleportAllowedAt =
+                  now + ENEMY_STUCK_TELEPORT_GLOBAL_COOLDOWN;
+                continue;
+              }
+              // aucune case atteignable trouvee dans la fourchette de
+              // distance (coin tres encombre / cul-de-sac) - on retente
+              // au prochain cycle, cf. jitter normal juste en dessous
+              // plutot que de laisser l'ennemi fige
+            }
           }
         } else {
           enemy.stuckStreak = 0;
