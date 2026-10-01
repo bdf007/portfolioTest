@@ -10,9 +10,15 @@ const AGGRO_RADIUS_BY_TYPE = {
   guard: 8, // poste fixe, tres attentif
   patrol: 7, // en mouvement, attention normale
   rest: 4, // repos, reagit tard
+  wander: 7, // errance libre, meme attention qu'une patrouille classique
 };
 
-const DEFAULT_TYPE_WEIGHTS = { guard: 0.35, patrol: 0.4, rest: 0.25 };
+const DEFAULT_TYPE_WEIGHTS = {
+  guard: 0.1,
+  patrol: 0.3,
+  rest: 0.2,
+  wander: 0.4,
+};
 
 /**
  * Tire un type de comportement selon des poids, de facon seedee (meme rng
@@ -40,7 +46,7 @@ function pickPatrolRoute(
   grid,
   home,
   rng,
-  { radius = 5, maxPathLength = 20, maxTries = 15 } = {},
+  { radius = 9, maxPathLength = 36, maxTries = 25 } = {},
 ) {
   const height = grid.length;
   const width = grid[0].length;

@@ -10,8 +10,8 @@ import { generateDrunkardWalk } from "./drunkardwalk";
 // genere par le vrai generateur serveur (drunkardwalk) plutot qu'une
 // grille figee, pour une forme organique representative d'un vrai
 // niveau plutot qu'un motif artificiel de coins
-const PREVIEW_COLS = 14;
-const PREVIEW_ROWS = 10;
+const PREVIEW_COLS = 28;
+const PREVIEW_ROWS = 20;
 
 // chargees une seule fois (memes 6 images pour tous les biomes de
 // secours cave/tree - cf. biomeRegistry.js) plutot que recalculees a
@@ -45,7 +45,9 @@ class BiomePreviewScene extends Phaser.Scene {
     // sol/coin ponderees) ET par generateDrunkardWalk (forme du niveau) -
     // fixe et propre au tileset pour un rendu stable (pas de re-tirage
     // aleatoire a chaque remontage)
-    this.currentSeed = `biome-preview-desert`;
+    // this.currentSeed = `biome-preview-desert`;
+    this.currentSeed = `biome-preview-cityTiles_0_3`;
+    // this.currentSeed = `biome-preview-${this.biome.tilesetKey}`;
     const grid = generateDrunkardWalk({
       width: PREVIEW_COLS,
       height: PREVIEW_ROWS,

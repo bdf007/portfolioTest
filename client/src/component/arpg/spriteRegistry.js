@@ -1399,12 +1399,12 @@ export const SPRITE_REGISTRY = {
     path: batSpritesheet,
     frameWidth: 48,
     frameHeight: 48,
-    scale: 1,
+    scale: 0.7,
     lootTable: "batDrop",
     sheetCols: 4,
     sheetRows: 16,
     animations: FULL_ANIMATION_FRAMES,
-    hitbox: computeSafeHitbox(48, 48, 1),
+    hitbox: computeSafeHitbox(48, 48, 0.7),
   },
   brownBear: {
     key: "brownBear",
@@ -5907,6 +5907,7 @@ const HERO_STATS_PROFILES = {
       "randomTeleportGem",
       "slimeBlobLeatherHelmet",
       "slimeBlob",
+      "loreScroll1",
     ],
     startingAmmo: null,
     startingAbilities: [
@@ -6781,6 +6782,7 @@ export const ICON_SHEET_1_FRAMES = {
   summonPinkSpectrelinScroll: 91,
   summonSilverSpectrelinScroll: 91,
   summonBronzeSpectrelinScroll: 91,
+  loreScroll1: 91,
 };
 
 export const ICON_SHEET_2_FRAMES = {

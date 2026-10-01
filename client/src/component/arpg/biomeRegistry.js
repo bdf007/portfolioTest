@@ -27,6 +27,8 @@ import {
   CASTLE_DUNGEON_V03_AUTOTILE_SPRITESHEET,
   CITY_TILES_AUTOTILE_SPRITESHEET,
   CITY_WALLS1_AUTOTILE_SPRITESHEET,
+  CITY_WALLS2_AUTOTILE_SPRITESHEET,
+  CITY_WALLS3_AUTOTILE_SPRITESHEET,
   DARKWOODS2_AUTOTILE_SPRITESHEET,
   DARKWOODS_AUTOTILE_SPRITESHEET,
   DESERT_AUTOTILE_SPRITESHEET,
@@ -77,9 +79,49 @@ export const BIOME_REGISTRY = [
     spritesheet: HILLS1_AUTOTILE_SPRITESHEET,
   },
   {
-    tilesetKey: "cityWalls1",
-    displayName: "City Walls 1",
+    tilesetKey: "cityWalls1_0_0",
+    displayName: "City Walls1_0_0",
     spritesheet: CITY_WALLS1_AUTOTILE_SPRITESHEET,
+  },
+  {
+    tilesetKey: "cityWalls1_0_1",
+    displayName: "City Walls1_0_1",
+    spritesheet: CITY_WALLS1_AUTOTILE_SPRITESHEET,
+  },
+  {
+    tilesetKey: "cityWalls1_2_0",
+    displayName: "City Walls1_2_0",
+    spritesheet: CITY_WALLS1_AUTOTILE_SPRITESHEET,
+  },
+  {
+    tilesetKey: "cityWalls2_0_0",
+    displayName: "City Walls2_0_0",
+    spritesheet: CITY_WALLS2_AUTOTILE_SPRITESHEET,
+  },
+  {
+    tilesetKey: "cityWalls2_0_1",
+    displayName: "City Walls2_0_1",
+    spritesheet: CITY_WALLS2_AUTOTILE_SPRITESHEET,
+  },
+  {
+    tilesetKey: "cityWalls2_2_0",
+    displayName: "City Walls2_2_0",
+    spritesheet: CITY_WALLS2_AUTOTILE_SPRITESHEET,
+  },
+  {
+    tilesetKey: "cityWalls3_0_0",
+    displayName: "City Walls3_0_0",
+    spritesheet: CITY_WALLS3_AUTOTILE_SPRITESHEET,
+  },
+  {
+    tilesetKey: "cityWalls3_0_1",
+    displayName: "City Walls3_0_1",
+    spritesheet: CITY_WALLS3_AUTOTILE_SPRITESHEET,
+  },
+  {
+    tilesetKey: "cityWalls3_2_0",
+    displayName: "City Walls3_2_0",
+    spritesheet: CITY_WALLS3_AUTOTILE_SPRITESHEET,
   },
   {
     tilesetKey: "tower1",

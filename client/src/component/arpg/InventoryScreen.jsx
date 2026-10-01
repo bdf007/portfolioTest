@@ -897,7 +897,9 @@ export default function InventoryScreen({
             <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
               <div
                 style={{ position: "relative", cursor: "pointer" }}
-                onClick={() => setDetailItemId(itemId)}
+                onClick={() =>
+                  setDetailItemId({ itemId, sockets: instance?.sockets || [] })
+                }
                 title="Cliquer pour la description détaillée"
               >
                 <ItemIcon itemId={itemId} scale={1.1} />
@@ -1099,7 +1101,12 @@ export default function InventoryScreen({
                   >
                     <div
                       style={{ cursor: "pointer" }}
-                      onClick={() => setDetailItemId(group.itemId)}
+                      onClick={() =>
+                        setDetailItemId({
+                          itemId: group.itemId,
+                          sockets: group.sockets || [],
+                        })
+                      }
                       title="Cliquer pour la description détaillée"
                     >
                       <ItemIcon itemId={group.itemId} scale={1.5} />
@@ -1857,8 +1864,9 @@ export default function InventoryScreen({
             }}
           >
             {(() => {
-              const def = resolveItemDef(detailItemId);
+              const def = resolveItemDef(detailItemId.itemId);
               if (!def) return null;
+              const socketedGems = (detailItemId.sockets || []).filter(Boolean);
               return (
                 <>
                   <div
@@ -1869,7 +1877,7 @@ export default function InventoryScreen({
                       marginBottom: 10,
                     }}
                   >
-                    <ItemIcon itemId={detailItemId} scale={2} />
+                    <ItemIcon itemId={detailItemId.itemId} scale={2} />
                     <h4 style={{ margin: 0, fontSize: 14 }}>{def.name}</h4>
                   </div>
                   <div
@@ -1877,6 +1885,40 @@ export default function InventoryScreen({
                   >
                     {def.description}
                   </div>
+                  {socketedGems.length > 0 && (
+                    <div
+                      style={{
+                        fontSize: 11,
+                        color: "#9fd6c8",
+                        marginBottom: 10,
+                        borderTop: "1px solid rgba(138,112,80,0.4)",
+                        paddingTop: 8,
+                      }}
+                    >
+                      <div
+                        style={{
+                          fontSize: 10,
+                          color: "#8a7050",
+                          marginBottom: 3,
+                          textTransform: "uppercase",
+                          letterSpacing: 0.5,
+                        }}
+                      >
+                        Gemmes enchâssées
+                      </div>
+                      {socketedGems.map((gemId, i) => {
+                        const gemDef = resolveItemDef(gemId);
+                        return (
+                          <div key={i} style={{ marginBottom: 2 }}>
+                            <strong>{gemDef?.name || gemId}</strong>
+                            {gemDef?.description
+                              ? ` — ${gemDef.description}`
+                              : ""}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                   {def.loreText ? (
                     <div
                       style={{

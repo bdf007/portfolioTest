@@ -118,7 +118,7 @@ export function createQuestNpcs(scene, npcDataArray) {
     sprite.anims.play(`${npcSpriteKey}-idle-down`);
     sprite.setDepth(9);
     scene.levelColliders.push(scene.physics.add.collider(sprite, scene.layer));
-    scene.levelColliders.push(scene.physics.add.collider(scene.hero, sprite));
+    // scene.levelColliders.push(scene.physics.add.collider(scene.hero, sprite));
     scene.levelColliders.push(
       scene.physics.add.collider(scene.enemyGroup, sprite),
     );
@@ -263,7 +263,7 @@ export function createAmbientNpcs(scene, npcDataArray) {
     sprite.anims.play(`${npcSpriteKey}-idle-down`);
     sprite.setDepth(9);
     scene.levelColliders.push(scene.physics.add.collider(sprite, scene.layer));
-    scene.levelColliders.push(scene.physics.add.collider(scene.hero, sprite));
+    // scene.levelColliders.push(scene.physics.add.collider(scene.hero, sprite));
     scene.levelColliders.push(
       scene.physics.add.collider(scene.enemyGroup, sprite),
     );
@@ -333,8 +333,7 @@ export function openQuestDialog(scene, npc) {
       .filter((i) => i.itemId === qs.targetItemId)
       .reduce((sum, i) => sum + i.quantity, 0);
     const hasEnough = haveQty >= requiredQty;
-    const qtyLabel =
-      requiredQty > 1 ? `${requiredQty} ${itemName}` : itemName;
+    const qtyLabel = requiredQty > 1 ? `${requiredQty} ${itemName}` : itemName;
 
     if (qs.completed) {
       text = custom.complete || `Merci pour ${qtyLabel} !`;
@@ -412,8 +411,7 @@ export function openQuestDialog(scene, npc) {
         const hasItem = scene.inventory.some((i) => i.itemId === qs.itemId);
         if (hasItem) {
           text =
-            custom.progress ||
-            `Tu as mon colis ! Merci de me l'avoir apporté.`;
+            custom.progress || `Tu as mon colis ! Merci de me l'avoir apporté.`;
           canTurnIn = true;
         } else {
           text = custom.progress || `J'attends toujours mon colis...`;
@@ -442,8 +440,7 @@ export function openQuestDialog(scene, npc) {
       }
       if (qs.completed) {
         text =
-          custom.complete ||
-          `Merci de m'avoir aidé à retrouver mes proches !`;
+          custom.complete || `Merci de m'avoir aidé à retrouver mes proches !`;
       } else {
         const escortArrived = scene.summons.some(
           (s) => s.isEscort && s.escortQuestKey === qs.linkedKey,
@@ -455,8 +452,7 @@ export function openQuestDialog(scene, npc) {
           canTurnIn = true;
         } else {
           text =
-            custom.progress ||
-            `J'attends toujours l'arrivée de mon protégé...`;
+            custom.progress || `J'attends toujours l'arrivée de mon protégé...`;
         }
       }
     } else {
@@ -481,8 +477,7 @@ export function openQuestDialog(scene, npc) {
       `Progression : ${qs.killCount} / ${qs.target} ${enemyName} tués. Reviens me voir une fois terminé !`;
   } else {
     const enemyName = resolveEnemyDisplayName(qs.targetEnemyType);
-    text =
-      custom.offer || `Peux-tu tuer ${qs.target} ${enemyName} pour toi ?`;
+    text = custom.offer || `Peux-tu tuer ${qs.target} ${enemyName} pour toi ?`;
     canAccept = true;
   }
   scene.events.emit("npc-dialog", {

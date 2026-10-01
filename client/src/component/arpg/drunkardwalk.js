@@ -153,9 +153,9 @@ export function generateDrunkardWalk({
   width,
   height,
   seed,
-  targetFloorRatio = 0.35,
-  maxSteps = 60000,
-  walkerCount = 4,
+  targetFloorRatio = 0.4, // valeur originale : 0.35
+  maxSteps = 80000, // valeur originale : 60000
+  walkerCount = 5, // valeur originale : 4
 }) {
   const grid = createGrid(width, height, WALL);
   const rng = createRng(String(seed));

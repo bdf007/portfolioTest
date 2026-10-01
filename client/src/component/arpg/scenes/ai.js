@@ -180,6 +180,39 @@ function findEnemyTeleportSpot(scene, targetX, targetY) {
   };
 }
 
+/**
+ * Choisit une case de sol au hasard a portee de `home` pour l'etat
+ * "wander" (errance libre, cf. enemyBehavior.js) - contrairement a
+ * pickPatrolRoute (qui calcule UNE SEULE fois un aller-retour fixe a la
+ * creation de l'ennemi), celle-ci est appelee a repetition (toutes les
+ * ENEMY_WANDER_MIN/MAX_INTERVAL) pour tirer une nouvelle destination a
+ * chaque fois, donnant un trajet imprevisible plutot qu'une navette
+ * reguliere. Pas de verification d'accessibilite reelle (contrairement a
+ * findEnemyTeleportSpot) : une case isolee tiree par malchance fera
+ * simplement echouer le pathfinding (scene.requestPath renverra null),
+ * l'ennemi restera immobile jusqu'au prochain tirage - degradation sans
+ * consequence, l'erreur se corrige seule au cycle suivant.
+ */
+function pickRandomWanderSpot(scene, home, radius) {
+  const grid = scene.fogGrid;
+  const width = grid[0].length;
+  const height = grid.length;
+
+  for (let attempt = 0; attempt < 10; attempt++) {
+    const angle = Math.random() * Math.PI * 2;
+    const dist = 2 + Math.random() * Math.max(0, radius - 2);
+    const x = Math.round(home.x + Math.cos(angle) * dist);
+    const y = Math.round(home.y + Math.sin(angle) * dist);
+    if (x < 0 || y < 0 || x >= width || y >= height) continue;
+    if (grid[y][x] === WALL) continue;
+    return {
+      x: x * TILE_SIZE + TILE_SIZE / 2,
+      y: y * TILE_SIZE + TILE_SIZE / 2,
+    };
+  }
+  return null;
+}
+
 export function isPlayerBehindEnemy(
   scene,
   enemy,
@@ -197,104 +230,127 @@ export function isPlayerBehindEnemy(
   return dot < DETECTION_BEHIND_DOT_THRESHOLD;
 }
 
-export function updateEnemyDecisions(scene, playerTileX, playerTileY) {
+/**
+ * Logique de decision pour UN SEUL ennemi (detection d'aggro, perte de
+ * vue, retour au point de depart) - extraite de l'ancienne boucle de
+ * updateEnemyDecisions pour pouvoir etre appelee de deux facons :
+ *  - en masse sur tous les ennemis des que le JOUEUR change de case (cf.
+ *    updateEnemyDecisions plus bas, appelee par MainScene.update) - la
+ *    reaction la plus immediate possible a un deplacement du joueur ;
+ *  - individuellement, en rythme de croisiere, depuis updateEnemyMovement
+ *    (cf. ENEMY_DECISION_REFRESH_INTERVAL) - INDEPENDAMMENT des
+ *    deplacements du joueur, pour qu'un ennemi en chasse/retour recoive
+ *    regulierement une vraie decision/un vrai chemin EasyStar meme si le
+ *    joueur reste totalement immobile. Avant cet ajout, un joueur statique
+ *    privait tous les ennemis actifs de toute vraie mise a jour de
+ *    pathfinding, laissant uniquement le filet de secours "bloque depuis
+ *    1,5s" (cf. updateEnemyMovement) faire tout le travail - lequel finit
+ *    par reconverger sur les memes points de blocage/teleportation en
+ *    boucle au lieu de vraiment recalculer un chemin a jour.
+ */
+function updateSingleEnemyDecision(scene, enemy, playerTileX, playerTileY) {
   const grid = scene.fogGrid;
   const width = grid[0].length,
     height = grid.length;
   const isStealthed = scene.time.now < scene.stealthUntil;
 
-  for (const enemy of scene.enemies) {
-    if (isStealthed && enemy.state !== "chase") continue;
+  if (isStealthed && enemy.state !== "chase") return;
 
-    const ex = Math.floor(enemy.sprite.x / TILE_SIZE);
-    const ey = Math.floor(enemy.sprite.y / TILE_SIZE);
+  const ex = Math.floor(enemy.sprite.x / TILE_SIZE);
+  const ey = Math.floor(enemy.sprite.y / TILE_SIZE);
 
-    if (ey < 0 || ey >= height || ex < 0 || ex >= width) {
-      console.error(
-        `[updateEnemyDecisions] ennemi hors limites ! isBoss=${enemy.isBoss} archetype=${enemy.archetype} ex=${ex} ey=${ey} (grille: ${width}x${height}) sprite.x=${enemy.sprite.x} sprite.y=${enemy.sprite.y}`,
-      );
-      continue; // evite le plantage en attendant le vrai correctif
-    }
-
-    let targetTileX = playerTileX;
-    let targetTileY = playerTileY;
-    let targetType = "player";
-    let targetRef = null;
-    let bestDist = Math.hypot(ex - playerTileX, ey - playerTileY);
-
-    for (const summon of scene.summons) {
-      const sx = Math.floor(summon.sprite.x / TILE_SIZE);
-      const sy = Math.floor(summon.sprite.y / TILE_SIZE);
-      const d = Math.hypot(ex - sx, ey - sy);
-      if (d < bestDist) {
-        bestDist = d;
-        targetTileX = sx;
-        targetTileY = sy;
-        targetType = "summon";
-        targetRef = summon;
-      }
-    }
-
-    enemy.chaseTargetType = targetType;
-    enemy.chaseTargetRef = targetRef;
-
-    const distanceToPlayer = bestDist;
-    const losClear = hasClearLineOfSight(
-      grid,
-      width,
-      height,
-      ex,
-      ey,
-      targetTileX,
-      targetTileY,
+  if (ey < 0 || ey >= height || ex < 0 || ex >= width) {
+    console.error(
+      `[updateSingleEnemyDecision] ennemi hors limites ! isBoss=${enemy.isBoss} archetype=${enemy.archetype} ex=${ex} ey=${ey} (grille: ${width}x${height}) sprite.x=${enemy.sprite.x} sprite.y=${enemy.sprite.y}`,
     );
-    const arrivedAtHome = Math.hypot(ex - enemy.home.x, ey - enemy.home.y) < 1;
-    const isPlayerBehind =
-      targetType === "player"
-        ? isPlayerBehindEnemy(scene, enemy, ex, ey, playerTileX, playerTileY)
-        : false;
+    return; // evite le plantage en attendant le vrai correctif
+  }
 
-    const nextState = decideNextState(enemy.state, {
-      distanceToPlayer,
-      losClear,
-      aggroRadius: enemy.aggroRadius,
-      arrivedAtHome,
-      isPlayerBehind,
-    });
+  let targetTileX = playerTileX;
+  let targetTileY = playerTileY;
+  let targetType = "player";
+  let targetRef = null;
+  let bestDist = Math.hypot(ex - playerTileX, ey - playerTileY);
 
-    if (nextState === "home") {
-      enemy.state = enemy.type;
-      enemy.patrolIndex = 0;
-      enemy.patrolDirection = 1;
-      enemy.path = null;
-      continue;
+  for (const summon of scene.summons) {
+    const sx = Math.floor(summon.sprite.x / TILE_SIZE);
+    const sy = Math.floor(summon.sprite.y / TILE_SIZE);
+    const d = Math.hypot(ex - sx, ey - sy);
+    if (d < bestDist) {
+      bestDist = d;
+      targetTileX = sx;
+      targetTileY = sy;
+      targetType = "summon";
+      targetRef = summon;
     }
+  }
 
-    enemy.state = nextState;
+  enemy.chaseTargetType = targetType;
+  enemy.chaseTargetRef = targetRef;
 
-    if (nextState === "chase") {
-      scene.requestPath(
-        enemy.sprite.x,
-        enemy.sprite.y,
-        targetTileX * TILE_SIZE + TILE_SIZE / 2,
-        targetTileY * TILE_SIZE + TILE_SIZE / 2,
-        (path) => {
-          enemy.path = path;
-          enemy.pathIndex = 0;
-        },
-      );
-    } else if (nextState === "returning") {
-      scene.requestPath(
-        enemy.sprite.x,
-        enemy.sprite.y,
-        enemy.home.x * TILE_SIZE + TILE_SIZE / 2,
-        enemy.home.y * TILE_SIZE + TILE_SIZE / 2,
-        (path) => {
-          enemy.path = path;
-          enemy.pathIndex = 0;
-        },
-      );
-    }
+  const distanceToPlayer = bestDist;
+  const losClear = hasClearLineOfSight(
+    grid,
+    width,
+    height,
+    ex,
+    ey,
+    targetTileX,
+    targetTileY,
+  );
+  const arrivedAtHome = Math.hypot(ex - enemy.home.x, ey - enemy.home.y) < 1;
+  const isPlayerBehind =
+    targetType === "player"
+      ? isPlayerBehindEnemy(scene, enemy, ex, ey, playerTileX, playerTileY)
+      : false;
+
+  const nextState = decideNextState(enemy.state, {
+    distanceToPlayer,
+    losClear,
+    aggroRadius: enemy.aggroRadius,
+    arrivedAtHome,
+    isPlayerBehind,
+  });
+
+  if (nextState === "home") {
+    enemy.state = enemy.type;
+    enemy.patrolIndex = 0;
+    enemy.patrolDirection = 1;
+    enemy.path = null;
+    enemy.nextDecisionRefreshAt = null;
+    return;
+  }
+
+  enemy.state = nextState;
+
+  if (nextState === "chase") {
+    scene.requestPath(
+      enemy.sprite.x,
+      enemy.sprite.y,
+      targetTileX * TILE_SIZE + TILE_SIZE / 2,
+      targetTileY * TILE_SIZE + TILE_SIZE / 2,
+      (path) => {
+        enemy.path = path;
+        enemy.pathIndex = 0;
+      },
+    );
+  } else if (nextState === "returning") {
+    scene.requestPath(
+      enemy.sprite.x,
+      enemy.sprite.y,
+      enemy.home.x * TILE_SIZE + TILE_SIZE / 2,
+      enemy.home.y * TILE_SIZE + TILE_SIZE / 2,
+      (path) => {
+        enemy.path = path;
+        enemy.pathIndex = 0;
+      },
+    );
+  }
+}
+
+export function updateEnemyDecisions(scene, playerTileX, playerTileY) {
+  for (const enemy of scene.enemies) {
+    updateSingleEnemyDecision(scene, enemy, playerTileX, playerTileY);
   }
 }
 
@@ -305,6 +361,10 @@ export function updateEnemyMovement(scene) {
   const ENEMY_STUCK_JITTER_SPEED = 90;
   const ENEMY_STUCK_TELEPORT_JITTER_ATTEMPTS = 3; // ~4-5s de blocage malgre plusieurs jitter+repath
   const ENEMY_STUCK_TELEPORT_GLOBAL_COOLDOWN = 1200; // espace les teleportations d'urgence entre tous les ennemis
+  const ENEMY_DECISION_REFRESH_INTERVAL = 800; // rafraichissement de decision/chemin independant des deplacements du joueur, cf. commentaire plus bas
+  const ENEMY_WANDER_MIN_INTERVAL = 3000; // frequence de tirage d'une nouvelle destination pour l'etat "wander"
+  const ENEMY_WANDER_MAX_INTERVAL = 5000;
+  const ENEMY_WANDER_RADIUS = 10; // portee autour de home pour le tirage
 
   for (const enemy of scene.enemies) {
     enemy.visible = scene.isEnemyVisible(enemy);
@@ -323,6 +383,73 @@ export function updateEnemyMovement(scene) {
       continue;
     }
 
+    // Detection d'aggro periodique pour les ennemis PAS encore en
+    // chase/returning (patrouille, garde, sommeil...), independante des
+    // deplacements du joueur - meme principe que le rafraichissement de
+    // chemin des ennemis actifs plus bas, mais ici c'est la decision
+    // COMPLETE (decideNextState, y compris la detection d'aggro) qui doit
+    // tourner, puisque c'est elle qui decide qu'un ennemi en patrouille
+    // vient de te reperer. Sans ca, un ennemi pouvait te croiser (ou te
+    // marcher dessus) indefiniment sans jamais t'aggro tant que TOI tu ne
+    // changeais pas de case. Contrairement au rafraichissement des
+    // ennemis en chase (volontairement limite au chemin, cf. plus bas),
+    // rappeler la decision complete ici ne risque aucun "de-aggro
+    // premature" : il n'y a encore rien a annuler, on ne fait QUE
+    // detecter un nouvel aggro.
+    if (enemy.state !== "chase" && enemy.state !== "returning") {
+      const patrolDecisionNow = scene.time.now;
+      if (
+        !enemy.nextDecisionRefreshAt ||
+        patrolDecisionNow >= enemy.nextDecisionRefreshAt
+      ) {
+        enemy.nextDecisionRefreshAt =
+          patrolDecisionNow + ENEMY_DECISION_REFRESH_INTERVAL;
+        const playerTileX = Math.floor(scene.hero.x / TILE_SIZE);
+        const playerTileY = Math.floor(scene.hero.y / TILE_SIZE);
+        updateSingleEnemyDecision(scene, enemy, playerTileX, playerTileY);
+      }
+    }
+
+    if (enemy.state === "returning") {
+      const homeX = enemy.home.x * TILE_SIZE + TILE_SIZE / 2;
+      const homeY = enemy.home.y * TILE_SIZE + TILE_SIZE / 2;
+      const distToHome = Math.hypot(
+        homeX - enemy.sprite.x,
+        homeY - enemy.sprite.y,
+      );
+      if (distToHome < ENEMY_STOP_DISTANCE) {
+        // Arrive chez lui : reprend sa patrouille tout de suite, sans
+        // attendre qu'updateEnemyDecisions s'en charge - cette fonction
+        // ne tourne que quand le JOUEUR change de case (cf. plus bas),
+        // donc si le joueur reste cache/immobile, cette transition
+        // n'arrivait jamais. L'ennemi restait alors immobile (objectif
+        // atteint, rien a faire) a cote de son point de depart, et la
+        // detection de blocage juste en dessous prenait cette immobilite
+        // NORMALE pour un vrai blocage geometrique : au bout de quelques
+        // cycles elle le teleportait, il revenait a pied, se re-arretait
+        // chez lui en attendant la meme transition qui ne venait
+        // toujours pas, et ainsi de suite - boucle teleport/retour sans
+        // fin. En gerant la transition ici, independamment du joueur,
+        // l'ennemi reprend sa patrouille immediatement et ne reste
+        // jamais assez longtemps immobile pour etre pris pour "bloque".
+        enemy.state = enemy.type;
+        enemy.patrolIndex = 0;
+        enemy.patrolDirection = 1;
+        enemy.path = null;
+        enemy.pathIndex = 0;
+        enemy.stuckStreak = 0;
+        enemy.stuckJitterAttempts = 0;
+        enemy.stuckCheckPos = null;
+        enemy.nextDecisionRefreshAt = null;
+        enemy.sprite.setVelocity(0, 0);
+        enemy.sprite.anims.play(
+          enemy.spriteKey + "-idle-" + enemy.lastDir,
+          true,
+        );
+        continue;
+      }
+    }
+
     if (enemy.state === "chase" || enemy.state === "returning") {
       let targetType = enemy.chaseTargetType;
       let targetRef = enemy.chaseTargetRef;
@@ -338,6 +465,53 @@ export function updateEnemyMovement(scene) {
       const targetY =
         targetType === "summon" ? targetRef.sprite.y : scene.hero.y;
 
+      // Rafraichissement de CHEMIN periodique, INDEPENDANT des
+      // deplacements du joueur. Sans ca, un joueur totalement immobile
+      // pouvait priver un ennemi actif de toute vraie mise a jour de
+      // pathfinding pendant un temps illimite, laissant le filet de
+      // secours "bloque depuis 1,5s" faire tout le travail et reconverger
+      // en boucle sur les memes points de blocage/teleportation.
+      // Volontairement limite a un simple requestPath vers la cible
+      // courante (le heros/summon en chase, enemy.home en returning) -
+      // SANS jamais rappeler decideNextState ici. Une premiere version
+      // rappelait toute la decision (aggro/de-aggro inclus), mais ca
+      // faisait abandonner la chasse en cours de route : un ennemi aggro
+      // par un tir a distance part forcement de plus loin que
+      // aggroRadius (c'est le principe meme d'attaquer a distance), donc
+      // la reevaluation finissait tot ou tard par le desaggroer avant
+      // meme qu'il ait eu le temps de te rejoindre. La decision
+      // d'aggro/de-aggro reste donc uniquement geree par
+      // updateEnemyDecisions (declenchee par tes deplacements) et par la
+      // sortie "returning -> patrol" geree juste au-dessus quand il est
+      // reellement arrive chez lui - ici on ne fait QUE garder le chemin
+      // a jour, jamais changer l'etat.
+      const decisionNow = scene.time.now;
+      if (!enemy.nextDecisionRefreshAt) {
+        enemy.nextDecisionRefreshAt =
+          decisionNow + ENEMY_DECISION_REFRESH_INTERVAL;
+      } else if (decisionNow >= enemy.nextDecisionRefreshAt) {
+        enemy.nextDecisionRefreshAt =
+          decisionNow + ENEMY_DECISION_REFRESH_INTERVAL;
+        const repathDestX =
+          enemy.state === "returning"
+            ? enemy.home.x * TILE_SIZE + TILE_SIZE / 2
+            : targetX;
+        const repathDestY =
+          enemy.state === "returning"
+            ? enemy.home.y * TILE_SIZE + TILE_SIZE / 2
+            : targetY;
+        scene.requestPath(
+          enemy.sprite.x,
+          enemy.sprite.y,
+          repathDestX,
+          repathDestY,
+          (path) => {
+            enemy.path = path;
+            enemy.pathIndex = 0;
+          },
+        );
+      }
+
       const distToTarget = Math.hypot(
         targetX - enemy.sprite.x,
         targetY - enemy.sprite.y,
@@ -348,6 +522,27 @@ export function updateEnemyMovement(scene) {
         : ENEMY_STOP_DISTANCE;
       const stopForMelee =
         enemy.state === "chase" && distToTarget < stopDistance;
+
+      // targetX/targetY pointent TOUJOURS sur le heros/summon (voir plus
+      // haut), y compris en etat "returning" - ce qui est volontaire pour
+      // le calcul de distToTarget (detection de re-aggro) mais PAS pour un
+      // rechemin de secours : un ennemi bloque en train de RENTRER chez
+      // lui doit etre redirige vers enemy.home, jamais vers le heros
+      // (sinon il repart droit sur le joueur au lieu de rentrer, et comme
+      // "returning" n'a ni stopForMelee ni logique d'attaque, il reste
+      // juste colle contre le heros a pousser indefiniment - boucle de
+      // blocage/teleportation sans fin). repathTargetX/Y ci-dessous sont
+      // la VRAIE destination courante de l'ennemi, utilises uniquement
+      // par le filet de securite anti-blocage plus bas (rechemin +
+      // teleportation), jamais par la detection de re-aggro.
+      const repathTargetX =
+        enemy.state === "returning"
+          ? enemy.home.x * TILE_SIZE + TILE_SIZE / 2
+          : targetX;
+      const repathTargetY =
+        enemy.state === "returning"
+          ? enemy.home.y * TILE_SIZE + TILE_SIZE / 2
+          : targetY;
 
       if (
         enemy.state === "chase" &&
@@ -436,24 +631,64 @@ export function updateEnemyMovement(scene) {
         if (movedDist < ENEMY_STUCK_MOVE_THRESHOLD) {
           enemy.stuckStreak = (enemy.stuckStreak || 0) + 1;
           if (enemy.stuckStreak >= ENEMY_STUCK_JITTER_STREAK) {
+            // updateEnemyDecisions (seule source normale de nouveaux
+            // chemins pour le mode chase) ne tourne que quand le JOUEUR
+            // change de case (perf, cf. MainScene.update) - si le
+            // joueur reste immobile, un ennemi dont le chemin est
+            // perime ou vide (ex: juste apres une teleportation
+            // d'urgence, qui met enemy.path a null) n'en recevait donc
+            // jamais de nouveau, et retombait bloque -> re-teleporte en
+            // boucle toutes les ~4-5s indefiniment tant que le joueur
+            // ne bougeait pas. On redemande ici nous-memes un chemin
+            // frais a chaque cycle de blocage, independamment des
+            // deplacements du joueur - stuckJitterUntil declenche en
+            // prime le jitter visuel (vecteur aleatoire) le temps que
+            // le nouveau chemin arrive.
+            scene.requestPath(
+              enemy.sprite.x,
+              enemy.sprite.y,
+              repathTargetX,
+              repathTargetY,
+              (path) => {
+                enemy.path = path;
+                enemy.pathIndex = 0;
+              },
+            );
+            enemy.stuckJitterUntil = now + 300;
+            enemy.stuckStreak = 0;
+
             // Filet de securite anti-softlock : le repath + jitter
             // suffit dans la grande majorite des cas, mais pas
             // toujours (ennemi vraiment coince dans la geometrie, clip
-            // de collision...). On compte les cycles de jitter
-            // consecutifs qui n'ont pas resolu le blocage ; au bout de
-            // ENEMY_STUCK_TELEPORT_JITTER_ATTEMPTS, on teleporte
-            // l'ennemi pres de sa cible plutot que de le laisser
-            // rebondir indefiniment contre la geometrie. Critique
-            // devant une salle de boss : la porte reste verrouillee
-            // tant que tous les ennemis ne sont pas elimines, donc un
-            // ennemi injoignable = softlock garanti pour le joueur.
+            // de collision...). On compte les cycles de blocage
+            // consecutifs qui n'ont pas resolu le probleme malgre le
+            // chemin frais ; au bout de ENEMY_STUCK_TELEPORT_JITTER_ATTEMPTS,
+            // on teleporte l'ennemi pres de sa cible plutot que de le
+            // laisser rebondir indefiniment contre la geometrie.
+            // Critique devant une salle de boss : la porte reste
+            // verrouillee tant que tous les ennemis ne sont pas
+            // elimines, donc un ennemi injoignable = softlock garanti.
             enemy.stuckJitterAttempts = (enemy.stuckJitterAttempts || 0) + 1;
             if (
               enemy.stuckJitterAttempts >=
                 ENEMY_STUCK_TELEPORT_JITTER_ATTEMPTS &&
               now >= (scene.nextEnemyTeleportAllowedAt || 0)
             ) {
-              const landing = findEnemyTeleportSpot(scene, targetX, targetY);
+              // Desormais inconditionnel (plus de condition de distance -
+              // etre deja proche de la cible ne veut pas dire que ce n'est
+              // QUE de la congestion, ca peut aussi etre un vrai blocage
+              // contre un mur tout pres du heros). Ce n'est de toute facon
+              // plus le filet de rattrapage principal : le redemande de
+              // chemin juste au-dessus, a CHAQUE cycle de blocage,
+              // resout deja la grande majorite des cas (congestion
+              // temporaire comprise) avant meme d'arriver ici - on
+              // n'atteint ce point qu'apres plusieurs cycles de rechemin
+              // qui n'ont rien change, signe d'un vrai blocage persistant.
+              const landing = findEnemyTeleportSpot(
+                scene,
+                repathTargetX,
+                repathTargetY,
+              );
               if (landing) {
                 enemy.sprite.setPosition(landing.x, landing.y);
                 enemy.sprite.setVelocity(0, 0);
@@ -475,8 +710,7 @@ export function updateEnemyMovement(scene) {
               }
               // aucune case atteignable trouvee dans la fourchette de
               // distance (coin tres encombre / cul-de-sac) - on retente
-              // au prochain cycle, cf. jitter normal juste en dessous
-              // plutot que de laisser l'ennemi fige
+              // au prochain cycle de blocage
             }
           }
         } else {
@@ -538,6 +772,67 @@ export function updateEnemyMovement(scene) {
           enemy.patrolIndex += enemy.patrolDirection;
         },
       );
+      continue;
+    }
+
+    if (enemy.state === "wander") {
+      // Errance libre : contrairement a "patrol" (aller-retour fixe
+      // calcule une fois), on tire une NOUVELLE destination aleatoire a
+      // portee toutes les ENEMY_WANDER_MIN/MAX_INTERVAL et on s'y rend
+      // via le vrai pathfinding (comme la chasse, cf. followPathStep) -
+      // jamais la marche en ligne droite de moveEnemyToward, pour garder
+      // la meme robustesse anti-blocage que le reste du systeme.
+      const wanderNow = scene.time.now;
+      if (!enemy.wanderNextPickAt || wanderNow >= enemy.wanderNextPickAt) {
+        enemy.wanderNextPickAt =
+          wanderNow +
+          ENEMY_WANDER_MIN_INTERVAL +
+          Math.random() *
+            (ENEMY_WANDER_MAX_INTERVAL - ENEMY_WANDER_MIN_INTERVAL);
+        const spot = pickRandomWanderSpot(
+          scene,
+          enemy.home,
+          ENEMY_WANDER_RADIUS,
+        );
+        if (spot) {
+          scene.requestPath(
+            enemy.sprite.x,
+            enemy.sprite.y,
+            spot.x,
+            spot.y,
+            (path) => {
+              enemy.path = path;
+              enemy.pathIndex = 0;
+            },
+          );
+        }
+      }
+
+      const wanderStep = scene.followPathStep(
+        enemy,
+        getEffectiveEnemySpeed(enemy) * 0.6,
+      );
+      if (wanderStep) {
+        enemy.sprite.setVelocity(wanderStep.vx, wanderStep.vy);
+        enemy.lastDir =
+          Math.abs(wanderStep.nx) > Math.abs(wanderStep.ny)
+            ? wanderStep.nx > 0
+              ? "right"
+              : "left"
+            : wanderStep.ny > 0
+              ? "down"
+              : "up";
+        enemy.sprite.anims.play(
+          enemy.spriteKey + "-walk-" + enemy.lastDir,
+          true,
+        );
+      } else {
+        enemy.sprite.setVelocity(0, 0);
+        enemy.sprite.anims.play(
+          enemy.spriteKey + "-idle-" + enemy.lastDir,
+          true,
+        );
+      }
       continue;
     }
 

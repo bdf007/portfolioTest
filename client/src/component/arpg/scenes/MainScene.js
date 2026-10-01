@@ -1195,7 +1195,7 @@ export default class MainScene extends Phaser.Scene {
       this.useFury();
     }
 
-    updateEnemyMovement(this);
+    // updateEnemyMovement(this);
 
     for (const chest of this.chests) {
       if (!chest.sprite) continue;
@@ -1382,6 +1382,7 @@ export default class MainScene extends Phaser.Scene {
 
     if (dist < 4) {
       enemy.stuckCheck = null;
+      enemy.patrolJitterUntil = 0;
       onArrive();
       return;
     }
@@ -1394,9 +1395,19 @@ export default class MainScene extends Phaser.Scene {
           enemy.sprite.y - enemy.stuckCheck.y,
         );
         if (moved < 3) {
-          enemy.stuckCheck = null;
-          onArrive();
-          return;
+          // Reellement bloque (la case suivante de la route est
+          // normalement toujours praticable, calculee par un vrai
+          // pathfinding - un blocage ici vient quasi toujours d'un
+          // autre PNJ/ennemi qui occupe la case au meme moment). On ne
+          // fait PLUS comme si on etait arrive : ca cassait la garantie
+          // "case adjacente a case adjacente" de la route en faisant
+          // sauter un cran en avant depuis une position pas vraiment
+          // atteinte, ce qui pouvait ensuite faire cogner un mur sur le
+          // saut suivant (plus garanti sans obstacle). On se contente
+          // d'un leger jitter le temps que l'obstacle se degage, sans
+          // jamais avancer dans la route tant que la case n'est pas
+          // reellement atteinte.
+          enemy.patrolJitterUntil = now + 300;
         }
       }
       enemy.stuckCheck = { x: enemy.sprite.x, y: enemy.sprite.y, time: now };
@@ -1404,13 +1415,20 @@ export default class MainScene extends Phaser.Scene {
 
     const nx = dx / dist,
       ny = dy / dist;
-    enemy.sprite.setVelocity(nx * speed, ny * speed);
+    let vx = nx * speed,
+      vy = ny * speed;
+    if (now < (enemy.patrolJitterUntil || 0)) {
+      const jitterAngle = Math.random() * Math.PI * 2;
+      vx += Math.cos(jitterAngle) * speed * 0.6;
+      vy += Math.sin(jitterAngle) * speed * 0.6;
+    }
+    enemy.sprite.setVelocity(vx, vy);
     const edir =
-      Math.abs(nx) > Math.abs(ny)
-        ? nx > 0
+      Math.abs(vx) > Math.abs(vy)
+        ? vx > 0
           ? "right"
           : "left"
-        : ny > 0
+        : vy > 0
           ? "down"
           : "up";
     enemy.sprite.anims.play(enemy.spriteKey + "-walk-" + edir, true);

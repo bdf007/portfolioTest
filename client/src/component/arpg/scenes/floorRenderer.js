@@ -20,8 +20,8 @@ import {
   DARKWOODS2_AUTOTILE_SPRITESHEET,
   STANDARD_FIELDS2_AUTOTILE_SPRITESHEET,
   CITY_WALLS1_AUTOTILE_SPRITESHEET,
-  // CITY_WALLS2_AUTOTILE_SPRITESHEET,
-  // CITY_WALLS3_AUTOTILE_SPRITESHEET,
+  CITY_WALLS2_AUTOTILE_SPRITESHEET,
+  CITY_WALLS3_AUTOTILE_SPRITESHEET,
   // CITY_WALLSE2_AUTOTILE_SPRITESHEET,
   // CITY_WALLSE3_AUTOTILE_SPRITESHEET,
   // FORTRESS1_AUTOTILE_SPRITESHEET,
@@ -143,7 +143,7 @@ const WALL_CORNER_INDEX_TO_FRAME_0_0_TOWER1 = [
   22,
   17,
 ];
-const WALL_CORNER_INDEX_TO_FRAME_0_0_CITY_WALLS1 = [
+const WALL_CORNER_INDEX_TO_FRAME_0_0_CITY_WALLS = [
   224,
   32,
   0,
@@ -161,8 +161,44 @@ const WALL_CORNER_INDEX_TO_FRAME_0_0_CITY_WALLS1 = [
   22,
   17,
 ];
+const WALL_CORNER_INDEX_TO_FRAME_0_1_CITY_WALLS = [
+  224,
+  35,
+  0,
+  16,
+  2,
+  [32, 2],
+  4,
+  55,
+  34,
+  33,
+  [34, 0],
+  7,
+  18,
+  6,
+  54,
+  20,
+];
+const WALL_CORNER_INDEX_TO_FRAME_2_0_CITY_WALLS = [
+  224, 128, 96, 112, 98, 132, 97, 99, 130, 129, 131, 115, 114, 116, 100, 113,
+];
 const WALL_CORNER_INDEX_TO_FRAME_0_1 = [
-  70, 35, 3, 19, 5, 35, 4, 20, 37, 36, 5, 39, 21, 38, 20, 20,
+  70,
+  35,
+  3,
+  19,
+  5,
+  [35, 5],
+  4,
+  20,
+  37,
+  36,
+  [37, 3],
+  39,
+  21,
+  38,
+  20,
+  20,
 ];
 const WALL_CORNER_INDEX_TO_FRAME_CITY_TILE_0_1 = [
   {
@@ -176,12 +212,12 @@ const WALL_CORNER_INDEX_TO_FRAME_CITY_TILE_0_1 = [
   0,
   32,
   2,
-  [32, 2],
+  4,
   1,
   68,
   66,
   65,
-  [66, 0],
+  4,
   36,
   34,
   35,
@@ -207,40 +243,10 @@ const WALL_CORNER_INDEX_TO_FRAME_CITY_TILE_0_2 = [
   129,
 ];
 const WALL_CORNER_INDEX_TO_FRAME_CITY_TILE_0_3 = [
-  7,
-  256,
-  192,
-  224,
-  194,
-  [224, 194],
-  193,
-  196,
-  258,
-  257,
-  [258, 192],
-  164,
-  226,
-  163,
-  195,
-  225,
+  7, 256, 192, 224, 194, 196, 193, 196, 258, 257, 195, 164, 226, 163, 195, 225,
 ];
 const WALL_CORNER_INDEX_TO_FRAME_CITY_TILE_0_4 = [
-  7,
-  352,
-  288,
-  320,
-  290,
-  [320, 290],
-  289,
-  196,
-  354,
-  353,
-  [354, 288],
-  164,
-  322,
-  163,
-  195,
-  225,
+  7, 352, 288, 320, 290, 196, 289, 196, 354, 353, 195, 164, 322, 163, 195, 225,
 ];
 const WALL_CORNER_INDEX_TO_FRAME_0_1_MINES2 = [
   86,
@@ -261,22 +267,7 @@ const WALL_CORNER_INDEX_TO_FRAME_0_1_MINES2 = [
   20,
 ];
 const WALL_CORNER_INDEX_TO_FRAME_DARKWOODS_1_3 = [
-  86,
-  128,
-  96,
-  112,
-  98,
-  [128, 98],
-  97,
-  113,
-  130,
-  129,
-  [130, 96],
-  115,
-  114,
-  116,
-  113,
-  113,
+  86, 128, 96, 112, 98, 131, 97, 113, 130, 129, 132, 115, 114, 116, 113, 113,
 ];
 const WALL_CORNER_INDEX_TO_FRAME_STANDARD_FIELDS_0_1 = [
   {
@@ -325,16 +316,31 @@ const WALL_CORNER_INDEX_TO_FRAME_STANDARD_FIELDS_1_1 = [
   33,
 ];
 const WALL_CORNER_INDEX_TO_FRAME_1_0 = [
-  70, 80, 48, 64, 50, 80, 49, 68, 82, 81, 50, 52, 66, 51, 67, 65,
+  70,
+  80,
+  48,
+  64,
+  50,
+  [80, 50],
+  49,
+  68,
+  82,
+  81,
+  [82, 48],
+  52,
+  66,
+  51,
+  67,
+  65,
 ];
-const WALL_CORNER_INDEX_TO_FRAME_1_0_HILLS = [
-  70, 80, 48, 64, 50, 80, 49, 51, 82, 81, 50, 67, 66, 68, 52, 65,
-];
-const WALL_CORNER_INDEX_TO_FRAME_MOUNTAIN3B = [
-  70, 80, 48, 64, 50, 80, 49, 51, 82, 81, 50, 67, 66, 68, 52, 65,
+// const WALL_CORNER_INDEX_TO_FRAME_1_0_HILLS = [
+//   70, 80, 48, 64, 50, 80, 49, 51, 82, 81, 50, 67, 66, 68, 52, 65,
+// ];
+const WALL_CORNER_INDEX_TO_FRAME_1_0_MOUNTAIN3B = [
+  70, 80, 48, 64, 50, 83, 49, 51, 82, 81, 84, 67, 66, 68, 52, 65,
 ];
 const WALL_CORNER_INDEX_TO_FRAME_2_0 = [
-  96, 128, 96, 112, 98, 128, 97, 99, 130, 129, 98, 115, 114, 116, 100, 113,
+  70, 128, 96, 112, 98, 131, 97, 99, 130, 129, 132, 115, 114, 116, 100, 113,
 ];
 
 const WALL_CORNER_INDEX_TO_FRAME_0_0_MUDDY_CAVE = [
@@ -374,12 +380,12 @@ const WALL_CORNER_INDEX_TO_FRAME_FOREST_0_0 = [
   1,
   33,
   3,
-  65,
+  99,
   2,
   100,
   67,
   66,
-  3,
+  131,
   129,
   35,
   130,
@@ -531,7 +537,7 @@ const WALL_CORNER_INDEX_TO_FRAME_FOREST_WATER_0_1 = [
   // 565,
 ];
 const WALL_CORNER_INDEX_TO_FRAME_FOREST_WATER_0_2 = [
-  265, 602, 538, 570, 540, 636, 539, 667, 604, 603, 602, 635, 572, 634, 666,
+  265, 602, 538, 570, 540, 636, 539, 667, 604, 603, 668, 635, 572, 634, 666,
   // {
   //   variants: [
   //     { tiles: 571, weight: 5 },
@@ -887,7 +893,9 @@ export function buildFloorTilemap(scene, { grid, tileset, data, depth }) {
     tileset === "tower1" || // WALL_CORNER_INDEX_TO_FRAME_0_0_TOWER1
     tileset === "tower2" ||
     tileset === "tower3" ||
-    tileset === "cityWalls1" ||
+    tileset === "cityWalls1_0_0" ||
+    tileset === "cityWalls1_0_1" ||
+    tileset === "cityWalls1_2_0" ||
     tileset === "cityTiles_0_1" ||
     tileset === "cityTiles_0_2" ||
     tileset === "cityTiles_0_3" ||
@@ -1046,7 +1054,7 @@ export function buildFloorTilemap(scene, { grid, tileset, data, depth }) {
       DESERT_AUTOTILE_SPRITESHEET,
       "desert2",
       WALL_CORNER_INDEX_TO_FRAME_2_0,
-      161,
+      65,
     );
     phaserTilesetKey = result.phaserTilesetKey;
     renderGrid = result.renderGrid;
@@ -1071,13 +1079,13 @@ export function buildFloorTilemap(scene, { grid, tileset, data, depth }) {
     scene.currentRawTilesetKey = HILLS1_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
     scene.currentRenderGrid = renderGrid;
     scene.currentSlotSourceTileIds = result.slotSourceTileIds;
-  } else if (tileset === "cityWalls1") {
+  } else if (tileset === "cityWalls1_0_0") {
     const result = composeCornerAutotileTexture(
       scene,
       grid,
       CITY_WALLS1_AUTOTILE_SPRITESHEET,
-      "city-walls1",
-      WALL_CORNER_INDEX_TO_FRAME_0_0_CITY_WALLS1,
+      "city-walls1_0_0",
+      WALL_CORNER_INDEX_TO_FRAME_0_0_CITY_WALLS,
       113 || 17, // sol assorti a la ville - explicite maintenant, meme si c'etait deja la valeur par defaut
     );
     phaserTilesetKey = result.phaserTilesetKey;
@@ -1085,6 +1093,134 @@ export function buildFloorTilemap(scene, { grid, tileset, data, depth }) {
     composedFloorSlots = result.floorSlotIndices;
     scene.currentFloorTileIndex = composedFloorSlots[0];
     scene.currentRawTilesetKey = CITY_WALLS1_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
+    scene.currentRenderGrid = renderGrid;
+    scene.currentSlotSourceTileIds = result.slotSourceTileIds;
+  } else if (tileset === "cityWalls1_0_1") {
+    const result = composeCornerAutotileTexture(
+      scene,
+      grid,
+      CITY_WALLS1_AUTOTILE_SPRITESHEET,
+      "city-walls1_0_1",
+      WALL_CORNER_INDEX_TO_FRAME_0_1_CITY_WALLS,
+      17,
+    );
+    phaserTilesetKey = result.phaserTilesetKey;
+    renderGrid = result.renderGrid;
+    composedFloorSlots = result.floorSlotIndices;
+    scene.currentFloorTileIndex = composedFloorSlots[0];
+    scene.currentRawTilesetKey = CITY_WALLS1_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
+    scene.currentRenderGrid = renderGrid;
+    scene.currentSlotSourceTileIds = result.slotSourceTileIds;
+  } else if (tileset === "cityWalls1_2_0") {
+    const result = composeCornerAutotileTexture(
+      scene,
+      grid,
+      CITY_WALLS1_AUTOTILE_SPRITESHEET,
+      "city-walls1_2_0",
+      WALL_CORNER_INDEX_TO_FRAME_2_0_CITY_WALLS,
+      17,
+    );
+    phaserTilesetKey = result.phaserTilesetKey;
+    renderGrid = result.renderGrid;
+    composedFloorSlots = result.floorSlotIndices;
+    scene.currentFloorTileIndex = composedFloorSlots[0];
+    scene.currentRawTilesetKey = CITY_WALLS1_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
+    scene.currentRenderGrid = renderGrid;
+    scene.currentSlotSourceTileIds = result.slotSourceTileIds;
+  } else if (tileset === "cityWalls2_0_0") {
+    const result = composeCornerAutotileTexture(
+      scene,
+      grid,
+      CITY_WALLS2_AUTOTILE_SPRITESHEET,
+      "city-walls2_0_0",
+      WALL_CORNER_INDEX_TO_FRAME_0_0_CITY_WALLS,
+      113 || 17, // sol assorti a la ville - explicite maintenant, meme si c'etait deja la valeur par defaut
+    );
+    phaserTilesetKey = result.phaserTilesetKey;
+    renderGrid = result.renderGrid;
+    composedFloorSlots = result.floorSlotIndices;
+    scene.currentFloorTileIndex = composedFloorSlots[0];
+    scene.currentRawTilesetKey = CITY_WALLS2_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
+    scene.currentRenderGrid = renderGrid;
+    scene.currentSlotSourceTileIds = result.slotSourceTileIds;
+  } else if (tileset === "cityWalls2_0_1") {
+    const result = composeCornerAutotileTexture(
+      scene,
+      grid,
+      CITY_WALLS2_AUTOTILE_SPRITESHEET,
+      "city-walls2_0_1",
+      WALL_CORNER_INDEX_TO_FRAME_0_1_CITY_WALLS,
+      17,
+    );
+    phaserTilesetKey = result.phaserTilesetKey;
+    renderGrid = result.renderGrid;
+    composedFloorSlots = result.floorSlotIndices;
+    scene.currentFloorTileIndex = composedFloorSlots[0];
+    scene.currentRawTilesetKey = CITY_WALLS2_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
+    scene.currentRenderGrid = renderGrid;
+    scene.currentSlotSourceTileIds = result.slotSourceTileIds;
+  } else if (tileset === "cityWalls2_2_0") {
+    const result = composeCornerAutotileTexture(
+      scene,
+      grid,
+      CITY_WALLS2_AUTOTILE_SPRITESHEET,
+      "city-walls2_2_0",
+      WALL_CORNER_INDEX_TO_FRAME_2_0_CITY_WALLS,
+      17,
+    );
+    phaserTilesetKey = result.phaserTilesetKey;
+    renderGrid = result.renderGrid;
+    composedFloorSlots = result.floorSlotIndices;
+    scene.currentFloorTileIndex = composedFloorSlots[0];
+    scene.currentRawTilesetKey = CITY_WALLS2_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
+    scene.currentRenderGrid = renderGrid;
+    scene.currentSlotSourceTileIds = result.slotSourceTileIds;
+  } else if (tileset === "cityWalls3_0_0") {
+    const result = composeCornerAutotileTexture(
+      scene,
+      grid,
+      CITY_WALLS3_AUTOTILE_SPRITESHEET,
+      "city-walls3_0_0",
+      WALL_CORNER_INDEX_TO_FRAME_0_0_CITY_WALLS,
+      113 || 17, // sol assorti a la ville - explicite maintenant, meme si c'etait deja la valeur par defaut
+    );
+    phaserTilesetKey = result.phaserTilesetKey;
+    renderGrid = result.renderGrid;
+    composedFloorSlots = result.floorSlotIndices;
+    scene.currentFloorTileIndex = composedFloorSlots[0];
+    scene.currentRawTilesetKey = CITY_WALLS3_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
+    scene.currentRenderGrid = renderGrid;
+    scene.currentSlotSourceTileIds = result.slotSourceTileIds;
+  } else if (tileset === "cityWalls3_0_1") {
+    const result = composeCornerAutotileTexture(
+      scene,
+      grid,
+      CITY_WALLS3_AUTOTILE_SPRITESHEET,
+      "city-walls3_0_1",
+      WALL_CORNER_INDEX_TO_FRAME_0_1_CITY_WALLS,
+      17,
+    );
+    phaserTilesetKey = result.phaserTilesetKey;
+    renderGrid = result.renderGrid;
+    composedFloorSlots = result.floorSlotIndices;
+    scene.currentFloorTileIndex = composedFloorSlots[0];
+    scene.currentRawTilesetKey = CITY_WALLS3_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
+    scene.currentRenderGrid = renderGrid;
+    scene.currentSlotSourceTileIds = result.slotSourceTileIds;
+  } else if (tileset === "cityWalls3_2_0") {
+    const result = composeCornerAutotileTexture(
+      scene,
+      grid,
+      CITY_WALLS3_AUTOTILE_SPRITESHEET,
+      "city-walls3_2_0",
+      WALL_CORNER_INDEX_TO_FRAME_2_0_CITY_WALLS,
+      17,
+    );
+    phaserTilesetKey = result.phaserTilesetKey;
+    renderGrid = result.renderGrid;
+    composedFloorSlots = result.floorSlotIndices;
+    scene.currentFloorTileIndex = composedFloorSlots[0];
+    scene.currentRawTilesetKey = CITY_WALLS3_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
     scene.currentRenderGrid = renderGrid;
     scene.currentSlotSourceTileIds = result.slotSourceTileIds;
   } else if (tileset === "tower1") {
@@ -1189,7 +1325,7 @@ export function buildFloorTilemap(scene, { grid, tileset, data, depth }) {
       grid,
       HILLS3_AUTOTILE_SPRITESHEET,
       "hills3",
-      WALL_CORNER_INDEX_TO_FRAME_MOUNTAIN3B,
+      WALL_CORNER_INDEX_TO_FRAME_1_0_MOUNTAIN3B,
       65, // <-- pareil, a confirmer
     );
     phaserTilesetKey = result.phaserTilesetKey;
@@ -1253,7 +1389,7 @@ export function buildFloorTilemap(scene, { grid, tileset, data, depth }) {
       grid,
       HILLS2_AUTOTILE_SPRITESHEET,
       "hills7",
-      WALL_CORNER_INDEX_TO_FRAME_1_0_HILLS,
+      WALL_CORNER_INDEX_TO_FRAME_1_0_MOUNTAIN3B,
       113, // <-- pareil, a confirmer
     );
     phaserTilesetKey = result.phaserTilesetKey;
@@ -1317,7 +1453,7 @@ export function buildFloorTilemap(scene, { grid, tileset, data, depth }) {
       grid,
       HILLS3_AUTOTILE_SPRITESHEET,
       "hills11",
-      WALL_CORNER_INDEX_TO_FRAME_1_0_HILLS,
+      WALL_CORNER_INDEX_TO_FRAME_1_0_MOUNTAIN3B,
       113, // <-- pareil, a confirmer
     );
     phaserTilesetKey = result.phaserTilesetKey;

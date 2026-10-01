@@ -13575,6 +13575,8 @@ export const ITEM_DEFS = {
     name: "Parchemin d'extraction",
     description:
       "Libère un socket d'un équipement en détruisant la gemme qui y est insérée (pour en insérer une autre à la place). Consomme aussi un matériau du même palier que la cible. Risque très faible que l'objet entier soit détruit dans l'opération.",
+    loreText:
+      "Les archivistes de la Tour Grise notaient déjà ce procédé il y a trois siècles : « séparer la pierre de sa monture sans la briser demande moins de force que de patience ». ...",
     stackable: true,
     price: 150,
   },
@@ -14222,6 +14224,19 @@ export const ITEM_DEFS = {
     grantsAbility: "detectSecrets",
     stackable: false,
     price: 45,
+  },
+
+  loreScroll1: {
+    id: "loreScroll1",
+    category: "loreScroll",
+    name: "lore ARPG",
+    description: "le lore de ce ARPG",
+    loreText:
+      "Ce parchemin contient des informations détaillées sur l'histoire et le lore de ce ARPG.",
+    grantsAbility: "lore",
+    stackable: false,
+    unique: true,
+    price: 50,
   },
 
   // recipes
