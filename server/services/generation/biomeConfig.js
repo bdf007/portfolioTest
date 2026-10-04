@@ -29,7 +29,15 @@ const BIOMES = [
     generator: "drunkardwalk",
     tileset: ["muddyCave_0_0", "muddyCaveV2_0_0"],
     enemyBaseCount: 5,
-    enemyTypes: ["grayGriblin", "purpleGriblin"],
+    enemyTypes: [
+      "orqueGreen",
+      "orqueBlack",
+      "orqueYellow",
+      "orqueBlue",
+      "orqueRed",
+      "orquePurple",
+      "orqueGrey",
+    ],
     decorationConfig: {
       count: [40, 60], // genereux - c'est fait pour remplir le biome
       decorTypes: [
@@ -94,12 +102,11 @@ const BIOMES = [
     tileset: ["muddyCave_0_0", "muddyCaveV2_0_0"],
     enemyBaseCount: 10,
     enemyTypes: [
-      "grayGriblin",
-      "purpleGriblin",
-      "redGriblin",
-      "blueGriblin",
-      "goldGriblin",
-      "greenGriblin",
+      "massecailleBlue",
+      "massecailleGreen",
+      "massecaillePurple",
+      "massecailleRed",
+      "massecailleYellow",
     ],
     decorationConfig: {
       count: [40, 60], // genereux - c'est fait pour remplir le biome
@@ -234,11 +241,11 @@ const BIOMES = [
     tileset: ["muddyCave_0_0", "muddyCaveV2_0_0"],
     enemyBaseCount: 15,
     enemyTypes: [
-      "angryBrownMushroom",
-      "gnome",
-      "bat",
-      "warlockRed",
-      "golemEau",
+      "knightJauneRouge",
+      "knightBleuArgent",
+      "knightNoirCramoisi",
+      "knightVertOr",
+      "knightVioletArgent",
     ],
     decorationConfig: {
       count: [50, 100], // genereux - c'est fait pour remplir le biome
@@ -304,11 +311,12 @@ const BIOMES = [
     tileset: ["muddyCave_0_0", "muddyCaveV2_0_0"],
     enemyBaseCount: 20,
     enemyTypes: [
-      "angryBrownMushroom",
-      "gnome",
-      "bat",
-      "warlockRed",
-      "golemEau",
+      "blueGrayVesperin",
+      "silverVesperin",
+      "goldVesperin",
+      "copperVesperin",
+      "steelVesperin",
+      "emeraldVesperin",
     ],
     decorationConfig: {
       count: [60, 120], // genereux - c'est fait pour remplir le biome
@@ -376,11 +384,12 @@ const BIOMES = [
     enemyBaseCount: 15,
     bossRoomSize: 40,
     enemyTypes: [
-      "angryBrownMushroom",
-      "gnome",
-      "trollBlue",
-      "orqueGrey",
-      "massecailleBlue",
+      "pinkLimacorne",
+      "deepBlueLimacorne",
+      "turquoiseLimacorne",
+      "algaeGreenLimacorne",
+      "coralLimacorne",
+      "pearlLimacorne",
     ],
     decorationConfig: {
       count: [50, 100], // genereux - c'est fait pour remplir le biome

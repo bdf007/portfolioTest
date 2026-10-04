@@ -15,9 +15,9 @@ const AGGRO_RADIUS_BY_TYPE = {
 
 const DEFAULT_TYPE_WEIGHTS = {
   guard: 0.1,
-  patrol: 0.3,
+  patrol: 0.5,
   rest: 0.2,
-  wander: 0.4,
+  wander: 0.2,
 };
 
 /**
