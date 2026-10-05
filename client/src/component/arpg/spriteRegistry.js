@@ -279,6 +279,7 @@ import stairupSprite from "../../assets/tilesets/stair_up.png";
 import wallTreeSprite from "../../assets/tilesets/wall_tree.png";
 import floorTreeSprite from "../../assets/tilesets/floor_tree.png";
 import desertAutotileImg from "../../assets/tilesets/Set_A_Desert1.png";
+import desert2AutotileImg from "../../assets/tilesets/Set_A_Desert2.png";
 import hillsAutotileImg from "../../assets/tilesets/Set_A_Hills1.png";
 import hills2AutotileImg from "../../assets/tilesets/Set_A_Hills2.png";
 import hills3AutotileImg from "../../assets/tilesets/Set_A_Hills3.png";
@@ -298,6 +299,7 @@ import fortressE2AutotileImg from "../../assets/tilesets/Set_E_Fortress2.png";
 import fortressE3AutotileImg from "../../assets/tilesets/Set_E_Fortress3.png";
 import mines1AutotileImg from "../../assets/tilesets/Set_A_Mines1.png";
 import mines2AutotileImg from "../../assets/tilesets/Set_A_Mines2.png";
+import mines3AutotileImg from "../../assets/tilesets/Set_A_Mines3.png";
 import techFortress1AutotileImg from "../../assets/tilesets/Set_A_TechFortress1.png";
 import techFortress2AutotileImg from "../../assets/tilesets/Set_A_TechFortress2.png";
 import techFortressE1AutotileImg from "../../assets/tilesets/Set_E_TechFortress1.png";
@@ -305,6 +307,7 @@ import techFortressE2AutotileImg from "../../assets/tilesets/Set_E_TechFortress2
 import tower1AutotileImg from "../../assets/tilesets/Set_A_Tower1.png";
 import tower2AutotileImg from "../../assets/tilesets/Set_A_Tower2.png";
 import tower3AutotileImg from "../../assets/tilesets/Set_A_Tower3.png";
+import tower4AutotileImg from "../../assets/tilesets/Set_A_Tower4.png";
 import towerE1AutotileImg from "../../assets/tilesets/Set_E_Tower1.png";
 import towerE2AutotileImg from "../../assets/tilesets/Set_E_Tower2.png";
 import towerE3AutotileImg from "../../assets/tilesets/Set_E_Tower3.png";
@@ -325,6 +328,8 @@ import standardFields3AutotileImg from "../../assets/tilesets/Set_A_Standard_Fie
 import worldBAutotileImg from "../../assets/tilesets/Set_B_World.png";
 import muddyCaveAutotileImg from "../../assets/tilesets/muddy_cave.png";
 import muddyCaveV2AutotileImg from "../../assets/tilesets/muddy_cave_v2.png";
+import muddyCaveV3AutotileImg from "../../assets/tilesets/muddy_cave_v3.png";
+import muddyCaveV4AutotileImg from "../../assets/tilesets/muddy_cave_v4.png";
 import summerForestAutotileImg from "../../assets/tilesets/summer_forest.png";
 import springForestAutotileImg from "../../assets/tilesets/spring_forest.png";
 import autumnForestAutotileImg from "../../assets/tilesets/autumn_forest.png";
@@ -333,6 +338,7 @@ import winterForestSnowyAutotileImg from "../../assets/tilesets/winter_forest_sn
 import castleDungeonV01AutotileImg from "../../assets/tilesets/castle_dungeon_v01.png";
 import castleDungeonV02AutotileImg from "../../assets/tilesets/castle_dungeon_v02.png";
 import castleDungeonV03AutotileImg from "../../assets/tilesets/castle_dungeon_v03.png";
+import castleDungeonV04AutotileImg from "../../assets/tilesets/castle_dungeon_v04.png";
 // import objects
 import chestsSpritesheet from "../../assets/objects_icons/Chests.png";
 import iconSheet1 from "../../assets/objects_icons/icon_sheet1.png";
@@ -407,6 +413,12 @@ export const FORTRESS_AUTOTILE_SPRITESHEET = {
 export const DESERT_AUTOTILE_SPRITESHEET = {
   key: "desertAutotile",
   path: desertAutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+export const DESERT2_AUTOTILE_SPRITESHEET = {
+  key: "desert2Autotile",
+  path: desert2AutotileImg,
   frameWidth: 16,
   frameHeight: 16,
 };
@@ -563,6 +575,12 @@ export const TOWER3_AUTOTILE_SPRITESHEET = {
   frameWidth: 16,
   frameHeight: 16,
 };
+export const TOWER4_AUTOTILE_SPRITESHEET = {
+  key: "tower4Autotile",
+  path: tower4AutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
 export const TOWERE1_AUTOTILE_SPRITESHEET = {
   key: "towersE1Autotile",
   path: towerE1AutotileImg,
@@ -591,6 +609,12 @@ export const MINES1_AUTOTILE_SPRITESHEET = {
 export const MINES2_AUTOTILE_SPRITESHEET = {
   key: "mines2Autotile",
   path: mines2AutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+export const MINES3_AUTOTILE_SPRITESHEET = {
+  key: "mines3Autotile",
+  path: mines3AutotileImg,
   frameWidth: 16,
   frameHeight: 16,
 };
@@ -700,6 +724,18 @@ export const MUDDY_CAVE_V2_AUTOTILE_SPRITESHEET = {
   frameWidth: 16,
   frameHeight: 16,
 };
+export const MUDDY_CAVE_V3_AUTOTILE_SPRITESHEET = {
+  key: "muddyCaveV3Autotile",
+  path: muddyCaveV3AutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+export const MUDDY_CAVE_V4_AUTOTILE_SPRITESHEET = {
+  key: "muddyCaveV4Autotile",
+  path: muddyCaveV4AutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
 
 export const SUMMER_FOREST_AUTOTILE_SPRITESHEET = {
   key: "summerForestAutotile",
@@ -747,6 +783,12 @@ export const CASTLE_DUNGEON_V02_AUTOTILE_SPRITESHEET = {
 export const CASTLE_DUNGEON_V03_AUTOTILE_SPRITESHEET = {
   key: "castleDungeonV03Autotile",
   path: castleDungeonV03AutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+export const CASTLE_DUNGEON_V04_AUTOTILE_SPRITESHEET = {
+  key: "castleDungeonV04Autotile",
+  path: castleDungeonV04AutotileImg,
   frameWidth: 16,
   frameHeight: 16,
 };
@@ -813,7 +855,12 @@ export const HOUSE_FOOTPRINTS = [
   { key: "house_tall_teal_B", tileW: 7, tileH: 6 },
 ];
 
-export function computeSafeHitbox(frameWidth, frameHeight, scale) {
+export function computeSafeHitbox(
+  frameWidth,
+  frameHeight,
+  scale,
+  feetMargin = FEET_MARGIN,
+) {
   let width = SAFE_WORLD_WIDTH / scale;
   let height = SAFE_WORLD_HEIGHT / scale;
 
@@ -821,7 +868,7 @@ export function computeSafeHitbox(frameWidth, frameHeight, scale) {
   height = Math.min(height, frameHeight * 0.9);
 
   const offsetX = Math.max(0, (frameWidth - width) / 2);
-  const offsetY = Math.max(0, frameHeight - height - FEET_MARGIN);
+  const offsetY = Math.max(0, frameHeight - height - feetMargin);
 
   return {
     width: Math.round(width),
@@ -1649,7 +1696,7 @@ export const SPRITE_REGISTRY = {
     sheetCols: 4,
     sheetRows: 16,
     animations: FULL_ANIMATION_FRAMES,
-    hitbox: computeSafeHitbox(96, 96, 0.8),
+    hitbox: computeSafeHitbox(96, 96, 0.8, 25),
   },
   orqueBlack: {
     key: "orqueBlack",
@@ -1662,7 +1709,7 @@ export const SPRITE_REGISTRY = {
     sheetCols: 4,
     sheetRows: 16,
     animations: FULL_ANIMATION_FRAMES,
-    hitbox: computeSafeHitbox(96, 96, 0.8),
+    hitbox: computeSafeHitbox(96, 96, 0.8, 25),
   },
   orqueYellow: {
     key: "orqueYellow",
@@ -1675,7 +1722,7 @@ export const SPRITE_REGISTRY = {
     sheetCols: 4,
     sheetRows: 16,
     animations: FULL_ANIMATION_FRAMES,
-    hitbox: computeSafeHitbox(96, 96, 0.8),
+    hitbox: computeSafeHitbox(96, 96, 0.8, 25),
   },
   orqueBlue: {
     key: "orqueBlue",
@@ -1688,7 +1735,7 @@ export const SPRITE_REGISTRY = {
     sheetCols: 4,
     sheetRows: 16,
     animations: FULL_ANIMATION_FRAMES,
-    hitbox: computeSafeHitbox(96, 96, 0.8),
+    hitbox: computeSafeHitbox(96, 96, 0.8, 25),
   },
   orqueRed: {
     key: "orqueRed",
@@ -1701,7 +1748,7 @@ export const SPRITE_REGISTRY = {
     sheetCols: 4,
     sheetRows: 16,
     animations: FULL_ANIMATION_FRAMES,
-    hitbox: computeSafeHitbox(96, 96, 0.8),
+    hitbox: computeSafeHitbox(96, 96, 0.8, 25),
   },
   orquePurple: {
     key: "orquePurple",
@@ -1714,7 +1761,7 @@ export const SPRITE_REGISTRY = {
     sheetCols: 4,
     sheetRows: 16,
     animations: FULL_ANIMATION_FRAMES,
-    hitbox: computeSafeHitbox(96, 96, 0.8),
+    hitbox: computeSafeHitbox(96, 96, 0.8, 25),
   },
   orqueGrey: {
     key: "orqueGrey",
@@ -1727,7 +1774,7 @@ export const SPRITE_REGISTRY = {
     sheetCols: 4,
     sheetRows: 16,
     animations: FULL_ANIMATION_FRAMES,
-    hitbox: computeSafeHitbox(96, 96, 0.8),
+    hitbox: computeSafeHitbox(96, 96, 0.8, 25),
   },
 
   redWarriorMushroom: {
@@ -1820,7 +1867,7 @@ export const SPRITE_REGISTRY = {
     sheetCols: 4,
     sheetRows: 16,
     animations: FULL_ANIMATION_FRAMES,
-    hitbox: computeSafeHitbox(96, 96, 0.8),
+    hitbox: computeSafeHitbox(96, 96, 0.8, 25),
   },
 
   massecailleGreen: {
@@ -1834,7 +1881,7 @@ export const SPRITE_REGISTRY = {
     sheetCols: 4,
     sheetRows: 16,
     animations: FULL_ANIMATION_FRAMES,
-    hitbox: computeSafeHitbox(96, 96, 0.8),
+    hitbox: computeSafeHitbox(96, 96, 0.8, 25),
   },
   massecaillePurple: {
     key: "massecaillePurple",
@@ -1847,7 +1894,7 @@ export const SPRITE_REGISTRY = {
     sheetCols: 4,
     sheetRows: 16,
     animations: FULL_ANIMATION_FRAMES,
-    hitbox: computeSafeHitbox(96, 96, 0.8),
+    hitbox: computeSafeHitbox(96, 96, 0.8, 25),
   },
   massecailleRed: {
     key: "massecailleRed",
@@ -1860,7 +1907,7 @@ export const SPRITE_REGISTRY = {
     sheetCols: 4,
     sheetRows: 16,
     animations: FULL_ANIMATION_FRAMES,
-    hitbox: computeSafeHitbox(96, 96, 0.8),
+    hitbox: computeSafeHitbox(96, 96, 0.8, 25),
   },
   massecailleYellow: {
     key: "massecailleYellow",
@@ -1873,7 +1920,7 @@ export const SPRITE_REGISTRY = {
     sheetCols: 4,
     sheetRows: 16,
     animations: FULL_ANIMATION_FRAMES,
-    hitbox: computeSafeHitbox(96, 96, 0.8),
+    hitbox: computeSafeHitbox(96, 96, 0.8, 25),
   },
   fantasy9: {
     key: "fantasy9",
@@ -1899,7 +1946,7 @@ export const SPRITE_REGISTRY = {
     sheetCols: 4,
     sheetRows: 16,
     animations: FULL_ANIMATION_FRAMES,
-    hitbox: computeSafeHitbox(96, 96, 0.8),
+    hitbox: computeSafeHitbox(96, 96, 0.8, 30),
   },
   knightBleuArgent: {
     key: "knightBleuArgent",
@@ -1912,7 +1959,7 @@ export const SPRITE_REGISTRY = {
     sheetCols: 4,
     sheetRows: 16,
     animations: FULL_ANIMATION_FRAMES,
-    hitbox: computeSafeHitbox(96, 96, 0.8),
+    hitbox: computeSafeHitbox(96, 96, 0.8, 30),
   },
   knightNoirCramoisi: {
     key: "knightNoirCramoisi",
@@ -1925,7 +1972,7 @@ export const SPRITE_REGISTRY = {
     sheetCols: 4,
     sheetRows: 16,
     animations: FULL_ANIMATION_FRAMES,
-    hitbox: computeSafeHitbox(96, 96, 0.8),
+    hitbox: computeSafeHitbox(96, 96, 0.8, 30),
   },
   knightVertOr: {
     key: "knightVertOr",
@@ -1938,7 +1985,7 @@ export const SPRITE_REGISTRY = {
     sheetCols: 4,
     sheetRows: 16,
     animations: FULL_ANIMATION_FRAMES,
-    hitbox: computeSafeHitbox(96, 96, 0.8),
+    hitbox: computeSafeHitbox(96, 96, 0.8, 30),
   },
   knightVioletArgent: {
     key: "knightVioletArgent",
@@ -1951,7 +1998,7 @@ export const SPRITE_REGISTRY = {
     sheetCols: 4,
     sheetRows: 16,
     animations: FULL_ANIMATION_FRAMES,
-    hitbox: computeSafeHitbox(96, 96, 0.8),
+    hitbox: computeSafeHitbox(96, 96, 0.8, 30),
   },
 
   gargoyle: {
@@ -1997,27 +2044,27 @@ export const SPRITE_REGISTRY = {
     key: "golem",
     displayName: "Golem",
     path: golemSpritesheet,
-    frameWidth: 48,
-    frameHeight: 48,
+    frameWidth: 96,
+    frameHeight: 96,
     scale: 1,
     lootTable: "golemDrop",
     sheetCols: 4,
     sheetRows: 16,
     animations: FULL_ANIMATION_FRAMES,
-    hitbox: computeSafeHitbox(48, 48, 1),
+    hitbox: computeSafeHitbox(96, 96, 1),
   },
   golemEau: {
     key: "golemEau",
     displayName: "Golem d'eau",
     path: golemEauSpritesheet,
-    frameWidth: 48,
-    frameHeight: 48,
-    scale: 1.5,
+    frameWidth: 96,
+    frameHeight: 96,
+    scale: 1,
     lootTable: "golemEauDrop",
     sheetCols: 4,
     sheetRows: 16,
     animations: FULL_ANIMATION_FRAMES,
-    hitbox: computeSafeHitbox(48, 48, 1.5),
+    hitbox: computeSafeHitbox(96, 96, 1),
   },
   golemFeu: {
     key: "golemFeu",
@@ -3158,7 +3205,7 @@ export const SPRITE_REGISTRY = {
     sheetCols: 4,
     sheetRows: 16,
     animations: FULL_ANIMATION_FRAMES,
-    hitbox: computeSafeHitbox(96, 96, 0.8),
+    hitbox: computeSafeHitbox(96, 96, 0.8, 18),
   },
   silverVesperin: {
     key: "silverVesperin",
@@ -3171,7 +3218,7 @@ export const SPRITE_REGISTRY = {
     sheetCols: 4,
     sheetRows: 16,
     animations: FULL_ANIMATION_FRAMES,
-    hitbox: computeSafeHitbox(96, 96, 0.8),
+    hitbox: computeSafeHitbox(96, 96, 0.8, 18),
   },
   goldVesperin: {
     key: "goldVesperin",
@@ -3184,7 +3231,7 @@ export const SPRITE_REGISTRY = {
     sheetCols: 4,
     sheetRows: 16,
     animations: FULL_ANIMATION_FRAMES,
-    hitbox: computeSafeHitbox(96, 96, 0.8),
+    hitbox: computeSafeHitbox(96, 96, 0.8, 18),
   },
   copperVesperin: {
     key: "copperVesperin",
@@ -3197,7 +3244,7 @@ export const SPRITE_REGISTRY = {
     sheetCols: 4,
     sheetRows: 16,
     animations: FULL_ANIMATION_FRAMES,
-    hitbox: computeSafeHitbox(96, 96, 0.8),
+    hitbox: computeSafeHitbox(96, 96, 0.8, 18),
   },
   steelVesperin: {
     key: "steelVesperin",
@@ -3210,7 +3257,7 @@ export const SPRITE_REGISTRY = {
     sheetCols: 4,
     sheetRows: 16,
     animations: FULL_ANIMATION_FRAMES,
-    hitbox: computeSafeHitbox(96, 96, 0.8),
+    hitbox: computeSafeHitbox(96, 96, 0.8, 18),
   },
   emeraldVesperin: {
     key: "emeraldVesperin",
@@ -3223,7 +3270,7 @@ export const SPRITE_REGISTRY = {
     sheetCols: 4,
     sheetRows: 16,
     animations: FULL_ANIMATION_FRAMES,
-    hitbox: computeSafeHitbox(96, 96, 0.8),
+    hitbox: computeSafeHitbox(96, 96, 0.8, 18),
   },
 
   orangeTikorin: {
@@ -3237,7 +3284,7 @@ export const SPRITE_REGISTRY = {
     sheetCols: 4,
     sheetRows: 16,
     animations: FULL_ANIMATION_FRAMES,
-    hitbox: computeSafeHitbox(96, 96, 0.5),
+    hitbox: computeSafeHitbox(96, 96, 0.5, 20),
   },
   lightOakTikorin: {
     key: "lightOakTikorin",
@@ -3250,7 +3297,7 @@ export const SPRITE_REGISTRY = {
     sheetCols: 4,
     sheetRows: 16,
     animations: FULL_ANIMATION_FRAMES,
-    hitbox: computeSafeHitbox(96, 96, 0.5),
+    hitbox: computeSafeHitbox(96, 96, 0.5, 20),
   },
   walnutTikorin: {
     key: "walnutTikorin",
@@ -3263,7 +3310,7 @@ export const SPRITE_REGISTRY = {
     sheetCols: 4,
     sheetRows: 16,
     animations: FULL_ANIMATION_FRAMES,
-    hitbox: computeSafeHitbox(96, 96, 0.5),
+    hitbox: computeSafeHitbox(96, 96, 0.5, 20),
   },
   mahoganyTikorin: {
     key: "mahoganyTikorin",
@@ -3276,7 +3323,7 @@ export const SPRITE_REGISTRY = {
     sheetCols: 4,
     sheetRows: 16,
     animations: FULL_ANIMATION_FRAMES,
-    hitbox: computeSafeHitbox(96, 96, 0.5),
+    hitbox: computeSafeHitbox(96, 96, 0.5, 20),
   },
   ebonyTikorin: {
     key: "ebonyTikorin",
@@ -3289,7 +3336,7 @@ export const SPRITE_REGISTRY = {
     sheetCols: 4,
     sheetRows: 16,
     animations: FULL_ANIMATION_FRAMES,
-    hitbox: computeSafeHitbox(96, 96, 0.8),
+    hitbox: computeSafeHitbox(96, 96, 0.8, 25),
   },
   goldenBeechTikorin: {
     key: "goldenBeechTikorin",
@@ -3302,7 +3349,7 @@ export const SPRITE_REGISTRY = {
     sheetCols: 4,
     sheetRows: 16,
     animations: FULL_ANIMATION_FRAMES,
-    hitbox: computeSafeHitbox(96, 96, 0.8),
+    hitbox: computeSafeHitbox(96, 96, 0.8, 25),
   },
 
   pinkLimacorne: {
@@ -3316,7 +3363,7 @@ export const SPRITE_REGISTRY = {
     sheetCols: 4,
     sheetRows: 16,
     animations: FULL_ANIMATION_FRAMES,
-    hitbox: computeSafeHitbox(96, 96, 0.6),
+    hitbox: computeSafeHitbox(96, 96, 0.6, 20),
   },
   deepBlueLimacorne: {
     key: "deepBlueLimacorne",
@@ -3329,7 +3376,7 @@ export const SPRITE_REGISTRY = {
     sheetCols: 4,
     sheetRows: 16,
     animations: FULL_ANIMATION_FRAMES,
-    hitbox: computeSafeHitbox(96, 96, 0.6),
+    hitbox: computeSafeHitbox(96, 96, 0.6, 20),
   },
   turquoiseLimacorne: {
     key: "turquoiseLimacorne",
@@ -3342,7 +3389,7 @@ export const SPRITE_REGISTRY = {
     sheetCols: 4,
     sheetRows: 16,
     animations: FULL_ANIMATION_FRAMES,
-    hitbox: computeSafeHitbox(96, 96, 0.6),
+    hitbox: computeSafeHitbox(96, 96, 0.6, 20),
   },
   algaeGreenLimacorne: {
     key: "algaeGreenLimacorne",
@@ -3355,7 +3402,7 @@ export const SPRITE_REGISTRY = {
     sheetCols: 4,
     sheetRows: 16,
     animations: FULL_ANIMATION_FRAMES,
-    hitbox: computeSafeHitbox(96, 96, 0.6),
+    hitbox: computeSafeHitbox(96, 96, 0.6, 20),
   },
   coralLimacorne: {
     key: "coralLimacorne",
@@ -3368,7 +3415,7 @@ export const SPRITE_REGISTRY = {
     sheetCols: 4,
     sheetRows: 16,
     animations: FULL_ANIMATION_FRAMES,
-    hitbox: computeSafeHitbox(96, 96, 0.6),
+    hitbox: computeSafeHitbox(96, 96, 0.6, 20),
   },
   pearlLimacorne: {
     key: "pearlLimacorne",
@@ -3381,7 +3428,7 @@ export const SPRITE_REGISTRY = {
     sheetCols: 4,
     sheetRows: 16,
     animations: FULL_ANIMATION_FRAMES,
-    hitbox: computeSafeHitbox(96, 96, 0.6),
+    hitbox: computeSafeHitbox(96, 96, 0.6, 20),
   },
   craquelin: {
     key: "craquelin",

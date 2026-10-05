@@ -27,7 +27,12 @@ const BIOMES = [
     minDepth: 1,
     maxDepth: 1,
     generator: "drunkardwalk",
-    tileset: ["muddyCave_0_0", "muddyCaveV2_0_0"],
+    tileset: [
+      "muddyCave_0_0",
+      "muddyCaveV2_0_0",
+      "muddyCaveV3_0_0",
+      "muddyCaveV4_0_0",
+    ],
     enemyBaseCount: 5,
     enemyTypes: [
       "orqueGreen",
@@ -99,7 +104,12 @@ const BIOMES = [
     minDepth: 2,
     maxDepth: 2,
     generator: "cellular",
-    tileset: ["muddyCave_0_0", "muddyCaveV2_0_0"],
+    tileset: [
+      "muddyCave_0_0",
+      "muddyCaveV2_0_0",
+      "muddyCaveV3_0_0",
+      "muddyCaveV4_0_0",
+    ],
     enemyBaseCount: 10,
     enemyTypes: [
       "massecailleBlue",
@@ -238,7 +248,12 @@ const BIOMES = [
     minDepth: 3,
     maxDepth: 3,
     generator: "cellular",
-    tileset: ["muddyCave_0_0", "muddyCaveV2_0_0"],
+    tileset: [
+      "muddyCave_0_0",
+      "muddyCaveV2_0_0",
+      "muddyCaveV3_0_0",
+      "muddyCaveV4_0_0",
+    ],
     enemyBaseCount: 15,
     enemyTypes: [
       "knightJauneRouge",
@@ -308,7 +323,12 @@ const BIOMES = [
     minDepth: 4,
     maxDepth: 4,
     generator: "cellular",
-    tileset: ["muddyCave_0_0", "muddyCaveV2_0_0"],
+    tileset: [
+      "muddyCave_0_0",
+      "muddyCaveV2_0_0",
+      "muddyCaveV3_0_0",
+      "muddyCaveV4_0_0",
+    ],
     enemyBaseCount: 20,
     enemyTypes: [
       "blueGrayVesperin",
@@ -380,7 +400,12 @@ const BIOMES = [
     minDepth: 5,
     maxDepth: 5,
     generator: "cellular",
-    tileset: ["muddyCave_0_0", "muddyCaveV2_0_0"],
+    tileset: [
+      "muddyCave_0_0",
+      "muddyCaveV2_0_0",
+      "muddyCaveV3_0_0",
+      "muddyCaveV4_0_0",
+    ],
     enemyBaseCount: 15,
     bossRoomSize: 40,
     enemyTypes: [

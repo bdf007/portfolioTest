@@ -12,6 +12,7 @@ import {
   FORTRESS_AUTOTILE_SPRITESHEET,
   DUNGEON_AUTOTILE_SPRITESHEET,
   DESERT_AUTOTILE_SPRITESHEET,
+  DESERT2_AUTOTILE_SPRITESHEET,
   HILLS1_AUTOTILE_SPRITESHEET,
   HILLS2_AUTOTILE_SPRITESHEET,
   HILLS3_AUTOTILE_SPRITESHEET,
@@ -37,11 +38,13 @@ import {
   TOWER1_AUTOTILE_SPRITESHEET,
   TOWER2_AUTOTILE_SPRITESHEET,
   TOWER3_AUTOTILE_SPRITESHEET,
+  TOWER4_AUTOTILE_SPRITESHEET,
   // TOWERE1_AUTOTILE_SPRITESHEET,
   // TOWERE2_AUTOTILE_SPRITESHEET,
   // TOWERE3_AUTOTILE_SPRITESHEET,
   MINES1_AUTOTILE_SPRITESHEET,
   MINES2_AUTOTILE_SPRITESHEET,
+  MINES3_AUTOTILE_SPRITESHEET,
   // DESERT_TOWNE1_AUTOTILE_SPRITESHEET,
   // DESERT_TOWNE2_AUTOTILE_SPRITESHEET,
   // ROUFTOPSF_AUTOTILE_SPRITESHEET,
@@ -56,6 +59,8 @@ import {
   CITY_HOUSES,
   MUDDY_CAVE_AUTOTILE_SPRITESHEET,
   MUDDY_CAVE_V2_AUTOTILE_SPRITESHEET,
+  MUDDY_CAVE_V3_AUTOTILE_SPRITESHEET,
+  MUDDY_CAVE_V4_AUTOTILE_SPRITESHEET,
   SUMMER_FOREST_AUTOTILE_SPRITESHEET,
   SPRING_FOREST_AUTOTILE_SPRITESHEET,
   AUTUMN_FOREST_AUTOTILE_SPRITESHEET,
@@ -64,6 +69,7 @@ import {
   CASTLE_DUNGEON_V01_AUTOTILE_SPRITESHEET,
   CASTLE_DUNGEON_V02_AUTOTILE_SPRITESHEET,
   CASTLE_DUNGEON_V03_AUTOTILE_SPRITESHEET,
+  CASTLE_DUNGEON_V04_AUTOTILE_SPRITESHEET,
   TILE_IMAGE_REGISTRY,
   OBJECTS_DUNGEON_01_SPRITESHEET,
   DETAILS_SPRITESHEET,
@@ -864,7 +870,8 @@ export function composeCornerAutotileTexture(
  */
 export function buildFloorTilemap(scene, { grid, tileset, data, depth }) {
   const useRealAutotile =
-    tileset === "desert" || // WALL_CORNER_INDEX_TO_FRAME_0_0
+    tileset === "desert" ||
+    tileset === "desert_2" || // WALL_CORNER_INDEX_TO_FRAME_0_0
     tileset === "hills" ||
     tileset === "snow" ||
     tileset === "darkwoods_1_1" ||
@@ -879,7 +886,9 @@ export function buildFloorTilemap(scene, { grid, tileset, data, depth }) {
     tileset === "standardFields_3_1_1" ||
     tileset === "desertMountain2" ||
     tileset === "desertMountain3" ||
-    tileset === "desert2" ||
+    tileset === "desertMountain2_2" ||
+    tileset === "desertMountain3_2" ||
+    tileset === "desert2_2" ||
     tileset === "hills1" ||
     tileset === "hills2" ||
     tileset === "hills3" ||
@@ -890,9 +899,11 @@ export function buildFloorTilemap(scene, { grid, tileset, data, depth }) {
     tileset === "hills8" ||
     tileset === "mines1" ||
     tileset === "mines2" || //WALL_CORNER_INDEX_TO_FRAME_0_1_MINES2
+    tileset === "mines3" || //WALL_CORNER_INDEX_TO_FRAME_0_1_MINES3
     tileset === "tower1" || // WALL_CORNER_INDEX_TO_FRAME_0_0_TOWER1
     tileset === "tower2" ||
     tileset === "tower3" ||
+    tileset === "tower4" ||
     tileset === "cityWalls1_0_0" ||
     tileset === "cityWalls1_0_1" ||
     tileset === "cityWalls1_2_0" ||
@@ -902,6 +913,8 @@ export function buildFloorTilemap(scene, { grid, tileset, data, depth }) {
     tileset === "cityTiles_0_4" ||
     tileset === "muddyCave_0_0" ||
     tileset === "muddyCaveV2_0_0" ||
+    tileset === "muddyCaveV3_0_0" ||
+    tileset === "muddyCaveV4_0_0" ||
     tileset === "summerForest_0_0" ||
     tileset === "summerForest_0_1" ||
     tileset === "summerForest_1_0" ||
@@ -962,7 +975,9 @@ export function buildFloorTilemap(scene, { grid, tileset, data, depth }) {
     tileset === "castleDungeonV02_0_0" ||
     tileset === "castleDungeonV02_0_1" ||
     tileset === "castleDungeonV03_0_0" ||
-    tileset === "castleDungeonV03_0_1";
+    tileset === "castleDungeonV03_0_1" ||
+    tileset === "castleDungeonV04_0_0" ||
+    tileset === "castleDungeonV04_0_1";
   const useDungeon1Autotile = tileset === "dungeon1";
   const useFortress1Autotile = tileset === "fortress1";
 
@@ -1061,6 +1076,70 @@ export function buildFloorTilemap(scene, { grid, tileset, data, depth }) {
     composedFloorSlots = result.floorSlotIndices;
     scene.currentFloorTileIndex = composedFloorSlots[0];
     scene.currentRawTilesetKey = DESERT_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
+    scene.currentRenderGrid = renderGrid;
+    scene.currentSlotSourceTileIds = result.slotSourceTileIds;
+  } else if (tileset === "desert_2") {
+    const result = composeCornerAutotileTexture(
+      scene,
+      grid,
+      DESERT2_AUTOTILE_SPRITESHEET,
+      "desert_2",
+      WALL_CORNER_INDEX_TO_FRAME_0_0,
+      17, // sol assorti a la montagne 1 - explicite maintenant, meme si c'etait deja la valeur par defaut
+    );
+    phaserTilesetKey = result.phaserTilesetKey;
+    renderGrid = result.renderGrid;
+    composedFloorSlots = result.floorSlotIndices;
+    scene.currentFloorTileIndex = composedFloorSlots[0];
+    scene.currentRawTilesetKey = DESERT2_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
+    scene.currentRenderGrid = renderGrid;
+    scene.currentSlotSourceTileIds = result.slotSourceTileIds;
+  } else if (tileset === "desertMountain2_2") {
+    const result = composeCornerAutotileTexture(
+      scene,
+      grid,
+      DESERT2_AUTOTILE_SPRITESHEET,
+      "desert-mountain2_2",
+      WALL_CORNER_INDEX_TO_FRAME_0_1,
+      20, // <-- a remplacer par le vrai numero de sol assorti a montagne2, une fois identifie
+    );
+    phaserTilesetKey = result.phaserTilesetKey;
+    renderGrid = result.renderGrid;
+    composedFloorSlots = result.floorSlotIndices;
+    scene.currentFloorTileIndex = composedFloorSlots[0];
+    scene.currentRawTilesetKey = DESERT2_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
+    scene.currentRenderGrid = renderGrid;
+    scene.currentSlotSourceTileIds = result.slotSourceTileIds;
+  } else if (tileset === "desertMountain3_2") {
+    const result = composeCornerAutotileTexture(
+      scene,
+      grid,
+      DESERT2_AUTOTILE_SPRITESHEET,
+      "desert-mountain3_2",
+      WALL_CORNER_INDEX_TO_FRAME_1_0,
+      65, // <-- pareil, a confirmer
+    );
+    phaserTilesetKey = result.phaserTilesetKey;
+    renderGrid = result.renderGrid;
+    composedFloorSlots = result.floorSlotIndices;
+    scene.currentFloorTileIndex = composedFloorSlots[0];
+    scene.currentRawTilesetKey = DESERT2_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
+    scene.currentRenderGrid = renderGrid;
+    scene.currentSlotSourceTileIds = result.slotSourceTileIds;
+  } else if (tileset === "desert2_2") {
+    const result = composeCornerAutotileTexture(
+      scene,
+      grid,
+      DESERT2_AUTOTILE_SPRITESHEET,
+      "desert2_2",
+      WALL_CORNER_INDEX_TO_FRAME_2_0,
+      65,
+    );
+    phaserTilesetKey = result.phaserTilesetKey;
+    renderGrid = result.renderGrid;
+    composedFloorSlots = result.floorSlotIndices;
+    scene.currentFloorTileIndex = composedFloorSlots[0];
+    scene.currentRawTilesetKey = DESERT2_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
     scene.currentRenderGrid = renderGrid;
     scene.currentSlotSourceTileIds = result.slotSourceTileIds;
   } else if (tileset === "hills1") {
@@ -1271,6 +1350,22 @@ export function buildFloorTilemap(scene, { grid, tileset, data, depth }) {
     scene.currentRawTilesetKey = TOWER3_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
     scene.currentRenderGrid = renderGrid;
     scene.currentSlotSourceTileIds = result.slotSourceTileIds;
+  } else if (tileset === "tower4") {
+    const result = composeCornerAutotileTexture(
+      scene,
+      grid,
+      TOWER4_AUTOTILE_SPRITESHEET,
+      "tower4",
+      WALL_CORNER_INDEX_TO_FRAME_0_0_TOWER1,
+      20, // sol assorti a la montagne 1 - explicite maintenant, meme si c'etait deja la valeur par defaut
+    );
+    phaserTilesetKey = result.phaserTilesetKey;
+    renderGrid = result.renderGrid;
+    composedFloorSlots = result.floorSlotIndices;
+    scene.currentFloorTileIndex = composedFloorSlots[0];
+    scene.currentRawTilesetKey = TOWER4_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
+    scene.currentRenderGrid = renderGrid;
+    scene.currentSlotSourceTileIds = result.slotSourceTileIds;
   } else if (tileset === "hills2") {
     const result = composeCornerAutotileTexture(
       scene,
@@ -1317,6 +1412,22 @@ export function buildFloorTilemap(scene, { grid, tileset, data, depth }) {
     composedFloorSlots = result.floorSlotIndices;
     scene.currentFloorTileIndex = composedFloorSlots[0];
     scene.currentRawTilesetKey = MINES2_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
+    scene.currentRenderGrid = renderGrid;
+    scene.currentSlotSourceTileIds = result.slotSourceTileIds;
+  } else if (tileset === "mines3") {
+    const result = composeCornerAutotileTexture(
+      scene,
+      grid,
+      MINES3_AUTOTILE_SPRITESHEET,
+      "mines3",
+      WALL_CORNER_INDEX_TO_FRAME_0_1_MINES2,
+      17, // <-- a remplacer par le vrai numero de sol assorti a montagne2, une fois identifie
+    );
+    phaserTilesetKey = result.phaserTilesetKey;
+    renderGrid = result.renderGrid;
+    composedFloorSlots = result.floorSlotIndices;
+    scene.currentFloorTileIndex = composedFloorSlots[0];
+    scene.currentRawTilesetKey = MINES3_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
     scene.currentRenderGrid = renderGrid;
     scene.currentSlotSourceTileIds = result.slotSourceTileIds;
   } else if (tileset === "hills3") {
@@ -1762,6 +1873,38 @@ export function buildFloorTilemap(scene, { grid, tileset, data, depth }) {
     composedFloorSlots = result.floorSlotIndices;
     scene.currentFloorTileIndex = composedFloorSlots[0];
     scene.currentRawTilesetKey = MUDDY_CAVE_V2_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
+    scene.currentRenderGrid = renderGrid;
+    scene.currentSlotSourceTileIds = result.slotSourceTileIds;
+  } else if (tileset === "muddyCaveV3_0_0") {
+    const result = composeCornerAutotileTexture(
+      scene,
+      grid,
+      MUDDY_CAVE_V3_AUTOTILE_SPRITESHEET,
+      "muddyCaveV3_0_0",
+      WALL_CORNER_INDEX_TO_FRAME_0_0_MUDDY_CAVE,
+      101,
+    );
+    phaserTilesetKey = result.phaserTilesetKey;
+    renderGrid = result.renderGrid;
+    composedFloorSlots = result.floorSlotIndices;
+    scene.currentFloorTileIndex = composedFloorSlots[0];
+    scene.currentRawTilesetKey = MUDDY_CAVE_V3_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
+    scene.currentRenderGrid = renderGrid;
+    scene.currentSlotSourceTileIds = result.slotSourceTileIds;
+  } else if (tileset === "muddyCaveV4_0_0") {
+    const result = composeCornerAutotileTexture(
+      scene,
+      grid,
+      MUDDY_CAVE_V4_AUTOTILE_SPRITESHEET,
+      "muddyCaveV4_0_0",
+      WALL_CORNER_INDEX_TO_FRAME_0_0_MUDDY_CAVE,
+      101,
+    );
+    phaserTilesetKey = result.phaserTilesetKey;
+    renderGrid = result.renderGrid;
+    composedFloorSlots = result.floorSlotIndices;
+    scene.currentFloorTileIndex = composedFloorSlots[0];
+    scene.currentRawTilesetKey = MUDDY_CAVE_V4_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
     scene.currentRenderGrid = renderGrid;
     scene.currentSlotSourceTileIds = result.slotSourceTileIds;
   } else if (tileset === "summerForest_0_0") {
@@ -2876,6 +3019,38 @@ export function buildFloorTilemap(scene, { grid, tileset, data, depth }) {
     composedFloorSlots = result.floorSlotIndices;
     scene.currentFloorTileIndex = composedFloorSlots[0];
     scene.currentRawTilesetKey = CASTLE_DUNGEON_V02_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
+    scene.currentRenderGrid = renderGrid;
+    scene.currentSlotSourceTileIds = result.slotSourceTileIds;
+  } else if (tileset === "castleDungeonV04_0_0") {
+    const result = composeCornerAutotileTexture(
+      scene,
+      grid,
+      CASTLE_DUNGEON_V04_AUTOTILE_SPRITESHEET,
+      "castleDungeonV04_0_0",
+      WALL_CORNER_INDEX_TO_FRAME_CASTLE_DUNGEON_0_1,
+      40,
+    );
+    phaserTilesetKey = result.phaserTilesetKey;
+    renderGrid = result.renderGrid;
+    composedFloorSlots = result.floorSlotIndices;
+    scene.currentFloorTileIndex = composedFloorSlots[0];
+    scene.currentRawTilesetKey = CASTLE_DUNGEON_V04_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
+    scene.currentRenderGrid = renderGrid;
+    scene.currentSlotSourceTileIds = result.slotSourceTileIds;
+  } else if (tileset === "castleDungeonV04_0_1") {
+    const result = composeCornerAutotileTexture(
+      scene,
+      grid,
+      CASTLE_DUNGEON_V04_AUTOTILE_SPRITESHEET,
+      "castleDungeonV04_0_1",
+      WALL_CORNER_INDEX_TO_FRAME_CASTLE_DUNGEON_0_2,
+      36,
+    );
+    phaserTilesetKey = result.phaserTilesetKey;
+    renderGrid = result.renderGrid;
+    composedFloorSlots = result.floorSlotIndices;
+    scene.currentFloorTileIndex = composedFloorSlots[0];
+    scene.currentRawTilesetKey = CASTLE_DUNGEON_V04_AUTOTILE_SPRITESHEET.key; // adapte a la constante reellement utilisee dans CETTE branche precise
     scene.currentRenderGrid = renderGrid;
     scene.currentSlotSourceTileIds = result.slotSourceTileIds;
   } else {

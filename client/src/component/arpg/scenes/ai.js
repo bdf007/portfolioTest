@@ -931,6 +931,28 @@ export function bossSummonMinion(scene, boss) {
   boss.summonedMinions.push(minion);
 }
 
+// vrai si la cible est encore du cote vers lequel l'ennemi frappe
+// (direction figee pendant l'anim) - sert a permettre l'esquive en
+// passant derriere lui
+function isTargetInFront(enemy, targetSprite, dir) {
+  const dx = targetSprite.x - enemy.sprite.x;
+  const dy = targetSprite.y - enemy.sprite.y;
+  // tolerance de 8px : une cible quasi sur la ligne de cote reste touchee
+  const TOL = 8;
+  switch (dir) {
+    case "up":
+      return dy <= TOL;
+    case "down":
+      return dy >= -TOL;
+    case "left":
+      return dx <= TOL;
+    case "right":
+      return dx >= -TOL;
+    default:
+      return true;
+  }
+}
+
 export function updateEnemyAttacks(scene, now) {
   for (const enemy of scene.enemies) {
     if (enemy.state !== "chase") continue;
@@ -1056,6 +1078,7 @@ export function updateEnemyAttacks(scene, now) {
 
     enemy.attackCooldown.trigger(now);
     enemy.sprite.setVelocity(0, 0);
+    const attackDir = enemy.lastDir; // direction figee de la frappe
 
     const hasAttackAnim = scene.anims.exists(
       enemy.spriteKey + "-attack-" + enemy.lastDir,
@@ -1091,11 +1114,21 @@ export function updateEnemyAttacks(scene, now) {
           enemy.sprite.x - summon.sprite.x,
           enemy.sprite.y - summon.sprite.y,
         );
-        if (summonDist <= ENEMY_ATTACK_RANGE && summonDist < resolveDist) {
+        if (
+          summonDist <= ENEMY_ATTACK_RANGE &&
+          summonDist < resolveDist &&
+          isTargetInFront(enemy, summon.sprite, attackDir)
+        ) {
           resolveTarget = { isSummon: true, summon, defense: summon.defense };
         }
       }
-      if (!resolveTarget.isSummon && resolveDist > ENEMY_ATTACK_RANGE) return; // esquive : plus personne a portee
+      // esquive : hors de portee OU passe derriere l'ennemi pendant l'anim
+      if (
+        !resolveTarget.isSummon &&
+        (resolveDist > ENEMY_ATTACK_RANGE ||
+          !isTargetInFront(enemy, scene.hero, attackDir))
+      )
+        return;
 
       if (resolveTarget.isSummon) {
         const dmg = computeDamage(

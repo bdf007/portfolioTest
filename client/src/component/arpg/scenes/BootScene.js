@@ -11,6 +11,7 @@ import {
   DUNGEON_AUTOTILE_SPRITESHEET,
   FORTRESS_AUTOTILE_SPRITESHEET,
   DESERT_AUTOTILE_SPRITESHEET,
+  DESERT2_AUTOTILE_SPRITESHEET,
   HILLS1_AUTOTILE_SPRITESHEET,
   HILLS2_AUTOTILE_SPRITESHEET,
   HILLS3_AUTOTILE_SPRITESHEET,
@@ -36,11 +37,13 @@ import {
   TOWER1_AUTOTILE_SPRITESHEET,
   TOWER2_AUTOTILE_SPRITESHEET,
   TOWER3_AUTOTILE_SPRITESHEET,
+  TOWER4_AUTOTILE_SPRITESHEET,
   TOWERE1_AUTOTILE_SPRITESHEET,
   TOWERE2_AUTOTILE_SPRITESHEET,
   TOWERE3_AUTOTILE_SPRITESHEET,
   MINES1_AUTOTILE_SPRITESHEET,
   MINES2_AUTOTILE_SPRITESHEET,
+  MINES3_AUTOTILE_SPRITESHEET,
   DESERT_TOWNE1_AUTOTILE_SPRITESHEET,
   DESERT_TOWNE2_AUTOTILE_SPRITESHEET,
   ROUFTOPSF_AUTOTILE_SPRITESHEET,
@@ -56,6 +59,8 @@ import {
   STANDARD_FIELDS3_AUTOTILE_SPRITESHEET,
   MUDDY_CAVE_AUTOTILE_SPRITESHEET,
   MUDDY_CAVE_V2_AUTOTILE_SPRITESHEET,
+  MUDDY_CAVE_V3_AUTOTILE_SPRITESHEET,
+  MUDDY_CAVE_V4_AUTOTILE_SPRITESHEET,
   SUMMER_FOREST_AUTOTILE_SPRITESHEET,
   SPRING_FOREST_AUTOTILE_SPRITESHEET,
   AUTUMN_FOREST_AUTOTILE_SPRITESHEET,
@@ -64,6 +69,7 @@ import {
   CASTLE_DUNGEON_V01_AUTOTILE_SPRITESHEET,
   CASTLE_DUNGEON_V02_AUTOTILE_SPRITESHEET,
   CASTLE_DUNGEON_V03_AUTOTILE_SPRITESHEET,
+  CASTLE_DUNGEON_V04_AUTOTILE_SPRITESHEET,
   OBJECTS_DUNGEON_01_SPRITESHEET,
   DETAILS_SPRITESHEET,
 } from "../spriteRegistry";
@@ -139,6 +145,14 @@ export default class BootScene extends Phaser.Scene {
       {
         frameWidth: DESERT_AUTOTILE_SPRITESHEET.frameWidth,
         frameHeight: DESERT_AUTOTILE_SPRITESHEET.frameHeight,
+      },
+    );
+    this.load.spritesheet(
+      DESERT2_AUTOTILE_SPRITESHEET.key,
+      DESERT2_AUTOTILE_SPRITESHEET.path,
+      {
+        frameWidth: DESERT2_AUTOTILE_SPRITESHEET.frameWidth,
+        frameHeight: DESERT2_AUTOTILE_SPRITESHEET.frameHeight,
       },
     );
     this.load.spritesheet(
@@ -326,6 +340,14 @@ export default class BootScene extends Phaser.Scene {
       },
     );
     this.load.spritesheet(
+      TOWER4_AUTOTILE_SPRITESHEET.key,
+      TOWER4_AUTOTILE_SPRITESHEET.path,
+      {
+        frameWidth: TOWER4_AUTOTILE_SPRITESHEET.frameWidth,
+        frameHeight: TOWER4_AUTOTILE_SPRITESHEET.frameHeight,
+      },
+    );
+    this.load.spritesheet(
       TOWERE1_AUTOTILE_SPRITESHEET.key,
       TOWERE1_AUTOTILE_SPRITESHEET.path,
       {
@@ -363,6 +385,14 @@ export default class BootScene extends Phaser.Scene {
       {
         frameWidth: MINES2_AUTOTILE_SPRITESHEET.frameWidth,
         frameHeight: MINES2_AUTOTILE_SPRITESHEET.frameHeight,
+      },
+    );
+    this.load.spritesheet(
+      MINES3_AUTOTILE_SPRITESHEET.key,
+      MINES3_AUTOTILE_SPRITESHEET.path,
+      {
+        frameWidth: MINES3_AUTOTILE_SPRITESHEET.frameWidth,
+        frameHeight: MINES3_AUTOTILE_SPRITESHEET.frameHeight,
       },
     );
     this.load.spritesheet(
@@ -486,6 +516,22 @@ export default class BootScene extends Phaser.Scene {
       },
     );
     this.load.spritesheet(
+      MUDDY_CAVE_V3_AUTOTILE_SPRITESHEET.key,
+      MUDDY_CAVE_V3_AUTOTILE_SPRITESHEET.path,
+      {
+        frameWidth: MUDDY_CAVE_V3_AUTOTILE_SPRITESHEET.frameWidth,
+        frameHeight: MUDDY_CAVE_V3_AUTOTILE_SPRITESHEET.frameHeight,
+      },
+    );
+    this.load.spritesheet(
+      MUDDY_CAVE_V4_AUTOTILE_SPRITESHEET.key,
+      MUDDY_CAVE_V4_AUTOTILE_SPRITESHEET.path,
+      {
+        frameWidth: MUDDY_CAVE_V4_AUTOTILE_SPRITESHEET.frameWidth,
+        frameHeight: MUDDY_CAVE_V4_AUTOTILE_SPRITESHEET.frameHeight,
+      },
+    );
+    this.load.spritesheet(
       SUMMER_FOREST_AUTOTILE_SPRITESHEET.key,
       SUMMER_FOREST_AUTOTILE_SPRITESHEET.path,
       {
@@ -547,6 +593,14 @@ export default class BootScene extends Phaser.Scene {
       {
         frameWidth: CASTLE_DUNGEON_V03_AUTOTILE_SPRITESHEET.frameWidth,
         frameHeight: CASTLE_DUNGEON_V03_AUTOTILE_SPRITESHEET.frameHeight,
+      },
+    );
+    this.load.spritesheet(
+      CASTLE_DUNGEON_V04_AUTOTILE_SPRITESHEET.key,
+      CASTLE_DUNGEON_V04_AUTOTILE_SPRITESHEET.path,
+      {
+        frameWidth: CASTLE_DUNGEON_V04_AUTOTILE_SPRITESHEET.frameWidth,
+        frameHeight: CASTLE_DUNGEON_V04_AUTOTILE_SPRITESHEET.frameHeight,
       },
     );
     this.load.spritesheet(

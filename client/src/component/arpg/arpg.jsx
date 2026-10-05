@@ -318,7 +318,7 @@ export default function Arpg() {
       audio: { noAudio: true },
       physics: {
         default: "arcade",
-        arcade: { gravity: { y: 0 }, debug: false },
+        arcade: { gravity: { y: 0 }, debug: true },
       },
       scene: [BootScene, MainScene],
     };

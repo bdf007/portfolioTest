@@ -25,6 +25,7 @@ import {
   CASTLE_DUNGEON_V01_AUTOTILE_SPRITESHEET,
   CASTLE_DUNGEON_V02_AUTOTILE_SPRITESHEET,
   CASTLE_DUNGEON_V03_AUTOTILE_SPRITESHEET,
+  CASTLE_DUNGEON_V04_AUTOTILE_SPRITESHEET,
   CITY_TILES_AUTOTILE_SPRITESHEET,
   CITY_WALLS1_AUTOTILE_SPRITESHEET,
   CITY_WALLS2_AUTOTILE_SPRITESHEET,
@@ -32,13 +33,17 @@ import {
   DARKWOODS2_AUTOTILE_SPRITESHEET,
   DARKWOODS_AUTOTILE_SPRITESHEET,
   DESERT_AUTOTILE_SPRITESHEET,
+  DESERT2_AUTOTILE_SPRITESHEET,
   HILLS1_AUTOTILE_SPRITESHEET,
   HILLS2_AUTOTILE_SPRITESHEET,
   HILLS3_AUTOTILE_SPRITESHEET,
   MINES1_AUTOTILE_SPRITESHEET,
   MINES2_AUTOTILE_SPRITESHEET,
+  MINES3_AUTOTILE_SPRITESHEET,
   MUDDY_CAVE_AUTOTILE_SPRITESHEET,
   MUDDY_CAVE_V2_AUTOTILE_SPRITESHEET,
+  MUDDY_CAVE_V3_AUTOTILE_SPRITESHEET,
+  MUDDY_CAVE_V4_AUTOTILE_SPRITESHEET,
   SNOW_AUTOTILE_SPRITESHEET,
   SPRING_FOREST_AUTOTILE_SPRITESHEET,
   STANDARD_FIELDS1_AUTOTILE_SPRITESHEET,
@@ -48,6 +53,7 @@ import {
   TOWER1_AUTOTILE_SPRITESHEET,
   TOWER2_AUTOTILE_SPRITESHEET,
   TOWER3_AUTOTILE_SPRITESHEET,
+  TOWER4_AUTOTILE_SPRITESHEET,
   WINTER_FOREST_AUTOTILE_SPRITESHEET,
   WINTER_FOREST_SNOWY_AUTOTILE_SPRITESHEET,
 } from "./spriteRegistry";
@@ -72,6 +78,26 @@ export const BIOME_REGISTRY = [
     tilesetKey: "desert2",
     displayName: "Desert 2",
     spritesheet: DESERT_AUTOTILE_SPRITESHEET,
+  },
+  {
+    tilesetKey: "desert_2",
+    displayName: "Desert 2_2",
+    spritesheet: DESERT2_AUTOTILE_SPRITESHEET,
+  },
+  {
+    tilesetKey: "desertMountain2_2",
+    displayName: "Desert Mountain 2_2",
+    spritesheet: DESERT2_AUTOTILE_SPRITESHEET,
+  },
+  {
+    tilesetKey: "desertMountain3_2",
+    displayName: "Desert Mountain 3_2",
+    spritesheet: DESERT2_AUTOTILE_SPRITESHEET,
+  },
+  {
+    tilesetKey: "desert2_2",
+    displayName: "Desert 2_2",
+    spritesheet: DESERT2_AUTOTILE_SPRITESHEET,
   },
   {
     tilesetKey: "hills1",
@@ -139,6 +165,11 @@ export const BIOME_REGISTRY = [
     spritesheet: TOWER3_AUTOTILE_SPRITESHEET,
   },
   {
+    tilesetKey: "tower4",
+    displayName: "Tower 4",
+    spritesheet: TOWER4_AUTOTILE_SPRITESHEET,
+  },
+  {
     tilesetKey: "hills2",
     displayName: "Hills 2",
     spritesheet: HILLS1_AUTOTILE_SPRITESHEET,
@@ -152,6 +183,11 @@ export const BIOME_REGISTRY = [
     tilesetKey: "mines2",
     displayName: "Mines 2",
     spritesheet: MINES2_AUTOTILE_SPRITESHEET,
+  },
+  {
+    tilesetKey: "mines3",
+    displayName: "Mines 3",
+    spritesheet: MINES3_AUTOTILE_SPRITESHEET,
   },
   {
     tilesetKey: "hills3",
@@ -287,6 +323,16 @@ export const BIOME_REGISTRY = [
     tilesetKey: "muddyCaveV2_0_0",
     displayName: "Muddy Cave V 2 0 0",
     spritesheet: MUDDY_CAVE_V2_AUTOTILE_SPRITESHEET,
+  },
+  {
+    tilesetKey: "muddyCaveV3_0_0",
+    displayName: "Muddy Cave V 3 0 0",
+    spritesheet: MUDDY_CAVE_V3_AUTOTILE_SPRITESHEET,
+  },
+  {
+    tilesetKey: "muddyCaveV4_0_0",
+    displayName: "Muddy Cave V 4 0 0",
+    spritesheet: MUDDY_CAVE_V4_AUTOTILE_SPRITESHEET,
   },
   {
     tilesetKey: "summerForest_0_0",
@@ -592,6 +638,16 @@ export const BIOME_REGISTRY = [
     tilesetKey: "castleDungeonV03_0_1",
     displayName: "Castle Dungeon V 03 0 1",
     spritesheet: CASTLE_DUNGEON_V03_AUTOTILE_SPRITESHEET,
+  },
+  {
+    tilesetKey: "castleDungeonV04_0_0",
+    displayName: "Castle Dungeon V 04 0 0",
+    spritesheet: CASTLE_DUNGEON_V04_AUTOTILE_SPRITESHEET,
+  },
+  {
+    tilesetKey: "castleDungeonV04_0_1",
+    displayName: "Castle Dungeon V 04 0 1",
+    spritesheet: CASTLE_DUNGEON_V04_AUTOTILE_SPRITESHEET,
   },
   { tilesetKey: "cave", displayName: "Cave", spritesheet: null },
   { tilesetKey: "ruins", displayName: "Ruins", spritesheet: null },

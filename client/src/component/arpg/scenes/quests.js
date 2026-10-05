@@ -115,6 +115,10 @@ export function createQuestNpcs(scene, npcDataArray) {
       npcSprite.animations.idleDown,
     );
     sprite.setScale(npcSprite.scale);
+    const nhb = npcSprite.hitbox;
+    sprite.body
+      .setSize(nhb.width, nhb.height)
+      .setOffset(nhb.offsetX, nhb.offsetY);
     sprite.anims.play(`${npcSpriteKey}-idle-down`);
     sprite.setDepth(9);
     scene.levelColliders.push(scene.physics.add.collider(sprite, scene.layer));
@@ -260,6 +264,10 @@ export function createAmbientNpcs(scene, npcDataArray) {
       npcSprite.animations.idleDown,
     );
     sprite.setScale(npcSprite.scale);
+    const nhb = npcSprite.hitbox;
+    sprite.body
+      .setSize(nhb.width, nhb.height)
+      .setOffset(nhb.offsetX, nhb.offsetY);
     sprite.anims.play(`${npcSpriteKey}-idle-down`);
     sprite.setDepth(9);
     scene.levelColliders.push(scene.physics.add.collider(sprite, scene.layer));
