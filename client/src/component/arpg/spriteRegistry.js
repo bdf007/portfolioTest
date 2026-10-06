@@ -91,6 +91,10 @@ import vampiresSpritesheet from "../../assets/ennemies/vampires.png";
 import gazerSpritesheet from "../../assets/ennemies/gazer.png";
 // ennemies with full animations
 import angryTrentSpritesheet from "../../assets/ennemies/angry_trent.png";
+import angryTrentGreySpritesheet from "../../assets/ennemies/angry_trent_grey.png";
+import angryTrentOrangeSpritesheet from "../../assets/ennemies/angry_trent_orange.png";
+import angryTrentRedSpritesheet from "../../assets/ennemies/angry_trent_red.png";
+import angryTrentYellowSpritesheet from "../../assets/ennemies/angry_trent_yellow.png";
 import gnomeSpritesheet from "../../assets/ennemies/gnome.png";
 import knifedBatSpritesheet from "../../assets/ennemies/knifed_bat.png";
 import mudGolemSpritesheet from "../../assets/ennemies/mud_golem.png";
@@ -1282,16 +1286,74 @@ export const SPRITE_REGISTRY = {
 
   angryTrent: {
     key: "angryTrent",
-    displayName: "Angry Trent",
+    family: "angryTrentAny",
+    familyName: "arbres grincheux",
+    displayName: "Ronchêne",
     path: angryTrentSpritesheet,
-    frameWidth: 48,
-    frameHeight: 48,
-    scale: 1.2,
+    frameWidth: 96,
+    frameHeight: 96,
+    scale: 0.7,
     lootTable: "angryTrentDrop",
     animations: FULL_ANIMATION_FRAMES,
     sheetCols: 4,
     sheetRows: 16,
-    hitbox: computeSafeHitbox(48, 48, 1.2),
+    hitbox: computeSafeHitbox(96, 96, 0.7, 12),
+  },
+  angryTrentGrey: {
+    key: "angryTrentGrey",
+    family: "angryTrentAny",
+    displayName: "Grognorme",
+    path: angryTrentGreySpritesheet,
+    frameWidth: 96,
+    frameHeight: 96,
+    scale: 0.7,
+    lootTable: "angryTrentDrop",
+    animations: FULL_ANIMATION_FRAMES,
+    sheetCols: 4,
+    sheetRows: 16,
+    hitbox: computeSafeHitbox(96, 96, 0.7, 12),
+  },
+  angryTrentOrange: {
+    key: "angryTrentOrange",
+    family: "angryTrentAny",
+    displayName: "Pesteaule",
+    path: angryTrentOrangeSpritesheet,
+    frameWidth: 96,
+    frameHeight: 96,
+    scale: 0.7,
+    lootTable: "angryTrentDrop",
+    animations: FULL_ANIMATION_FRAMES,
+    sheetCols: 4,
+    sheetRows: 16,
+    hitbox: computeSafeHitbox(96, 96, 0.7, 12),
+  },
+  angryTrentRed: {
+    key: "angryTrentRed",
+    family: "angryTrentAny",
+    displayName: "Fulmipin",
+    path: angryTrentRedSpritesheet,
+    frameWidth: 96,
+    frameHeight: 96,
+    scale: 0.7,
+    lootTable: "angryTrentDrop",
+    animations: FULL_ANIMATION_FRAMES,
+    sheetCols: 4,
+    sheetRows: 16,
+    hitbox: computeSafeHitbox(96, 96, 0.7, 12),
+  },
+  angryTrentYellow: {
+    key: "angryTrentYellow",
+    family: "angryTrentAny",
+    displayName: "Maugrolivier",
+    path: angryTrentYellowSpritesheet,
+    frameWidth: 96,
+    frameHeight: 96,
+    scale: 0.7,
+    lootTable: "angryTrentDrop",
+    animations: FULL_ANIMATION_FRAMES,
+    sheetCols: 4,
+    sheetRows: 16,
+    hitbox: computeSafeHitbox(96, 96, 0.7, 12),
   },
   gnome: {
     key: "gnome",
@@ -6292,6 +6354,25 @@ export function resolveEnemyDisplayName(typeKey) {
 }
 
 /**
+ * Nom a afficher pour une CIBLE de quete "tuer X ennemis" : si la cible
+ * est une famille (cf. champ `family` / `familyName` de SPRITE_REGISTRY),
+ * on affiche le nom de famille (toutes couleurs confondues) plutot que
+ * le nom de la seule variante de base. Sinon, comportement normal.
+ *
+ * @param {string} targetType cle de variante ou de famille
+ * @returns {string}
+ */
+export function resolveEnemyTargetName(targetType) {
+  // cible = identifiant de famille : cherche le familyName sur
+  // n'importe quelle entree de cette famille
+  const familyEntry = Object.values(SPRITE_REGISTRY).find(
+    (e) => e.family === targetType && e.familyName,
+  );
+  if (familyEntry) return familyEntry.familyName;
+  return resolveEnemyDisplayName(targetType);
+}
+
+/**
  * Liste de toutes les entrées "vrais ennemis" de SPRITE_REGISTRY (tout ce
  * qui a un lootTable - exclut le héros, les PNJ NPC_town*, les leviers,
  * enemyDefault et les familiers non rencontrés en tant qu'ennemis comme
@@ -6330,6 +6411,16 @@ export function resolveHeroSprite(heroId) {
 export function resolveHeroStatsOverride(heroId) {
   const hero = HERO_ROSTER.find((h) => h.id === heroId) || HERO_ROSTER[0];
   return hero.statsOverride;
+}
+
+// vrai si l'ennemi correspond a la cible de quete `targetType` : meme type
+// serveur, meme cle de sprite, ou meme famille (toutes les couleurs d'un
+// meme monstre). `spriteKey` est la cle resolue (cf. resolveEnemySprite).
+export function matchesEnemyTarget(targetType, archetype, spriteKey) {
+  if (targetType === archetype || targetType === spriteKey) return true;
+  const family =
+    SPRITE_REGISTRY[spriteKey]?.family || SPRITE_REGISTRY[archetype]?.family;
+  return !!family && family === targetType;
 }
 
 export function getUniqueTexturesToLoad() {

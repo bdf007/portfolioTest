@@ -35,12 +35,11 @@ const BIOMES = [
     ],
     enemyBaseCount: 5,
     enemyTypes: [
-      "golem",
-      "golemEau",
-      "golemFeu",
-      "golemFoudre",
-      "golemGlace",
-      "golemOmbre",
+      "angryTrent",
+      "angryTrentGrey",
+      "angryTrentOrange",
+      "angryTrentRed",
+      "angryTrentYellow",
     ],
     decorationConfig: {
       count: [40, 60], // genereux - c'est fait pour remplir le biome
@@ -111,11 +110,11 @@ const BIOMES = [
     ],
     enemyBaseCount: 10,
     enemyTypes: [
-      "mahoganyTikorin",
-      "greenSlime",
-      "redGemmacrabe",
-      "orangeSpectrelin",
-      "angryBrownMushroom",
+      "angryTrent",
+      "angryTrentGrey",
+      "angryTrentOrange",
+      "angryTrentRed",
+      "angryTrentYellow",
     ],
     decorationConfig: {
       count: [40, 60], // genereux - c'est fait pour remplir le biome

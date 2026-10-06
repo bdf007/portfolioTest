@@ -8,6 +8,7 @@ import {
   SPRITE_REGISTRY,
   resolveEnemySprite,
   resolveHeroStatsOverride,
+  matchesEnemyTarget,
 } from "../spriteRegistry";
 import { resolveItemDef } from "../itemDefs";
 import {
@@ -1843,7 +1844,14 @@ export default class MainScene extends Phaser.Scene {
       for (const questKey of Object.keys(this.quests)) {
         const qs = this.quests[questKey];
         if (!qs.accepted || qs.completed) continue;
-        if (qs.targetEnemyType && qs.targetEnemyType !== enemy.archetype)
+        if (
+          qs.targetEnemyType &&
+          !matchesEnemyTarget(
+            qs.targetEnemyType,
+            enemy.archetype,
+            enemy.spriteKey,
+          )
+        )
           continue;
         if (qs.killCount < qs.target) {
           qs.killCount++;

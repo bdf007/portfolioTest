@@ -546,10 +546,10 @@ export const ABILITY_DEFS = {
 
   summonAngryTrent: {
     id: "summonAngryTrent",
-    name: "Invocation : Trent en colère",
+    name: "Invocation : Ronchêne",
     archetypes: [],
     description:
-      "Invoque un trent en colère temporaire qui combat à tes côtés, jusqu'à sa mort ou expiration. 30 mana.",
+      "Invoque un ronchêne temporaire qui combat à tes côtés, jusqu'à sa mort ou expiration. 30 mana.",
     staminaCost: 1,
     cooldownMs: 15000,
     effectType: "summon",

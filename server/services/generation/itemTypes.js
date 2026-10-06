@@ -903,8 +903,8 @@ const ITEM_TYPES = {
   summonAngryTrentScroll: {
     id: "summonAngryTrentScroll",
     category: "abilityScroll",
-    name: "Parchemin : Invocation : Trent en colère",
-    description: "Apprend la compétence Invocation : Trent en colère.",
+    name: "Parchemin : Invocation : Ronchêne",
+    description: "Apprend la compétence Invocation : Ronchêne.",
     grantsAbility: "summonAngryTrent",
     stackable: false,
   },
@@ -1021,17 +1021,16 @@ const ITEM_TYPES = {
   angryTrentCore: {
     id: "angryTrentCore",
     category: "craftingMaterial",
-    name: "Noyau de Trent en colère",
-    description: "Le cœur d'un Trent en colère, utilisé pour l'artisanat.",
+    name: "Noyau de Ronchêne",
+    description: "Le cœur d'un Ronchêne, utilisé pour l'artisanat.",
     stackable: false,
     unique: true,
   },
   woodAngryTrent: {
     id: "woodAngryTrent",
     category: "craftingMaterial",
-    name: "Bois de Trent en colère",
-    description:
-      "Du bois provenant d'un Trent en colère, utilisé pour l'artisanat.",
+    name: "Bois de Ronchêne",
+    description: "Du bois provenant d'un Ronchêne, utilisé pour l'artisanat.",
     stackable: true,
   },
   knifedBatCore: {

@@ -1,7 +1,11 @@
 import { createRng } from "../rng";
 import { pickPatrolRoute } from "../enemyBehavior";
 import { createCooldown } from "../combat";
-import { SPRITE_REGISTRY, resolveEnemyDisplayName } from "../spriteRegistry";
+import {
+  SPRITE_REGISTRY,
+  resolveEnemyDisplayName,
+  resolveEnemyTargetName,
+} from "../spriteRegistry";
 import { resolveItemDef } from "../itemDefs";
 
 import { TILE_SIZE, ENEMY_SPEED, ENEMY_ATTACK_COOLDOWN } from "./gameConstants";
@@ -473,18 +477,18 @@ export function openQuestDialog(scene, npc) {
       }
     }
   } else if (qs.completed) {
-    const enemyName = resolveEnemyDisplayName(qs.targetEnemyType);
+    const enemyName = resolveEnemyTargetName(qs.targetEnemyType);
     text = custom.complete || `Merci d'avoir tué ces ${enemyName} pour moi !`;
   } else if (qs.accepted && qs.killCount >= qs.target) {
     text = custom.progress || `C'est fait ! Tu peux réclamer ta récompense.`;
     canTurnIn = true;
   } else if (qs.accepted) {
-    const enemyName = resolveEnemyDisplayName(qs.targetEnemyType);
+    const enemyName = resolveEnemyTargetName(qs.targetEnemyType);
     text =
       custom.progress ||
       `Progression : ${qs.killCount} / ${qs.target} ${enemyName} tués. Reviens me voir une fois terminé !`;
   } else {
-    const enemyName = resolveEnemyDisplayName(qs.targetEnemyType);
+    const enemyName = resolveEnemyTargetName(qs.targetEnemyType);
     text = custom.offer || `Peux-tu tuer ${qs.target} ${enemyName} pour toi ?`;
     canAccept = true;
   }

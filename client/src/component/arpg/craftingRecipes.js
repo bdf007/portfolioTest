@@ -3335,7 +3335,7 @@ export const CRAFTING_RECIPES = {
 
   summonAngryTrentRecipe: {
     id: "summonAngryTrentRecipe",
-    name: "Recette de Parchemin : Invocation : Trent en colère",
+    name: "Recette de Parchemin : Invocation : Ronchêne",
     resultItemId: "summonAngryTrentScroll",
     resultQuantity: 1,
     ingredients: [
