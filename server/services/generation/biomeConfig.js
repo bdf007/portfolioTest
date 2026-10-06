@@ -35,13 +35,12 @@ const BIOMES = [
     ],
     enemyBaseCount: 5,
     enemyTypes: [
-      "orqueGreen",
-      "orqueBlack",
-      "orqueYellow",
-      "orqueBlue",
-      "orqueRed",
-      "orquePurple",
-      "orqueGrey",
+      "golem",
+      "golemEau",
+      "golemFeu",
+      "golemFoudre",
+      "golemGlace",
+      "golemOmbre",
     ],
     decorationConfig: {
       count: [40, 60], // genereux - c'est fait pour remplir le biome
@@ -112,11 +111,11 @@ const BIOMES = [
     ],
     enemyBaseCount: 10,
     enemyTypes: [
-      "massecailleBlue",
-      "massecailleGreen",
-      "massecaillePurple",
-      "massecailleRed",
-      "massecailleYellow",
+      "mahoganyTikorin",
+      "greenSlime",
+      "redGemmacrabe",
+      "orangeSpectrelin",
+      "angryBrownMushroom",
     ],
     decorationConfig: {
       count: [40, 60], // genereux - c'est fait pour remplir le biome
