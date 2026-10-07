@@ -47,6 +47,7 @@ import {
   getEffectivePlayerMeleeDamage,
   getEffectivePlayerRangedDamage,
   getEffectivePlayerVisionRadius,
+  getPlayerControlTint,
 } from "./statusEffects";
 import {
   confirmResummon as confirmResummonImpl,
@@ -376,6 +377,9 @@ export default class MainScene extends Phaser.Scene {
     createParticleTexture(this, "particle-fire", 0xff6600);
     createParticleTexture(this, "particle-ice", 0x99ddff);
     createParticleTexture(this, "particle-gas", 0x88cc44);
+    createParticleTexture(this, "particle-poison", 0x9933ff);
+    createParticleTexture(this, "particle-blood", 0xcc0000);
+    createParticleTexture(this, "particle-stun", 0xffee33);
     for (const [entryKey, entry] of Object.entries(SPRITE_REGISTRY)) {
       this.createAnimationsForEntry(entryKey, entry);
     }
@@ -1087,6 +1091,10 @@ export default class MainScene extends Phaser.Scene {
       }
       vx *= speed;
       vy *= speed;
+      if (this.isPlayerStunned() || this.isPlayerRooted()) {
+        vx = 0;
+        vy = 0;
+      }
 
       this.hero.setVelocity(vx, vy);
 
@@ -1127,6 +1135,19 @@ export default class MainScene extends Phaser.Scene {
         this.lastAimVector = { x: vx / len, y: vy / len };
       }
     }
+    // teinte d'etat (stun/freeze/root) - reappliquee a chaque frame car
+    // les flashs de degats (clearTint) l'effacent ; on ne touche pas au
+    // hero pendant un flash plein (FILL) pour garder le retour visuel
+    const controlTint = getPlayerControlTint(this);
+    if (controlTint !== null) {
+      if (this.hero.tintMode !== Phaser.TintModes.FILL) {
+        this.hero.setTint(controlTint);
+      }
+      this.heroControlTinted = true;
+    } else if (this.heroControlTinted) {
+      this.heroControlTinted = false;
+      if (this.hero.tintMode !== Phaser.TintModes.FILL) this.hero.clearTint();
+    }
     const tileX = Math.floor(this.hero.x / TILE_SIZE);
     const tileY = Math.floor(this.hero.y / TILE_SIZE);
     if (
@@ -1164,26 +1185,33 @@ export default class MainScene extends Phaser.Scene {
     }
 
     const now = this.time.now;
+    const playerStunned = this.isPlayerStunned();
     if (
       Phaser.Input.Keyboard.JustDown(this.keys.melee) ||
       this.touchMeleeRequested
     ) {
       this.touchMeleeRequested = false;
-      this.performMeleeAttack(now);
+      if (!playerStunned) {
+        this.performMeleeAttack(now);
+      }
     }
     if (
       Phaser.Input.Keyboard.JustDown(this.keys.ranged) ||
       this.touchRangedRequested
     ) {
       this.touchRangedRequested = false;
-      this.performRangedAttack(now);
+      if (!playerStunned) {
+        this.performRangedAttack(now);
+      }
     }
     if (
       Phaser.Input.Keyboard.JustDown(this.keys.action) ||
       this.touchActionRequested
     ) {
       this.touchActionRequested = false;
-      this.performInteraction();
+      if (!playerStunned) {
+        this.performInteraction();
+      }
     }
     if (this.gamePaused) return;
 
@@ -1193,7 +1221,7 @@ export default class MainScene extends Phaser.Scene {
       this.touchFuryRequested
     ) {
       this.touchFuryRequested = false;
-      this.useFury();
+      if (!playerStunned) this.useFury();
     }
 
     // updateEnemyMovement(this);
@@ -1370,8 +1398,20 @@ export default class MainScene extends Phaser.Scene {
     return enemy.statusEffects.some((e) => e.type === "stun");
   }
 
+  // joueur immobilise : etourdi (stun) ou gele (freeze) - bloque le
+  // deplacement ET les attaques (cf. update)
+  isPlayerStunned() {
+    return this.playerStatusEffects.some(
+      (e) => e.type === "stun" || e.type === "freeze",
+    );
+  }
+
   isEnemyRooted(enemy) {
     return enemy.statusEffects.some((e) => e.type === "root");
+  }
+
+  isPlayerRooted() {
+    return this.playerStatusEffects.some((e) => e.type === "root");
   }
 
   moveEnemyToward(enemy, waypointTile, speed, onArrive) {

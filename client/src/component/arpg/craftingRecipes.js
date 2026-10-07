@@ -4040,7 +4040,7 @@ export const CRAFTING_RECIPES = {
   },
   summonSpiderRecipe: {
     id: "summonSpiderRecipe",
-    name: "Recette de Parchemin : Invocation : Araignée",
+    name: "Recette de Parchemin : Invocation : Tarentule",
     resultItemId: "summonSpiderScroll",
     resultQuantity: 1,
     ingredients: [
@@ -5058,6 +5058,39 @@ export const CRAFTING_RECIPES = {
     resultQuantity: 1,
     ingredients: [
       { itemId: "craquombreCore", quantity: 1 },
+      { itemId: "grimoire", quantity: 1 },
+    ],
+    discoveryOnly: true,
+  },
+  summonRedSlimeRecipe: {
+    id: "summonRedSlimeRecipe",
+    name: "Recette de Parchemin : Invocation : Blob rouge",
+    resultItemId: "summonRedSlimeScroll",
+    resultQuantity: 1,
+    ingredients: [
+      { itemId: "redSlimeCore", quantity: 1 },
+      { itemId: "grimoire", quantity: 1 },
+    ],
+    discoveryOnly: true,
+  },
+  summonOrangeSlimeRecipe: {
+    id: "summonOrangeSlimeRecipe",
+    name: "Recette de Parchemin : Invocation : Blob orange",
+    resultItemId: "summonOrangeSlimeScroll",
+    resultQuantity: 1,
+    ingredients: [
+      { itemId: "orangeSlimeCore", quantity: 1 },
+      { itemId: "grimoire", quantity: 1 },
+    ],
+    discoveryOnly: true,
+  },
+  summonSkyBlueSlimeRecipe: {
+    id: "summonSkyBlueSlimeRecipe",
+    name: "Recette de Parchemin : Invocation : Blob bleu ciel",
+    resultItemId: "summonSkyBlueSlimeScroll",
+    resultQuantity: 1,
+    ingredients: [
+      { itemId: "skyBlueSlimeCore", quantity: 1 },
       { itemId: "grimoire", quantity: 1 },
     ],
     discoveryOnly: true,

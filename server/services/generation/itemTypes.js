@@ -1813,16 +1813,16 @@ const ITEM_TYPES = {
   spiderCore: {
     id: "spiderCore",
     category: "craftingMaterial",
-    name: "Noyau de araignée",
-    description: "Le cœur d'une araignée, utilisé pour l'artisanat.",
+    name: "Noyau de tarentule",
+    description: "Le cœur d'une tarentule, utilisé pour l'artisanat.",
     stackable: false,
     unique: true,
   },
   summonSpiderScroll: {
     id: "summonSpiderScroll",
     category: "abilityScroll",
-    name: "Parchemin : Invocation : Araignée",
-    description: "Apprend la compétence Invocation : Araignée.",
+    name: "Parchemin : Invocation : Tarentule",
+    description: "Apprend la compétence Invocation : Tarentule.",
     grantsAbility: "summonSpider",
     stackable: false,
   },
@@ -3402,6 +3402,54 @@ const ITEM_TYPES = {
     grantsAbility: "summonCraquombre",
     stackable: false,
   },
+  redSlimeCore: {
+    id: "redSlimeCore",
+    category: "craftingMaterial",
+    name: "Noyau de blob rouge",
+    description: "Le cœur d'un blob rouge, utilisé pour l'artisanat.",
+    stackable: false,
+    unique: true,
+  },
+  summonRedSlimeScroll: {
+    id: "summonRedSlimeScroll",
+    category: "abilityScroll",
+    name: "Parchemin : Invocation : Blob rouge",
+    description: "Apprend la compétence Invocation : Blob rouge.",
+    grantsAbility: "summonRedSlime",
+    stackable: false,
+  },
+  orangeSlimeCore: {
+    id: "orangeSlimeCore",
+    category: "craftingMaterial",
+    name: "Noyau de blob orange",
+    description: "Le cœur d'un blob orange, utilisé pour l'artisanat.",
+    stackable: false,
+    unique: true,
+  },
+  summonOrangeSlimeScroll: {
+    id: "summonOrangeSlimeScroll",
+    category: "abilityScroll",
+    name: "Parchemin : Invocation : Blob orange",
+    description: "Apprend la compétence Invocation : Blob orange.",
+    grantsAbility: "summonOrangeSlime",
+    stackable: false,
+  },
+  skyBlueSlimeCore: {
+    id: "skyBlueSlimeCore",
+    category: "craftingMaterial",
+    name: "Noyau de blob bleu ciel",
+    description: "Le cœur d'un blob bleu ciel, utilisé pour l'artisanat.",
+    stackable: false,
+    unique: true,
+  },
+  summonSkyBlueSlimeScroll: {
+    id: "summonSkyBlueSlimeScroll",
+    category: "abilityScroll",
+    name: "Parchemin : Invocation : Blob bleu ciel",
+    description: "Apprend la compétence Invocation : Blob bleu ciel.",
+    grantsAbility: "summonSkyBlueSlime",
+    stackable: false,
+  },
 };
 
 /**
@@ -4188,6 +4236,21 @@ const LOOT_TABLES = {
     { itemId: null, weight: 50 },
     { itemId: "gold", weight: 50, quantityRange: [1, 3] },
     { itemId: "craquombreCore", weight: 50 },
+  ],
+  redSlimeDrop: [
+    { itemId: null, weight: 50 },
+    { itemId: "gold", weight: 50, quantityRange: [1, 3] },
+    { itemId: "redSlimeCore", weight: 50 },
+  ],
+  orangeSlimeDrop: [
+    { itemId: null, weight: 50 },
+    { itemId: "gold", weight: 50, quantityRange: [1, 3] },
+    { itemId: "orangeSlimeCore", weight: 50 },
+  ],
+  skyBlueSlimeDrop: [
+    { itemId: null, weight: 50 },
+    { itemId: "gold", weight: 50, quantityRange: [1, 3] },
+    { itemId: "skyBlueSlimeCore", weight: 50 },
   ],
 };
 

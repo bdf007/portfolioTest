@@ -33,13 +33,13 @@ const BIOMES = [
       "muddyCaveV3_0_0",
       "muddyCaveV4_0_0",
     ],
-    enemyBaseCount: 5,
+    enemyBaseCount: 10,
     enemyTypes: [
-      "angryTrent",
-      "angryTrentGrey",
-      "angryTrentOrange",
-      "angryTrentRed",
-      "angryTrentYellow",
+      "spider",
+      "spiderBlackPoison",
+      "spiderBlueAcid",
+      "spiderBrownIce",
+      "spiderGreenFire",
     ],
     decorationConfig: {
       count: [40, 60], // genereux - c'est fait pour remplir le biome

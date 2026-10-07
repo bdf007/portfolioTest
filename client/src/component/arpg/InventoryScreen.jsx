@@ -635,6 +635,20 @@ const ICON_TINTS = {
   summonCraquorScroll: "#cccccc",
   craquombreCore: "#cccccc",
   summonCraquombreScroll: "#cccccc",
+  redSlimeCore: "#cccccc",
+  summonRedSlimeScroll: "#cccccc",
+  orangeSlimeCore: "#cccccc",
+  summonOrangeSlimeScroll: "#cccccc",
+  skyBlueSlimeCore: "#cccccc",
+  summonSkyBlueSlimeScroll: "#cccccc",
+  spiderBlackPoisonCore: "#cccccc",
+  summonSpiderBlackPoisonScroll: "#cccccc",
+  spiderBlueAcidCore: "#cccccc",
+  summonSpiderBlueAcidScroll: "#cccccc",
+  spiderBrownIceCore: "#cccccc",
+  summonSpiderBrownIceScroll: "#cccccc",
+  spiderGreenFireCore: "#cccccc",
+  summonSpiderGreenFireScroll: "#cccccc",
 };
 
 /**

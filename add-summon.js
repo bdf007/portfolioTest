@@ -262,7 +262,7 @@ async function main() {
     damageScale: 0.5,
     defenseScale: 0.8,
     damageType: "physical",
-    resistances: { physical: 1 },
+    resistances: { physical: 0 },
     unlockLevel: null,
   },
 `;

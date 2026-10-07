@@ -35,6 +35,10 @@ export const INFLICTS_TO_VISUAL_EFFECT = {
   burn: "fire",
   acid: "gas",
   slow: "ice",
+  bleed: "blood",
+  poison: "poison",
+  freeze: "ice",
+  stun: "stun",
 };
 
 export function resolveVisualEffect(enemyData) {
