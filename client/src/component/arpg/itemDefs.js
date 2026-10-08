@@ -15321,20 +15321,22 @@ export const ITEM_DEFS = {
     grantsAbility: "summonGreendragon",
     stackable: false,
   },
-  ogreCore: {
-    id: "ogreCore",
+  ogreBrownCore: {
+    id: "ogreBrownCore",
     category: "craftingMaterial",
-    name: "Noyau de ogre",
-    description: "Le cœur d'un ogre, utilisé pour l'artisanat.",
+    name: "Noyau de gourdogre — Clan Fangebois",
+    description:
+      "Le cœur d'un gourdogre du Clan Fangebois, utilisé pour l'artisanat.",
     stackable: false,
     unique: true,
   },
-  summonOgreScroll: {
-    id: "summonOgreScroll",
+  summonOgreBrownScroll: {
+    id: "summonOgreBrownScroll",
     category: "abilityScroll",
-    name: "Parchemin : Invocation : Ogre",
-    description: "Apprend la compétence Invocation : Ogre.",
-    grantsAbility: "summonOgre",
+    name: "Parchemin : Invocation : Gourdogre — Clan Fangebois",
+    description:
+      "Apprend la compétence Invocation : Gourdogre — Clan Fangebois.",
+    grantsAbility: "summonOgreBrown",
     stackable: false,
   },
   redbeetleCore: {

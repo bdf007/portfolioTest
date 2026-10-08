@@ -1963,16 +1963,16 @@ export const ABILITY_DEFS = {
     resistances: { physical: 1 },
     unlockLevel: null,
   },
-  summonOgre: {
-    id: "summonOgre",
-    name: "Invocation : Ogre",
+  summonOgreBrown: {
+    id: "summonOgreBrown",
+    name: "Invocation : Gourdogre — Clan Fangebois",
     archetypes: [],
     description:
-      "Invoque un ogre temporaire qui combat à tes côtés, jusqu'à sa mort ou expiration. 30 mana.",
+      "Invoque un gourdogre du Clan Fangebois qui combat à tes côtés, jusqu'à sa mort ou expiration. 30 mana.",
     staminaCost: 1,
     cooldownMs: 15000,
     effectType: "summon",
-    summonType: "ogre",
+    summonType: "ogreBrown",
     durationMs: null,
     hp: 40,
     damage: 8,

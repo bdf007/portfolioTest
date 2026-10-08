@@ -3884,13 +3884,13 @@ export const CRAFTING_RECIPES = {
     ],
     discoveryOnly: true,
   },
-  summonOgreRecipe: {
-    id: "summonOgreRecipe",
-    name: "Recette de Parchemin : Invocation : Ogre",
-    resultItemId: "summonOgreScroll",
+  summonOgreBrownRecipe: {
+    id: "summonOgreBrownRecipe",
+    name: "Recette de Parchemin : Invocation : Gourdogre — Clan Fangebois",
+    resultItemId: "summonOgreBrownScroll",
     resultQuantity: 1,
     ingredients: [
-      { itemId: "ogreCore", quantity: 1 },
+      { itemId: "ogreBrownCore", quantity: 1 },
       { itemId: "grimoire", quantity: 1 },
     ],
     discoveryOnly: true,

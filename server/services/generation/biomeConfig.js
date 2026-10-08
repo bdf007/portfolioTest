@@ -34,13 +34,7 @@ const BIOMES = [
       "muddyCaveV4_0_0",
     ],
     enemyBaseCount: 10,
-    enemyTypes: [
-      "spider",
-      "spiderBlackPoison",
-      "spiderBlueAcid",
-      "spiderBrownIce",
-      "spiderGreenFire",
-    ],
+    enemyTypes: ["strongSpiderShadow", "shadowManditaure"],
     decorationConfig: {
       count: [40, 60], // genereux - c'est fait pour remplir le biome
       decorTypes: [
