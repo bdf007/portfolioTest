@@ -17,6 +17,7 @@ import {
   RING_NECKLACE_ALL_TIERS_SPRITESHEET,
   DETAILS_SPRITESHEET,
   ICON_SCROLL_SPRITESHEET,
+  GEMS_SPRITESHEET,
   ICON_SHEET_1_FRAMES,
   ICON_SHEET_2_FRAMES,
   MONSTER_LOOTS_FRAMES,
@@ -30,6 +31,7 @@ import {
   RING_NECKLACE_TIERS_FRAMES,
   DETAILS_FRAMES,
   ICON_SCROLL_FRAMES,
+  GEMS_SPRITESHEET_FRAMES,
 } from "./spriteRegistry";
 import bookPages from "../../assets/background/book_pages.png";
 
@@ -764,6 +766,9 @@ export function ItemIcon({ itemId, scale = 2 }) {
   } else if (ICON_SCROLL_FRAMES[itemId] !== undefined) {
     frameIndex = ICON_SCROLL_FRAMES[itemId];
     spriteSheet = ICON_SCROLL_SPRITESHEET;
+  } else if (GEMS_SPRITESHEET_FRAMES[itemId] !== undefined) {
+    frameIndex = GEMS_SPRITESHEET_FRAMES[itemId];
+    spriteSheet = GEMS_SPRITESHEET;
   } else {
     return null;
   }
@@ -840,6 +845,7 @@ export function hasIconFrame(id) {
     BELT_ALL_TIERS_FRAMES[id] !== undefined ||
     RING_NECKLACE_TIERS_FRAMES[id] !== undefined ||
     ICON_SCROLL_FRAMES[id] !== undefined ||
+    GEMS_SPRITESHEET_FRAMES[id] !== undefined ||
     DETAILS_FRAMES[id] !== undefined
   );
 }

@@ -462,7 +462,7 @@ const WALL_CORNER_INDEX_TO_FRAME_FOREST_0_2 = [
 ];
 
 const WALL_CORNER_INDEX_TO_FRAME_FOREST_0_3_0 = [
-  298, 77, 13, 45, 15, 77, 14, 142, 79, 78, 15, 141, 47, 109, 46,
+  298, 77, 13, 45, 15, 111, 14, 142, 79, 78, 143, 110, 47, 109, 46,
   // {
   //   variants: [
   //     { tiles: [34, 46], weight: 10 },
@@ -476,7 +476,26 @@ const WALL_CORNER_INDEX_TO_FRAME_FOREST_0_3_0 = [
 ];
 
 const WALL_CORNER_INDEX_TO_FRAME_FOREST_0_3_1 = [
-  298, 77, 13, 45, 15, 77, 14, 142, 79, 78, 15, 141, 47, 109, 46,
+  298,
+  77,
+  13,
+  45,
+  15,
+  77,
+  {
+    variants: [
+      { tiles: [14], weight: 5 },
+      { tiles: [175], weight: 7 },
+    ],
+  },
+  142,
+  79,
+  78,
+  15,
+  110,
+  47,
+  109,
+  141,
   // {
   //   variants: [
   //     { tiles: [34, 46], weight: 10 },
@@ -597,12 +616,12 @@ const WALL_CORNER_INDEX_TO_FRAME_0_0_WINTER_SNOWY_FOREST = [
   1,
   33,
   3,
-  65,
+  99,
   2,
   130,
   67,
   66,
-  3,
+  131,
   98,
   35,
   97,
@@ -2876,9 +2895,9 @@ export function buildFloorTilemap(scene, { grid, tileset, data, depth }) {
       WALL_CORNER_INDEX_TO_FRAME_FOREST_0_3_0,
       [
         { tileId: 34, weight: 5 },
-        { tileId: [34, 516], weight: 1 },
-        { tileId: [34, 521], weight: 1 },
-        { tileId: [34, 524], weight: 1 },
+        // { tileId: [34, 516], weight: 1 },
+        // { tileId: [34, 521], weight: 1 },
+        // { tileId: [34, 524], weight: 1 },
       ],
     );
     phaserTilesetKey = result.phaserTilesetKey;
@@ -2897,9 +2916,9 @@ export function buildFloorTilemap(scene, { grid, tileset, data, depth }) {
       WALL_CORNER_INDEX_TO_FRAME_FOREST_0_3_1,
       [
         { tileId: 38, weight: 5 },
-        { tileId: [38, 516], weight: 1 },
-        { tileId: [38, 521], weight: 1 },
-        { tileId: [38, 524], weight: 1 },
+        // { tileId: [38, 516], weight: 1 },
+        // { tileId: [38, 521], weight: 1 },
+        // { tileId: [38, 524], weight: 1 },
       ],
     );
     phaserTilesetKey = result.phaserTilesetKey;

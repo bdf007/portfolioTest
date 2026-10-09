@@ -131,9 +131,9 @@ export function resolveSocketBand(itemId) {
 
 // ===== Tirage du nombre de sockets =====
 const SOCKET_COUNT_WEIGHTS = {
-  low: [0.8, 0.2], // 0 ou 1 socket
-  mid: [0.5, 0.3, 0.2], // 0, 1 ou 2 sockets
-  top: [0.25, 0.3, 0.25, 0.2], // 0, 1, 2 ou 3 sockets
+  low: [0.92, 0.08], // 0 ou 1 socket
+  mid: [0.7, 0.22, 0.08], // 0, 1 ou 2 sockets
+  top: [0.5, 0.3, 0.14, 0.06], // 0, 1, 2 ou 3 sockets
 };
 
 function weightedPick(weights) {

@@ -27,12 +27,13 @@ const BIOMES = [
     minDepth: 1,
     maxDepth: 1,
     generator: "drunkardwalk",
-    tileset: [
-      "muddyCave_0_0",
-      "muddyCaveV2_0_0",
-      "muddyCaveV3_0_0",
-      "muddyCaveV4_0_0",
-    ],
+    // tileset: [
+    //   "muddyCave_0_0",
+    //   "muddyCaveV2_0_0",
+    //   "muddyCaveV3_0_0",
+    //   "muddyCaveV4_0_0",
+    // ],
+    tileset: "winterSnowyForest_0_3_1",
     enemyBaseCount: 10,
     enemyTypes: ["strongSpiderShadow", "shadowManditaure"],
     decorationConfig: {
