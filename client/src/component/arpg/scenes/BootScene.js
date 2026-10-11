@@ -18,6 +18,7 @@ import {
   SNOW_AUTOTILE_SPRITESHEET,
   DARKWOODS_AUTOTILE_SPRITESHEET,
   DARKWOODS2_AUTOTILE_SPRITESHEET,
+  DARKWOODS3_AUTOTILE_SPRITESHEET,
   STANDARD_FIELDS2_AUTOTILE_SPRITESHEET,
   CITY_WALLS1_AUTOTILE_SPRITESHEET,
   CITY_WALLS2_AUTOTILE_SPRITESHEET,
@@ -44,6 +45,9 @@ import {
   MINES1_AUTOTILE_SPRITESHEET,
   MINES2_AUTOTILE_SPRITESHEET,
   MINES3_AUTOTILE_SPRITESHEET,
+  MINES4_AUTOTILE_SPRITESHEET,
+  MINES5_AUTOTILE_SPRITESHEET,
+  MINES6_AUTOTILE_SPRITESHEET,
   DESERT_TOWNE1_AUTOTILE_SPRITESHEET,
   DESERT_TOWNE2_AUTOTILE_SPRITESHEET,
   ROUFTOPSF_AUTOTILE_SPRITESHEET,
@@ -51,6 +55,7 @@ import {
   DUNGEONS_A22_AUTOTILE_SPRITESHEET,
   GREY_COASTA51_AUTOTILE_SPRITESHEET,
   CITY_TILES_AUTOTILE_SPRITESHEET,
+  CITY_TILES_V2_AUTOTILE_SPRITESHEET,
   WORLD_B_AUTOTILE_SPRITESHEET,
   BEIGE_COAST_A_AUTOTILE_SPRITESHEET,
   BEIGE_FIELDS1_A_AUTOTILE_SPRITESHEET,
@@ -61,6 +66,13 @@ import {
   MUDDY_CAVE_V2_AUTOTILE_SPRITESHEET,
   MUDDY_CAVE_V3_AUTOTILE_SPRITESHEET,
   MUDDY_CAVE_V4_AUTOTILE_SPRITESHEET,
+  MUDDY_CAVE_V5_AUTOTILE_SPRITESHEET,
+  MUDDY_CAVE_V6_AUTOTILE_SPRITESHEET,
+  MUDDY_CAVE_V7_AUTOTILE_SPRITESHEET,
+  MUDDY_CAVE_V8_AUTOTILE_SPRITESHEET,
+  MUDDY_CAVE_V9_AUTOTILE_SPRITESHEET,
+  MUDDY_CAVE_V10_AUTOTILE_SPRITESHEET,
+  MUDDY_CAVE_V11_AUTOTILE_SPRITESHEET,
   SUMMER_FOREST_AUTOTILE_SPRITESHEET,
   SPRING_FOREST_AUTOTILE_SPRITESHEET,
   AUTUMN_FOREST_AUTOTILE_SPRITESHEET,
@@ -193,6 +205,14 @@ export default class BootScene extends Phaser.Scene {
       {
         frameWidth: DARKWOODS2_AUTOTILE_SPRITESHEET.frameWidth,
         frameHeight: DARKWOODS2_AUTOTILE_SPRITESHEET.frameHeight,
+      },
+    );
+    this.load.spritesheet(
+      DARKWOODS3_AUTOTILE_SPRITESHEET.key,
+      DARKWOODS3_AUTOTILE_SPRITESHEET.path,
+      {
+        frameWidth: DARKWOODS3_AUTOTILE_SPRITESHEET.frameWidth,
+        frameHeight: DARKWOODS3_AUTOTILE_SPRITESHEET.frameHeight,
       },
     );
     this.load.spritesheet(
@@ -396,6 +416,30 @@ export default class BootScene extends Phaser.Scene {
       },
     );
     this.load.spritesheet(
+      MINES4_AUTOTILE_SPRITESHEET.key,
+      MINES4_AUTOTILE_SPRITESHEET.path,
+      {
+        frameWidth: MINES4_AUTOTILE_SPRITESHEET.frameWidth,
+        frameHeight: MINES4_AUTOTILE_SPRITESHEET.frameHeight,
+      },
+    );
+    this.load.spritesheet(
+      MINES5_AUTOTILE_SPRITESHEET.key,
+      MINES5_AUTOTILE_SPRITESHEET.path,
+      {
+        frameWidth: MINES5_AUTOTILE_SPRITESHEET.frameWidth,
+        frameHeight: MINES5_AUTOTILE_SPRITESHEET.frameHeight,
+      },
+    );
+    this.load.spritesheet(
+      MINES6_AUTOTILE_SPRITESHEET.key,
+      MINES6_AUTOTILE_SPRITESHEET.path,
+      {
+        frameWidth: MINES6_AUTOTILE_SPRITESHEET.frameWidth,
+        frameHeight: MINES6_AUTOTILE_SPRITESHEET.frameHeight,
+      },
+    );
+    this.load.spritesheet(
       DESERT_TOWNE1_AUTOTILE_SPRITESHEET.key,
       DESERT_TOWNE1_AUTOTILE_SPRITESHEET.path,
       {
@@ -449,6 +493,14 @@ export default class BootScene extends Phaser.Scene {
       {
         frameWidth: CITY_TILES_AUTOTILE_SPRITESHEET.frameWidth,
         frameHeight: CITY_TILES_AUTOTILE_SPRITESHEET.frameHeight,
+      },
+    );
+    this.load.spritesheet(
+      CITY_TILES_V2_AUTOTILE_SPRITESHEET.key,
+      CITY_TILES_V2_AUTOTILE_SPRITESHEET.path,
+      {
+        frameWidth: CITY_TILES_V2_AUTOTILE_SPRITESHEET.frameWidth,
+        frameHeight: CITY_TILES_V2_AUTOTILE_SPRITESHEET.frameHeight,
       },
     );
     this.load.spritesheet(
@@ -529,6 +581,62 @@ export default class BootScene extends Phaser.Scene {
       {
         frameWidth: MUDDY_CAVE_V4_AUTOTILE_SPRITESHEET.frameWidth,
         frameHeight: MUDDY_CAVE_V4_AUTOTILE_SPRITESHEET.frameHeight,
+      },
+    );
+    this.load.spritesheet(
+      MUDDY_CAVE_V5_AUTOTILE_SPRITESHEET.key,
+      MUDDY_CAVE_V5_AUTOTILE_SPRITESHEET.path,
+      {
+        frameWidth: MUDDY_CAVE_V5_AUTOTILE_SPRITESHEET.frameWidth,
+        frameHeight: MUDDY_CAVE_V5_AUTOTILE_SPRITESHEET.frameHeight,
+      },
+    );
+    this.load.spritesheet(
+      MUDDY_CAVE_V6_AUTOTILE_SPRITESHEET.key,
+      MUDDY_CAVE_V6_AUTOTILE_SPRITESHEET.path,
+      {
+        frameWidth: MUDDY_CAVE_V6_AUTOTILE_SPRITESHEET.frameWidth,
+        frameHeight: MUDDY_CAVE_V6_AUTOTILE_SPRITESHEET.frameHeight,
+      },
+    );
+    this.load.spritesheet(
+      MUDDY_CAVE_V7_AUTOTILE_SPRITESHEET.key,
+      MUDDY_CAVE_V7_AUTOTILE_SPRITESHEET.path,
+      {
+        frameWidth: MUDDY_CAVE_V7_AUTOTILE_SPRITESHEET.frameWidth,
+        frameHeight: MUDDY_CAVE_V7_AUTOTILE_SPRITESHEET.frameHeight,
+      },
+    );
+    this.load.spritesheet(
+      MUDDY_CAVE_V8_AUTOTILE_SPRITESHEET.key,
+      MUDDY_CAVE_V8_AUTOTILE_SPRITESHEET.path,
+      {
+        frameWidth: MUDDY_CAVE_V8_AUTOTILE_SPRITESHEET.frameWidth,
+        frameHeight: MUDDY_CAVE_V8_AUTOTILE_SPRITESHEET.frameHeight,
+      },
+    );
+    this.load.spritesheet(
+      MUDDY_CAVE_V9_AUTOTILE_SPRITESHEET.key,
+      MUDDY_CAVE_V9_AUTOTILE_SPRITESHEET.path,
+      {
+        frameWidth: MUDDY_CAVE_V9_AUTOTILE_SPRITESHEET.frameWidth,
+        frameHeight: MUDDY_CAVE_V9_AUTOTILE_SPRITESHEET.frameHeight,
+      },
+    );
+    this.load.spritesheet(
+      MUDDY_CAVE_V10_AUTOTILE_SPRITESHEET.key,
+      MUDDY_CAVE_V10_AUTOTILE_SPRITESHEET.path,
+      {
+        frameWidth: MUDDY_CAVE_V10_AUTOTILE_SPRITESHEET.frameWidth,
+        frameHeight: MUDDY_CAVE_V10_AUTOTILE_SPRITESHEET.frameHeight,
+      },
+    );
+    this.load.spritesheet(
+      MUDDY_CAVE_V11_AUTOTILE_SPRITESHEET.key,
+      MUDDY_CAVE_V11_AUTOTILE_SPRITESHEET.path,
+      {
+        frameWidth: MUDDY_CAVE_V11_AUTOTILE_SPRITESHEET.frameWidth,
+        frameHeight: MUDDY_CAVE_V11_AUTOTILE_SPRITESHEET.frameHeight,
       },
     );
     this.load.spritesheet(

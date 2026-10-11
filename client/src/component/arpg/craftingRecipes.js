@@ -2935,6 +2935,14 @@ export const CRAFTING_RECIPES = {
     ],
     discoveryOnly: true, // optionnel - deblocage automatique par niveau, comme les competences
   },
+  healingAuraScrollRecipe: {
+    id: "healingAuraScrollRecipe",
+    name: "Recette de sort : Soin de zone",
+    resultItemId: "healingAuraScroll",
+    resultQuantity: 1,
+    ingredients: [{ itemId: "berries", quantity: 3 }],
+    discoveryOnly: true,
+  },
   mediumHealthPotionRecipe: {
     id: "mediumHealthPotionRecipe",
     name: "Recette de Potion de soin moyenne",
@@ -3320,13 +3328,13 @@ export const CRAFTING_RECIPES = {
     discoveryOnly: true,
     // unlockLevel: ..., // optionnel
   },
-  summonGnomeRecipe: {
-    id: "summonGnomeRecipe",
-    name: "Recette de Parchemin : Invocation : Gnome",
-    resultItemId: "summonGnomeScroll",
+  summonGnomeGreenRecipe: {
+    id: "summonGnomeGreenRecipe",
+    name: "Recette de Parchemin : Invocation : Gnome Vert",
+    resultItemId: "summonGnomeGreenScroll",
     resultQuantity: 1,
     ingredients: [
-      { itemId: "gnomeCore", quantity: 1 },
+      { itemId: "gnomeGreenCore", quantity: 1 },
       { itemId: "grimoire", quantity: 1 },
     ],
     discoveryOnly: true,

@@ -525,16 +525,16 @@ export const ABILITY_DEFS = {
     resistances: { physical: 1 },
     unlockLevel: null,
   },
-  summonGnome: {
-    id: "summonGnome",
-    name: "Invocation : Gnome",
+  summonGnomeGreen: {
+    id: "summonGnomeGreen",
+    name: "Invocation : Gnome Vert",
     archetypes: [],
     description:
-      "Invoque un gnome temporaire qui combat à tes côtés, jusqu'à sa mort ou expiration. 30 mana.",
+      "Invoque un gnome vert temporaire qui combat à tes côtés, jusqu'à sa mort ou expiration. 30 mana.",
     staminaCost: 1,
     cooldownMs: 15000,
     effectType: "summon",
-    summonType: "gnome",
+    summonType: "gnomeGreen",
     durationMs: null,
     hp: 40,
     damage: 8,
@@ -874,6 +874,20 @@ export const ABILITY_DEFS = {
     cooldownMs: 8000,
     effectType: "weaponImbue",
     healPercent: 0.5,
+  },
+  healingAura: {
+    id: "healingAura",
+    name: "Soin de zone",
+    archetypes: [],
+    description:
+      "Soigne le héros, ses invocations et les alliés escortés à proximité. 25 mana.",
+    staminaCost: 1,
+    cooldownMs: 120,
+    effectType: "aoeHeal",
+    radius: 120,
+    healFlat: 15, // PV fixes rendus a chaque cible
+    healPercent: 0.2, // + 20% des PV max de la cible
+    unlockLevel: null,
   },
   riposte: {
     id: "riposte",

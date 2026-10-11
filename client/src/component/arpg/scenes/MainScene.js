@@ -547,6 +547,7 @@ export default class MainScene extends Phaser.Scene {
     this.activeDialogQuestKey = null;
     this.activeTalkingNpc = null;
     this.shopSoldItems = {}; // { depth: [{itemId, quantity}] } - objets vendus a la boutique de CETTE ville precise, rachetables uniquement ici
+    this.rescuedNpcs = []; // [{questKey, townDepth, spriteKey, x, y, greeting}] - PNJ sauves (quete "rescue"), ambiants et persistants dans leur ville
     this.shopRerollSeed = {}; // { depth: nombre de rafraichissements utilises sur CETTE boutique } - 0/absent = stock d'origine (this.shopData.stock)
     this.inventory = [];
     this.gamePaused = false;
@@ -849,8 +850,8 @@ export default class MainScene extends Phaser.Scene {
     buyItemImpl(this, shopItemIndex, quantity);
   }
 
-  sellItem(itemId, quantity = 1) {
-    sellItemImpl(this, itemId, quantity);
+  sellItem(itemId, quantity = 1, instanceId = null) {
+    sellItemImpl(this, itemId, quantity, instanceId);
   }
 
   closeShop() {

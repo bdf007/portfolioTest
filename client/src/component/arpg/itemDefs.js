@@ -17481,6 +17481,17 @@ export const ITEM_DEFS = {
     stackable: true,
     price: 50,
   },
+
+  healingAuraScroll: {
+    id: "healingAuraScroll",
+    category: "abilityScroll",
+    name: "Parchemin : Soin de zone",
+    description:
+      "Apprend la compétence Soin de zone (consomme du mana). Soigne aussi tes invocations et les alliés escortés.",
+    grantsAbility: "healingAura",
+    stackable: true,
+    price: 110,
+  },
   woodenArrowRecipe: {
     id: "woodenArrowRecipe",
     category: "recipeScroll",
@@ -17508,12 +17519,12 @@ export const ITEM_DEFS = {
     grantsAbility: "summonAngryBrownMushroom",
     stackable: false,
   },
-  summonGnomeScroll: {
-    id: "summonGnomeScroll",
+  summonGnomeGreenScroll: {
+    id: "summonGnomeGreenScroll",
     category: "abilityScroll",
-    name: "Parchemin : Invocation : Gnome",
-    description: "Apprend la compétence Invocation : Gnome.",
-    grantsAbility: "summonGnome",
+    name: "Parchemin : Invocation : Gnome Vert",
+    description: "Apprend la compétence Invocation : Gnome Vert.",
+    grantsAbility: "summonGnomeGreen",
     stackable: false,
   },
   summonAngryTrentScroll: {
@@ -17968,11 +17979,11 @@ export const ITEM_DEFS = {
     stackable: false,
     unique: true,
   },
-  gnomeCore: {
-    id: "gnomeCore",
+  gnomeGreenCore: {
+    id: "gnomeGreenCore",
     category: "craftingMaterial",
-    name: "Noyau de gnome",
-    description: "Le cœur d'un gnome, utilisé pour l'artisanat.",
+    name: "Noyau de gnome vert",
+    description: "Le cœur d'un gnome vert, utilisé pour l'artisanat.",
     stackable: false,
     unique: true,
   },

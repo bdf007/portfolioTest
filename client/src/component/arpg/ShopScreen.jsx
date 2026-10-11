@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { resolveItemDef } from "./itemDefs";
 import { groupInventory } from "./InventoryScreen";
 
-const SELL_PRICE_RATIO = 0.5; // doit rester synchronise avec MainScene.js
+const SELL_PRICE_RATIO = 0.5; // doit rester synchronise avec shopTravel.js
+const GEM_SELL_RATIO = 0.5; // idem (shopTravel.js)
 
 export default function ShopScreen({
   stock,
@@ -27,7 +28,7 @@ export default function ShopScreen({
 
   const goldEntry = inventory.find((i) => i.itemId === "gold");
   const currentGold = goldEntry ? goldEntry.quantity : 0;
-  const groupedInventory = groupInventory(inventory).filter(
+  const groupedInventory = groupInventory(inventory, equipped).filter(
     (g) => g.itemId !== "gold" && g.itemId !== equipped.quiver,
   );
 
@@ -293,15 +294,24 @@ export default function ShopScreen({
         {groupedInventory.map((group) => {
           const def = resolveItemDef(group.itemId);
           if (!def.price) return null;
+          // un objet a sockets est une ligne individuelle (instanceId) :
+          // cle et quantite propres a CET exemplaire
+          const rowKey = group.instanceId || group.itemId;
           const maxQty = group.totalQuantity;
-          const qty = getQty(sellQuantities, group.itemId, maxQty);
-          const unitPrice = Math.floor(def.price * SELL_PRICE_RATIO);
+          const qty = getQty(sellQuantities, rowKey, maxQty);
+          const gemBonus = Math.floor(
+            (group.sockets || [])
+              .filter(Boolean)
+              .reduce((s, gemId) => s + (resolveItemDef(gemId).price || 0), 0) *
+              GEM_SELL_RATIO,
+          );
+          const unitPrice = Math.floor(def.price * SELL_PRICE_RATIO) + gemBonus;
           const totalPrice = unitPrice * qty;
           const atMax = qty >= maxQty;
 
           return (
             <div
-              key={group.itemId}
+              key={rowKey}
               style={{
                 display: "flex",
                 justifyContent: "space-between",
@@ -314,8 +324,9 @@ export default function ShopScreen({
             >
               <div>
                 <div style={{ fontSize: 13 }}>
-                  {def.name}
+                  {group.customName || def.name}
                   {group.totalQuantity > 1 ? ` x${group.totalQuantity}` : ""}
+                  {gemBonus > 0 ? ` 💎 +${gemBonus} or` : ""}
                 </div>
                 <div style={{ fontSize: 12, color: "#d4af37", marginTop: 4 }}>
                   {totalPrice} or {qty > 1 ? `(${unitPrice}/u.)` : ""}
@@ -331,7 +342,7 @@ export default function ShopScreen({
               >
                 <button
                   onClick={() =>
-                    adjustQty(setSellQuantities, group.itemId, -10, maxQty)
+                    adjustQty(setSellQuantities, rowKey, -10, maxQty)
                   }
                   disabled={qty <= 1}
                   style={{
@@ -349,7 +360,7 @@ export default function ShopScreen({
                 </button>
                 <button
                   onClick={() =>
-                    adjustQty(setSellQuantities, group.itemId, -1, maxQty)
+                    adjustQty(setSellQuantities, rowKey, -1, maxQty)
                   }
                   disabled={qty <= 1}
                   style={{
@@ -372,7 +383,7 @@ export default function ShopScreen({
                 </span>
                 <button
                   onClick={() =>
-                    adjustQty(setSellQuantities, group.itemId, 1, maxQty)
+                    adjustQty(setSellQuantities, rowKey, 1, maxQty)
                   }
                   disabled={atMax}
                   style={{
@@ -390,7 +401,7 @@ export default function ShopScreen({
                 </button>
                 <button
                   onClick={() =>
-                    adjustQty(setSellQuantities, group.itemId, 10, maxQty)
+                    adjustQty(setSellQuantities, rowKey, 10, maxQty)
                   }
                   disabled={atMax}
                   style={{
@@ -408,7 +419,7 @@ export default function ShopScreen({
                 </button>
                 <button
                   onClick={() =>
-                    adjustQty(setSellQuantities, group.itemId, 9999, maxQty)
+                    adjustQty(setSellQuantities, rowKey, 9999, maxQty)
                   }
                   disabled={atMax}
                   style={{
@@ -424,7 +435,7 @@ export default function ShopScreen({
                   Max
                 </button>
                 <button
-                  onClick={() => onSell(group.itemId, qty)}
+                  onClick={() => onSell(group.itemId, qty, group.instanceId)}
                   style={{
                     padding: "6px 12px",
                     fontSize: 12,

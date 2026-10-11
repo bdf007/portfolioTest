@@ -7,11 +7,17 @@ import {
   resolveEnemyTargetName,
 } from "../spriteRegistry";
 import { resolveItemDef } from "../itemDefs";
+import { findPath } from "../pathfinding";
 
 import { TILE_SIZE, ENEMY_SPEED, ENEMY_ATTACK_COOLDOWN } from "./gameConstants";
 
 const ESCORT_NPC_HP = 40; // fragile - pas cense encaisser des coups longtemps, purement passif
 
+const RESCUE_XP_REWARD = 50;
+const RESCUE_GOLD_REWARD_RANGE = [35, 65];
+const RESCUE_INJECT_CHANCE = 0.15;
+// etages ou aucun captif ne doit apparaitre (ex: etages de boss) - a remplir
+const RESCUE_EXCLUDED_DEPTHS = new Set([]);
 const AMBIENT_NPC_GREETINGS = [
   "Bonjour, voyageur !",
   "Belle journée, n'est-ce pas ?",
@@ -22,6 +28,44 @@ const AMBIENT_NPC_GREETINGS = [
   "On en a gros!",
 ];
 
+const EXTRA_NPC_INDEX_BASE = 100; // indices des PNJ d'accueil ajoutes (jamais ceux du serveur)
+
+// case de sol (3 a 8 cases du point d'arrivee du heros) pour un PNJ d'accueil
+function pickExtraReceiverSpot(scene, n) {
+  const grid = scene.fogGrid;
+  const from = scene.lastPlayerTile;
+  if (!grid || !from) return null;
+  const rng = createRng(`${scene.currentSeed}-extra-receiver-${n}`);
+  const candidates = [];
+  const minY = Math.max(0, from.y - 8);
+  const maxY = Math.min(grid.length - 1, from.y + 8);
+  const minX = Math.max(0, from.x - 8);
+  const maxX = Math.min(grid[0].length - 1, from.x + 8);
+  for (let y = minY; y <= maxY; y++) {
+    for (let x = minX; x <= maxX; x++) {
+      const d = Math.hypot(x - from.x, y - from.y);
+      if (grid[y][x] === 0 && d >= 3 && d <= 8) candidates.push({ x, y });
+    }
+  }
+  if (candidates.length === 0) return null;
+  return candidates[Math.floor(rng() * candidates.length)];
+}
+
+// pnj d'accueil deja crees dans cette ville (retrouves a partir des quetes)
+function collectExtraReceiverNpcs(scene) {
+  const prefix = `${scene.currentDepth}-`;
+  const out = [];
+  for (const [key, q] of Object.entries(scene.quests)) {
+    if (!key.startsWith(prefix) || !q.extraPos) continue;
+    out.push({
+      npcIndex: Number(key.slice(prefix.length)),
+      x: q.extraPos.x,
+      y: q.extraPos.y,
+    });
+  }
+  return out;
+}
+
 export function createQuestNpcs(scene, npcDataArray) {
   const npcSpritePool = Object.keys(SPRITE_REGISTRY).filter((key) =>
     key.startsWith("NPC_town"),
@@ -31,6 +75,7 @@ export function createQuestNpcs(scene, npcDataArray) {
   scene.questNpcs = [];
 
   let nextReceiverIndex = 0;
+  let nextExtraIndex = 0;
   for (const questKey of Object.keys(scene.quests)) {
     const giverQs = scene.quests[questKey];
     if (
@@ -57,9 +102,23 @@ export function createQuestNpcs(scene, npcDataArray) {
     ) {
       nextReceiverIndex++;
     }
-    if (nextReceiverIndex >= npcDataArray.length) continue;
-
-    const receiverNpcIndex = nextReceiverIndex++;
+    let receiverNpcIndex;
+    let extraPos = null;
+    if (nextReceiverIndex < npcDataArray.length) {
+      receiverNpcIndex = nextReceiverIndex++;
+    } else {
+      // plus aucun PNJ libre dans cette ville : PNJ d'accueil supplementaire
+      while (
+        scene.quests[
+          `${scene.currentDepth}-${EXTRA_NPC_INDEX_BASE + nextExtraIndex}`
+        ]
+      ) {
+        nextExtraIndex++;
+      }
+      extraPos = pickExtraReceiverSpot(scene, nextExtraIndex);
+      if (!extraPos) continue;
+      receiverNpcIndex = EXTRA_NPC_INDEX_BASE + nextExtraIndex++;
+    }
     const receiverKey = `${scene.currentDepth}-${receiverNpcIndex}`;
     scene.quests[receiverKey] =
       giverQs.questId === "escort"
@@ -82,12 +141,16 @@ export function createQuestNpcs(scene, npcDataArray) {
             accepted: true,
             completed: false,
           };
+    if (extraPos) scene.quests[receiverKey].extraPos = extraPos;
     giverQs.receiverKey = receiverKey;
   }
 
   const freshlyCreatedKeys = [];
 
-  for (const npcData of npcDataArray) {
+  // PNJ du serveur + PNJ d'accueil supplementaires (persistes via extraPos)
+  const allNpcData = [...npcDataArray, ...collectExtraReceiverNpcs(scene)];
+
+  for (const npcData of allNpcData) {
     const questKey = `${scene.currentDepth}-${npcData.npcIndex}`;
 
     // une quete d'escorte deja acceptee (role "giver") a deja transforme
@@ -172,16 +235,30 @@ export function createQuestNpcs(scene, npcDataArray) {
   }
 
   maybeInjectDeliveryQuest(scene, freshlyCreatedKeys);
+  maybeInjectRescueQuest(
+    scene,
+    Object.keys(scene.quests).filter((k) =>
+      k.startsWith(`${scene.currentDepth}-`),
+    ),
+  );
 }
-
 export function maybeInjectDeliveryQuest(scene, eligibleKeys) {
   // jamais une quete liee a un boss (obtainItem garanti ou defeatBoss) -
   // l'ecraser silencieusement briserait la garantie d'objet de boss
   // (isBossItem, verifiee dans damageEnemy) avant meme que le joueur
   // ait pu la voir
+  // une seule quete de sauvetage par ville (a l'injection ou deja existante)
+  const prefix = `${scene.currentDepth}-`;
+  if (
+    Object.entries(scene.quests).some(
+      ([k, q]) => k.startsWith(prefix) && q.questId === "rescue",
+    )
+  )
+    return;
+
   const safeKeys = eligibleKeys.filter((k) => {
     const q = scene.quests[k];
-    if (!q) return false;
+    if (!q || q.accepted || q.completed || q.failed) return false;
     if (q.questId === "defeatBoss") return false;
     if (q.questId === "obtainItem" && q.isBossItem) return false;
     return true;
@@ -242,6 +319,227 @@ export function maybeInjectDeliveryQuest(scene, eligibleKeys) {
       completed: false,
     };
     giverQs.receiverKey = receiverKey;
+  }
+}
+export function maybeInjectRescueQuest(scene, eligibleKeys) {
+  if (scene.currentBiomeId !== "town") return;
+
+  const safeKeys = eligibleKeys.filter((k) => {
+    const q = scene.quests[k];
+    if (!q || q.accepted) return false;
+    if (["defeatBoss", "delivery", "escort", "rescue"].includes(q.questId))
+      return false;
+    if (q.questId === "obtainItem" && q.isBossItem) return false;
+    return true;
+  });
+  if (safeKeys.length === 0) return;
+
+  const rescueRng = createRng(`${scene.currentSeed}-rescue-inject`);
+  if (rescueRng() >= RESCUE_INJECT_CHANCE) return;
+
+  // etages deja visites entre la ville precedente (exclue) et celle-ci
+  const candidates = [];
+  for (
+    let d = Math.max(1, scene.currentDepth - 9);
+    d < scene.currentDepth;
+    d++
+  ) {
+    if (RESCUE_EXCLUDED_DEPTHS.has(d)) continue;
+    if (scene.visitedFloors.find((f) => f.depth === d)) candidates.push(d);
+  }
+  if (candidates.length === 0) return;
+
+  const giverKey = safeKeys[Math.floor(rescueRng() * safeKeys.length)];
+  const targetDepth = candidates[Math.floor(rescueRng() * candidates.length)];
+  const [minGold, maxGold] = RESCUE_GOLD_REWARD_RANGE;
+
+  const giverQs = scene.quests[giverKey];
+  giverQs.questId = "rescue";
+  giverQs.role = "giver";
+  giverQs.townDepth = scene.currentDepth;
+  giverQs.targetDepth = targetDepth;
+  giverQs.captiveFreed = false;
+  giverQs.failed = false;
+  giverQs.xpReward = RESCUE_XP_REWARD;
+  giverQs.goldReward =
+    minGold + Math.floor(rescueRng() * (maxGold - minGold + 1));
+  giverQs.itemReward = null;
+  giverQs.dialogText = null;
+  giverQs.accepted = false;
+  giverQs.completed = false;
+}
+
+/**
+ * Fait apparaitre le PNJ captif d'une quete "rescue" acceptee, a l'etage
+ * cible, tant qu'il n'a pas ete libere. Appelee par levelLoader apres
+ * createQuestNpcs (qui n'est lui-meme appele que si l'etage a des PNJ).
+ */
+export function spawnRescueCaptive(scene) {
+  if (!scene.questNpcs) scene.questNpcs = [];
+  const npcSpritePool = Object.keys(SPRITE_REGISTRY).filter((key) =>
+    key.startsWith("NPC_town"),
+  );
+
+  for (const questKey of Object.keys(scene.quests)) {
+    const qs = scene.quests[questKey];
+    if (qs.questId !== "rescue" || qs.role !== "giver") continue;
+    if (!qs.accepted || qs.completed || qs.failed || qs.captiveFreed) continue;
+    if (qs.targetDepth !== scene.currentDepth) continue;
+    if (scene.questNpcs.some((n) => n.isCaptive && n.questKey === questKey))
+      continue;
+
+    const rng = createRng(`${scene.currentSeed}-rescue-captive-${questKey}`);
+    const grid = scene.fogGrid;
+    const candidates = [];
+    for (let y = 0; y < grid.length; y++) {
+      for (let x = 0; x < grid[0].length; x++) {
+        if (grid[y][x] === 0) candidates.push({ x, y });
+      }
+    }
+    for (let i = candidates.length - 1; i > 0; i--) {
+      const j = Math.floor(rng() * (i + 1));
+      [candidates[i], candidates[j]] = [candidates[j], candidates[i]];
+    }
+
+    // premiere case de sol ATTEIGNABLE depuis le point d'arrivee du heros
+    const from = scene.lastPlayerTile;
+    let spot = null;
+    for (let i = 0; i < Math.min(40, candidates.length); i++) {
+      if (findPath(grid, from, candidates[i], 2000)) {
+        spot = candidates[i];
+        break;
+      }
+    }
+    if (!spot) continue;
+
+    const npcSpriteKey =
+      npcSpritePool.length > 0
+        ? npcSpritePool[Math.floor(rng() * npcSpritePool.length)]
+        : "hero1";
+    const npcSprite = SPRITE_REGISTRY[npcSpriteKey];
+
+    const sprite = scene.physics.add.sprite(
+      spot.x * TILE_SIZE + TILE_SIZE / 2,
+      spot.y * TILE_SIZE + TILE_SIZE / 2,
+      npcSprite.key,
+      npcSprite.animations.idleDown,
+    );
+    sprite.setScale(npcSprite.scale);
+    const nhb = npcSprite.hitbox;
+    sprite.body
+      .setSize(nhb.width, nhb.height)
+      .setOffset(nhb.offsetX, nhb.offsetY);
+    sprite.anims.play(`${npcSpriteKey}-idle-down`);
+    sprite.setDepth(9);
+    scene.levelColliders.push(scene.physics.add.collider(sprite, scene.layer));
+    scene.levelColliders.push(
+      scene.physics.add.collider(scene.enemyGroup, sprite),
+    );
+
+    scene.questNpcs.push({
+      sprite,
+      npcIndex: -1,
+      questKey, // cle de la quete "rescue" du PNJ de ville
+      spriteKey: npcSpriteKey,
+      lastDir: "down",
+      patrolPath: null,
+      patrolIndex: 0,
+      patrolDirection: 1,
+      talking: false,
+      isCaptive: true,
+    });
+  }
+}
+
+// transforme un PNJ en invocation d'escorte qui suit le heros (meme objet
+// que celui de la quete d'escorte, factorise ici)
+function convertNpcToEscortSummon(scene, npc, questKey) {
+  scene.summonIdCounter = (scene.summonIdCounter || 0) + 1;
+  scene.summons.push({
+    id: scene.summonIdCounter,
+    sprite: npc.sprite,
+    spriteKey: npc.spriteKey,
+    sourceAbilityId: null,
+    isEscort: true,
+    escortQuestKey: questKey,
+    path: null,
+    pathIndex: 0,
+    nextPathRequestAt: 0,
+    pathDestX: null,
+    pathDestY: null,
+    hp: ESCORT_NPC_HP,
+    maxHp: ESCORT_NPC_HP,
+    damage: 0,
+    defense: 0,
+    damageType: "physical",
+    resistances: {},
+    persistent: true,
+    attackCooldown: createCooldown(ENEMY_ATTACK_COOLDOWN),
+    expiresAt: null,
+    lastDir: npc.lastDir || "down",
+    growthConfig: null,
+    stuckCheckPos: { x: npc.sprite.x, y: npc.sprite.y },
+    stuckCheckAt: scene.time.now,
+    stuckJitterUntil: 0,
+    stuckStreak: 0,
+    attackType: "melee",
+  });
+  if (scene.summonGroup) scene.summonGroup.add(npc.sprite);
+}
+
+const RESCUED_GREETINGS = [
+  "Je n'oublierai jamais ce que tu as fait pour moi !",
+  "Sans toi, je serais encore là-dessous... Merci !",
+  "Ici, au moins, je me sens en sécurité. Merci encore !",
+];
+
+// fait apparaitre UN pnj sauve comme pnj ambiant (patrouille + dialogue)
+function spawnRescuedNpc(scene, entry) {
+  if (!scene.ambientNpcs) scene.ambientNpcs = [];
+  const info = SPRITE_REGISTRY[entry.spriteKey];
+  if (!info) return;
+
+  const sprite = scene.physics.add.sprite(
+    entry.x * TILE_SIZE + TILE_SIZE / 2,
+    entry.y * TILE_SIZE + TILE_SIZE / 2,
+    info.key,
+    info.animations.idleDown,
+  );
+  sprite.setScale(info.scale);
+  const nhb = info.hitbox;
+  sprite.body
+    .setSize(nhb.width, nhb.height)
+    .setOffset(nhb.offsetX, nhb.offsetY);
+  sprite.anims.play(`${entry.spriteKey}-idle-down`);
+  sprite.setDepth(9);
+  scene.levelColliders.push(scene.physics.add.collider(sprite, scene.layer));
+  scene.levelColliders.push(
+    scene.physics.add.collider(scene.enemyGroup, sprite),
+  );
+
+  const route = pickPatrolRoute(
+    scene.fogGrid,
+    { x: entry.x, y: entry.y },
+    createRng(`${scene.currentSeed}-rescued-${entry.questKey}`),
+  );
+
+  scene.ambientNpcs.push({
+    sprite,
+    spriteKey: entry.spriteKey,
+    lastDir: "down",
+    patrolPath: route ? route.path : null,
+    patrolIndex: 0,
+    patrolDirection: 1,
+    talking: false,
+    greetingText: entry.greeting,
+  });
+}
+
+// recree, dans la ville courante, tous les pnj sauves qui y vivent
+// (appelee par levelLoader apres createAmbientNpcs)
+export function spawnRescuedNpcs(scene) {
+  for (const entry of scene.rescuedNpcs || []) {
+    if (entry.townDepth === scene.currentDepth) spawnRescuedNpc(scene, entry);
   }
 }
 
@@ -476,6 +774,37 @@ export function openQuestDialog(scene, npc) {
         canAccept = true;
       }
     }
+  } else if (qs.questId === "rescue") {
+    if (npc.isCaptive) {
+      text =
+        custom.captive ||
+        `Tu es venu me chercher ? Merci ! Je te suis, sortons d'ici avant que quelque chose ne nous trouve.`;
+      canAccept = true;
+    } else if (qs.completed) {
+      text =
+        custom.complete || `Merci de m'avoir ramené mon ami sain et sauf !`;
+    } else if (qs.failed) {
+      text =
+        custom.failed ||
+        `Tu n'as pas pu le sauver... Je n'ai plus rien à te dire.`;
+    } else if (qs.accepted && qs.captiveFreed) {
+      const escortPresent = scene.summons.some(
+        (s) => s.isEscort && s.escortQuestKey === questKey,
+      );
+      if (escortPresent) {
+        text = custom.progress || `Tu l'as retrouvé ! Merci infiniment.`;
+        canTurnIn = true;
+      } else {
+        text = `Où est mon ami ? Ramène-le moi en vie !`;
+      }
+    } else if (qs.accepted) {
+      text = `Mon ami est resté coincé à l'étage ${qs.targetDepth}. Je t'en prie, ramène-le !`;
+    } else {
+      text =
+        custom.offer ||
+        `Un de mes amis s'est perdu à l'étage ${qs.targetDepth}, là où tu es déjà passé. Peux-tu y retourner pour le sauver et me le ramener ?`;
+      canAccept = true;
+    }
   } else if (qs.completed) {
     const enemyName = resolveEnemyTargetName(qs.targetEnemyType);
     text = custom.complete || `Merci d'avoir tué ces ${enemyName} pour moi !`;
@@ -505,6 +834,26 @@ export function acceptQuest(scene) {
   qs.accepted = true;
   if (qs.questId === "delivery" && qs.role === "giver") {
     scene.addItemToInventory(qs.itemId, 1);
+  }
+  if (qs.questId === "rescue") {
+    const npc = scene.activeTalkingNpc;
+    if (npc && npc.isCaptive) {
+      // libere le captif : il devient une escorte rattachee a la quete du
+      // PNJ de ville (meme cle que celle ouverte dans openQuestDialog)
+      scene.questNpcs = scene.questNpcs.filter((n) => n !== npc);
+      const alreadyEscorting = scene.summons.some(
+        (s) => s.isEscort && s.escortQuestKey === scene.activeDialogQuestKey,
+      );
+      if (alreadyEscorting) {
+        npc.sprite.destroy();
+      } else {
+        convertNpcToEscortSummon(scene, npc, scene.activeDialogQuestKey);
+      }
+      qs.captiveFreed = true;
+      scene.showLootToast(
+        `Captif libéré ! Ramène-le à l'étage ${qs.townDepth}.`,
+      );
+    }
   }
   if (qs.questId === "escort") {
     // meme calcul de ville future que maybeInjectDeliveryQuest - seul
@@ -606,7 +955,8 @@ export function turnInQuest(scene) {
     qs.questId !== "defeatBoss" &&
     qs.questId !== "killEnemies" &&
     !(qs.questId === "delivery" && qs.role === "receiver") &&
-    !(qs.questId === "escort" && qs.role === "receiver")
+    !(qs.questId === "escort" && qs.role === "receiver") &&
+    !(qs.questId === "rescue" && qs.role === "giver")
   )
     return;
 
@@ -647,6 +997,35 @@ export function turnInQuest(scene) {
 
     const giverQs = scene.quests[qs.linkedKey];
     if (giverQs) giverQs.completed = true;
+  } else if (qs.questId === "rescue" && qs.role === "giver") {
+    const rescued = scene.summons.filter(
+      (s) => s.isEscort && s.escortQuestKey === scene.activeDialogQuestKey,
+    );
+    if (rescued.length === 0) return; // pas (ou plus) avec le heros
+
+    // le sauve devient un pnj ambiant PERSISTANT de cette ville
+    const savedKey = scene.activeDialogQuestKey;
+    const first = rescued[0];
+    const entry = {
+      questKey: savedKey,
+      townDepth: scene.currentDepth,
+      spriteKey: first.spriteKey,
+      x: Math.floor(first.sprite.x / TILE_SIZE),
+      y: Math.floor(first.sprite.y / TILE_SIZE),
+      greeting:
+        RESCUED_GREETINGS[Math.floor(Math.random() * RESCUED_GREETINGS.length)],
+    };
+
+    for (const r of rescued) r.sprite.destroy();
+    scene.summons = scene.summons.filter(
+      (s) => !(s.isEscort && s.escortQuestKey === savedKey),
+    );
+
+    scene.rescuedNpcs = scene.rescuedNpcs || [];
+    if (!scene.rescuedNpcs.some((r) => r.questKey === savedKey)) {
+      scene.rescuedNpcs.push(entry);
+      spawnRescuedNpc(scene, entry);
+    }
   } else {
     const itemIndex = scene.inventory.findIndex((i) => i.itemId === qs.itemId);
     if (itemIndex === -1) return;

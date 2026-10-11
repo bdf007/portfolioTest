@@ -34,6 +34,7 @@ export default function QuestsScreen({ quests, inventory, onClose }) {
       return q.role === "giver" ? "Livrer : " : "Réceptionner : ";
     if (q.questId === "escort")
       return q.role === "receiver" ? "Accueillir : " : "Escorter : ";
+    if (q.questId === "rescue") return "Sauver : ";
     return "Tuer : ";
   }
 
@@ -65,6 +66,15 @@ export default function QuestsScreen({ quests, inventory, onClose }) {
         return "Un voyageur escorté, en route vers ici";
       }
       return `Un voyageur → étage ${q.targetDepth}`;
+    }
+    if (q.questId === "rescue") {
+      if (q.completed)
+        return `Captif de l'étage ${q.targetDepth} ramené en ville`;
+      if (q.failed)
+        return `Captif de l'étage ${q.targetDepth} (mort en chemin)`;
+      if (q.captiveFreed)
+        return `Captif libéré → le ramener à l'étage ${q.townDepth}`;
+      return `Un captif t'attend à l'étage ${q.targetDepth}`;
     }
     return `${q.killCount} / ${q.target} ${resolveEnemyDisplayName(q.targetEnemyType)}`;
   }

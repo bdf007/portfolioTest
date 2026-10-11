@@ -95,7 +95,11 @@ import angryTrentGreySpritesheet from "../../assets/ennemies/angry_trent_grey.pn
 import angryTrentOrangeSpritesheet from "../../assets/ennemies/angry_trent_orange.png";
 import angryTrentRedSpritesheet from "../../assets/ennemies/angry_trent_red.png";
 import angryTrentYellowSpritesheet from "../../assets/ennemies/angry_trent_yellow.png";
-import gnomeSpritesheet from "../../assets/ennemies/gnome.png";
+import gnomeGreenSpritesheet from "../../assets/ennemies/gnomeGreen.png";
+import gnomeRedSpritesheet from "../../assets/ennemies/gnomeRed.png";
+import gnomeBlueSpritesheet from "../../assets/ennemies/gnomeBlue.png";
+import gnomeYellowSpritesheet from "../../assets/ennemies/gnomeYellow.png";
+import gnomeBrownSpritesheet from "../../assets/ennemies/gnomeBrown.png";
 import knifedBatSpritesheet from "../../assets/ennemies/knifed_bat.png";
 import mudGolemSpritesheet from "../../assets/ennemies/mud_golem.png";
 import redBeetleSpritesheet from "../../assets/ennemies/red_beetle.png";
@@ -310,6 +314,7 @@ import hills3AutotileImg from "../../assets/tilesets/Set_A_Hills3.png";
 import snowAutotileImg from "../../assets/tilesets/Set_A_Snow1.png";
 import darkwoodsAutotileImg from "../../assets/tilesets/Set_A_Darkwoods1.png";
 import darkwoods2AutotileImg from "../../assets/tilesets/Set_A_Darkwoods2.png";
+import darkwoods3AutotileImg from "../../assets/tilesets/Set_A_Darkwoods3.png";
 import cityWalls1AutotileImg from "../../assets/tilesets/Set_A_CityWalls1.png";
 import cityWalls2AutotileImg from "../../assets/tilesets/Set_A_CityWalls2.png";
 import cityWalls3AutotileImg from "../../assets/tilesets/Set_A_CityWalls3.png";
@@ -324,6 +329,9 @@ import fortressE3AutotileImg from "../../assets/tilesets/Set_E_Fortress3.png";
 import mines1AutotileImg from "../../assets/tilesets/Set_A_Mines1.png";
 import mines2AutotileImg from "../../assets/tilesets/Set_A_Mines2.png";
 import mines3AutotileImg from "../../assets/tilesets/Set_A_Mines3.png";
+import mines4AutotileImg from "../../assets/tilesets/Set_A_Mines4.png";
+import mines5AutotileImg from "../../assets/tilesets/Set_A_Mines5.png";
+import mines6AutotileImg from "../../assets/tilesets/Set_A_Mines6.png";
 import techFortress1AutotileImg from "../../assets/tilesets/Set_A_TechFortress1.png";
 import techFortress2AutotileImg from "../../assets/tilesets/Set_A_TechFortress2.png";
 import techFortressE1AutotileImg from "../../assets/tilesets/Set_E_TechFortress1.png";
@@ -343,6 +351,7 @@ import dungeonsA22AutotileImg from "../../assets/tilesets/Set_A2_Dungeons2.png";
 import standardFields2AutotileImg from "../../assets/tilesets/Set_A_StandardFields2.png";
 import greyCoastA51AutotileImg from "../../assets/tilesets/Set_A5_GreyCoast1.png";
 import cityTilesetAutotileImg from "../../assets/tilesets/city_tileset.png";
+import cityTilesetV2AutotileImg from "../../assets/tilesets/city_tileset_v2.png";
 import beigeCoastAAutotileImg from "../../assets/tilesets/Set_A_Beige_Coast.png";
 import beigeFieldsA1AutotileImg from "../../assets/tilesets/Set_A_Beige_Fields1.png";
 import greyCoastAAutotileImg from "../../assets/tilesets/Set_A_Grey_Coast.png";
@@ -354,6 +363,13 @@ import muddyCaveAutotileImg from "../../assets/tilesets/muddy_cave.png";
 import muddyCaveV2AutotileImg from "../../assets/tilesets/muddy_cave_v2.png";
 import muddyCaveV3AutotileImg from "../../assets/tilesets/muddy_cave_v3.png";
 import muddyCaveV4AutotileImg from "../../assets/tilesets/muddy_cave_v4.png";
+import muddyCaveV5AutotileImg from "../../assets/tilesets/muddy_cave_v5.png";
+import muddyCaveV6AutotileImg from "../../assets/tilesets/muddy_cave_v6.png";
+import muddyCaveV7AutotileImg from "../../assets/tilesets/muddy_cave_v7.png";
+import muddyCaveV8AutotileImg from "../../assets/tilesets/muddy_cave_v8.png";
+import muddyCaveV9AutotileImg from "../../assets/tilesets/muddy_cave_v9.png";
+import muddyCaveV10AutotileImg from "../../assets/tilesets/muddy_cave_v10.png";
+import muddyCaveV11AutotileImg from "../../assets/tilesets/muddy_cave_v11.png";
 import summerForestAutotileImg from "../../assets/tilesets/summer_forest.png";
 import springForestAutotileImg from "../../assets/tilesets/spring_forest.png";
 import autumnForestAutotileImg from "../../assets/tilesets/autumn_forest.png";
@@ -484,6 +500,12 @@ export const DARKWOODS_AUTOTILE_SPRITESHEET = {
 export const DARKWOODS2_AUTOTILE_SPRITESHEET = {
   key: "darkwoods2Autotile",
   path: darkwoods2AutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+export const DARKWOODS3_AUTOTILE_SPRITESHEET = {
+  key: "darkwoods3Autotile",
+  path: darkwoods3AutotileImg,
   frameWidth: 16,
   frameHeight: 16,
 };
@@ -644,6 +666,24 @@ export const MINES3_AUTOTILE_SPRITESHEET = {
   frameWidth: 16,
   frameHeight: 16,
 };
+export const MINES4_AUTOTILE_SPRITESHEET = {
+  key: "mines4Autotile",
+  path: mines4AutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+export const MINES5_AUTOTILE_SPRITESHEET = {
+  key: "mines5Autotile",
+  path: mines5AutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+export const MINES6_AUTOTILE_SPRITESHEET = {
+  key: "mines6Autotile",
+  path: mines6AutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
 export const DESERT_TOWNE1_AUTOTILE_SPRITESHEET = {
   key: "desertTownE1Autotile",
   path: desertTownE1AutotileImg,
@@ -686,6 +726,12 @@ export const GREY_COASTA51_AUTOTILE_SPRITESHEET = {
 export const CITY_TILES_AUTOTILE_SPRITESHEET = {
   key: "cityTilesA1Autotile",
   path: cityTilesetAutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+export const CITY_TILES_V2_AUTOTILE_SPRITESHEET = {
+  key: "cityTilesV2Autotile",
+  path: cityTilesetV2AutotileImg,
   frameWidth: 16,
   frameHeight: 16,
 };
@@ -759,6 +805,48 @@ export const MUDDY_CAVE_V3_AUTOTILE_SPRITESHEET = {
 export const MUDDY_CAVE_V4_AUTOTILE_SPRITESHEET = {
   key: "muddyCaveV4Autotile",
   path: muddyCaveV4AutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+export const MUDDY_CAVE_V5_AUTOTILE_SPRITESHEET = {
+  key: "muddyCaveV5Autotile",
+  path: muddyCaveV5AutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+export const MUDDY_CAVE_V6_AUTOTILE_SPRITESHEET = {
+  key: "muddyCaveV6Autotile",
+  path: muddyCaveV6AutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+export const MUDDY_CAVE_V7_AUTOTILE_SPRITESHEET = {
+  key: "muddyCaveV7Autotile",
+  path: muddyCaveV7AutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+export const MUDDY_CAVE_V8_AUTOTILE_SPRITESHEET = {
+  key: "muddyCaveV8Autotile",
+  path: muddyCaveV8AutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+export const MUDDY_CAVE_V9_AUTOTILE_SPRITESHEET = {
+  key: "muddyCaveV9Autotile",
+  path: muddyCaveV9AutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+export const MUDDY_CAVE_V10_AUTOTILE_SPRITESHEET = {
+  key: "muddyCaveV10Autotile",
+  path: muddyCaveV10AutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+export const MUDDY_CAVE_V11_AUTOTILE_SPRITESHEET = {
+  key: "muddyCaveV11Autotile",
+  path: muddyCaveV11AutotileImg,
   frameWidth: 16,
   frameHeight: 16,
 };
@@ -1401,18 +1489,70 @@ export const SPRITE_REGISTRY = {
     sheetRows: 16,
     hitbox: computeSafeHitbox(96, 96, 0.7, 12),
   },
-  gnome: {
-    key: "gnome",
-    displayName: "Gnome",
-    path: gnomeSpritesheet,
-    frameWidth: 48,
-    frameHeight: 48,
-    scale: 0.8,
-    lootTable: "gnomeDrop",
+  gnomeGreen: {
+    key: "gnomeGreen",
+    displayName: "Gnome Vert",
+    path: gnomeGreenSpritesheet,
+    frameWidth: 96,
+    frameHeight: 96,
+    scale: 0.4,
+    lootTable: "gnomeGreenDrop",
     animations: FULL_ANIMATION_FRAMES,
     sheetCols: 4,
     sheetRows: 16,
-    hitbox: computeSafeHitbox(48, 48, 0.8),
+    hitbox: computeSafeHitbox(96, 96, 0.4, 12),
+  },
+  gnomeRed: {
+    key: "gnomeRed",
+    displayName: "Gnome Rouge",
+    path: gnomeRedSpritesheet,
+    frameWidth: 96,
+    frameHeight: 96,
+    scale: 0.4,
+    lootTable: "gnomeRedDrop",
+    animations: FULL_ANIMATION_FRAMES,
+    sheetCols: 4,
+    sheetRows: 16,
+    hitbox: computeSafeHitbox(96, 96, 0.4, 12),
+  },
+  gnomeBlue: {
+    key: "gnomeBlue",
+    displayName: "Gnome Bleu",
+    path: gnomeBlueSpritesheet,
+    frameWidth: 96,
+    frameHeight: 96,
+    scale: 0.4,
+    lootTable: "gnomeBlueDrop",
+    animations: FULL_ANIMATION_FRAMES,
+    sheetCols: 4,
+    sheetRows: 16,
+    hitbox: computeSafeHitbox(96, 96, 0.4, 12),
+  },
+  gnomeYellow: {
+    key: "gnomeYellow",
+    displayName: "Gnome Jaune",
+    path: gnomeYellowSpritesheet,
+    frameWidth: 96,
+    frameHeight: 96,
+    scale: 0.4,
+    lootTable: "gnomeYellowDrop",
+    animations: FULL_ANIMATION_FRAMES,
+    sheetCols: 4,
+    sheetRows: 16,
+    hitbox: computeSafeHitbox(96, 96, 0.4, 12),
+  },
+  gnomeBrown: {
+    key: "gnomeBrown",
+    displayName: "Gnome Brun",
+    path: gnomeBrownSpritesheet,
+    frameWidth: 96,
+    frameHeight: 96,
+    scale: 0.4,
+    lootTable: "gnomeBrownDrop",
+    animations: FULL_ANIMATION_FRAMES,
+    sheetCols: 4,
+    sheetRows: 16,
+    hitbox: computeSafeHitbox(96, 96, 0.4, 12),
   },
   knifedBat: {
     key: "knifedBat",
@@ -6565,7 +6705,6 @@ const HERO_STATS_PROFILES = {
       "randomTeleportGem",
       "slimeBlobLeatherHelmet",
       "slimeBlob",
-      "loreScroll1",
     ],
     startingAmmo: null,
     startingAbilities: [
@@ -6573,6 +6712,7 @@ const HERO_STATS_PROFILES = {
       "scoutPulse",
       "detectTraps",
       "detectSecrets",
+      "healingAura",
     ],
   },
   warrior: {
@@ -7527,7 +7667,7 @@ export const MONSTER_LOOTS_FRAMES = {
   monsterLiver: 22,
   monsterCore: 23,
   angryBrownMushroomCore: 23,
-  gnomeCore: 23,
+  gnomeGreenCore: 23,
   angryTrentCore: 23,
   knifedBatCore: 23,
   monsterHorn: 24,

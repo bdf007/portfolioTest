@@ -769,6 +769,19 @@ const ITEM_TYPES = {
     stackable: false,
   },
 
+  // loreScrolls
+  loreScroll1: {
+    id: "loreScroll1",
+    category: "loreScroll",
+    name: "lore ARPG",
+    description: "le lore de ce ARPG",
+    loreText:
+      "Ce parchemin contient des informations détaillées sur l'histoire et le lore de ce ARPG.",
+    grantsAbility: "lore",
+    stackable: false,
+    unique: true,
+  },
+
   //scroll
   blanckScroll: {
     id: "blankScroll",
@@ -891,12 +904,12 @@ const ITEM_TYPES = {
     grantsAbility: "summonAngryBrownMushroom",
     stackable: false,
   },
-  summonGnomeScroll: {
-    id: "summonGnomeScroll",
+  summonGreenScroll: {
+    id: "summonGreenScroll",
     category: "abilityScroll",
-    name: "Parchemin : Invocation : Gnome",
-    description: "Apprend la compétence Invocation : Gnome.",
-    grantsAbility: "summonGnome",
+    name: "Parchemin : Invocation : Gnome vert",
+    description: "Apprend la compétence Invocation : Gnome vert.",
+    grantsAbility: "summonGnomeGreen",
     stackable: false,
   },
 
@@ -994,11 +1007,11 @@ const ITEM_TYPES = {
     stackable: false,
     unique: true,
   },
-  gnomeCore: {
-    id: "gnomeCore",
+  gnomeGreenCore: {
+    id: "gnomeGreenCore",
     category: "craftingMaterial",
-    name: "Noyau de gnome",
-    description: "Le cœur d'un gnome, utilisé pour l'artisanat.",
+    name: "Noyau de gnome vert",
+    description: "Le cœur d'un gnome vert, utilisé pour l'artisanat.",
     stackable: false,
     unique: true,
   },
@@ -3469,6 +3482,12 @@ const LOOT_TABLES = {
     { itemId: "manaPotion", weight: 35 },
     { itemId: "gold", weight: 40, quantityRange: [2, 10] },
   ],
+  chestStandard1: [
+    { itemId: "loreScroll1", weight: 100 },
+    { itemId: "healthPotion", weight: 30 },
+    { itemId: "manaPotion", weight: 30 },
+    { itemId: "gold", weight: 40, quantityRange: [2, 10] },
+  ],
   crateStandard: [
     { itemId: null, weight: 50 },
     { itemId: "gold", weight: 30, quantityRange: [1, 2] },
@@ -3500,10 +3519,10 @@ const LOOT_TABLES = {
     { itemId: "angryBrownMushroomCore", weight: 50 },
     { itemId: "vegetalFiber", weight: 50, quantityRange: [3, 5] },
   ],
-  gnomeDrop: [
+  gnomeGreenDrop: [
     { itemId: null, weight: 50 }, // la plupart des gnomes ne laissent rien
     { itemId: "gold", weight: 50, quantityRange: [1, 3] },
-    { itemId: "gnomeCore", weight: 50 },
+    { itemId: "gnomeGreenCore", weight: 50 },
     { itemId: "gnomeClaw", weight: 10 },
     { itemId: "gnomeFurTuft", weight: 50, quantityRange: [1, 3] },
   ],

@@ -931,9 +931,9 @@ export default function Arpg() {
     if (scene) scene.buyItem(index, quantity);
   };
 
-  const handleSellItem = (itemId, quantity) => {
+  const handleSellItem = (itemId, quantity, instanceId) => {
     const scene = gameRef.current?.scene.getScene("MainScene");
-    if (scene) scene.sellItem(itemId, quantity);
+    if (scene) scene.sellItem(itemId, quantity, instanceId);
   };
 
   const handleCloseShop = () => {

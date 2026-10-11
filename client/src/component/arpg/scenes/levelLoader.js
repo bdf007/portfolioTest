@@ -26,7 +26,12 @@ import {
   spawnMiningRocks,
   spawnForageNodes,
 } from "./floorEntities";
-import { createQuestNpcs, createAmbientNpcs } from "./quests";
+import {
+  createQuestNpcs,
+  createAmbientNpcs,
+  spawnRescueCaptive,
+  spawnRescuedNpcs,
+} from "./quests";
 import {
   createEnemyVisualEffect,
   getEffectivePlayerVisionRadius,
@@ -646,6 +651,9 @@ export async function loadLevel(
   if (ambientNpcData && ambientNpcData.length > 0) {
     createAmbientNpcs(scene, ambientNpcData);
   }
+
+  spawnRescueCaptive(scene);
+  spawnRescuedNpcs(scene);
 
   scene.fogState = createFogState(grid);
 
