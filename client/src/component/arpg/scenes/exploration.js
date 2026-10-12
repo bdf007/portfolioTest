@@ -415,6 +415,13 @@ export function triggerFloorTrap(scene, trap, target) {
   scene.persistProgress();
 }
 
+function chestTitle(chest) {
+  if (chest.propType === "corpse") {
+    return chest.enemyName ? `Cadavre : ${chest.enemyName}` : "Cadavre";
+  }
+  return "Coffre";
+}
+
 export function openChestScreen(scene, chest) {
   scene.activeChest = chest;
   scene.pauseGame("chest");
@@ -446,6 +453,7 @@ export function openChestScreen(scene, chest) {
   }
 
   scene.events.emit("chest-screen", {
+    title: chestTitle(chest),
     items: chest.lootItems.map((item, itemIndex) => ({
       itemIndex,
       itemId: item.itemId,
@@ -481,8 +489,8 @@ export function takeChestItem(scene, itemIndex) {
     closeChestScreen(scene);
     return;
   }
-
   scene.events.emit("chest-screen", {
+    title: chestTitle(chest),
     items: chest.lootItems.map((it, idx) => ({
       itemIndex: idx,
       itemId: it.itemId,

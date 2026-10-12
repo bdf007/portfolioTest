@@ -9,6 +9,7 @@ import {
   resolveEnemySprite,
   resolveHeroStatsOverride,
   matchesEnemyTarget,
+  resolveEnemyDisplayName,
 } from "../spriteRegistry";
 import { resolveItemDef } from "../itemDefs";
 import {
@@ -64,6 +65,7 @@ import {
   openAmbientDialog,
   closeDialog as closeDialogImpl,
   updateNpcMovement,
+  notifyItemQuestProgress,
 } from "./quests";
 import {
   checkSecretWallInteraction,
@@ -548,6 +550,7 @@ export default class MainScene extends Phaser.Scene {
     this.activeTalkingNpc = null;
     this.shopSoldItems = {}; // { depth: [{itemId, quantity}] } - objets vendus a la boutique de CETTE ville precise, rachetables uniquement ici
     this.rescuedNpcs = []; // [{questKey, townDepth, spriteKey, x, y, greeting}] - PNJ sauves (quete "rescue"), ambiants et persistants dans leur ville
+    this.questChains = {}; // { chainId: { step, done } } - progression des chaines de quetes (cf. questChains.js)
     this.shopRerollSeed = {}; // { depth: nombre de rafraichissements utilises sur CETTE boutique } - 0/absent = stock d'origine (this.shopData.stock)
     this.inventory = [];
     this.gamePaused = false;
@@ -600,6 +603,7 @@ export default class MainScene extends Phaser.Scene {
     }
 
     this.events.emit("inventory-updated", [...this.inventory]);
+    notifyItemQuestProgress(this, itemId, quantity);
     this.persistProgress();
   }
 
@@ -1519,6 +1523,7 @@ export default class MainScene extends Phaser.Scene {
     const heroY = this.hero.body.center.y;
 
     if (checkSecretWallInteraction(this)) return;
+    if (!this.dialogOpen && this.offerInteractionChoices(heroX, heroY)) return;
     if (mineRock(this)) return;
     if (forageNode(this)) return;
 
@@ -1609,6 +1614,66 @@ export default class MainScene extends Phaser.Scene {
         return;
       }
     }
+  }
+
+  // plusieurs interactions possibles au meme endroit (rocher de minage +
+  // cadavres/coffres) : le joueur choisit au lieu de subir une priorite fixe
+  offerInteractionChoices(heroX, heroY) {
+    const range = this.playerMeleeRange;
+    const choices = [];
+
+    const rock = this.miningRocks.find((r) => {
+      if (r.depleted) return false;
+      const px = r.data.x * TILE_SIZE + TILE_SIZE / 2;
+      const py = r.data.y * TILE_SIZE + TILE_SIZE / 2;
+      return Math.hypot(px - heroX, py - heroY) <= range;
+    });
+    if (rock) {
+      choices.push({
+        label: `Miner : ${resolveItemDef(rock.data.resourceItemId).name}`,
+        run: () => mineRock(this),
+      });
+    }
+
+    for (const chest of this.chests) {
+      // meme regle que dans performInteraction : un coffre deja ouvert et
+      // vide est ignore
+      if (chest.opened && chest.lootItems.length === 0) continue;
+      const cx = chest.x * TILE_SIZE + TILE_SIZE / 2;
+      const cy = chest.y * TILE_SIZE + TILE_SIZE / 2;
+      if (Math.hypot(cx - heroX, cy - heroY) > range) continue;
+
+      const label =
+        chest.propType === "corpse"
+          ? chest.enemyName
+            ? `Cadavre : ${chest.enemyName}`
+            : "Cadavre"
+          : "Coffre";
+      choices.push({
+        label,
+        run: () => openChestScreen(this, chest),
+      });
+    }
+
+    if (choices.length < 2) return false; // un seul choix : comportement habituel
+
+    this.pendingInteractionChoices = choices;
+    this.dialogOpen = true;
+    this.pauseGame("dialog");
+    this.events.emit("npc-dialog", {
+      text: "Que veux-tu faire ?",
+      canAccept: false,
+      canTurnIn: false,
+      choices: choices.map((c) => ({ label: c.label })),
+    });
+    return true;
+  }
+
+  chooseInteraction(index) {
+    const choice = this.pendingInteractionChoices?.[index];
+    this.pendingInteractionChoices = null;
+    this.closeDialog(); // ferme le menu et relance le jeu
+    if (choice) choice.run();
   }
 
   takeChestItem(itemIndex) {
@@ -1786,6 +1851,7 @@ export default class MainScene extends Phaser.Scene {
         enemy.sprite.anims.play(enemy.spriteKey + "-death");
         spawnLootCorpse(this, enemy, []);
         corpseChest = this.chests[this.chests.length - 1];
+        corpseChest.enemyName = resolveEnemyDisplayName(enemy.archetype);
       }
       const spawnOrMergeLoot = (items) => {
         if (!items || items.length === 0) return;
@@ -1798,18 +1864,56 @@ export default class MainScene extends Phaser.Scene {
 
       const lootItems = [...(enemy.drops || [])];
 
+      // exemplaires d'un objet qui attendent deja dans les cadavres/coffres de
+      // l'etage (pas encore ramasses) - evite les doublons de drop de quete
+      const countPendingLoot = (itemId) =>
+        (this.chests || []).reduce(
+          (sum, c) =>
+            sum +
+            (c.lootItems || [])
+              .filter((i) => i.itemId === itemId)
+              .reduce((s, i) => s + i.quantity, 0),
+          0,
+        );
+
       if (!enemy.isBoss && enemy.questLoot) {
         for (const questKey of Object.keys(this.quests)) {
           const qs = this.quests[questKey];
           if (qs.questId !== "obtainItem" || !qs.accepted || qs.completed)
             continue;
           if (qs.targetItemId !== enemy.questLoot) continue;
-          const haveQty = this.inventory
-            .filter((i) => i.itemId === enemy.questLoot)
-            .reduce((sum, i) => sum + i.quantity, 0);
+          const haveQty =
+            this.inventory
+              .filter((i) => i.itemId === enemy.questLoot)
+              .reduce((sum, i) => sum + i.quantity, 0) +
+            countPendingLoot(enemy.questLoot);
           if (haveQty >= (qs.targetQuantity || 1)) continue;
 
           lootItems.push({ itemId: enemy.questLoot, quantity: 1 });
+          break;
+        }
+      }
+
+      // drop defini par une etape de CHAINE (cf. questChains.js, `lootFrom`) :
+      // independant du questLoot de l'ennemi, donc pas de quete automatique
+      // du serveur pour cet objet
+      if (!enemy.isBoss) {
+        for (const questKey of Object.keys(this.quests)) {
+          const qs = this.quests[questKey];
+          if (!qs.lootFrom || !qs.accepted || qs.completed) continue;
+          if (qs.lootFrom.enemyType !== enemy.archetype) continue;
+          const itemId = qs.targetItemId;
+          if (lootItems.some((i) => i.itemId === itemId)) continue;
+          const haveQty =
+            this.inventory
+              .filter((i) => i.itemId === itemId)
+              .reduce((sum, i) => sum + i.quantity, 0) +
+            countPendingLoot(itemId);
+          if (haveQty >= (qs.targetQuantity || 1)) continue;
+          const chance = qs.lootFrom.chance ?? 1;
+          if (Math.random() >= chance) continue;
+
+          lootItems.push({ itemId, quantity: 1 });
           break;
         }
       }
@@ -1897,7 +2001,11 @@ export default class MainScene extends Phaser.Scene {
         if (qs.killCount < qs.target) {
           qs.killCount++;
           if (qs.killCount === qs.target) {
-            this.showLootToast("Quête prête : reviens voir le PNJ !");
+            this.showLootToast(
+              qs.npcName
+                ? `Quête prête : reviens voir ${qs.npcName} !`
+                : "Quête prête : reviens voir le PNJ !",
+            );
           }
           anyQuestUpdated = true;
         }

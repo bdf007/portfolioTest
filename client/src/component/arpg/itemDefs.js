@@ -18099,6 +18099,13 @@ export const ITEM_DEFS = {
     description: "Un coffre verrouillé.",
     stackable: false,
   },
+  alricMerchandise: {
+    id: "alricMerchandise",
+    category: "questItem",
+    name: "Marchandise d'Alric",
+    description: "Des objets appartenant à Alric.",
+    stackable: true,
+  },
   greenApple: {
     id: "greenApple",
     category: "questItem",
@@ -18120,6 +18127,15 @@ export const ITEM_DEFS = {
     description: "Un champignon rare.",
     stackable: true,
     price: 5,
+  },
+  steelPickaxeBrenn: {
+    id: "steelPickaxeBrenn",
+    category: "questItem",
+    name: "Pioche en acier de Brenn",
+    description:
+      "Une pioche en acier appartenant à Brenn. Inutilisable par quiconque qui n'est pas Brenn.",
+    stackable: false,
+    unique: true,
   },
   mudGolemCore: {
     id: "mudGolemCore",

@@ -5103,6 +5103,17 @@ export const CRAFTING_RECIPES = {
     ],
     discoveryOnly: true,
   },
+  summonGreenSlimeRecipe: {
+    id: "summonGreenSlimeRecipe",
+    name: "Recette de Parchemin : Invocation : Blob vert",
+    resultItemId: "summonGreenSlimeScroll",
+    resultQuantity: 1,
+    ingredients: [
+      { itemId: "greenSlimeCore", quantity: 1 },
+      { itemId: "grimoire", quantity: 1 },
+    ],
+    discoveryOnly: true,
+  },
 };
 
 // Les recettes generees par buildRecipe() n'ont pas de champ `name` explicite

@@ -6065,9 +6065,9 @@ export const SPRITE_REGISTRY = {
     path: town1NPCf1Spritesheet,
     frameWidth: 32,
     frameHeight: 40,
-    scale: 1,
+    scale: 0.9,
     animations: STANDARD_ANIMATION_FRAMES,
-    hitbox: computeSafeHitbox(32, 40, 1),
+    hitbox: computeSafeHitbox(32, 40, 0.9),
   },
   NPC_town1_F2: {
     key: "NPC_town1_F2",
@@ -6115,9 +6115,9 @@ export const SPRITE_REGISTRY = {
     path: town1NPCm1Spritesheet,
     frameWidth: 32,
     frameHeight: 40,
-    scale: 1,
+    scale: 0.9,
     animations: STANDARD_ANIMATION_FRAMES,
-    hitbox: computeSafeHitbox(32, 40, 1),
+    hitbox: computeSafeHitbox(32, 40, 0.9),
   },
   NPC_town1_M2: {
     key: "NPC_town1_M2",
@@ -6125,9 +6125,9 @@ export const SPRITE_REGISTRY = {
     path: town1NPCm2Spritesheet,
     frameWidth: 32,
     frameHeight: 40,
-    scale: 1,
+    scale: 0.9,
     animations: STANDARD_ANIMATION_FRAMES,
-    hitbox: computeSafeHitbox(32, 40, 1),
+    hitbox: computeSafeHitbox(32, 40, 0.9),
   },
   NPC_town1_M3: {
     key: "NPC_town1_M3",
@@ -6636,13 +6636,13 @@ const HERO_STATS_PROFILES = {
     rangedRange: 440,
     startingItems: [
       "woodenBow",
-      "woodenPickaxe",
-      "woodenAxe",
-      "leatherArmor",
-      "boots",
-      "leatherHelmet",
-      "pants",
-      "belt",
+      // "woodenPickaxe",
+      // "woodenAxe",
+      // "leatherArmor",
+      // "boots",
+      // "leatherHelmet",
+      // "pants",
+      // "belt",
     ],
     startingAmmo: { itemId: "woodenArrow", quantity: 100 },
     startingAbilities: ["piercingArrow", "scoutPulse"],
@@ -6670,7 +6670,10 @@ const HERO_STATS_PROFILES = {
     visionRadius: 6,
     meleeRange: 60,
     rangedRange: 320,
-    startingItems: ["woodenMallet", "woodenPickaxe", "woodenAxe"],
+    startingItems: [
+      "woodenMallet",
+      // "woodenPickaxe", "woodenAxe"
+    ],
     startingAmmo: null,
     startingAbilities: ["whirlwind"],
   },
@@ -6696,16 +6699,7 @@ const HERO_STATS_PROFILES = {
     visionRadius: 7,
     meleeRange: 40,
     rangedRange: 400,
-    startingItems: [
-      "woodenDagger",
-      "woodenPickaxe",
-      "woodenAxe",
-      "socketPerforationScroll",
-      "burnGem",
-      "randomTeleportGem",
-      "slimeBlobLeatherHelmet",
-      "slimeBlob",
-    ],
+    startingItems: ["woodenDagger"],
     startingAmmo: null,
     startingAbilities: [
       "stealth",
@@ -6737,12 +6731,7 @@ const HERO_STATS_PROFILES = {
     visionRadius: 7,
     meleeRange: 50,
     rangedRange: 320,
-    startingItems: [
-      "woodenSword",
-      "woodenShield",
-      "woodenPickaxe",
-      "woodenAxe",
-    ],
+    startingItems: ["woodenSword", "woodenShield"],
     startingAmmo: null,
     startingAbilities: ["shieldBash"],
     startingRecipes: ["reinforcedSwordRecipe"],
@@ -6771,13 +6760,13 @@ const HERO_STATS_PROFILES = {
     rangedRange: 450,
     startingItems: [
       "woodenStaff",
-      { itemId: "waterLily", quantity: 2 },
-      "woodenPickaxe",
-      "woodenAxe",
+      // { itemId: "waterLily", quantity: 2 },
+      // "woodenPickaxe",
+      // "woodenAxe",
     ],
     startingAmmo: null,
     startingAbilities: ["fireball"],
-    startingRecipes: ["manaPotionRecipe"],
+    // startingRecipes: ["manaPotionRecipe"],
     // damageType: "fire",
     // resistances: { fire: 1 },
   },
@@ -6803,7 +6792,10 @@ const HERO_STATS_PROFILES = {
     visionRadius: 7,
     meleeRange: 55,
     rangedRange: 300,
-    startingItems: ["woodenMallet", "woodenPickaxe", "woodenAxe"],
+    startingItems: [
+      "woodenMallet",
+      // "woodenPickaxe", "woodenAxe"
+    ],
     startingAmmo: null,
     startingAbilities: ["taunt"],
   },
@@ -6829,7 +6821,10 @@ const HERO_STATS_PROFILES = {
     visionRadius: 7,
     meleeRange: 50,
     rangedRange: 320,
-    startingItems: ["woodenStaff", "woodenPickaxe", "woodenAxe"],
+    startingItems: [
+      "woodenStaff",
+      // "woodenPickaxe", "woodenAxe"
+    ],
     startingAmmo: null,
     startingAbilities: ["curse"],
   },
@@ -6855,7 +6850,10 @@ const HERO_STATS_PROFILES = {
     visionRadius: 7,
     meleeRange: 45,
     rangedRange: 350,
-    startingItems: ["woodenStaff", "woodenPickaxe", "woodenAxe"],
+    startingItems: [
+      "woodenStaff",
+      // "woodenPickaxe", "woodenAxe"
+    ],
     startingAmmo: null,
     startingAbilities: ["summonWolfFamiliar"],
   },
@@ -6881,7 +6879,10 @@ const HERO_STATS_PROFILES = {
     visionRadius: 7,
     meleeRange: 40,
     rangedRange: 400,
-    startingItems: ["woodenStaff", "woodenPickaxe", "woodenAxe"],
+    startingItems: [
+      "woodenStaff",
+      // "woodenPickaxe", "woodenAxe"
+    ],
     startingAmmo: null,
     startingAbilities: ["slow"],
   },
@@ -7371,6 +7372,7 @@ export const ICON_SHEET_1_FRAMES = {
   bag: 92,
   bigBag: 93,
   pouch: 94,
+  alricMerchandise: 94,
   brownChest: 95,
   redChest: 96,
   rustyKey: 97,
@@ -7634,6 +7636,7 @@ export const ICON_SHEET_1_FRAMES = {
   summonRedSlimeScroll: 91,
   summonOrangeSlimeScroll: 91,
   summonSkyBlueSlimeScroll: 91,
+  summonGreenSlimeScroll: 91,
 };
 
 export const ICON_SHEET_2_FRAMES = {
@@ -7877,6 +7880,7 @@ export const MONSTER_LOOTS_FRAMES = {
   redSlimeCore: 23,
   orangeSlimeCore: 23,
   skyBlueSlimeCore: 23,
+  greenSlimeCore: 23,
 };
 
 export const ICON_SKILL_1_FRAMES = {
@@ -8297,6 +8301,7 @@ export const WEAPON_TIERS_FRAMES = {
   copperPickaxe: 274,
   ironPickaxe: 275,
   steelPickaxe: 276,
+  steelPickaxeBrenn: 276,
   silverPickaxe: 277,
   goldPickaxe: 278,
   platiniumPickaxe: 279,

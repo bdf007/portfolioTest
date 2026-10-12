@@ -79,14 +79,14 @@ export function closeTravelHub(scene) {
 }
 
 function getMergedShopStock(scene) {
-  const rerollCount = scene.shopRerollSeed[scene.currentDepth] || 0;
+  const rerollCount = scene.shopRerollSeed?.[scene.currentDepth] || 0;
   const baseStock =
     rerollCount > 0
       ? generateShopStockClient(
           `${scene.currentSeed}-shop-refresh-${scene.currentDepth}-${rerollCount}`,
         )
       : scene.shopData?.stock || [];
-  const soldHere = scene.shopSoldItems[scene.currentDepth] || [];
+  const soldHere = scene.shopSoldItems?.[scene.currentDepth] || [];
   const soldEntries = soldHere.map((s) => {
     const def = resolveItemDef(s.itemId);
     return {
@@ -100,7 +100,7 @@ function getMergedShopStock(scene) {
 }
 
 export function getShopRefreshCost(scene) {
-  const rerollCount = scene.shopRerollSeed[scene.currentDepth] || 0;
+  const rerollCount = scene.shopRerollSeed?.[scene.currentDepth] || 0;
   // cout croissant a chaque utilisation sur CETTE boutique (remis a zero
   // en revenant sur un autre etage/ville) - ajuste le multiplicateur ou
   // passe a une formule non-lineaire si 50/100/150/... est trop plat

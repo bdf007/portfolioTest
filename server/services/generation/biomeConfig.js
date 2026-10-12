@@ -41,14 +41,8 @@ const BIOMES = [
       "muddyCaveV11_0_0",
     ],
     // tileset: "standardFields_2_1_1",
-    enemyBaseCount: 2,
-    enemyTypes: [
-      "gnomeGreen",
-      "gnomeRed",
-      "gnomeBlue",
-      "gnomeYellow",
-      "gnomeBrown",
-    ],
+    enemyBaseCount: 5,
+    enemyTypes: ["greenSlime"],
     decorationConfig: {
       count: [40, 60], // genereux - c'est fait pour remplir le biome
       decorTypes: [

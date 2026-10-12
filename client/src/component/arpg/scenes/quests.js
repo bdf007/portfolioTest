@@ -8,6 +8,11 @@ import {
 } from "../spriteRegistry";
 import { resolveItemDef } from "../itemDefs";
 import { findPath } from "../pathfinding";
+import {
+  installChainQuests,
+  advanceQuestChain,
+  getChainTargetKeys,
+} from "./questChains";
 
 import { TILE_SIZE, ENEMY_SPEED, ENEMY_ATTACK_COOLDOWN } from "./gameConstants";
 
@@ -56,7 +61,7 @@ function collectExtraReceiverNpcs(scene) {
   const prefix = `${scene.currentDepth}-`;
   const out = [];
   for (const [key, q] of Object.entries(scene.quests)) {
-    if (!key.startsWith(prefix) || !q.extraPos) continue;
+    if (!key.startsWith(prefix) || key.includes("~") || !q.extraPos) continue;
     out.push({
       npcIndex: Number(key.slice(prefix.length)),
       x: q.extraPos.x,
@@ -73,6 +78,11 @@ export function createQuestNpcs(scene, npcDataArray) {
   const spriteRng = createRng(`${scene.currentSeed}-quest-npc-sprites`);
   const patrolRng = createRng(`${scene.currentSeed}-quest-npc-patrol`);
   scene.questNpcs = [];
+
+  installChainQuests(
+    scene,
+    npcDataArray.map((n) => n.npcIndex),
+  );
 
   let nextReceiverIndex = 0;
   let nextExtraIndex = 0;
@@ -169,10 +179,17 @@ export function createQuestNpcs(scene, npcDataArray) {
       continue;
     }
 
-    const npcSpriteKey =
+    // le tirage est TOUJOURS effectue (les autres pnj gardent leur sprite),
+    // puis remplace si la quete du pnj impose un sprite (pnj de chaine)
+    const randomSpriteKey =
       npcSpritePool.length > 0
         ? npcSpritePool[Math.floor(spriteRng() * npcSpritePool.length)]
         : "hero1";
+    const forcedSpriteKey = scene.quests[questKey]?.npcSpriteKey;
+    const npcSpriteKey =
+      forcedSpriteKey && SPRITE_REGISTRY[forcedSpriteKey]
+        ? forcedSpriteKey
+        : randomSpriteKey;
     const npcSprite = SPRITE_REGISTRY[npcSpriteKey];
 
     const sprite = scene.physics.add.sprite(
@@ -247,18 +264,11 @@ export function maybeInjectDeliveryQuest(scene, eligibleKeys) {
   // l'ecraser silencieusement briserait la garantie d'objet de boss
   // (isBossItem, verifiee dans damageEnemy) avant meme que le joueur
   // ait pu la voir
-  // une seule quete de sauvetage par ville (a l'injection ou deja existante)
-  const prefix = `${scene.currentDepth}-`;
-  if (
-    Object.entries(scene.quests).some(
-      ([k, q]) => k.startsWith(prefix) && q.questId === "rescue",
-    )
-  )
-    return;
-
+  const chainTargetKeys = getChainTargetKeys(scene);
+  eligibleKeys = eligibleKeys.filter((k) => !chainTargetKeys.has(k));
   const safeKeys = eligibleKeys.filter((k) => {
     const q = scene.quests[k];
-    if (!q || q.accepted || q.completed || q.failed) return false;
+    if (!q || q.accepted || q.completed || q.failed || q.chainId) return false;
     if (q.questId === "defeatBoss") return false;
     if (q.questId === "obtainItem" && q.isBossItem) return false;
     return true;
@@ -324,9 +334,20 @@ export function maybeInjectDeliveryQuest(scene, eligibleKeys) {
 export function maybeInjectRescueQuest(scene, eligibleKeys) {
   if (scene.currentBiomeId !== "town") return;
 
+  // une seule quete de sauvetage par ville (a l'injection ou deja existante)
+  const prefix = `${scene.currentDepth}-`;
+  if (
+    Object.entries(scene.quests).some(
+      ([k, q]) => k.startsWith(prefix) && q.questId === "rescue",
+    )
+  )
+    return;
+
+  const chainTargetKeys = getChainTargetKeys(scene);
   const safeKeys = eligibleKeys.filter((k) => {
     const q = scene.quests[k];
-    if (!q || q.accepted) return false;
+    if (!q || q.accepted || q.completed || q.failed) return false;
+    if (q.chainId || chainTargetKeys.has(k)) return false; // jamais sur une quete de chaine
     if (["defeatBoss", "delivery", "escort", "rescue"].includes(q.questId))
       return false;
     if (q.questId === "obtainItem" && q.isBossItem) return false;
@@ -608,9 +629,25 @@ export function openQuestDialog(scene, npc) {
   scene.activeDialogQuestKey = questKey;
   scene.activeTalkingNpc = npc;
   npc.talking = true;
+  // une quete precedente a pu se terminer depuis le chargement de l'etage :
+  // pose maintenant l'etape de chaine qui attend ce pnj (si elle existe)
+  installChainQuests(
+    scene,
+    (scene.questNpcs || []).map((n) => n.npcIndex),
+  );
   const qs = scene.quests[questKey];
   if (!qs) return;
-  const custom = qs.dialogText || {};
+  // une etape de chaine DEJA rendue : on affiche son texte "after" (ou un
+  // remerciement generique), pas le texte "complete" qui annonce la suite
+  const custom =
+    qs.chainId && qs.completed
+      ? {
+          ...(qs.dialogText || {}),
+          complete:
+            (qs.dialogText && qs.dialogText.after) ||
+            "Merci encore pour ton aide !",
+        }
+      : qs.dialogText || {};
   let text;
 
   const secretHintSuffix = (() => {
@@ -822,7 +859,7 @@ export function openQuestDialog(scene, npc) {
     canAccept = true;
   }
   scene.events.emit("npc-dialog", {
-    text: text + secretHintSuffix,
+    text: (qs.npcName ? `${qs.npcName} : ` : "") + text + secretHintSuffix,
     canAccept,
     canTurnIn,
   });
@@ -832,6 +869,9 @@ export function acceptQuest(scene) {
   const qs = scene.quests[scene.activeDialogQuestKey];
   if (!qs) return;
   qs.accepted = true;
+  if (qs.chainId) {
+    delete scene.quests[`${scene.activeDialogQuestKey}~lead`];
+  }
   if (qs.questId === "delivery" && qs.role === "giver") {
     scene.addItemToInventory(qs.itemId, 1);
   }
@@ -860,9 +900,10 @@ export function acceptQuest(scene) {
     // le client connait scene.visitedFloors, jamais decide cote serveur
     const firstFutureTown = Math.floor(scene.currentDepth / 10) * 10 + 10;
     const futureCandidates = [];
+    // la prochaine ville devant le joueur, visitee ou non : une escorte
+    // doit toujours aller a la ville la plus proche (cf. plus bas)
     for (let d = firstFutureTown; d <= 100; d += 10) {
-      if (!scene.visitedFloors.find((f) => f.depth === d))
-        futureCandidates.push(d);
+      futureCandidates.push(d);
     }
 
     if (futureCandidates.length === 0) {
@@ -1042,21 +1083,91 @@ export function turnInQuest(scene) {
   scene.xp += qs.xpReward;
   scene.events.emit("xp-changed", { xp: scene.xp });
 
-  scene.dialogOpen = false;
-  scene.unpauseGame("dialog");
-  scene.activeDialogQuestKey = null;
-  releaseTalkingNpc(scene);
-  scene.events.emit("npc-dialog", null);
-  scene.events.emit("quests-updated", { ...scene.quests });
+  // recompenses reellement donnees (memes regles qu'avant), pour le popup
+  const rewardLines = [];
+  if (qs.xpReward) rewardLines.push(`${qs.xpReward} XP`);
 
-  if (qs.questId === "killEnemies") {
+  if (qs.chainId && !qs.role) {
+    // etape de chaine : or ET objet, puis la chaine avance
+    if (qs.goldReward) {
+      scene.addItemToInventory("gold", qs.goldReward);
+      rewardLines.push(`${qs.goldReward} or`);
+    }
     if (qs.itemReward) {
       scene.addItemToInventory(qs.itemReward.itemId, qs.itemReward.quantity);
       const itemDef = resolveItemDef(qs.itemReward.itemId);
-      scene.showLootToast(`Reçu : ${itemDef.name} x${qs.itemReward.quantity}`);
+      rewardLines.push(`${itemDef.name} x${qs.itemReward.quantity}`);
+    }
+    if (qs.recipeReward) {
+      if (!scene.unlockedRecipes.includes(qs.recipeReward)) {
+        scene.unlockedRecipes.push(qs.recipeReward);
+      }
+      // la recette n'est plus "decouverte mais verrouillee"
+      scene.discoveredLockedRecipes = (
+        scene.discoveredLockedRecipes || []
+      ).filter((id) => id !== qs.recipeReward);
+      scene.events.emit("recipes-updated", [...scene.unlockedRecipes]);
+      scene.events.emit("locked-recipes-updated", [
+        ...scene.discoveredLockedRecipes,
+      ]);
+      rewardLines.push(`Recette : ${qs.recipeName || qs.recipeReward}`);
+    }
+  } else if (qs.questId === "killEnemies") {
+    if (qs.itemReward) {
+      scene.addItemToInventory(qs.itemReward.itemId, qs.itemReward.quantity);
+      const itemDef = resolveItemDef(qs.itemReward.itemId);
+      rewardLines.push(`${itemDef.name} x${qs.itemReward.quantity}`);
     }
   } else {
     scene.addItemToInventory("gold", qs.goldReward);
+    if (qs.goldReward) rewardLines.push(`${qs.goldReward} or`);
+  }
+
+  // la chaine avance APRES l'ajout des recompenses (pose l'etape suivante)
+  if (qs.chainId && !qs.role) advanceQuestChain(scene, qs);
+
+  scene.events.emit("quests-updated", { ...scene.quests });
+
+  // le dialogue reste ouvert et affiche les gains (bouton "Fermer" seul) ;
+  // closeDialog() se charge de liberer le PNJ et de relancer le jeu
+  scene.events.emit("npc-dialog", {
+    text:
+      (qs.dialogText && qs.dialogText.complete
+        ? `${qs.dialogText.complete}\n\n`
+        : "") +
+      (rewardLines.length > 0
+        ? `Quête terminée ! Récompenses : ${rewardLines.join(" · ")}`
+        : "Quête terminée !"),
+    canAccept: false,
+    canTurnIn: false,
+  });
+}
+
+// a appeler apres l'ajout d'un objet a l'inventaire : previent le joueur quand
+// une quete "rapporter" vient de devenir remettable
+export function notifyItemQuestProgress(scene, itemId, addedQty) {
+  if (!itemId || itemId === "gold") return;
+  const haveQty = scene.inventory
+    .filter((i) => i.itemId === itemId)
+    .reduce((sum, i) => sum + i.quantity, 0);
+  for (const qs of Object.values(scene.quests)) {
+    if (qs.questId !== "obtainItem" || !qs.accepted || qs.completed) continue;
+    if (qs.targetItemId !== itemId) continue;
+    const target = qs.targetQuantity || 1;
+    // seulement au moment ou le seuil est franchi (pas a chaque ramassage)
+    if (haveQty >= target && haveQty - addedQty < target) {
+      const message = qs.npcName
+        ? `Quête prête : reviens voir ${qs.npcName} !`
+        : "Quête prête : reviens voir le PNJ !";
+      // retarde : le message de recolte (minage, cueillette, butin) est affiche
+      // juste apres l'ajout a l'inventaire et remplacerait celui-ci
+      if (scene.time) {
+        scene.time.delayedCall(1500, () => scene.showLootToast(message));
+      } else {
+        scene.showLootToast(message);
+      }
+      break;
+    }
   }
 }
 

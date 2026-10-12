@@ -32,6 +32,7 @@ import {
   spawnRescueCaptive,
   spawnRescuedNpcs,
 } from "./quests";
+import { chainNeedsSpawnNpc } from "./questChains";
 import {
   createEnemyVisualEffect,
   getEffectivePlayerVisionRadius,
@@ -644,8 +645,13 @@ export async function loadLevel(
     }
   }
 
-  if (data.questNpcs && data.questNpcs.length > 0) {
-    createQuestNpcs(scene, data.questNpcs);
+  // aussi appele (avec une liste vide) quand une chaine doit faire apparaitre
+  // son propre pnj ici, meme si le serveur n'a genere aucun pnj a quetes
+  if (
+    (data.questNpcs && data.questNpcs.length > 0) ||
+    chainNeedsSpawnNpc(scene)
+  ) {
+    createQuestNpcs(scene, data.questNpcs || []);
   }
 
   if (ambientNpcData && ambientNpcData.length > 0) {

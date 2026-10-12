@@ -155,6 +155,7 @@ export function spawnChests(scene, { chests, savedEphemeralChests }) {
       variant,
       ephemeral: true,
       propType: isCorpse ? "corpse" : "chest",
+      enemyName: isCorpse ? eph.corpse.enemyName || null : null,
     });
 
     if (-eph.index > scene.nextLootChestId) {

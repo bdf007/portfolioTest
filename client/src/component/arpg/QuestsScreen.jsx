@@ -35,6 +35,7 @@ export default function QuestsScreen({ quests, inventory, onClose }) {
     if (q.questId === "escort")
       return q.role === "receiver" ? "Accueillir : " : "Escorter : ";
     if (q.questId === "rescue") return "Sauver : ";
+    if (q.questId === "chainLead") return "À faire : ";
     return "Tuer : ";
   }
 
@@ -67,6 +68,7 @@ export default function QuestsScreen({ quests, inventory, onClose }) {
       }
       return `Un voyageur → étage ${q.targetDepth}`;
     }
+    if (q.questId === "chainLead") return q.leadText;
     if (q.questId === "rescue") {
       if (q.completed)
         return `Captif de l'étage ${q.targetDepth} ramené en ville`;
@@ -78,7 +80,15 @@ export default function QuestsScreen({ quests, inventory, onClose }) {
     }
     return `${q.killCount} / ${q.target} ${resolveEnemyDisplayName(q.targetEnemyType)}`;
   }
-
+  // "Nom de la chaine - etape 2/3" ; une chaine d'UNE seule etape (simple
+  // quete personnalisee) n'affiche pas "etape 1/1"
+  function describeChain(q) {
+    const stepLabel =
+      q.chainStepCount > 1
+        ? ` - étape ${q.chainStep + 1}/${q.chainStepCount}`
+        : "";
+    return `${q.chainName}${stepLabel}`;
+  }
   const containerRef = useRef(null);
   const [bookSize, setBookSize] = useState({ width: 800, height: 500 });
 
@@ -174,6 +184,14 @@ export default function QuestsScreen({ quests, inventory, onClose }) {
                 <div style={{ fontWeight: "bold" }}>
                   Étage {questKey.split("-")[0]}
                 </div>
+                {q.chainName && (
+                  <div style={{ fontStyle: "italic", color: "#7a5a2a" }}>
+                    {describeChain(q)}
+                  </div>
+                )}
+                {q.npcName && (
+                  <div style={{ color: "#7a5a2a" }}>Confié par {q.npcName}</div>
+                )}
                 <div style={{ color: "#5a4a35" }}>
                   {describeAction(q)}
                   {describeProgress(q)}
@@ -214,6 +232,14 @@ export default function QuestsScreen({ quests, inventory, onClose }) {
                     </span>
                   )}
                 </div>
+                {q.chainName && (
+                  <div style={{ fontStyle: "italic", color: "#7a5a2a" }}>
+                    {describeChain(q)}
+                  </div>
+                )}
+                {q.npcName && (
+                  <div style={{ color: "#7a5a2a" }}>Confié par {q.npcName}</div>
+                )}
                 <div style={{ color: "#5a4a35" }}>
                   {describeAction(q)}
                   {describeProgress(q)}

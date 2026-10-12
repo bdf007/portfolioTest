@@ -44,6 +44,7 @@ export async function resumeFromSave(scene, save) {
   scene.discoveredLockedRecipes = ps.discoveredLockedRecipes || [];
   scene.shopSoldItems = ps.shopSoldItems || {};
   scene.rescuedNpcs = ps.rescuedNpcs || [];
+  scene.questChains = ps.questChains || {};
   scene.shopRerollSeed = ps.shopRerollSeed || {};
   scene.obtainedUniqueItems = ps.obtainedUniqueItems || [];
   scene.furyKillCount = ps.furyKillCount || 0;
@@ -245,6 +246,7 @@ export async function persistProgressAsync(scene) {
                     py: c.sprite.y,
                     scale: c.sprite.scaleX,
                     flipX: c.sprite.flipX,
+                    enemyName: c.enemyName || null,
                   }
                 : null,
           })),
@@ -257,6 +259,7 @@ export async function persistProgressAsync(scene) {
         discoveredLockedRecipes: scene.discoveredLockedRecipes,
         shopSoldItems: scene.shopSoldItems,
         rescuedNpcs: scene.rescuedNpcs,
+        questChains: scene.questChains,
         shopRerollSeed: scene.shopRerollSeed,
         obtainedUniqueItems: scene.obtainedUniqueItems,
         summons: scene.summons.map((s) => ({
