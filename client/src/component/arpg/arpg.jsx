@@ -5,6 +5,8 @@ import MainScene from "./scenes/MainScene";
 import Minimap from "./Minimap";
 import CharacterSelectScreen from "./CharacterSelectScreen";
 import GameListScreen from "./GameListScreen";
+import BestiaryScreen from "./BestiaryScreen";
+import BiomeGalleryScreen from "./BiomeGalleryScreen";
 import InventoryScreen, { ItemIcon, hasIconFrame } from "./InventoryScreen";
 import QuestsScreen from "./QuestsScreen";
 import TravelHubScreen from "./TravelHubScreen";
@@ -316,7 +318,7 @@ export default function Arpg() {
       audio: { noAudio: true },
       physics: {
         default: "arcade",
-        arcade: { gravity: { y: 0 }, debug: false },
+        arcade: { gravity: { y: 0 }, debug: true },
       },
       scene: [BootScene, MainScene],
     };
@@ -446,6 +448,8 @@ export default function Arpg() {
             document,
           );
         }
+        setShopStock(null);
+        setTravelDestinations(null);
         setPhase("picker");
         loadGamesList();
       });
@@ -478,6 +482,10 @@ export default function Arpg() {
     const scene = gameRef.current?.scene.getScene("MainScene");
     if (scene) scene.closeDialog();
   }, []);
+  const handleChooseInteraction = useCallback((index) => {
+    const scene = gameRef.current?.scene.getScene("MainScene");
+    if (scene) scene.chooseInteraction(index);
+  }, []);
   const handleTakeChestItem = useCallback((itemIndex) => {
     const scene = gameRef.current?.scene.getScene("MainScene");
     if (scene) scene.takeChestItem(itemIndex);
@@ -493,6 +501,7 @@ export default function Arpg() {
 
   const handleSaveAndQuit = () => {
     const scene = gameRef.current?.scene.getScene("MainScene");
+    if (shopStock && scene) scene.closeShop(); // ferme la boutique (et rend la main a la scene) avant de quitter
     if (scene) scene.saveAndQuit();
   };
 
@@ -776,6 +785,12 @@ export default function Arpg() {
     }
     if (npcDialog) {
       const actions = [];
+      (npcDialog.choices || []).forEach((c, i) => {
+        actions.push({
+          label: `choice-${i}`,
+          onClick: () => handleChooseInteraction(i),
+        });
+      });
       if (npcDialog.canAccept)
         actions.push({ label: "Accepter", onClick: handleAcceptQuest });
       if (npcDialog.canTurnIn)
@@ -803,6 +818,7 @@ export default function Arpg() {
     handleAcceptQuest,
     handleTurnInQuest,
     handleCloseDialog,
+    handleChooseInteraction,
     handleTakeChestItem,
     handleTakeAllChest,
     handleCloseChestScreen,
@@ -929,9 +945,9 @@ export default function Arpg() {
     if (scene) scene.buyItem(index, quantity);
   };
 
-  const handleSellItem = (itemId, quantity) => {
+  const handleSellItem = (itemId, quantity, instanceId) => {
     const scene = gameRef.current?.scene.getScene("MainScene");
-    if (scene) scene.sellItem(itemId, quantity);
+    if (scene) scene.sellItem(itemId, quantity, instanceId);
   };
 
   const handleCloseShop = () => {
@@ -1027,15 +1043,26 @@ export default function Arpg() {
 
   if (phase === "picker") {
     return (
-      <GameListScreen
-        games={games}
-        username={username}
-        onResume={handleResumeGame}
-        onAbandon={handleAbandonGame}
-        onDelete={handleDeleteGame}
-        onNewGame={handleNewGame}
-      />
+      <div style={{ position: "relative" }}>
+        <GameListScreen
+          games={games}
+          username={username}
+          onResume={handleResumeGame}
+          onAbandon={handleAbandonGame}
+          onDelete={handleDeleteGame}
+          onNewGame={handleNewGame}
+          onOpenBestiary={() => setPhase("bestiary")}
+          onOpenBiomes={() => setPhase("biomes")}
+        />
+      </div>
     );
+  }
+
+  if (phase === "bestiary") {
+    return <BestiaryScreen onClose={() => setPhase("picker")} />;
+  }
+  if (phase === "biomes") {
+    return <BiomeGalleryScreen onClose={() => setPhase("picker")} />;
   }
 
   if (phase === "select") {
@@ -1642,8 +1669,32 @@ export default function Arpg() {
               fontSize: isMobile ? 13 : 14,
             }}
           >
-            <div style={{ marginBottom: 12 }}>{npcDialog.text}</div>
-            <div style={{ display: "flex", gap: 10 }}>
+            <div style={{ marginBottom: 12, whiteSpace: "pre-line" }}>
+              {npcDialog.text}
+            </div>
+            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+              {(npcDialog.choices || []).map((c, i) => (
+                <button
+                  key={i}
+                  onClick={() => handleChooseInteraction(i)}
+                  style={{
+                    padding: "6px 14px",
+                    fontSize: 13,
+                    borderRadius: 6,
+                    border: "1px solid #8a7050",
+                    background: "#3a2f20",
+                    color: "#f0e6d0",
+                    cursor: "pointer",
+                    outline:
+                      getCurrentDialogActions()[focusedButtonIndex]?.label ===
+                      `choice-${i}`
+                        ? "3px solid #fff"
+                        : "none",
+                  }}
+                >
+                  {c.label}
+                </button>
+              ))}
               {npcDialog.canAccept && (
                 <button
                   onClick={handleAcceptQuest}
@@ -1916,6 +1967,7 @@ export default function Arpg() {
         )}
         {chestScreenData && (
           <ChestScreen
+            title={chestScreenData.title}
             items={chestScreenData.items}
             focusedLabel={getCurrentDialogActions()[focusedButtonIndex]?.label}
             onTakeItem={handleTakeChestItem}
@@ -1992,8 +2044,8 @@ export default function Arpg() {
             equipped={equipped}
             refreshCost={
               gameRef.current?.scene
-                .getScene("MainScene")
-                ?.getShopRefreshCost() ?? 0
+                ?.getScene("MainScene")
+                ?.getShopRefreshCost?.() ?? 0
             }
             onBuy={handleBuyItem}
             onSell={handleSellItem}

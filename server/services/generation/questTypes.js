@@ -1,5 +1,6 @@
 const { createRng } = require("./rng");
 const { rollLoot, ITEM_TYPES } = require("./itemTypes");
+const { ENEMY_TYPES } = require("./enemyStats");
 
 /**
  * Table des types de quêtes proposées par les PNJ - même esprit que
@@ -196,6 +197,14 @@ function generateEscortQuest(seed) {
  */
 const FIXED_QUESTS = {};
 
+function getEnemyFamily(typeKey) {
+  return ENEMY_TYPES[typeKey]?.family || null;
+}
+
+// probabilite qu'une quete "tuer N ennemis" cible la famille entiere
+// plutot qu'une seule couleur, quand au moins 2 variantes sont dans le pool
+const FAMILY_QUEST_CHANCE = 0.4;
+
 /**
  * Choisit un type de quête, son objectif ET le type d'ennemi cible
  * (seedé, reproductible) pour un PNJ donné.
@@ -223,7 +232,20 @@ function generateQuestForNpc(seed, enemyTypePool, depth) {
     enemyTypePool && enemyTypePool.length > 0
       ? enemyTypePool
       : ["enemyDefault"];
-  const targetEnemyType = pool[Math.floor(rng() * pool.length)];
+  let targetEnemyType = pool[Math.floor(rng() * pool.length)];
+
+  // quete de famille : seed separee pour ne pas decaler la sequence rng
+  // principale (les quetes deja generees restent identiques)
+  const familyId = getEnemyFamily(targetEnemyType);
+  if (familyId) {
+    const familyRng = createRng(String(seed) + "-quest-family");
+    const membersInPool = pool.filter(
+      (t) => getEnemyFamily(t) === familyId,
+    ).length;
+    if (membersInPool >= 2 && familyRng() < FAMILY_QUEST_CHANCE) {
+      targetEnemyType = familyId;
+    }
+  }
 
   const itemReward = rollLoot(
     "questReward",

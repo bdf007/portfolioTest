@@ -8,6 +8,8 @@ import {
   SPRITE_REGISTRY,
   resolveEnemySprite,
   resolveHeroStatsOverride,
+  matchesEnemyTarget,
+  resolveEnemyDisplayName,
 } from "../spriteRegistry";
 import { resolveItemDef } from "../itemDefs";
 import {
@@ -46,6 +48,7 @@ import {
   getEffectivePlayerMeleeDamage,
   getEffectivePlayerRangedDamage,
   getEffectivePlayerVisionRadius,
+  getPlayerControlTint,
 } from "./statusEffects";
 import {
   confirmResummon as confirmResummonImpl,
@@ -62,6 +65,7 @@ import {
   openAmbientDialog,
   closeDialog as closeDialogImpl,
   updateNpcMovement,
+  notifyItemQuestProgress,
 } from "./quests";
 import {
   checkSecretWallInteraction,
@@ -76,6 +80,7 @@ import {
   takeAllChestItems as takeAllChestItemsImpl,
   closeChestScreen as closeChestScreenImpl,
   spawnLootChest,
+  spawnLootCorpse,
 } from "./exploration";
 import {
   updateEnemyDecisions,
@@ -141,6 +146,7 @@ import {
   FURY_KILLS_REQUIRED,
   DEFAULT_ATTRIBUTES,
   resolveVisualEffect,
+  CORPSE_EMPTY_TINT,
 } from "./gameConstants";
 
 const VISION_RADIUS_DEFAULT = 6; // repli si le profil d'archetype (cf. HERO_STATS_PROFILES) ne definit pas visionRadius
@@ -285,6 +291,16 @@ export default class MainScene extends Phaser.Scene {
         repeat: 0,
       });
     }
+    if (f.death) {
+      this.anims.create({
+        key: prefix + "death",
+        frames: this.anims.generateFrameNumbers(textureKey, {
+          frames: f.death,
+        }),
+        frameRate: 8,
+        repeat: 0,
+      });
+    }
   }
 
   buildPathfindingGrid() {
@@ -363,6 +379,9 @@ export default class MainScene extends Phaser.Scene {
     createParticleTexture(this, "particle-fire", 0xff6600);
     createParticleTexture(this, "particle-ice", 0x99ddff);
     createParticleTexture(this, "particle-gas", 0x88cc44);
+    createParticleTexture(this, "particle-poison", 0x9933ff);
+    createParticleTexture(this, "particle-blood", 0xcc0000);
+    createParticleTexture(this, "particle-stun", 0xffee33);
     for (const [entryKey, entry] of Object.entries(SPRITE_REGISTRY)) {
       this.createAnimationsForEntry(entryKey, entry);
     }
@@ -530,6 +549,8 @@ export default class MainScene extends Phaser.Scene {
     this.activeDialogQuestKey = null;
     this.activeTalkingNpc = null;
     this.shopSoldItems = {}; // { depth: [{itemId, quantity}] } - objets vendus a la boutique de CETTE ville precise, rachetables uniquement ici
+    this.rescuedNpcs = []; // [{questKey, townDepth, spriteKey, x, y, greeting}] - PNJ sauves (quete "rescue"), ambiants et persistants dans leur ville
+    this.questChains = {}; // { chainId: { step, done } } - progression des chaines de quetes (cf. questChains.js)
     this.shopRerollSeed = {}; // { depth: nombre de rafraichissements utilises sur CETTE boutique } - 0/absent = stock d'origine (this.shopData.stock)
     this.inventory = [];
     this.gamePaused = false;
@@ -582,6 +603,7 @@ export default class MainScene extends Phaser.Scene {
     }
 
     this.events.emit("inventory-updated", [...this.inventory]);
+    notifyItemQuestProgress(this, itemId, quantity);
     this.persistProgress();
   }
 
@@ -832,8 +854,8 @@ export default class MainScene extends Phaser.Scene {
     buyItemImpl(this, shopItemIndex, quantity);
   }
 
-  sellItem(itemId, quantity = 1) {
-    sellItemImpl(this, itemId, quantity);
+  sellItem(itemId, quantity = 1, instanceId = null) {
+    sellItemImpl(this, itemId, quantity, instanceId);
   }
 
   closeShop() {
@@ -1074,6 +1096,10 @@ export default class MainScene extends Phaser.Scene {
       }
       vx *= speed;
       vy *= speed;
+      if (this.isPlayerStunned() || this.isPlayerRooted()) {
+        vx = 0;
+        vy = 0;
+      }
 
       this.hero.setVelocity(vx, vy);
 
@@ -1114,6 +1140,19 @@ export default class MainScene extends Phaser.Scene {
         this.lastAimVector = { x: vx / len, y: vy / len };
       }
     }
+    // teinte d'etat (stun/freeze/root) - reappliquee a chaque frame car
+    // les flashs de degats (clearTint) l'effacent ; on ne touche pas au
+    // hero pendant un flash plein (FILL) pour garder le retour visuel
+    const controlTint = getPlayerControlTint(this);
+    if (controlTint !== null) {
+      if (this.hero.tintMode !== Phaser.TintModes.FILL) {
+        this.hero.setTint(controlTint);
+      }
+      this.heroControlTinted = true;
+    } else if (this.heroControlTinted) {
+      this.heroControlTinted = false;
+      if (this.hero.tintMode !== Phaser.TintModes.FILL) this.hero.clearTint();
+    }
     const tileX = Math.floor(this.hero.x / TILE_SIZE);
     const tileY = Math.floor(this.hero.y / TILE_SIZE);
     if (
@@ -1151,26 +1190,33 @@ export default class MainScene extends Phaser.Scene {
     }
 
     const now = this.time.now;
+    const playerStunned = this.isPlayerStunned();
     if (
       Phaser.Input.Keyboard.JustDown(this.keys.melee) ||
       this.touchMeleeRequested
     ) {
       this.touchMeleeRequested = false;
-      this.performMeleeAttack(now);
+      if (!playerStunned) {
+        this.performMeleeAttack(now);
+      }
     }
     if (
       Phaser.Input.Keyboard.JustDown(this.keys.ranged) ||
       this.touchRangedRequested
     ) {
       this.touchRangedRequested = false;
-      this.performRangedAttack(now);
+      if (!playerStunned) {
+        this.performRangedAttack(now);
+      }
     }
     if (
       Phaser.Input.Keyboard.JustDown(this.keys.action) ||
       this.touchActionRequested
     ) {
       this.touchActionRequested = false;
-      this.performInteraction();
+      if (!playerStunned) {
+        this.performInteraction();
+      }
     }
     if (this.gamePaused) return;
 
@@ -1180,10 +1226,10 @@ export default class MainScene extends Phaser.Scene {
       this.touchFuryRequested
     ) {
       this.touchFuryRequested = false;
-      this.useFury();
+      if (!playerStunned) this.useFury();
     }
 
-    updateEnemyMovement(this);
+    // updateEnemyMovement(this);
 
     for (const chest of this.chests) {
       if (!chest.sprite) continue;
@@ -1357,8 +1403,20 @@ export default class MainScene extends Phaser.Scene {
     return enemy.statusEffects.some((e) => e.type === "stun");
   }
 
+  // joueur immobilise : etourdi (stun) ou gele (freeze) - bloque le
+  // deplacement ET les attaques (cf. update)
+  isPlayerStunned() {
+    return this.playerStatusEffects.some(
+      (e) => e.type === "stun" || e.type === "freeze",
+    );
+  }
+
   isEnemyRooted(enemy) {
     return enemy.statusEffects.some((e) => e.type === "root");
+  }
+
+  isPlayerRooted() {
+    return this.playerStatusEffects.some((e) => e.type === "root");
   }
 
   moveEnemyToward(enemy, waypointTile, speed, onArrive) {
@@ -1370,6 +1428,7 @@ export default class MainScene extends Phaser.Scene {
 
     if (dist < 4) {
       enemy.stuckCheck = null;
+      enemy.patrolJitterUntil = 0;
       onArrive();
       return;
     }
@@ -1382,9 +1441,19 @@ export default class MainScene extends Phaser.Scene {
           enemy.sprite.y - enemy.stuckCheck.y,
         );
         if (moved < 3) {
-          enemy.stuckCheck = null;
-          onArrive();
-          return;
+          // Reellement bloque (la case suivante de la route est
+          // normalement toujours praticable, calculee par un vrai
+          // pathfinding - un blocage ici vient quasi toujours d'un
+          // autre PNJ/ennemi qui occupe la case au meme moment). On ne
+          // fait PLUS comme si on etait arrive : ca cassait la garantie
+          // "case adjacente a case adjacente" de la route en faisant
+          // sauter un cran en avant depuis une position pas vraiment
+          // atteinte, ce qui pouvait ensuite faire cogner un mur sur le
+          // saut suivant (plus garanti sans obstacle). On se contente
+          // d'un leger jitter le temps que l'obstacle se degage, sans
+          // jamais avancer dans la route tant que la case n'est pas
+          // reellement atteinte.
+          enemy.patrolJitterUntil = now + 300;
         }
       }
       enemy.stuckCheck = { x: enemy.sprite.x, y: enemy.sprite.y, time: now };
@@ -1392,13 +1461,20 @@ export default class MainScene extends Phaser.Scene {
 
     const nx = dx / dist,
       ny = dy / dist;
-    enemy.sprite.setVelocity(nx * speed, ny * speed);
+    let vx = nx * speed,
+      vy = ny * speed;
+    if (now < (enemy.patrolJitterUntil || 0)) {
+      const jitterAngle = Math.random() * Math.PI * 2;
+      vx += Math.cos(jitterAngle) * speed * 0.6;
+      vy += Math.sin(jitterAngle) * speed * 0.6;
+    }
+    enemy.sprite.setVelocity(vx, vy);
     const edir =
-      Math.abs(nx) > Math.abs(ny)
-        ? nx > 0
+      Math.abs(vx) > Math.abs(vy)
+        ? vx > 0
           ? "right"
           : "left"
-        : ny > 0
+        : vy > 0
           ? "down"
           : "up";
     enemy.sprite.anims.play(enemy.spriteKey + "-walk-" + edir, true);
@@ -1447,6 +1523,7 @@ export default class MainScene extends Phaser.Scene {
     const heroY = this.hero.body.center.y;
 
     if (checkSecretWallInteraction(this)) return;
+    if (!this.dialogOpen && this.offerInteractionChoices(heroX, heroY)) return;
     if (mineRock(this)) return;
     if (forageNode(this)) return;
 
@@ -1537,6 +1614,66 @@ export default class MainScene extends Phaser.Scene {
         return;
       }
     }
+  }
+
+  // plusieurs interactions possibles au meme endroit (rocher de minage +
+  // cadavres/coffres) : le joueur choisit au lieu de subir une priorite fixe
+  offerInteractionChoices(heroX, heroY) {
+    const range = this.playerMeleeRange;
+    const choices = [];
+
+    const rock = this.miningRocks.find((r) => {
+      if (r.depleted) return false;
+      const px = r.data.x * TILE_SIZE + TILE_SIZE / 2;
+      const py = r.data.y * TILE_SIZE + TILE_SIZE / 2;
+      return Math.hypot(px - heroX, py - heroY) <= range;
+    });
+    if (rock) {
+      choices.push({
+        label: `Miner : ${resolveItemDef(rock.data.resourceItemId).name}`,
+        run: () => mineRock(this),
+      });
+    }
+
+    for (const chest of this.chests) {
+      // meme regle que dans performInteraction : un coffre deja ouvert et
+      // vide est ignore
+      if (chest.opened && chest.lootItems.length === 0) continue;
+      const cx = chest.x * TILE_SIZE + TILE_SIZE / 2;
+      const cy = chest.y * TILE_SIZE + TILE_SIZE / 2;
+      if (Math.hypot(cx - heroX, cy - heroY) > range) continue;
+
+      const label =
+        chest.propType === "corpse"
+          ? chest.enemyName
+            ? `Cadavre : ${chest.enemyName}`
+            : "Cadavre"
+          : "Coffre";
+      choices.push({
+        label,
+        run: () => openChestScreen(this, chest),
+      });
+    }
+
+    if (choices.length < 2) return false; // un seul choix : comportement habituel
+
+    this.pendingInteractionChoices = choices;
+    this.dialogOpen = true;
+    this.pauseGame("dialog");
+    this.events.emit("npc-dialog", {
+      text: "Que veux-tu faire ?",
+      canAccept: false,
+      canTurnIn: false,
+      choices: choices.map((c) => ({ label: c.label })),
+    });
+    return true;
+  }
+
+  chooseInteraction(index) {
+    const choice = this.pendingInteractionChoices?.[index];
+    this.pendingInteractionChoices = null;
+    this.closeDialog(); // ferme le menu et relance le jeu
+    if (choice) choice.run();
   }
 
   takeChestItem(itemIndex) {
@@ -1695,7 +1832,49 @@ export default class MainScene extends Phaser.Scene {
           this.showLootToast("Furie prête !");
         }
       }
+
+      // Anim de mort : seulement pour les ennemis dont l'entree
+      // SPRITE_REGISTRY definit un champ "death" (createAnimationsForEntry
+      // ne cree l'anim prefix+"death" que dans ce cas). Si presente, le
+      // sprite de l'ennemi devient lui-meme le prop de butin permanent (a
+      // la place d'un coffre generique separe) via spawnLootCorpse - le
+      // cadavre est toujours cree (meme sans aucun butin) et ne disparait
+      // JAMAIS, contrairement a un coffre : il reste affiche a vie une
+      // fois pille, juste legerement grise (cf. plus bas et
+      // exploration.js) pour indiquer qu'il n'y a plus rien a prendre.
+      // corpseChest garde la reference vers l'entree scene.chests pour
+      // pouvoir y fusionner un 2e lot de butin (cas boss ci-dessous) sans
+      // jamais pousser deux fois le meme sprite dans scene.chests.
+      const hasDeathAnim = this.anims.exists(enemy.spriteKey + "-death");
+      let corpseChest = null;
+      if (hasDeathAnim) {
+        enemy.sprite.anims.play(enemy.spriteKey + "-death");
+        spawnLootCorpse(this, enemy, []);
+        corpseChest = this.chests[this.chests.length - 1];
+        corpseChest.enemyName = resolveEnemyDisplayName(enemy.archetype);
+      }
+      const spawnOrMergeLoot = (items) => {
+        if (!items || items.length === 0) return;
+        if (corpseChest) {
+          corpseChest.lootItems.push(...items);
+        } else {
+          spawnLootChest(this, enemy.sprite.x, enemy.sprite.y, items);
+        }
+      };
+
       const lootItems = [...(enemy.drops || [])];
+
+      // exemplaires d'un objet qui attendent deja dans les cadavres/coffres de
+      // l'etage (pas encore ramasses) - evite les doublons de drop de quete
+      const countPendingLoot = (itemId) =>
+        (this.chests || []).reduce(
+          (sum, c) =>
+            sum +
+            (c.lootItems || [])
+              .filter((i) => i.itemId === itemId)
+              .reduce((s, i) => s + i.quantity, 0),
+          0,
+        );
 
       if (!enemy.isBoss && enemy.questLoot) {
         for (const questKey of Object.keys(this.quests)) {
@@ -1703,9 +1882,11 @@ export default class MainScene extends Phaser.Scene {
           if (qs.questId !== "obtainItem" || !qs.accepted || qs.completed)
             continue;
           if (qs.targetItemId !== enemy.questLoot) continue;
-          const haveQty = this.inventory
-            .filter((i) => i.itemId === enemy.questLoot)
-            .reduce((sum, i) => sum + i.quantity, 0);
+          const haveQty =
+            this.inventory
+              .filter((i) => i.itemId === enemy.questLoot)
+              .reduce((sum, i) => sum + i.quantity, 0) +
+            countPendingLoot(enemy.questLoot);
           if (haveQty >= (qs.targetQuantity || 1)) continue;
 
           lootItems.push({ itemId: enemy.questLoot, quantity: 1 });
@@ -1713,9 +1894,31 @@ export default class MainScene extends Phaser.Scene {
         }
       }
 
-      if (lootItems.length > 0) {
-        spawnLootChest(this, enemy.sprite.x, enemy.sprite.y, lootItems);
+      // drop defini par une etape de CHAINE (cf. questChains.js, `lootFrom`) :
+      // independant du questLoot de l'ennemi, donc pas de quete automatique
+      // du serveur pour cet objet
+      if (!enemy.isBoss) {
+        for (const questKey of Object.keys(this.quests)) {
+          const qs = this.quests[questKey];
+          if (!qs.lootFrom || !qs.accepted || qs.completed) continue;
+          if (qs.lootFrom.enemyType !== enemy.archetype) continue;
+          const itemId = qs.targetItemId;
+          if (lootItems.some((i) => i.itemId === itemId)) continue;
+          const haveQty =
+            this.inventory
+              .filter((i) => i.itemId === itemId)
+              .reduce((sum, i) => sum + i.quantity, 0) +
+            countPendingLoot(itemId);
+          if (haveQty >= (qs.targetQuantity || 1)) continue;
+          const chance = qs.lootFrom.chance ?? 1;
+          if (Math.random() >= chance) continue;
+
+          lootItems.push({ itemId, quantity: 1 });
+          break;
+        }
       }
+
+      spawnOrMergeLoot(lootItems);
 
       if (enemy.isSecretRoomGuard && this.secretRewardLocked) {
         const anyGuardAlive = this.enemies.some(
@@ -1754,8 +1957,12 @@ export default class MainScene extends Phaser.Scene {
           });
         }
         if (bossLootItems.length > 0) {
-          spawnLootChest(this, enemy.sprite.x, enemy.sprite.y, bossLootItems);
-          this.showLootToast("Le boss a laissé tomber un coffre de butin !");
+          spawnOrMergeLoot(bossLootItems);
+          this.showLootToast(
+            hasDeathAnim
+              ? "Le corps du boss contient du butin !"
+              : "Le boss a laissé tomber un coffre de butin !",
+          );
         }
 
         let anyDefeatBossUpdated = false;
@@ -1782,12 +1989,23 @@ export default class MainScene extends Phaser.Scene {
       for (const questKey of Object.keys(this.quests)) {
         const qs = this.quests[questKey];
         if (!qs.accepted || qs.completed) continue;
-        if (qs.targetEnemyType && qs.targetEnemyType !== enemy.archetype)
+        if (
+          qs.targetEnemyType &&
+          !matchesEnemyTarget(
+            qs.targetEnemyType,
+            enemy.archetype,
+            enemy.spriteKey,
+          )
+        )
           continue;
         if (qs.killCount < qs.target) {
           qs.killCount++;
           if (qs.killCount === qs.target) {
-            this.showLootToast("Quête prête : reviens voir le PNJ !");
+            this.showLootToast(
+              qs.npcName
+                ? `Quête prête : reviens voir ${qs.npcName} !`
+                : "Quête prête : reviens voir le PNJ !",
+            );
           }
           anyQuestUpdated = true;
         }
@@ -1798,7 +2016,20 @@ export default class MainScene extends Phaser.Scene {
       }
       if (enemy.visualEmitter) enemy.visualEmitter.destroy();
 
-      enemy.sprite.destroy();
+      if (corpseChest) {
+        // le sprite de l'ennemi devient corpseChest.sprite (cf.
+        // spawnLootCorpse/exploration.js) - ne surtout pas le detruire ici,
+        // il reste affiche a vie (fige sur la derniere frame de "death"),
+        // avec ou sans butin. S'il n'y a rien a prendre (lootItems ET
+        // bossLootItems vides, merges dans corpseChest.lootItems ci-dessus),
+        // grise-le legerement pour indiquer qu'il n'y a plus rien a looter
+        // - meme teinte que le "deja pille" gere dans exploration.js.
+        if (corpseChest.lootItems.length === 0) {
+          corpseChest.sprite.setTint(CORPSE_EMPTY_TINT);
+        }
+      } else {
+        enemy.sprite.destroy();
+      }
       this.enemies = this.enemies.filter((e) => e !== enemy);
 
       if (enemy.isBoss) {

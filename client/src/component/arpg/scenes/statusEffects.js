@@ -9,7 +9,20 @@ const STATUS_EFFECT_COLORS = {
   haste: 0x44ff88, // vert clair - pour un futur flash sur soi-meme si besoin
   acid: 0x88ff00, // vert
   stun: 0xffff00, // jaune
+  poison: 0x8800ff, // violet
+  freeze: 0x00ffff, // cyan
 };
+
+// teinte discrete du heros selon son etat de controle - une couleur
+// legerement differente par etat (gel > etourdissement > immobilisation),
+// ou null s'il n'y en a aucune
+export function getPlayerControlTint(scene) {
+  const types = scene.playerStatusEffects.map((e) => e.type);
+  if (types.includes("freeze")) return 0x99ccff; // bleu glace
+  if (types.includes("stun")) return 0xffee66; // jaune pale
+  if (types.includes("root")) return 0xaacc66; // vert-brun, racines
+  return null;
+}
 
 /**
  * Deplacee telle quelle depuis MainScene.js - fonction pure, ne touche
@@ -152,6 +165,37 @@ export function createEnemyVisualEffect(scene, sprite, effectType) {
       lifespan: 900,
       frequency: 80,
     },
+    // bulles violettes qui montent doucement (poison)
+    poison: {
+      texture: "particle-poison",
+      speed: { min: 4, max: 12 },
+      scale: { start: 0.7, end: 0.2 },
+      alpha: { start: 0.8, end: 0 },
+      lifespan: 800,
+      frequency: 110,
+      gravityY: -15,
+    },
+    // gouttes rouges qui tombent (saignement) - blendMode NORMAL, sinon
+    // le rouge fonce en ADD devient presque invisible sur un fond sombre
+    blood: {
+      texture: "particle-blood",
+      speed: { min: 3, max: 10 },
+      scale: { start: 0.6, end: 0.2 },
+      alpha: { start: 0.9, end: 0 },
+      lifespan: 600,
+      frequency: 140,
+      gravityY: 60,
+      blendMode: "NORMAL",
+    },
+    // petites etincelles jaunes qui scintillent au-dessus de la tete (stun)
+    stun: {
+      texture: "particle-stun",
+      speed: { min: 6, max: 18 },
+      scale: { start: 0.5, end: 0 },
+      alpha: { start: 1, end: 0 },
+      lifespan: 500,
+      frequency: 90,
+    },
   };
   const config = configs[effectType];
   if (!config) return null;
@@ -162,7 +206,8 @@ export function createEnemyVisualEffect(scene, sprite, effectType) {
     alpha: config.alpha,
     lifespan: config.lifespan,
     frequency: config.frequency,
-    blendMode: "ADD",
+    gravityY: config.gravityY ?? 0,
+    blendMode: config.blendMode ?? "ADD",
   });
   emitter.setDepth(sprite.depth + 1);
   return emitter;

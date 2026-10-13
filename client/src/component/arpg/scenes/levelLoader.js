@@ -26,7 +26,13 @@ import {
   spawnMiningRocks,
   spawnForageNodes,
 } from "./floorEntities";
-import { createQuestNpcs, createAmbientNpcs } from "./quests";
+import {
+  createQuestNpcs,
+  createAmbientNpcs,
+  spawnRescueCaptive,
+  spawnRescuedNpcs,
+} from "./quests";
+import { chainNeedsSpawnNpc } from "./questChains";
 import {
   createEnemyVisualEffect,
   getEffectivePlayerVisionRadius,
@@ -67,8 +73,7 @@ export async function loadLevel(
     const discoveredTiles = [];
     for (let y = 0; y < scene.fogState.state.length; y++) {
       for (let x = 0; x < scene.fogState.state[y].length; x++) {
-        if (scene.fogState.state[y][x] !== 0)
-          discoveredTiles.push(`${x},${y}`);
+        if (scene.fogState.state[y][x] !== 0) discoveredTiles.push(`${x},${y}`);
       }
     }
     scene.floorFogCache[scene.currentDepth] = discoveredTiles;
@@ -309,7 +314,8 @@ export async function loadLevel(
     y: startPosition.y,
   };
   for (const ps of persistentSummons) {
-    ps.sprite = spawnSummonSprite(scene,
+    ps.sprite = spawnSummonSprite(
+      scene,
       ps.spriteKey,
       playerSpawn.x * TILE_SIZE + TILE_SIZE / 2,
       playerSpawn.y * TILE_SIZE + TILE_SIZE / 2,
@@ -327,7 +333,9 @@ export async function loadLevel(
   scene.lastDir = "down";
   scene.lastAimVector = { x: 0, y: 1 };
 
-  scene.levelColliders.push(scene.physics.add.collider(scene.hero, scene.layer));
+  scene.levelColliders.push(
+    scene.physics.add.collider(scene.hero, scene.layer),
+  );
   scene.levelColliders.push(
     scene.physics.add.collider(scene.enemyGroup, scene.layer),
   );
@@ -637,13 +645,21 @@ export async function loadLevel(
     }
   }
 
-  if (data.questNpcs && data.questNpcs.length > 0) {
-    createQuestNpcs(scene, data.questNpcs);
+  // aussi appele (avec une liste vide) quand une chaine doit faire apparaitre
+  // son propre pnj ici, meme si le serveur n'a genere aucun pnj a quetes
+  if (
+    (data.questNpcs && data.questNpcs.length > 0) ||
+    chainNeedsSpawnNpc(scene)
+  ) {
+    createQuestNpcs(scene, data.questNpcs || []);
   }
 
   if (ambientNpcData && ambientNpcData.length > 0) {
     createAmbientNpcs(scene, ambientNpcData);
   }
+
+  spawnRescueCaptive(scene);
+  spawnRescuedNpcs(scene);
 
   scene.fogState = createFogState(grid);
 

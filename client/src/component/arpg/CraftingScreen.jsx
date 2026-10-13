@@ -27,6 +27,7 @@ const CATEGORY_LABELS = {
   material: "Matériaux",
   craftingMaterial: "Matériaux",
   abilityScroll: "Parchemins",
+  loreScroll: "Parchemins de savoir",
   autre: "Autres",
 };
 

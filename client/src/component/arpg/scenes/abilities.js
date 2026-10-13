@@ -174,6 +174,8 @@ export function performAbilityEffect(scene, def) {
     performDetectTrapAbility(scene, def);
   } else if (def.effectType === "detectSecret") {
     performDetectSecretAbility(scene, def);
+  } else if (def.effectType === "aoeHeal") {
+    performAoeHealAbility(scene, def);
   } else {
     return false;
   }
@@ -197,6 +199,64 @@ export function triggerAbilityEffect(scene, abilityId) {
   const def = resolveAbilityDef(abilityId);
   if (!def) return false;
   return performAbilityEffect(scene, def);
+}
+
+export function performAoeHealAbility(scene, def) {
+  const healAmountFor = (maxHp) =>
+    Math.max(
+      1,
+      Math.round((def.healFlat || 0) + maxHp * (def.healPercent || 0)),
+    );
+
+  // le heros est toujours soigne (la zone est centree sur lui)
+  const hpBefore = scene.playerHp;
+  scene.playerHp = Math.min(
+    scene.playerMaxHp,
+    scene.playerHp + healAmountFor(scene.playerMaxHp),
+  );
+  const heroHealed = Math.round(scene.playerHp - hpBefore);
+  scene.events.emit("player-hp-changed", {
+    hp: scene.playerHp,
+    maxHp: scene.playerMaxHp,
+  });
+  if (heroHealed > 0) {
+    scene.showDamageNumber(scene.hero, heroHealed, "#44ff44", "+");
+  }
+
+  // invocations ET pnj escortes (isEscort : meme structure que les
+  // invocations, cf. quests.js convertNpcToEscortSummon)
+  for (const summon of scene.summons) {
+    if (summon.hp <= 0 || !summon.sprite || !summon.sprite.active) continue;
+    const dist = Math.hypot(
+      summon.sprite.x - scene.hero.x,
+      summon.sprite.y - scene.hero.y,
+    );
+    if (dist > def.radius) continue;
+
+    const maxHp = summon.maxHp ?? summon.hp;
+    const before = summon.hp;
+    summon.hp = Math.min(maxHp, summon.hp + healAmountFor(maxHp));
+    const healed = Math.round(summon.hp - before);
+    if (healed > 0) {
+      scene.showDamageNumber(summon.sprite, healed, "#44ff44", "+");
+    }
+  }
+
+  const circle = scene.add.circle(
+    scene.hero.x,
+    scene.hero.y,
+    10,
+    0x44ff88,
+    0.45,
+  );
+  circle.setDepth(14);
+  scene.tweens.add({
+    targets: circle,
+    radius: def.radius,
+    alpha: 0,
+    duration: 500,
+    onComplete: () => circle.destroy(),
+  });
 }
 
 export function performAoeStunAbility(scene, def) {

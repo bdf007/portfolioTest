@@ -9,6 +9,7 @@ import { ItemIcon, hasIconFrame } from "./InventoryScreen";
  * cf. MainScene.performInteraction qui filtre sur lootItems.length > 0.
  */
 export default function ChestScreen({
+  title = "Coffre",
   items,
   focusedLabel,
   onTakeItem,
@@ -37,7 +38,7 @@ export default function ChestScreen({
           marginBottom: 16,
         }}
       >
-        <h3 style={{ margin: 0 }}>Coffre</h3>
+        <h3 style={{ margin: 0 }}>{title}</h3>
         <button
           onClick={onClose}
           style={{
@@ -56,7 +57,9 @@ export default function ChestScreen({
       </div>
 
       {items.length === 0 ? (
-        <div style={{ color: "#666", fontSize: 13 }}>Le coffre est vide.</div>
+        <div style={{ color: "#666", fontSize: 13 }}>
+          Il n'y a plus rien à prendre.
+        </div>
       ) : (
         <>
           <div

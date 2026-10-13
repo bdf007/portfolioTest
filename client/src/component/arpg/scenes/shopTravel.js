@@ -2,6 +2,7 @@ import { createRng } from "../rng";
 import { resolveItemDef, ITEM_DEFS } from "../itemDefs";
 
 const SELL_PRICE_RATIO = 0.5; // moitie du prix d'achat - cf. sellItem
+const GEM_SELL_RATIO = 0.5; // part du prix des gemmes socketees reversee a la vente de l'objet
 const SHOP_REFRESH_BASE_COST = 50; // cout du 1er rafraichissement du stock sur un etage donne - augmente ensuite a chaque utilisation (cf. getShopRefreshCost)
 const SHOP_STOCK_SIZE_MIN = 3; // doit rester synchronise avec generateShopStock (shopGenerator.js, cote generation de niveau)
 const SHOP_STOCK_SIZE_MAX = 5;
@@ -78,14 +79,14 @@ export function closeTravelHub(scene) {
 }
 
 function getMergedShopStock(scene) {
-  const rerollCount = scene.shopRerollSeed[scene.currentDepth] || 0;
+  const rerollCount = scene.shopRerollSeed?.[scene.currentDepth] || 0;
   const baseStock =
     rerollCount > 0
       ? generateShopStockClient(
           `${scene.currentSeed}-shop-refresh-${scene.currentDepth}-${rerollCount}`,
         )
       : scene.shopData?.stock || [];
-  const soldHere = scene.shopSoldItems[scene.currentDepth] || [];
+  const soldHere = scene.shopSoldItems?.[scene.currentDepth] || [];
   const soldEntries = soldHere.map((s) => {
     const def = resolveItemDef(s.itemId);
     return {
@@ -99,7 +100,7 @@ function getMergedShopStock(scene) {
 }
 
 export function getShopRefreshCost(scene) {
-  const rerollCount = scene.shopRerollSeed[scene.currentDepth] || 0;
+  const rerollCount = scene.shopRerollSeed?.[scene.currentDepth] || 0;
   // cout croissant a chaque utilisation sur CETTE boutique (remis a zero
   // en revenant sur un autre etage/ville) - ajuste le multiplicateur ou
   // passe a une formule non-lineaire si 50/100/150/... est trop plat
@@ -175,31 +176,71 @@ export function buyItem(scene, shopItemIndex, quantity = 1) {
   }
 }
 
-export function sellItem(scene, itemId, quantity = 1) {
+export function sellItem(scene, itemId, quantity = 1, instanceId = null) {
   const def = resolveItemDef(itemId);
   if (!def.price) return;
 
+  // un equipement PORTE reste dans scene.inventory (scene.equipped ne
+  // garde que son instanceId) - il ne doit jamais etre vendable
+  const equippedIds = new Set(Object.values(scene.equipped).filter(Boolean));
+  const isSellable = (entry) =>
+    !(entry.instanceId && equippedIds.has(entry.instanceId));
+
   const haveQty = scene.inventory
-    .filter((i) => i.itemId === itemId)
+    .filter(
+      (i) =>
+        i.itemId === itemId &&
+        isSellable(i) &&
+        (!instanceId || i.instanceId === instanceId),
+    )
     .reduce((s, i) => s + i.quantity, 0);
+  if (haveQty <= 0) {
+    scene.showLootToast("Équipement porté : retire-le d'abord pour le vendre");
+    return;
+  }
   const sellQty = Math.max(1, Math.min(quantity, haveQty));
-  if (sellQty <= 0) return;
 
   // consomme A TRAVERS toutes les entrees correspondantes - pas juste
   // un index precis, indispensable pour un equipement non-empilable ou
   // plusieurs exemplaires identiques vivent dans des entrees SEPAREES
   // (cf. le commentaire de groupInventory dans InventoryScreen.jsx)
+  // valeur des gemmes socketees sur un exemplaire (prix catalogue des gemmes)
+  const gemValueOf = (entry) =>
+    (entry.sockets || [])
+      .filter(Boolean)
+      .reduce((sum, gemId) => sum + (resolveItemDef(gemId).price || 0), 0);
+
+  // exemplaires vendables, SANS gemme d'abord (puis les plus gemmes en
+  // dernier) pour ne jamais vendre par erreur un objet precieux
+  const candidates = scene.inventory
+    .map((entry, index) => ({ entry, index }))
+    .filter(
+      ({ entry }) =>
+        entry.itemId === itemId &&
+        isSellable(entry) &&
+        (!instanceId || entry.instanceId === instanceId),
+    )
+    .sort(
+      (a, b) => gemValueOf(a.entry) - gemValueOf(b.entry) || b.index - a.index,
+    );
+
   let remaining = sellQty;
-  for (let i = scene.inventory.length - 1; i >= 0 && remaining > 0; i--) {
-    const entry = scene.inventory[i];
-    if (entry.itemId !== itemId) continue;
+  let gemBonusGold = 0;
+  const indexesToRemove = [];
+  for (const { entry, index } of candidates) {
+    if (remaining <= 0) break;
     const take = Math.min(entry.quantity, remaining);
+    gemBonusGold += Math.floor(gemValueOf(entry) * GEM_SELL_RATIO);
     entry.quantity -= take;
     remaining -= take;
-    if (entry.quantity <= 0) scene.inventory.splice(i, 1);
+    if (entry.quantity <= 0) indexesToRemove.push(index);
   }
+  indexesToRemove
+    .sort((a, b) => b - a)
+    .forEach((idx) => scene.inventory.splice(idx, 1));
 
-  const sellPrice = Math.floor(def.price * SELL_PRICE_RATIO) * sellQty;
+  const sellPrice =
+    Math.floor(def.price * SELL_PRICE_RATIO) * sellQty + gemBonusGold;
   scene.addItemToInventory("gold", sellPrice);
 
   if (!scene.shopSoldItems[scene.currentDepth])

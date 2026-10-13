@@ -17,6 +17,7 @@ import {
   RING_NECKLACE_ALL_TIERS_SPRITESHEET,
   DETAILS_SPRITESHEET,
   ICON_SCROLL_SPRITESHEET,
+  GEMS_SPRITESHEET,
   ICON_SHEET_1_FRAMES,
   ICON_SHEET_2_FRAMES,
   MONSTER_LOOTS_FRAMES,
@@ -30,6 +31,7 @@ import {
   RING_NECKLACE_TIERS_FRAMES,
   DETAILS_FRAMES,
   ICON_SCROLL_FRAMES,
+  GEMS_SPRITESHEET_FRAMES,
 } from "./spriteRegistry";
 import bookPages from "../../assets/background/book_pages.png";
 
@@ -340,8 +342,8 @@ const ICON_TINTS = {
   monsterCore: null,
   angryBrownMushroomCore: "#8b4513",
   summonAngryBrownMushroomScroll: "#8b4513",
-  gnomeCore: "#80ee6f",
-  summonGnomeScroll: "#80ee6f",
+  gnomeGreenCore: "#167f06",
+  summonGnomeGreenScroll: "#167f06",
   gnomeClaw: "#80ee6f",
   gnomeFurTuft: "#80ee6f",
   angryTrentCore: "#4a7c59",
@@ -362,26 +364,6 @@ const ICON_TINTS = {
   summonRedBeetleScroll: "#cccccc",
   pinkOgreCore: "#cccccc",
   summonPinkOgreScroll: "#cccccc",
-  alien1Core: "#cccccc",
-  summonAlien1Scroll: "#cccccc",
-  alien2Core: "#cccccc",
-  summonAlien2Scroll: "#cccccc",
-  alien3Core: "#cccccc",
-  summonAlien3Scroll: "#cccccc",
-  alien4Core: "#cccccc",
-  summonAlien4Scroll: "#cccccc",
-  alien5Core: "#cccccc",
-  summonAlien5Scroll: "#cccccc",
-  alien6Core: "#cccccc",
-  summonAlien6Scroll: "#cccccc",
-  alien7Core: "#cccccc",
-  summonAlien7Scroll: "#cccccc",
-  alien8Core: "#cccccc",
-  summonAlien8Scroll: "#cccccc",
-  alien9Core: "#cccccc",
-  summonAlien9Scroll: "#cccccc",
-  alien10Core: "#cccccc",
-  summonAlien10Scroll: "#cccccc",
   batCore: "#cccccc",
   summonBatScroll: "#cccccc",
   brownBearCore: "#cccccc",
@@ -430,8 +412,8 @@ const ICON_TINTS = {
   summonGorillaScroll: "#cccccc",
   greendragonCore: "#cccccc",
   summonGreendragonScroll: "#cccccc",
-  ogreCore: "#cccccc",
-  summonOgreScroll: "#cccccc",
+  ogreBrownCore: "#cccccc",
+  summonOgreBrownScroll: "#cccccc",
   redbeetleCore: "#cccccc",
   summonRedbeetleScroll: "#cccccc",
   robot1Core: "#cccccc",
@@ -559,6 +541,116 @@ const ICON_TINTS = {
   summonBeequeenBossScroll: "#cccccc",
   beequeenCore: "#cccccc",
   summonBeequeenScroll: "#cccccc",
+  grayGriblinCore: "#cccccc",
+  summonGrayGriblinScroll: "#cccccc",
+  greenGriblinCore: "#cccccc",
+  summonGreenGriblinScroll: "#cccccc",
+  redGriblinCore: "#cccccc",
+  summonRedGriblinScroll: "#cccccc",
+  blueGriblinCore: "#cccccc",
+  summonBlueGriblinScroll: "#cccccc",
+  purpleGriblinCore: "#cccccc",
+  summonPurpleGriblinScroll: "#cccccc",
+  goldGriblinCore: "#cccccc",
+  summonGoldGriblinScroll: "#cccccc",
+  redManditaureCore: "#cccccc",
+  summonRedManditaureScroll: "#cccccc",
+  blueManditaureCore: "#cccccc",
+  summonBlueManditaureScroll: "#cccccc",
+  greenManditaureCore: "#cccccc",
+  summonGreenManditaureScroll: "#cccccc",
+  purpleManditaureCore: "#cccccc",
+  summonPurpleManditaureScroll: "#cccccc",
+  yellowManditaureCore: "#cccccc",
+  summonYellowManditaureScroll: "#cccccc",
+  blackManditaureCore: "#cccccc",
+  summonBlackManditaureScroll: "#cccccc",
+  purpleSpectrelinCore: "#cccccc",
+  summonPurpleSpectrelinScroll: "#cccccc",
+  orangeSpectrelinCore: "#cccccc",
+  summonOrangeSpectrelinScroll: "#cccccc",
+  cyanSpectrelinCore: "#cccccc",
+  summonCyanSpectrelinScroll: "#cccccc",
+  pinkSpectrelinCore: "#cccccc",
+  summonPinkSpectrelinScroll: "#cccccc",
+  silverSpectrelinCore: "#cccccc",
+  summonSilverSpectrelinScroll: "#cccccc",
+  bronzeSpectrelinCore: "#cccccc",
+  summonBronzeSpectrelinScroll: "#cccccc",
+  greenGemmacrabeCore: "#cccccc",
+  summonGreenGemmacrabeScroll: "#cccccc",
+  redGemmacrabeCore: "#cccccc",
+  summonRedGemmacrabeScroll: "#cccccc",
+  blueGemmacrabeCore: "#cccccc",
+  summonBlueGemmacrabeScroll: "#cccccc",
+  yellowGemmacrabeCore: "#cccccc",
+  summonYellowGemmacrabeScroll: "#cccccc",
+  orangeGemmacrabeCore: "#cccccc",
+  summonOrangeGemmacrabeScroll: "#cccccc",
+  whiteGemmacrabeCore: "#cccccc",
+  summonWhiteGemmacrabeScroll: "#cccccc",
+  blueGrayVesperinCore: "#cccccc",
+  summonBlueGrayVesperinScroll: "#cccccc",
+  silverVesperinCore: "#cccccc",
+  summonSilverVesperinScroll: "#cccccc",
+  goldVesperinCore: "#cccccc",
+  summonGoldVesperinScroll: "#cccccc",
+  copperVesperinCore: "#cccccc",
+  summonCopperVesperinScroll: "#cccccc",
+  steelVesperinCore: "#cccccc",
+  summonSteelVesperinScroll: "#cccccc",
+  emeraldVesperinCore: "#cccccc",
+  summonEmeraldVesperinScroll: "#cccccc",
+  orangeTikorinCore: "#cccccc",
+  summonOrangeTikorinScroll: "#cccccc",
+  lightOakTikorinCore: "#cccccc",
+  summonLightOakTikorinScroll: "#cccccc",
+  walnutTikorinCore: "#cccccc",
+  summonWalnutTikorinScroll: "#cccccc",
+  mahoganyTikorinCore: "#cccccc",
+  summonMahoganyTikorinScroll: "#cccccc",
+  ebonyTikorinCore: "#cccccc",
+  summonEbonyTikorinScroll: "#cccccc",
+  goldenBeechTikorinCore: "#cccccc",
+  summonGoldenBeechTikorinScroll: "#cccccc",
+  pinkLimacorneCore: "#cccccc",
+  summonPinkLimacorneScroll: "#cccccc",
+  deepBlueLimacorneCore: "#cccccc",
+  summonDeepBlueLimacorneScroll: "#cccccc",
+  turquoiseLimacorneCore: "#cccccc",
+  summonTurquoiseLimacorneScroll: "#cccccc",
+  algaeGreenLimacorneCore: "#cccccc",
+  summonAlgaeGreenLimacorneScroll: "#cccccc",
+  coralLimacorneCore: "#cccccc",
+  summonCoralLimacorneScroll: "#cccccc",
+  pearlLimacorneCore: "#cccccc",
+  summonPearlLimacorneScroll: "#cccccc",
+  craquelinCore: "#cccccc",
+  summonCraquelinScroll: "#cccccc",
+  craqueglaceCore: "#cccccc",
+  summonCraqueglaceScroll: "#cccccc",
+  craqueveninCore: "#cccccc",
+  summonCraqueveninScroll: "#cccccc",
+  craquarcaneCore: "#cccccc",
+  summonCraquarcaneScroll: "#cccccc",
+  craquorCore: "#cccccc",
+  summonCraquorScroll: "#cccccc",
+  craquombreCore: "#cccccc",
+  summonCraquombreScroll: "#cccccc",
+  redSlimeCore: "#cccccc",
+  summonRedSlimeScroll: "#cccccc",
+  orangeSlimeCore: "#cccccc",
+  summonOrangeSlimeScroll: "#cccccc",
+  skyBlueSlimeCore: "#cccccc",
+  summonSkyBlueSlimeScroll: "#cccccc",
+  spiderBlackPoisonCore: "#cccccc",
+  summonSpiderBlackPoisonScroll: "#cccccc",
+  spiderBlueAcidCore: "#cccccc",
+  summonSpiderBlueAcidScroll: "#cccccc",
+  spiderBrownIceCore: "#cccccc",
+  summonSpiderBrownIceScroll: "#cccccc",
+  spiderGreenFireCore: "#cccccc",
+  summonSpiderGreenFireScroll: "#cccccc",
 };
 
 /**
@@ -674,6 +766,9 @@ export function ItemIcon({ itemId, scale = 2 }) {
   } else if (ICON_SCROLL_FRAMES[itemId] !== undefined) {
     frameIndex = ICON_SCROLL_FRAMES[itemId];
     spriteSheet = ICON_SCROLL_SPRITESHEET;
+  } else if (GEMS_SPRITESHEET_FRAMES[itemId] !== undefined) {
+    frameIndex = GEMS_SPRITESHEET_FRAMES[itemId];
+    spriteSheet = GEMS_SPRITESHEET;
   } else {
     return null;
   }
@@ -750,6 +845,7 @@ export function hasIconFrame(id) {
     BELT_ALL_TIERS_FRAMES[id] !== undefined ||
     RING_NECKLACE_TIERS_FRAMES[id] !== undefined ||
     ICON_SCROLL_FRAMES[id] !== undefined ||
+    GEMS_SPRITESHEET_FRAMES[id] !== undefined ||
     DETAILS_FRAMES[id] !== undefined
   );
 }
@@ -790,6 +886,11 @@ export default function InventoryScreen({
   // d'utilisation, ou null - ouvre le panneau de selection de la cible ET
   // du socket precis a extraire (cf. plus bas).
   const [extractingScrollIndex, setExtractingScrollIndex] = useState(null);
+  // itemId de l'objet dont on affiche la description detaillee (panneau
+  // au clic), ou null - separe du tooltip `title` existant (def.description,
+  // toujours affiche au survol) : ce panneau montre EN PLUS def.loreText
+  // (texte long, indices de craft/jeu) quand il existe.
+  const [detailItemId, setDetailItemId] = useState(null);
   const heroEntry = SPRITE_REGISTRY[heroId] || SPRITE_REGISTRY.hero1;
   const sheetCols = heroEntry.sheetCols || 12;
   const sheetRows = heroEntry.sheetRows || 8;
@@ -856,7 +957,13 @@ export default function InventoryScreen({
             title={def.description}
           >
             <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-              <div style={{ position: "relative" }}>
+              <div
+                style={{ position: "relative", cursor: "pointer" }}
+                onClick={() =>
+                  setDetailItemId({ itemId, sockets: instance?.sockets || [] })
+                }
+                title="Cliquer pour la description détaillée"
+              >
                 <ItemIcon itemId={itemId} scale={1.1} />
                 {quiverQuantity !== null && (
                   <div
@@ -1054,7 +1161,18 @@ export default function InventoryScreen({
                       flexShrink: 1,
                     }}
                   >
-                    <ItemIcon itemId={group.itemId} scale={1.5} />
+                    <div
+                      style={{ cursor: "pointer" }}
+                      onClick={() =>
+                        setDetailItemId({
+                          itemId: group.itemId,
+                          sockets: group.sockets || [],
+                        })
+                      }
+                      title="Cliquer pour la description détaillée"
+                    >
+                      <ItemIcon itemId={group.itemId} scale={1.5} />
+                    </div>
 
                     <div>
                       <div style={{ fontSize: 12 }}>
@@ -1775,6 +1893,125 @@ export default function InventoryScreen({
               }}
             >
               Annuler
+            </button>
+          </div>
+        </div>
+      )}
+
+      {detailItemId && (
+        <div
+          onClick={() => setDetailItemId(null)}
+          style={{
+            position: "absolute",
+            inset: 0,
+            zIndex: 30,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            background: "rgba(0,0,0,0.6)",
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: "#2a2015",
+              border: "1px solid #8a7050",
+              borderRadius: 8,
+              padding: 16,
+              minWidth: 240,
+              maxWidth: 360,
+              maxHeight: "70%",
+              overflowY: "auto",
+              color: "#f0e6d0",
+            }}
+          >
+            {(() => {
+              const def = resolveItemDef(detailItemId.itemId);
+              if (!def) return null;
+              const socketedGems = (detailItemId.sockets || []).filter(Boolean);
+              return (
+                <>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 10,
+                      marginBottom: 10,
+                    }}
+                  >
+                    <ItemIcon itemId={detailItemId.itemId} scale={2} />
+                    <h4 style={{ margin: 0, fontSize: 14 }}>{def.name}</h4>
+                  </div>
+                  <div
+                    style={{ fontSize: 12, color: "#e0d4ba", marginBottom: 10 }}
+                  >
+                    {def.description}
+                  </div>
+                  {socketedGems.length > 0 && (
+                    <div
+                      style={{
+                        fontSize: 11,
+                        color: "#9fd6c8",
+                        marginBottom: 10,
+                        borderTop: "1px solid rgba(138,112,80,0.4)",
+                        paddingTop: 8,
+                      }}
+                    >
+                      <div
+                        style={{
+                          fontSize: 10,
+                          color: "#8a7050",
+                          marginBottom: 3,
+                          textTransform: "uppercase",
+                          letterSpacing: 0.5,
+                        }}
+                      >
+                        Gemmes enchâssées
+                      </div>
+                      {socketedGems.map((gemId, i) => {
+                        const gemDef = resolveItemDef(gemId);
+                        return (
+                          <div key={i} style={{ marginBottom: 2 }}>
+                            <strong>{gemDef?.name || gemId}</strong>
+                            {gemDef?.description
+                              ? ` — ${gemDef.description}`
+                              : ""}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                  {def.loreText ? (
+                    <div
+                      style={{
+                        fontSize: 11,
+                        color: "#c9b896",
+                        fontStyle: "italic",
+                        borderTop: "1px solid rgba(138,112,80,0.4)",
+                        paddingTop: 10,
+                        whiteSpace: "pre-wrap",
+                      }}
+                    >
+                      {def.loreText}
+                    </div>
+                  ) : null}
+                </>
+              );
+            })()}
+            <button
+              onClick={() => setDetailItemId(null)}
+              style={{
+                marginTop: 12,
+                fontSize: 11,
+                padding: "3px 8px",
+                borderRadius: 5,
+                border: "1px solid #8a7050",
+                background: "none",
+                color: "#f0e6d0",
+                cursor: "pointer",
+              }}
+            >
+              Fermer
             </button>
           </div>
         </div>

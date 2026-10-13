@@ -1,7 +1,4 @@
-import {
-  computeFamiliarGrowthScale,
-  spawnSummonSprite,
-} from "./summons";
+import { computeFamiliarGrowthScale, spawnSummonSprite } from "./summons";
 import { giveStartingKit } from "./inventory";
 import { saveProgress } from "../../../api/arpgClient";
 import { getPlayerStatsForLevel } from "../leveling";
@@ -46,6 +43,8 @@ export async function resumeFromSave(scene, save) {
   scene.unlockedRecipes = ps.unlockedRecipes || [];
   scene.discoveredLockedRecipes = ps.discoveredLockedRecipes || [];
   scene.shopSoldItems = ps.shopSoldItems || {};
+  scene.rescuedNpcs = ps.rescuedNpcs || [];
+  scene.questChains = ps.questChains || {};
   scene.shopRerollSeed = ps.shopRerollSeed || {};
   scene.obtainedUniqueItems = ps.obtainedUniqueItems || [];
   scene.furyKillCount = ps.furyKillCount || 0;
@@ -102,7 +101,8 @@ export async function resumeFromSave(scene, save) {
     const sourceAbilityDef = ABILITY_DEFS[savedSummon.sourceAbilityId];
     const growthConfig = sourceAbilityDef?.growthConfig || null;
     const growthScale = computeFamiliarGrowthScale(scene, growthConfig);
-    const sprite = spawnSummonSprite(scene,
+    const sprite = spawnSummonSprite(
+      scene,
       savedSummon.spriteKey,
       scene.hero.x + (Math.random() - 0.5) * 40,
       scene.hero.y + (Math.random() - 0.5) * 40,
@@ -234,6 +234,21 @@ export async function persistProgressAsync(scene) {
             y: c.y,
             variantIndex: CHEST_VARIANTS.indexOf(c.variant),
             opened: c.opened,
+            propType: c.propType,
+            lootItems: c.lootItems.map((i) => ({ ...i })),
+            // cadavres : de quoi recréer le sprite figé sur sa dernière frame
+            corpse:
+              c.propType === "corpse" && c.sprite
+                ? {
+                    textureKey: c.sprite.texture.key,
+                    frame: c.sprite.frame.name,
+                    px: c.sprite.x,
+                    py: c.sprite.y,
+                    scale: c.sprite.scaleX,
+                    flipX: c.sprite.flipX,
+                    enemyName: c.enemyName || null,
+                  }
+                : null,
           })),
         currentFloorChestRemainingLoot: scene.currentFloorChestRemainingLoot,
         currentFloorLootSeed: scene.currentFloorLootSeed,
@@ -243,6 +258,8 @@ export async function persistProgressAsync(scene) {
         unlockedRecipes: scene.unlockedRecipes,
         discoveredLockedRecipes: scene.discoveredLockedRecipes,
         shopSoldItems: scene.shopSoldItems,
+        rescuedNpcs: scene.rescuedNpcs,
+        questChains: scene.questChains,
         shopRerollSeed: scene.shopRerollSeed,
         obtainedUniqueItems: scene.obtainedUniqueItems,
         summons: scene.summons.map((s) => ({
