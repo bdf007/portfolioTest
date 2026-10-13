@@ -1,6 +1,7 @@
 const { createRng } = require("./rng");
 const { reachableFloorSet } = require("./bossRoom");
 const { getEnemyStatsForDepth } = require("./enemyStats");
+const { pickWeightedId } = require("./weightedPick");
 
 const WALL = 1;
 const FLOOR = 0;
@@ -328,8 +329,7 @@ function generateSecretRoom(
     for (let i = 0; i < enemyCount; i++) {
       const ex = chosen.roomX + Math.floor(rng() * (2 * half + 1)) - half;
       const ey = chosen.roomY + Math.floor(rng() * (2 * half + 1)) - half;
-      const typeKey =
-        enemyTypeCandidates[Math.floor(rng() * enemyTypeCandidates.length)];
+      const typeKey = pickWeightedId(enemyTypeCandidates, rng());
       const stats = getEnemyStatsForDepth(depth, typeKey);
       enemySpawns.push({
         x: ex,

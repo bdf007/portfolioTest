@@ -28,21 +28,17 @@ const BIOMES = [
     maxDepth: 1,
     generator: "drunkardwalk",
     tileset: [
-      "muddyCave_0_0",
-      "muddyCaveV2_0_0",
-      "muddyCaveV3_0_0",
-      "muddyCaveV4_0_0",
-      "muddyCaveV5_0_0",
-      "muddyCaveV6_0_0",
-      "muddyCaveV7_0_0",
-      "muddyCaveV8_0_0",
-      "muddyCaveV9_0_0",
-      "muddyCaveV10_0_0",
-      "muddyCaveV11_0_0",
+      { id: "muddyCave_0_0", weight: 5 },
+      { id: "muddyCaveV2_0_0", weight: 3 },
+      "muddyCaveV3_0_0", // une chaine seule = poids 1
+      { id: "muddyCaveV11_0_0", weight: 0.5 }, // rare
     ],
     // tileset: "standardFields_2_1_1",
     enemyBaseCount: 5,
-    enemyTypes: ["greenSlime"],
+    enemyTypes: [
+      { id: "greenSlime", weight: 9 },
+      { id: "yellowSlime", weight: 1 },
+    ],
     decorationConfig: {
       count: [40, 60], // genereux - c'est fait pour remplir le biome
       decorTypes: [
@@ -119,11 +115,11 @@ const BIOMES = [
     ],
     enemyBaseCount: 2,
     enemyTypes: [
-      "angryTrent",
-      "angryTrentGrey",
-      "angryTrentOrange",
-      "angryTrentRed",
-      "angryTrentYellow",
+      { id: "angryTrent", weight: 5 },
+      { id: "angryTrentGrey", weight: 3 },
+      { id: "angryTrentOrange", weight: 2 },
+      { id: "angryTrentRed", weight: 1 },
+      { id: "angryTrentYellow", weight: 1 },
     ],
     decorationConfig: {
       count: [40, 60], // genereux - c'est fait pour remplir le biome

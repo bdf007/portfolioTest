@@ -59,6 +59,10 @@ const {
   getQuestItemIds,
 } = require("../services/generation/itemTypes");
 const { createRng } = require("../services/generation/rng");
+const {
+  pickWeightedId,
+  getEnemyTypeIds,
+} = require("../services/generation/weightedPick");
 const ArpgGame = require("../models/ArpgModel");
 const {
   isBossDepth,
@@ -103,9 +107,7 @@ async function getLevel(req, res) {
     // `seed` est reutilise tel quel a chaque relecture du meme etage,
     // contrairement a `lootSeed` (cf. commentaire plus haut).
     const tileset = Array.isArray(biome.tileset)
-      ? biome.tileset[
-          Math.floor(createRng(`${seed}-tileset`)() * biome.tileset.length)
-        ]
+      ? pickWeightedId(biome.tileset, createRng(`${seed}-tileset`)())
       : biome.tileset;
 
     let grid;
@@ -290,8 +292,8 @@ async function getLevel(req, res) {
       const nextBiome = getBiomeForDepth(depth + 1);
       const enemyTypePool = [
         ...new Set([
-          ...(prevBiome.enemyTypes || []),
-          ...(nextBiome.enemyTypes || []),
+          ...getEnemyTypeIds(prevBiome),
+          ...getEnemyTypeIds(nextBiome),
         ]),
       ];
 
@@ -406,7 +408,9 @@ async function getLevel(req, res) {
           npcPos.y === upstairsTile.y;
 
         if (npcPos && !collidesWithUpstairs) {
-          const currentFloorEnemyTypes = biome.enemyTypes || ["enemyDefault"];
+          const currentFloorEnemyTypes = biome.enemyTypes
+            ? getEnemyTypeIds(biome)
+            : ["enemyDefault"];
           const enemyLootPoolThisFloor = currentFloorEnemyTypes
             .filter(
               (typeKey) =>
@@ -600,10 +604,7 @@ async function getLevel(req, res) {
     const enemyLootRng = createRng(lootSeed + "-enemy-loot");
     const enemyTypeCandidates = biome.enemyTypes || ["enemyDefault"];
     const enemies = enemySpawns.map((spawn) => {
-      const typeKey =
-        enemyTypeCandidates[
-          Math.floor(enemyTypeRng() * enemyTypeCandidates.length)
-        ];
+      const typeKey = pickWeightedId(enemyTypeCandidates, enemyTypeRng());
       const stats = getEnemyStatsForDepth(depth, typeKey);
       return {
         x: spawn.x,
