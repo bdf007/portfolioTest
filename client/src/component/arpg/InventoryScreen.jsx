@@ -651,8 +651,6 @@ const ICON_TINTS = {
   summonSpiderBrownIceScroll: "#cccccc",
   spiderGreenFireCore: "#cccccc",
   summonSpiderGreenFireScroll: "#cccccc",
-  greenSlimeCore: "#cccccc",
-  summonGreenSlimeScroll: "#cccccc",
 };
 
 /**
