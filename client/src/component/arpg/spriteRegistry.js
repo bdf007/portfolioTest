@@ -1257,7 +1257,7 @@ export const SPRITE_REGISTRY = {
     "hero13",
     thiefMaleSpritesheet,
     FULL_ANIMATION_FRAMES,
-    0.4,
+    0.45,
     4,
     16,
     96,

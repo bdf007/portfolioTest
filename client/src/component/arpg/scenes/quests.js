@@ -11,6 +11,7 @@ import { findPath } from "../pathfinding";
 import {
   installChainQuests,
   advanceQuestChain,
+  getPendingChainStepFor,
   getChainTargetKeys,
 } from "./questChains";
 
@@ -686,7 +687,7 @@ export function openQuestDialog(scene, npc) {
       text = custom.complete || `Merci pour ${qtyLabel} !`;
     } else if (qs.accepted && hasEnough) {
       text =
-        custom.progress ||
+        custom.ready ||
         `Tu en as assez ! Rends-moi ${qtyLabel} contre une récompense.`;
       canTurnIn = true;
     } else if (qs.accepted) {
@@ -711,8 +712,7 @@ export function openQuestDialog(scene, npc) {
     if (qs.completed) {
       text = custom.complete || `Merci d'avoir vaincu ${bossName} !`;
     } else if (qs.accepted && qs.bossDefeated) {
-      text =
-        custom.progress || `Tu l'as vaincu ! Tu peux réclamer ta récompense.`;
+      text = custom.ready || `Tu l'as vaincu ! Tu peux réclamer ta récompense.`;
       canTurnIn = true;
     } else if (qs.accepted) {
       text =
@@ -758,7 +758,7 @@ export function openQuestDialog(scene, npc) {
         const hasItem = scene.inventory.some((i) => i.itemId === qs.itemId);
         if (hasItem) {
           text =
-            custom.progress || `Tu as mon colis ! Merci de me l'avoir apporté.`;
+            custom.ready || `Tu as mon colis ! Merci de me l'avoir apporté.`;
           canTurnIn = true;
         } else {
           text = custom.progress || `J'attends toujours mon colis...`;
@@ -794,7 +794,7 @@ export function openQuestDialog(scene, npc) {
         );
         if (escortArrived) {
           text =
-            custom.progress ||
+            custom.ready ||
             `Te voilà enfin ! Merci de m'avoir escorté jusqu'ici.`;
           canTurnIn = true;
         } else {
@@ -829,7 +829,7 @@ export function openQuestDialog(scene, npc) {
         (s) => s.isEscort && s.escortQuestKey === questKey,
       );
       if (escortPresent) {
-        text = custom.progress || `Tu l'as retrouvé ! Merci infiniment.`;
+        text = custom.ready || `Tu l'as retrouvé ! Merci infiniment.`;
         canTurnIn = true;
       } else {
         text = `Où est mon ami ? Ramène-le moi en vie !`;
@@ -846,7 +846,7 @@ export function openQuestDialog(scene, npc) {
     const enemyName = resolveEnemyTargetName(qs.targetEnemyType);
     text = custom.complete || `Merci d'avoir tué ces ${enemyName} pour moi !`;
   } else if (qs.accepted && qs.killCount >= qs.target) {
-    text = custom.progress || `C'est fait ! Tu peux réclamer ta récompense.`;
+    text = custom.ready || `C'est fait ! Tu peux réclamer ta récompense.`;
     canTurnIn = true;
   } else if (qs.accepted) {
     const enemyName = resolveEnemyTargetName(qs.targetEnemyType);
@@ -881,6 +881,7 @@ export function acceptQuest(scene) {
       // libere le captif : il devient une escorte rattachee a la quete du
       // PNJ de ville (meme cle que celle ouverte dans openQuestDialog)
       scene.questNpcs = scene.questNpcs.filter((n) => n !== npc);
+      clearNpcMarkers(npc);
       const alreadyEscorting = scene.summons.some(
         (s) => s.isEscort && s.escortQuestKey === scene.activeDialogQuestKey,
       );
@@ -931,6 +932,7 @@ export function acceptQuest(scene) {
       const npc = scene.activeTalkingNpc;
       if (npc) {
         scene.questNpcs = scene.questNpcs.filter((n) => n !== npc);
+        clearNpcMarkers(npc);
 
         // garde-fou supplementaire (en plus de celui de createQuestNpcs) :
         // ne jamais creer une deuxieme invocation d'escorte pour la meme
@@ -1198,7 +1200,194 @@ export function closeDialog(scene) {
   scene.events.emit("npc-dialog", null);
 }
 
+// decalage (px) pour compenser les marges transparentes d'une frame de
+// sprite - a ajuster si le texte flotte trop haut ou touche la tete
+const NPC_MARKER_HEAD_PAD = 8;
+const NPC_MARKER_IMAGE_HEIGHT = 22; // hauteur affichee (px) quand le marqueur est un sprite
+const NPC_MARKER_STYLES = {
+  // textureKey : cle d'image (cf. TILE_IMAGE_REGISTRY dans spriteRegistry.js) ;
+  // tant qu'elle n'est pas chargee, le texte (char/color) sert de repli
+  offer: { char: "!", color: "#ffd700", textureKey: "marker_offer" }, // quete a prendre
+  progress: { char: "?", color: "#ffd700", textureKey: "marker_progress" }, // quete en cours
+  ready: { char: "?", color: "#44dd44", textureKey: "marker_ready" }, // quete a rendre
+};
+
+/**
+ * Etat de la quete d'un pnj pour le marqueur au-dessus de sa tete :
+ * "offer" | "progress" | "ready" | null (rien a afficher), + son nom
+ * (quetes de chaine, cf. qs.npcName / CHAIN_NPCS).
+ */
+function getNpcQuestStatus(scene, npc) {
+  if (npc.isCaptive) return { status: null, name: null };
+  const qs = scene.quests[npc.questKey];
+  const pending = getPendingChainStepFor(scene, npc.npcIndex);
+  const name = (qs && qs.npcName) || (pending && pending.name) || null;
+
+  if (!qs || qs.completed || qs.failed) {
+    return { status: pending ? "offer" : null, name };
+  }
+
+  const countItem = (itemId) =>
+    scene.inventory
+      .filter((i) => i.itemId === itemId)
+      .reduce((sum, i) => sum + i.quantity, 0);
+
+  let status = null;
+  switch (qs.questId) {
+    case "obtainItem":
+      if (!qs.accepted) status = "offer";
+      else if (countItem(qs.targetItemId) >= (qs.targetQuantity || 1))
+        status = "ready";
+      else status = "progress";
+      break;
+    case "defeatBoss":
+      if (!qs.accepted) status = "offer";
+      else status = qs.bossDefeated ? "ready" : "progress";
+      break;
+    case "delivery":
+      if (qs.role === "receiver") {
+        if (scene.quests[qs.linkedKey]?.accepted && countItem(qs.itemId) > 0)
+          status = "ready";
+      } else {
+        status = qs.accepted ? "progress" : "offer";
+      }
+      break;
+    case "escort":
+      if (qs.role === "receiver") {
+        const arrived = scene.summons.some(
+          (s) => s.isEscort && s.escortQuestKey === qs.linkedKey,
+        );
+        if (scene.quests[qs.linkedKey]?.accepted && arrived) status = "ready";
+      } else {
+        status = "offer";
+      }
+      break;
+    case "rescue":
+      if (!qs.accepted) status = "offer";
+      else if (
+        qs.captiveFreed &&
+        scene.summons.some(
+          (s) => s.isEscort && s.escortQuestKey === npc.questKey,
+        )
+      )
+        status = "ready";
+      else status = "progress";
+      break;
+    default:
+      // killEnemies et autres
+      if (!qs.accepted) status = "offer";
+      else status = qs.killCount >= qs.target ? "ready" : "progress";
+  }
+  return { status, name };
+}
+
+function ensureNpcTexts(scene, npc) {
+  if (npc.markerText) return;
+  npc.nameText = scene.add
+    .text(0, 0, "", {
+      fontFamily: "Arial",
+      fontSize: "11px",
+      color: "#ffffff",
+      stroke: "#000000",
+      strokeThickness: 3,
+    })
+    .setOrigin(0.5, 1)
+    .setDepth(11)
+    .setVisible(false);
+  npc.markerText = scene.add
+    .text(0, 0, "", {
+      fontFamily: "Arial",
+      fontSize: "22px",
+      fontStyle: "bold",
+      color: "#ffd700",
+      stroke: "#000000",
+      strokeThickness: 4,
+    })
+    .setOrigin(0.5, 1)
+    .setDepth(11)
+    .setVisible(false);
+  npc.markerImage = scene.add
+    .image(0, 0, "__DEFAULT")
+    .setOrigin(0.5, 1)
+    .setDepth(11)
+    .setVisible(false);
+  // les textes/images suivent la vie du sprite (changement d'etage, escorte...)
+  npc.sprite.once("destroy", () => {
+    if (npc.nameText) npc.nameText.destroy();
+    if (npc.markerText) npc.markerText.destroy();
+    if (npc.markerImage) npc.markerImage.destroy();
+    npc.nameText = null;
+    npc.markerText = null;
+    npc.markerImage = null;
+  });
+}
+
+function updateNpcMarkers(scene, npc, forcedInfo = null) {
+  if (!npc.sprite || !npc.sprite.active) return;
+  // pnj ambiants : pas de questKey, donc ni marqueur ni nom (sauf si l'etat
+  // est impose, cf. updateEscortMarkers)
+  if (!forcedInfo && !npc.questKey) return;
+  ensureNpcTexts(scene, npc);
+  const now = scene.time.now;
+  // l'etat n'est recalcule que toutes les 300 ms (pas a chaque frame)
+  if (!npc.markerCheckAt || now >= npc.markerCheckAt) {
+    npc.markerCheckAt = now + 300;
+    const info = forcedInfo || getNpcQuestStatus(scene, npc);
+    const style = info.status ? NPC_MARKER_STYLES[info.status] : null;
+    npc.nameText.setText(info.name || "");
+    // sprite si l'image est chargee, sinon repli sur le texte "!" / "?"
+    const useImage = !!style && scene.textures.exists(style.textureKey);
+    npc.markerKind = !style ? null : useImage ? "image" : "text";
+    if (useImage) {
+      npc.markerImage.setTexture(style.textureKey);
+      npc.markerImage.setScale(
+        NPC_MARKER_IMAGE_HEIGHT / npc.markerImage.height,
+      );
+    }
+    if (style && !useImage)
+      npc.markerText.setText(style.char).setColor(style.color);
+    else npc.markerText.setText("");
+  }
+  const show = npc.sprite.visible; // suit le brouillard de guerre
+  const hasName = !!npc.nameText.text;
+  const markerOn = !!npc.markerKind && !npc.talking && show;
+  const top = npc.sprite.y - npc.sprite.displayHeight / 2 + NPC_MARKER_HEAD_PAD;
+  npc.nameText.setVisible(show && hasName).setPosition(npc.sprite.x, top);
+  const nameHeight = hasName ? npc.nameText.height : 0;
+  const markerY = top - nameHeight - 2 + Math.sin(now / 250) * 2;
+  npc.markerImage
+    .setVisible(markerOn && npc.markerKind === "image")
+    .setPosition(npc.sprite.x, markerY);
+  npc.markerText
+    .setVisible(markerOn && npc.markerKind === "text")
+    .setPosition(npc.sprite.x, markerY);
+}
+
+// retire les marqueurs/nom d'un pnj (ex. quand il devient une escorte)
+function clearNpcMarkers(npc) {
+  if (npc.nameText) npc.nameText.destroy();
+  if (npc.markerText) npc.markerText.destroy();
+  if (npc.markerImage) npc.markerImage.destroy();
+  npc.nameText = null;
+  npc.markerText = null;
+  npc.markerImage = null;
+}
+
+// "?" jaune au-dessus d'un pnj escorte (ou d'un captif libere) qui suit le heros
+function updateEscortMarkers(scene) {
+  for (const summon of scene.summons || []) {
+    if (!summon.isEscort) continue;
+    updateNpcMarkers(scene, summon, { status: "progress", name: null });
+  }
+}
+
 export function updateNpcMovement(scene, npcList) {
+  // marqueurs des escortes (invocations) : une seule fois par frame, cette
+  // fonction etant appelee pour les pnj de quete ET les pnj ambiants
+  if (scene._escortMarkerFrame !== scene.time.now) {
+    scene._escortMarkerFrame = scene.time.now;
+    updateEscortMarkers(scene);
+  }
   if (!npcList) return;
   const state = scene.fogState.state;
 
@@ -1212,6 +1401,7 @@ export function updateNpcMovement(scene, npcList) {
       npcTileX < state[0].length &&
       state[npcTileY][npcTileX] === 2;
     npc.sprite.setVisible(npcVisible);
+    updateNpcMarkers(scene, npc);
 
     if (npc.talking) {
       npc.sprite.setVelocity(0, 0);

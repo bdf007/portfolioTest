@@ -113,13 +113,11 @@ const BIOMES = [
       "muddyCaveV10_0_0",
       "muddyCaveV11_0_0",
     ],
-    enemyBaseCount: 2,
+    enemyBaseCount: 10,
     enemyTypes: [
-      { id: "angryTrent", weight: 5 },
-      { id: "angryTrentGrey", weight: 3 },
-      { id: "angryTrentOrange", weight: 2 },
-      { id: "angryTrentRed", weight: 1 },
-      { id: "angryTrentYellow", weight: 1 },
+      { id: "greenSlime", weight: 9 },
+      { id: "yellowSlime", weight: 1 },
+      { id: "blueSlime", weight: 1 },
     ],
     decorationConfig: {
       count: [40, 60], // genereux - c'est fait pour remplir le biome

@@ -1622,6 +1622,35 @@ export default class MainScene extends Phaser.Scene {
     const range = this.playerMeleeRange;
     const choices = [];
 
+    // PNJ de quete a portee (nom des PNJ de chaine, cf. qs.npcName)
+    for (const npc of this.questNpcs || []) {
+      if (!npc.sprite || !npc.sprite.active) continue;
+      if (Math.hypot(npc.sprite.x - heroX, npc.sprite.y - heroY) > range)
+        continue;
+      const npcName = this.quests[npc.questKey]?.npcName;
+      choices.push({
+        label: npcName
+          ? `Parler à ${npcName}`
+          : npc.isCaptive
+            ? "Parler au captif"
+            : "Parler au PNJ",
+        run: () => openQuestDialog(this, npc),
+      });
+    }
+
+    // PNJ ambiants a portee
+    for (const ambient of this.ambientNpcs || []) {
+      if (!ambient.sprite || !ambient.sprite.active) continue;
+      if (
+        Math.hypot(ambient.sprite.x - heroX, ambient.sprite.y - heroY) > range
+      )
+        continue;
+      choices.push({
+        label: "Parler au PNJ",
+        run: () => openAmbientDialog(this, ambient),
+      });
+    }
+
     const rock = this.miningRocks.find((r) => {
       if (r.depleted) return false;
       const px = r.data.x * TILE_SIZE + TILE_SIZE / 2;

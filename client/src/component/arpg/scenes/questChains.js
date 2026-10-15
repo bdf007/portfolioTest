@@ -87,6 +87,8 @@ export const QUEST_CHAINS = {
             "Ma sœur m'a tout dit. Les blobs verts ont emporté ce que leur voracité n'avait pas saccagé. Rapporte-moi 6 caisses de marchandise, c'est tout ce qu'il me reste.",
           progress:
             "Les blobs ont dû en emporter un peu partout... Il me faut encore de la marchandise.",
+          ready:
+            "Tu as tout retrouvé ! Donne-moi ça, que je voie si ma marchandise est en bon état.",
           complete: "Je suis sauvé grâce à toi ! Voilà ma dernière récompense.",
           after: "Merci encore pour ton aide !",
         },
@@ -111,8 +113,9 @@ export const QUEST_CHAINS = {
           offer:
             "Un blob vert rôde dans les parages. Il m'a volé ma pioche. Peux-tu t'en occuper ?",
           progress: "As-tu retrouvé ma pioche ?",
+          ready: "Ma pioche ! Tu l'as retrouvée !",
           complete:
-            "Merci de m'avoir rapporté ma pioche. \n\nJe vais pouvoir commencer à miner de nouveau filon.  \n\nTiens prends ma pioche d'apprenti en récompense et reviens me voir si tu as besoin d'aide.",
+            "Merci de m'avoir rapporté ma pioche. \nJe vais pouvoir commencer à miner de nouveau filon.  \nTiens prends ma pioche d'apprenti en récompense, \nelle te permettra de récupérer du minerai de cuivre et du charbon. \nReviens me voir si tu as besoin d'aide.",
         },
       },
       {
@@ -129,7 +132,8 @@ export const QUEST_CHAINS = {
         dialogText: {
           offer:
             "Il me faudrait 6 minerais de cuivre. Equipe toi de ta pioche et rapporte-les-moi et je te montrerai comment les fondre.",
-          after: "Avec un peu de pratique, tu fondras tes propres lingots.",
+          after:
+            "Avec un peu de pratique et en appuyant sur 'G', tu fondras tes propres lingots.",
         },
       },
     ],
@@ -381,4 +385,26 @@ export function advanceQuestChain(scene, qs) {
   );
   scene.events.emit("quests-updated", { ...scene.quests });
   scene.persistProgress();
+}
+
+/**
+ * Etape de chaine qui attend CE pnj sur l'etage courant (sinon null) -
+ * sert a afficher le "!" au-dessus d'un pnj dont la prochaine etape n'est
+ * pas encore posee (elle ne l'est qu'a l'ouverture du dialogue, cf.
+ * installChainQuests), et son nom (CHAIN_NPCS).
+ */
+export function getPendingChainStepFor(scene, npcIndex) {
+  for (const chain of Object.values(QUEST_CHAINS)) {
+    const state = (scene.questChains && scene.questChains[chain.id]) || {
+      step: 0,
+      done: false,
+    };
+    if (state.done) continue;
+    const step = chain.steps[state.step];
+    if (!step || step.at.depth !== scene.currentDepth) continue;
+    if (resolveStepNpcIndex(step) !== npcIndex) continue;
+    const npcDef = step.npc ? CHAIN_NPCS[step.npc] : null;
+    return { name: npcDef ? npcDef.name : null };
+  }
+  return null;
 }
