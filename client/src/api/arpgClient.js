@@ -48,6 +48,7 @@ export async function fetchLevel(
   if (!res.ok) {
     throw new Error(`fetchLevel: ${res.status}`);
   }
+  console.log("res.json()", await res.clone().json());
   return res.json();
 }
 
@@ -121,4 +122,56 @@ export async function deleteGame(gameId) {
     throw new Error(`deleteGame: ${res.status}`);
   }
   return res.json();
+}
+
+// ---------------------------------------------------------------------------
+// Editeur de niveaux faits main (routes /api/arpg/editor/*, reservees aux
+// comptes de la variable d'environnement ARPG_EDITOR_USERS cote serveur)
+// ---------------------------------------------------------------------------
+
+async function editorRequest(path, options) {
+  const res = await fetch(`/api/arpg/editor${path}`, {
+    credentials: "include",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...(options && options.headers),
+    },
+  });
+  let body = null;
+  try {
+    body = await res.json();
+  } catch (e) {
+    /* corps vide ou non-JSON */
+  }
+  if (!res.ok) {
+    throw new Error((body && body.error) || `Erreur ${res.status}`);
+  }
+  return body;
+}
+
+/** { allowed: boolean } - faut-il afficher le bouton de l'editeur ? */
+export function fetchEditorStatus() {
+  return editorRequest("/status");
+}
+
+/** { depths: number[], enemyTypes: string[] } */
+export function fetchEditorLevels() {
+  return editorRequest("/levels");
+}
+
+/** { level: object|null } - contenu brut du fichier depth-<N>.json */
+export function fetchEditorLevel(depth) {
+  return editorRequest(`/levels/${depth}`);
+}
+
+export function saveEditorLevel(depth, level) {
+  return editorRequest(`/levels/${depth}`, {
+    method: "PUT",
+    body: JSON.stringify({ level }),
+  });
+}
+
+export function deleteEditorLevel(depth) {
+  return editorRequest(`/levels/${depth}`, { method: "DELETE" });
 }

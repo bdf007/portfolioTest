@@ -63,6 +63,11 @@ const {
   pickWeightedId,
   getEnemyTypeIds,
 } = require("../services/generation/weightedPick");
+const {
+  loadHandmadeLevel,
+  hydrateChests,
+  hydrateMiningRocks,
+} = require("../services/generation/handmadeLevel");
 const ArpgGame = require("../models/ArpgModel");
 const {
   isBossDepth,
@@ -98,6 +103,15 @@ async function getLevel(req, res) {
 
     const biome = getBiomeForDepth(depth);
 
+    // niveau "fait main" (fichier handmadeLevels/depth-<N>.json, cf.
+    // handmadeLevel.js) : null s'il n'y en a pas pour cet etage - le reste
+    // de la fonction fonctionne alors EXACTEMENT comme avant. gen(cat) dit
+    // si une categorie (enemies, chests, crates, traps, miningRocks,
+    // forageNodes, decorations) doit etre generee : toujours vrai sans
+    // niveau fait main, sinon seulement si "generate" la demande.
+    const handmade = await loadHandmadeLevel(depth);
+    const gen = (category) => !handmade || handmade.generate[category] === true;
+
     // certains biomes proposent plusieurs tilesets possibles (cf.
     // biomeConfig.js, ex. tileset: ["springForest_0_0", "autumnForest_0_0"])
     // - le choix doit rester IDENTIQUE tant qu'on relit le meme etage (F5,
@@ -106,9 +120,12 @@ async function getLevel(req, res) {
     // tirages seedes de ce fichier (cf. bossLootRng, npcCountRng...) -
     // `seed` est reutilise tel quel a chaque relecture du meme etage,
     // contrairement a `lootSeed` (cf. commentaire plus haut).
-    const tileset = Array.isArray(biome.tileset)
-      ? pickWeightedId(biome.tileset, createRng(`${seed}-tileset`)())
-      : biome.tileset;
+    const tileset =
+      handmade && handmade.tileset
+        ? handmade.tileset
+        : Array.isArray(biome.tileset)
+          ? pickWeightedId(biome.tileset, createRng(`${seed}-tileset`)())
+          : biome.tileset;
 
     let grid;
     let townBuildings = []; // rempli uniquement pour le biome 'town' - sert a placer l'entree de la boutique (cf. findBuildingFrontTile)
@@ -125,7 +142,11 @@ async function getLevel(req, res) {
       ...(biome.generatorParams || {}),
     };
 
-    switch (biome.generator) {
+    switch (handmade ? "handmade" : biome.generator) {
+      case "handmade":
+        grid = handmade.grid;
+        townBuildings = handmade.townBuildings;
+        break;
       case "cellular":
         grid = generateCave(genParams);
         break;
@@ -176,14 +197,16 @@ async function getLevel(req, res) {
         throw new Error(`Générateur inconnu pour le biome ${biome.id}`);
     }
 
-    const playerSpawn = findSpawnTile(grid, seed);
+    const playerSpawn = handmade
+      ? handmade.playerSpawn
+      : findSpawnTile(grid, seed);
 
     // salle de boss : remplace le calcul normal de la sortie (qui se
     // retrouve A L'INTERIEUR de la salle scellee, cf. carveBossRoom) et
     // restreint les ennemis normaux aux zones reellement atteignables
     // (porte fermee) - sans ca, un ennemi normal pourrait atterrir dans
     // la salle scellee et rendre impossible de nettoyer l'etage.
-    const hasBoss = isBossDepth(depth);
+    const hasBoss = !handmade && isBossDepth(depth); // pas de boss sur un niveau fait main (phase 1)
     let exitTile;
     let bossDoorTile = null;
     let boss = null;
@@ -221,7 +244,7 @@ async function getLevel(req, res) {
         varianceDice: bossConfig.stats.varianceDice || null,
       };
     } else {
-      exitTile = findExitTile(grid, playerSpawn);
+      exitTile = handmade ? handmade.exitTile : findExitTile(grid, playerSpawn);
     }
 
     // jamais de remontee depuis le premier etage - sinon, meme principe
@@ -229,8 +252,9 @@ async function getLevel(req, res) {
     // valide n'est trouvee (carte trop exigue) plutot que de planter.
     // Exclut la porte du boss si elle existe, pour ne jamais faire
     // coincider les deux landmarks.
-    const upstairsTile =
-      depth > 1
+    const upstairsTile = handmade
+      ? handmade.upstairsTile
+      : depth > 1
         ? findUpstairsTile(
             grid,
             playerSpawn,
@@ -241,7 +265,7 @@ async function getLevel(req, res) {
     // jamais sur un etage a boss - risquerait de creuser dans/pres de la
     // salle du boss, jamais teste ensemble
     let secretRoom = null;
-    if (!hasBoss) {
+    if (!hasBoss && !handmade) {
       secretRoom = generateSecretRoom(
         grid,
         seed,
@@ -261,7 +285,32 @@ async function getLevel(req, res) {
     // (aleatoire sur un etage normal, sous condition) sont prevues plus
     // tard mais pas construites ici.
     let questNpcs = [];
-    if (biome.id === "town") {
+    if (handmade) {
+      // PNJ places a la main : meme logique de quete que partout ailleurs
+      // (quete ecrite a la main pour ce PNJ si elle existe, sinon quete
+      // generee), mais aux positions du fichier. Bassin d'ennemis : ceux du
+      // biome de l'etage, ou a defaut (ville) ceux de l'etage d'avant/apres.
+      const handmadeEnemyPool =
+        biome.enemyTypes && biome.enemyTypes.length > 0
+          ? getEnemyTypeIds(biome)
+          : [
+              ...new Set([
+                ...getEnemyTypeIds(getBiomeForDepth(depth - 1)),
+                ...getEnemyTypeIds(getBiomeForDepth(depth + 1)),
+              ]),
+            ];
+      questNpcs = handmade.questNpcs.map((npc) => {
+        const fixedQuest = getFixedQuest(depth, npc.npcIndex);
+        const quest =
+          fixedQuest ||
+          generateQuestForNpc(
+            `${seed}-npc-${npc.npcIndex}`,
+            handmadeEnemyPool.length > 0 ? handmadeEnemyPool : ["enemyDefault"],
+            depth,
+          );
+        return { x: npc.x, y: npc.y, npcIndex: npc.npcIndex, ...quest };
+      });
+    } else if (biome.id === "town") {
       const npcCountRng = createRng(seed + "-quest-npc-count");
       const npcCount = 1 + Math.floor(npcCountRng() * 3); // 1 a 3
 
@@ -450,8 +499,8 @@ async function getLevel(req, res) {
     // aucune donnee de destinations : le CLIENT connait deja tous les
     // etages visites (this.visitedFloors), le serveur n'a qu'a placer le
     // point d'interaction, en evitant la remontee et les PNJ de quete.
-    let travelHubTile = null;
-    if (biome.id === "town") {
+    let travelHubTile = handmade ? handmade.travelHubTile : null;
+    if (!handmade && biome.id === "town") {
       const excludeTiles = [];
       if (upstairsTile) excludeTiles.push(upstairsTile);
       for (const npc of questNpcs) excludeTiles.push({ x: npc.x, y: npc.y });
@@ -465,8 +514,15 @@ async function getLevel(req, res) {
     // coherent visuellement qu'une case de sol quelconque. Repli sur
     // l'ancienne recherche generique si aucun batiment ne convient
     // (aucun batiment genere, ou tous leurs devants exclus/deja pris).
-    let shop = null;
-    if (biome.id === "town") {
+    let shop =
+      handmade && handmade.shop
+        ? {
+            x: handmade.shop.x,
+            y: handmade.shop.y,
+            stock: generateShopStock(seed),
+          }
+        : null;
+    if (!handmade && biome.id === "town") {
       const excludeTiles = [];
       if (upstairsTile) excludeTiles.push(upstairsTile);
       if (travelHubTile) excludeTiles.push(travelHubTile);
@@ -510,8 +566,14 @@ async function getLevel(req, res) {
     // texte de salutation et le sprite sont choisis cote CLIENT (purement
     // cosmetique, cf. MainScene.createAmbientNpcs) - le serveur ne fait
     // que placer les positions.
-    let ambientNpcs = [];
-    if (biome.id === "town") {
+    let ambientNpcs = handmade
+      ? handmade.ambientNpcs.map((pos, npcIndex) => ({
+          x: pos.x,
+          y: pos.y,
+          npcIndex,
+        }))
+      : [];
+    if (!handmade && biome.id === "town") {
       const ambientCountRng = createRng(`${seed}-ambient-npc-count`);
       const ambientCount = 2 + Math.floor(ambientCountRng() * 3); // 2 a 4
 
@@ -580,19 +642,31 @@ async function getLevel(req, res) {
       allowedTilesFull = allowedTiles;
     }
 
+    // niveau fait main : les cases deja occupees par ce qui est ecrit dans le
+    // fichier sont retirees des cases disponibles, pour que ce qui est
+    // GENERE en complement (generate) ne se superpose jamais dessus
+    if (handmade) {
+      for (const tile of handmade.occupiedTiles) {
+        allowedTiles.delete(`${tile.x},${tile.y}`);
+        allowedTilesFull.delete(`${tile.x},${tile.y}`);
+      }
+    }
+
     // Pas de persistance de l'etat "tue/vivant" ici, volontairement : a
     // chaque appel (donc a chaque entree/retour sur cet etage), on
     // regenere une liste d'ennemis fraiche et entierement vivante. C'est
     // ce qui donne le comportement "nettoye tant que le joueur reste,
     // respawn quand il revient" sans avoir besoin d'un systeme de timer -
     // voir le commentaire en tete de enemySpawner.js.
-    const enemySpawns = generateEnemySpawns({
-      grid,
-      seed: lootSeed + "-enemies", // <-- lootSeed au lieu de seed : position variable a chaque vraie revisite, stable en sauvegarde+reprise
-      playerSpawn,
-      enemyCount: biome.enemyBaseCount,
-      allowedTiles,
-    });
+    const enemySpawns = gen("enemies")
+      ? generateEnemySpawns({
+          grid,
+          seed: lootSeed + "-enemies", // <-- lootSeed au lieu de seed : position variable a chaque vraie revisite, stable en sauvegarde+reprise
+          playerSpawn,
+          enemyCount: biome.enemyBaseCount,
+          allowedTiles,
+        })
+      : [];
 
     // stats calculees cote serveur (jamais cote client, cf. commentaire
     // en tete de enemyStats.js), un type d'archetype tire PAR ennemi -
@@ -603,8 +677,10 @@ async function getLevel(req, res) {
     const enemyTypeRng = createRng(lootSeed + "-enemy-types"); // <-- idem, pour le TYPE d'ennemi choisi a chaque point de spawn
     const enemyLootRng = createRng(lootSeed + "-enemy-loot");
     const enemyTypeCandidates = biome.enemyTypes || ["enemyDefault"];
-    const enemies = enemySpawns.map((spawn) => {
-      const typeKey = pickWeightedId(enemyTypeCandidates, enemyTypeRng());
+    // construit un ennemi complet (stats + butin) pour une position et un
+    // type donnes - utilise a la fois pour les ennemis generes et ceux
+    // places a la main (niveau fait main), pour qu'ils ne divergent jamais
+    const buildEnemy = (spawn, typeKey) => {
       const stats = getEnemyStatsForDepth(depth, typeKey);
       return {
         x: spawn.x,
@@ -639,78 +715,132 @@ async function getLevel(req, res) {
           obtainedUniqueItems,
         ),
       };
-    });
+    };
+    // ennemis ecrits a la main d'abord (ordre stable : les indices servent
+    // a retenir les ennemis tues), puis ceux generes
+    const manualEnemies = handmade
+      ? handmade.enemies.map((e) => {
+          if (!ENEMY_TYPES[e.type]) {
+            throw new Error(
+              `[handmadeLevel] etage ${depth} : type d'ennemi inconnu "${e.type}"`,
+            );
+          }
+          return buildEnemy(e, e.type);
+        })
+      : [];
+    const generatedEnemies = enemySpawns.map((spawn) =>
+      buildEnemy(spawn, pickWeightedId(enemyTypeCandidates, enemyTypeRng())),
+    );
+    const enemies = [...manualEnemies, ...generatedEnemies];
 
     // coffres : meme principe que les ennemis (tires cote serveur,
     // contenu deja fixe a la generation) - exclut la salle de boss
     // scellee ET les cases-repere (sortie/escalier/boutique/hub) du
     // placement
-    const realChests = generateChests({
-      grid,
-      seed: lootSeed,
-      lootSeed,
-      playerSpawn,
-      chestCount: biome.chestCount,
-      allowedTiles,
-      lootTable: biome.chestLootTable || "chestStandard",
-      excludeItemIds: obtainedUniqueItems,
-    }).map((c) => ({ ...c, propType: "chest" }));
-    for (const c of realChests) allowedTilesFull.delete(`${c.x},${c.y}`);
-
-    const crates = biome.crateConfig
-      ? generateChests({
+    const manualChests = handmade
+      ? hydrateChests(handmade.chests, {
+          biome,
+          lootSeed,
+          obtainedUniqueItems,
+          rollLoot,
+          createRng,
+        })
+      : [];
+    const realChests = !gen("chests")
+      ? []
+      : generateChests({
           grid,
           seed: lootSeed,
           lootSeed,
           playerSpawn,
-          chestCount: biome.crateConfig.count,
-          allowedTilesFull,
-          lootTable: biome.crateConfig.lootTable || "chestStandard",
-          seedSuffix: "crate",
+          chestCount: biome.chestCount,
+          allowedTiles,
+          lootTable: biome.chestLootTable || "chestStandard",
           excludeItemIds: obtainedUniqueItems,
-        }).map((c) => ({ ...c, propType: "crate" }))
-      : [];
+        }).map((c) => ({ ...c, propType: "chest" }));
+    for (const c of realChests) allowedTilesFull.delete(`${c.x},${c.y}`);
+
+    const crates =
+      gen("crates") && biome.crateConfig
+        ? generateChests({
+            grid,
+            seed: lootSeed,
+            lootSeed,
+            playerSpawn,
+            chestCount: biome.crateConfig.count,
+            allowedTilesFull,
+            lootTable: biome.crateConfig.lootTable || "chestStandard",
+            seedSuffix: "crate",
+            excludeItemIds: obtainedUniqueItems,
+          }).map((c) => ({ ...c, propType: "crate" }))
+        : [];
     for (const c of crates) allowedTilesFull.delete(`${c.x},${c.y}`);
 
-    const chests = [...realChests, ...crates];
+    const chests = [...manualChests, ...realChests, ...crates];
 
-    const traps = generateTraps(
-      grid,
-      lootSeed,
-      playerSpawn,
-      biome.trapConfig,
-      allowedTilesFull,
-    );
-    for (const t of traps) allowedTilesFull.delete(`${t.x},${t.y}`);
-
-    const miningRocks = generateMiningRocks(
-      grid,
-      lootSeed,
-      playerSpawn,
-      biome.miningConfig,
-      allowedTilesFull,
-    );
-    for (const r of miningRocks) allowedTilesFull.delete(`${r.x},${r.y}`);
-
-    const forageNodes = generateForageNodes(
-      grid,
-      lootSeed,
-      playerSpawn,
-      biome.forageConfig,
-      allowedTilesFull,
-    );
-    for (const n of forageNodes) allowedTilesFull.delete(`${n.x},${n.y}`);
-
-    const decorations = biome.decorationConfig
-      ? generateDecorations({
+    const traps = gen("traps")
+      ? generateTraps(
           grid,
           lootSeed,
           playerSpawn,
-          count: biome.decorationConfig.count,
-          decorTypes: biome.decorationConfig.decorTypes,
-          allowedTiles: allowedTilesFull,
+          biome.trapConfig,
+          allowedTilesFull,
+        )
+      : [];
+    for (const t of traps) allowedTilesFull.delete(`${t.x},${t.y}`);
+
+    const manualRocks = handmade
+      ? hydrateMiningRocks(handmade.miningRocks, {
+          biome,
+          lootSeed,
+          createRng,
+          depth,
         })
       : [];
+    const miningRocks = [
+      ...manualRocks,
+      ...(gen("miningRocks")
+        ? generateMiningRocks(
+            grid,
+            lootSeed,
+            playerSpawn,
+            biome.miningConfig,
+            allowedTilesFull,
+          )
+        : []),
+    ];
+    for (const r of miningRocks) allowedTilesFull.delete(`${r.x},${r.y}`);
+
+    const forageNodes = gen("forageNodes")
+      ? generateForageNodes(
+          grid,
+          lootSeed,
+          playerSpawn,
+          biome.forageConfig,
+          allowedTilesFull,
+        )
+      : [];
+    for (const n of forageNodes) allowedTilesFull.delete(`${n.x},${n.y}`);
+
+    const decorations = [
+      ...(handmade
+        ? handmade.decorations.map((d) => ({
+            x: d.x,
+            y: d.y,
+            decorType: d.decorType,
+          }))
+        : []),
+      ...(gen("decorations") && biome.decorationConfig
+        ? generateDecorations({
+            grid,
+            lootSeed,
+            playerSpawn,
+            count: biome.decorationConfig.count,
+            decorTypes: biome.decorationConfig.decorTypes,
+            allowedTiles: allowedTilesFull,
+          })
+        : []),
+    ];
 
     res.json({
       depth,
@@ -734,6 +864,7 @@ async function getLevel(req, res) {
       forageNodes,
       decorations,
       townBuildings,
+      paintedFloor: handmade ? handmade.paintedFloor : null,
       secretRoom: secretRoom
         ? {
             triggerType: secretRoom.triggerType,

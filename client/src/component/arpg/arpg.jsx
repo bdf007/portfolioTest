@@ -18,9 +18,15 @@ import TouchControls from "./TouchControls";
 import { computeLevelFromXp } from "./leveling";
 import { resolveAbilityDef } from "./abilityDefs";
 import { resolveItemDef } from "./itemDefs";
-import { fetchMyGames, abandonGame, deleteGame } from "../../api/arpgClient";
+import {
+  fetchMyGames,
+  abandonGame,
+  deleteGame,
+  fetchEditorStatus,
+} from "../../api/arpgClient";
 import AttributesScreen from "./AttributesScreen";
 import FullMapScreen from "./FullMapScreen";
+import HandmadeEditorScreen from "./HandmadeEditorScreen";
 
 /**
  * Overlay sombre qui se dissout progressivement au-dessus d'un
@@ -298,6 +304,13 @@ export default function Arpg() {
 
   useEffect(() => {
     loadGamesList();
+  }, []);
+
+  const [editorAllowed, setEditorAllowed] = useState(false);
+  useEffect(() => {
+    fetchEditorStatus()
+      .then((r) => setEditorAllowed(!!r.allowed))
+      .catch(() => setEditorAllowed(false));
   }, []);
 
   useEffect(() => {
@@ -1044,6 +1057,26 @@ export default function Arpg() {
   if (phase === "picker") {
     return (
       <div style={{ position: "relative" }}>
+        {editorAllowed && (
+          <button
+            onClick={() => setPhase("editor")}
+            style={{
+              position: "fixed",
+              top: 50,
+              right: 12,
+              zIndex: 50,
+              padding: "6px 14px",
+              fontSize: 13,
+              borderRadius: 6,
+              border: "1px solid #8a7050",
+              background: "rgba(58,47,32,0.85)",
+              color: "#f0e6d0",
+              cursor: "pointer",
+            }}
+          >
+            🛠️ Éditeur de niveaux
+          </button>
+        )}
         <GameListScreen
           games={games}
           username={username}
@@ -1058,6 +1091,9 @@ export default function Arpg() {
     );
   }
 
+  if (phase === "editor") {
+    return <HandmadeEditorScreen onClose={() => setPhase("picker")} />;
+  }
   if (phase === "bestiary") {
     return <BestiaryScreen onClose={() => setPhase("picker")} />;
   }

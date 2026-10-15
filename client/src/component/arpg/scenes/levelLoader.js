@@ -20,6 +20,7 @@ import {
   LEVER_SPRITESHEET,
 } from "../spriteRegistry";
 import { buildFloorTilemap, spawnFloorDecorations } from "./floorRenderer";
+import { spawnPaintedFloor, gridForRendering } from "./paintedFloor";
 import {
   spawnChests,
   spawnTraps,
@@ -296,7 +297,15 @@ export async function loadLevel(
   const worldW = grid[0].length * TILE_SIZE;
   const worldH = grid.length * TILE_SIZE;
 
-  buildFloorTilemap(scene, { grid, tileset, data, depth });
+  buildFloorTilemap(scene, {
+    grid: gridForRendering(grid, data),
+    tileset,
+    data,
+    depth,
+  });
+  if (data.paintedFloor) {
+    await spawnPaintedFloor(scene, data);
+  }
 
   const startPosition = savedPlayerPosition || playerSpawn;
 

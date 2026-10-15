@@ -1,6 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import { resolveItemDef } from "./itemDefs";
-import { resolveEnemyDisplayName } from "./spriteRegistry";
+import {
+  resolveEnemyDisplayName,
+  resolveEnemyTargetName,
+} from "./spriteRegistry";
 import bookPages from "../../assets/background/book_pages.png"; // ajuste le chemin selon ou tu l'as range
 
 /**
@@ -78,7 +81,7 @@ export default function QuestsScreen({ quests, inventory, onClose }) {
         return `Captif libéré → le ramener à l'étage ${q.townDepth}`;
       return `Un captif t'attend à l'étage ${q.targetDepth}`;
     }
-    return `${q.killCount} / ${q.target} ${resolveEnemyDisplayName(q.targetEnemyType)}`;
+    return `${q.killCount} / ${q.target} ${resolveEnemyTargetName(q.targetEnemyType)}`;
   }
   // "Nom de la chaine - etape 2/3" ; une chaine d'UNE seule etape (simple
   // quete personnalisee) n'affiche pas "etape 1/1"
