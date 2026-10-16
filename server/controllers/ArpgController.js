@@ -255,7 +255,7 @@ async function getLevel(req, res) {
     // coincider les deux landmarks.
     const upstairsTile = handmade
       ? handmade.upstairsTile
-      : depth > 1
+      : depth > 0
         ? findUpstairsTile(
             grid,
             playerSpawn,
