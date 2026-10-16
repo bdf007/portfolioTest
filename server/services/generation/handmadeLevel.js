@@ -264,7 +264,10 @@ function normalizeHandmadeLevel(def, file) {
 
   // sol peint : { "<cle de feuille>": [[x, y, frame], ...] } - tuiles
   // visuelles posees par-dessus le sol autotile (cf. paintedFloor.js cote
-  // client). Une seule tuile par case. 4e element optionnel = drapeaux :
+  // client). Une tuile par case ET PAR COUCHE (5e element optionnel :
+  // couche 0 = sol, 1 = par-dessus, ex. un pont sur une riviere peinte ; la
+  // tuile de la couche la plus haute decide de la traversabilite de la case).
+  // 4e element optionnel = drapeaux :
   //   1 = NON traversable : la case devient un mur dans la grille renvoyee
   //       (collisions, brouillard, minicarte, placement des ennemis... tout
   //       suit), la tuile peinte etant dessinee par-dessus le mur ;
@@ -272,7 +275,7 @@ function normalizeHandmadeLevel(def, file) {
   //       cime d'arbre, toit, arche...). Combinables (3).
   const paintedFloor = {};
   const seenPainted = new Set();
-  const solidCells = [];
+  const topTileByCell = new Map(); // "x,y" -> { layer, solid } (couche la plus haute)
   if (def.paintedFloor !== undefined && def.paintedFloor !== null) {
     const raw = def.paintedFloor;
     if (typeof raw !== "object" || Array.isArray(raw)) {
@@ -290,30 +293,41 @@ function normalizeHandmadeLevel(def, file) {
       paintedFloor[sheet] = cells.map((c, i) => {
         const ok =
           Array.isArray(c) &&
-          (c.length === 3 || c.length === 4) &&
+          c.length >= 3 &&
+          c.length <= 5 &&
           c.every(Number.isInteger) &&
           inBounds({ x: c[0], y: c[1] }) &&
           c[2] >= 0 &&
-          (c.length === 3 || (c[3] >= 0 && c[3] <= 3));
+          (c.length < 4 || (c[3] >= 0 && c[3] <= 3)) &&
+          (c.length < 5 || (c[4] >= 0 && c[4] <= 1));
         if (!ok) {
           fail(
             file,
-            `paintedFloor.${sheet}[${i}] : attendu [x, y, frame] ou [x, y, frame, drapeaux 0-3] entiers, dans la grille (recu ${JSON.stringify(c)})`,
+            `paintedFloor.${sheet}[${i}] : attendu [x, y, frame] ou [x, y, frame, drapeaux 0-3] ou [x, y, frame, drapeaux, couche 0-1] entiers, dans la grille (recu ${JSON.stringify(c)})`,
           );
         }
-        if (c.length === 4 && (c[3] & 1) === 1)
-          solidCells.push({ x: c[0], y: c[1] });
-        const id = `${c[0]},${c[1]}`;
+        const flags = c.length >= 4 ? c[3] : 0;
+        const layer = c.length === 5 ? c[4] : 0;
+        const cellId = `${c[0]},${c[1]}`;
+        const id = `${cellId},${layer}`;
         if (seenPainted.has(id)) {
           fail(
             file,
-            `paintedFloor : la case (${c[0]},${c[1]}) est peinte deux fois`,
+            `paintedFloor : la case (${c[0]},${c[1]}) est peinte deux fois sur la couche ${layer}`,
           );
         }
         seenPainted.add(id);
-        return c.length === 4 && c[3] !== 0
-          ? [c[0], c[1], c[2], c[3]]
-          : [c[0], c[1], c[2]];
+        const top = topTileByCell.get(cellId);
+        if (!top || layer >= top.layer) {
+          topTileByCell.set(cellId, {
+            layer,
+            solid: (flags & 1) === 1,
+            x: c[0],
+            y: c[1],
+          });
+        }
+        if (layer !== 0) return [c[0], c[1], c[2], flags, layer];
+        return flags !== 0 ? [c[0], c[1], c[2], flags] : [c[0], c[1], c[2]];
       });
     }
   }
@@ -345,6 +359,7 @@ function normalizeHandmadeLevel(def, file) {
 
   // tuiles peintes non traversables -> murs (apres les verifications
   // ci-dessus : rien de pose a la main ne doit se retrouver dedans)
+  const solidCells = [...topTileByCell.values()].filter((t) => t.solid);
   for (const t of solidCells) {
     const clash = occupiedTiles.find((o) => o.x === t.x && o.y === t.y);
     if (clash) {

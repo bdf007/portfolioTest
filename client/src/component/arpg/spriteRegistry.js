@@ -384,6 +384,9 @@ import castleDungeonV01AutotileImg from "../../assets/tilesets/castle_dungeon_v0
 import castleDungeonV02AutotileImg from "../../assets/tilesets/castle_dungeon_v02.png";
 import castleDungeonV03AutotileImg from "../../assets/tilesets/castle_dungeon_v03.png";
 import castleDungeonV04AutotileImg from "../../assets/tilesets/castle_dungeon_v04.png";
+import animeBAutotileImg from "../../assets/tilesets/anime_B.png";
+import fairytaleValleyBV1AutotileImg from "../../assets/tilesets/Fairytale_valley_B_V1.png";
+import dmaAutotileImg from "../../assets/tilesets/dma.png";
 // import objects
 import chestsSpritesheet from "../../assets/objects_icons/Chests.png";
 import iconSheet1 from "../../assets/objects_icons/icon_sheet1.png";
@@ -908,6 +911,24 @@ export const CASTLE_DUNGEON_V03_AUTOTILE_SPRITESHEET = {
 export const CASTLE_DUNGEON_V04_AUTOTILE_SPRITESHEET = {
   key: "castleDungeonV04Autotile",
   path: castleDungeonV04AutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+export const ANIME_B_SPRITESHEET = {
+  key: "animeB",
+  path: animeBAutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+export const FAIRYTALE_VALLEY_B_V1_AUTOTILE_SPRITESHEET = {
+  key: "fairytaleValleyBV1Autotile",
+  path: fairytaleValleyBV1AutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+export const DMA_AUTOTILE_SPRITESHEET = {
+  key: "dmaAutotile",
+  path: dmaAutotileImg,
   frameWidth: 16,
   frameHeight: 16,
 };

@@ -82,6 +82,9 @@ import {
   CASTLE_DUNGEON_V02_AUTOTILE_SPRITESHEET,
   CASTLE_DUNGEON_V03_AUTOTILE_SPRITESHEET,
   CASTLE_DUNGEON_V04_AUTOTILE_SPRITESHEET,
+  ANIME_B_SPRITESHEET,
+  FAIRYTALE_VALLEY_B_V1_AUTOTILE_SPRITESHEET,
+  DMA_AUTOTILE_SPRITESHEET,
   OBJECTS_DUNGEON_01_SPRITESHEET,
   DETAILS_SPRITESHEET,
 } from "../spriteRegistry";
@@ -709,6 +712,26 @@ export default class BootScene extends Phaser.Scene {
       {
         frameWidth: CASTLE_DUNGEON_V04_AUTOTILE_SPRITESHEET.frameWidth,
         frameHeight: CASTLE_DUNGEON_V04_AUTOTILE_SPRITESHEET.frameHeight,
+      },
+    );
+    this.load.spritesheet(ANIME_B_SPRITESHEET.key, ANIME_B_SPRITESHEET.path, {
+      frameWidth: ANIME_B_SPRITESHEET.frameWidth,
+      frameHeight: ANIME_B_SPRITESHEET.frameHeight,
+    });
+    this.load.spritesheet(
+      FAIRYTALE_VALLEY_B_V1_AUTOTILE_SPRITESHEET.key,
+      FAIRYTALE_VALLEY_B_V1_AUTOTILE_SPRITESHEET.path,
+      {
+        frameWidth: FAIRYTALE_VALLEY_B_V1_AUTOTILE_SPRITESHEET.frameWidth,
+        frameHeight: FAIRYTALE_VALLEY_B_V1_AUTOTILE_SPRITESHEET.frameHeight,
+      },
+    );
+    this.load.spritesheet(
+      DMA_AUTOTILE_SPRITESHEET.key,
+      DMA_AUTOTILE_SPRITESHEET.path,
+      {
+        frameWidth: DMA_AUTOTILE_SPRITESHEET.frameWidth,
+        frameHeight: DMA_AUTOTILE_SPRITESHEET.frameHeight,
       },
     );
     this.load.spritesheet(

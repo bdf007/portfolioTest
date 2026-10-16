@@ -103,11 +103,11 @@ export function levelFromDef(def) {
   level.paintedFloor = {};
   if (def.paintedFloor && typeof def.paintedFloor === "object") {
     for (const [sheet, cells] of Object.entries(def.paintedFloor)) {
-      for (const [x, y, frame, flags = 0] of cells) {
+      for (const [x, y, frame, flags = 0, layer = 0] of cells) {
         const tile = { sheet, frame };
         if (flags & 1) tile.solid = true;
         if (flags & 2) tile.overhead = true;
-        level.paintedFloor[`${x},${y}`] = tile;
+        level.paintedFloor[tileKey(x, y, layer)] = tile;
       }
     }
   }
@@ -129,14 +129,21 @@ export function levelToDef(level) {
   // sol peint regroupe par feuille : { sheet: [[x, y, frame], ...] } (compact)
   const bySheet = {};
   for (const [id, tile] of Object.entries(level.paintedFloor)) {
-    const [x, y] = id.split(",").map(Number);
+    const [x, y, layer = 0] = id.split(",").map(Number);
     const flags = (tile.solid ? 1 : 0) | (tile.overhead ? 2 : 0);
     (bySheet[tile.sheet] = bySheet[tile.sheet] || []).push(
-      flags ? [x, y, tile.frame, flags] : [x, y, tile.frame],
+      layer
+        ? [x, y, tile.frame, flags, layer]
+        : flags
+          ? [x, y, tile.frame, flags]
+          : [x, y, tile.frame],
     );
   }
-  for (const cells of Object.values(bySheet))
-    cells.sort((a, b) => a[1] - b[1] || a[0] - b[0]);
+  for (const cells of Object.values(bySheet)) {
+    cells.sort(
+      (a, b) => a[1] - b[1] || a[0] - b[0] || (a[4] || 0) - (b[4] || 0),
+    );
+  }
   if (Object.keys(bySheet).length > 0) def.paintedFloor = bySheet;
   return def;
 }
@@ -205,6 +212,25 @@ export function resizeLevel(level, width, height) {
 // ---- sol peint ----
 
 /**
+ * Cle d'une tuile peinte : "x,y" pour la couche 0 (sol), "x,y,1" pour la
+ * couche 1 (par-dessus, ex. un pont sur une riviere peinte).
+ */
+export function tileKey(x, y, layer = 0) {
+  return layer ? `${x},${y},${layer}` : `${x},${y}`;
+}
+
+/** Tuile peinte la plus haute d'une case ({ id, tile }) ou null. */
+export function topTileAt(level, x, y) {
+  const upper = tileKey(x, y, 1);
+  if (level.paintedFloor[upper])
+    return { id: upper, tile: level.paintedFloor[upper] };
+  const base = tileKey(x, y, 0);
+  if (level.paintedFloor[base])
+    return { id: base, tile: level.paintedFloor[base] };
+  return null;
+}
+
+/**
  * Selection de tuiles dans une feuille : rectangle de `w` x `h` cases dont
  * le coin haut-gauche est (col, row) ; `cols` = nombre de colonnes de la
  * feuille (pour calculer l'indice de frame = ligne * cols + colonne).
@@ -223,12 +249,16 @@ export function paintFloorTile(level, x, y, sel, options = {}) {
   const solid = !!options.solid;
   const overhead = !!options.overhead;
   if (!sel || !inBounds(level, x, y)) return false;
-  const dx = ((x % sel.w) + sel.w) % sel.w;
-  const dy = ((y % sel.h) + sel.h) % sel.h;
+  // motif ancre sur options.anchor (premier clic / coin du rectangle) ;
+  // sans ancre : ancre sur la carte (0, 0) comme avant
+  const ax = options.anchor ? options.anchor.x : 0;
+  const ay = options.anchor ? options.anchor.y : 0;
+  const dx = (((x - ax) % sel.w) + sel.w) % sel.w;
+  const dy = (((y - ay) % sel.h) + sel.h) % sel.h;
   const tile = { sheet: sel.sheet, frame: selectionFrame(sel, dx, dy) };
   if (solid) tile.solid = true;
   if (overhead) tile.overhead = true;
-  const id = `${x},${y}`;
+  const id = tileKey(x, y, options.layer ? 1 : 0);
   const old = level.paintedFloor[id];
   if (
     old &&
@@ -248,20 +278,28 @@ export function paintFloorTile(level, x, y, sel, options = {}) {
 export function isBlocked(level, x, y) {
   if (!inBounds(level, x, y)) return true;
   if (level.grid[y][x] !== 0) return true;
-  const painted = level.paintedFloor[`${x},${y}`];
-  return !!(painted && painted.solid);
+  // la tuile la plus haute decide (un pont non bloquant sur une riviere bloquante = passable)
+  const top = topTileAt(level, x, y);
+  return !!(top && top.tile.solid);
 }
 
+/** Gomme : retire la tuile la plus haute de la case ; renvoie sa cle (ou null). */
 export function eraseFloorTile(level, x, y) {
-  const id = `${x},${y}`;
-  if (!level.paintedFloor[id]) return false;
-  delete level.paintedFloor[id];
-  return true;
+  const top = topTileAt(level, x, y);
+  if (!top) return null;
+  delete level.paintedFloor[top.id];
+  return top.id;
 }
 
 /** Peint un rectangle (bornes incluses). */
 export function paintFloorRect(level, x0, y0, x1, y1, sel, options = {}) {
   let changed = false;
+  // le motif part du coin haut-gauche du rectangle trace
+  if (!options.anchor)
+    options = {
+      ...options,
+      anchor: { x: Math.min(x0, x1), y: Math.min(y0, y1) },
+    };
   for (let y = Math.min(y0, y1); y <= Math.max(y0, y1); y++) {
     for (let x = Math.min(x0, x1); x <= Math.max(x0, x1); x++) {
       if (paintFloorTile(level, x, y, sel, options)) changed = true;

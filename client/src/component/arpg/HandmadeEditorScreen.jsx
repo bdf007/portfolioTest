@@ -417,22 +417,31 @@ class EditorScene extends Phaser.Scene {
     }
     const tile = this.level.paintedFloor[id];
     if (!tile || !this.textures.exists(tile.sheet)) return;
-    const [x, y] = id.split(",").map(Number);
+    const [x, y, layer = 0] = id.split(",").map(Number);
     this.paintedSprites.set(
       id,
-      createPaintedTile(this, tile.sheet, tile.frame, x, y),
+      createPaintedTile(this, tile.sheet, tile.frame, x, y, false, layer),
     );
   }
 
   /** Applique l'outil de sol peint a une case (pose ou gomme). */
   applyTileTool(x, y, erase) {
-    const id = `${x},${y}`;
-    const changed = erase
-      ? eraseFloorTile(this.level, x, y)
-      : paintFloorTile(this.level, x, y, this.ctrl.tileSel, {
-          solid: this.ctrl.tileSolid,
-          overhead: this.ctrl.tileOverhead,
-        });
+    const layer = this.ctrl.tileLayer ? 1 : 0;
+    let id = `${x},${y}${layer ? ",1" : ""}`;
+    let changed;
+    if (erase) {
+      const erasedId = eraseFloorTile(this.level, x, y); // retire la tuile la plus haute
+      changed = !!erasedId;
+      if (erasedId) id = erasedId;
+    } else {
+      changed = paintFloorTile(this.level, x, y, this.ctrl.tileSel, {
+        solid: this.ctrl.tileSolid,
+        overhead: this.ctrl.tileOverhead,
+        layer,
+        anchor:
+          this.stroke && this.stroke.anchor ? this.stroke.anchor : undefined,
+      });
+    }
     if (!changed) return false;
     const sheet =
       this.level.paintedFloor[id] && this.level.paintedFloor[id].sheet;
@@ -499,8 +508,23 @@ class EditorScene extends Phaser.Scene {
         );
         return;
       }
-      this.stroke = { tile: true, erase: tool === "tileErase", last: tile };
-      this.applyTileTool(tile.x, tile.y, tool === "tileErase");
+      this.stroke = {
+        tile: true,
+        erase: tool === "tileErase",
+        last: tile,
+        anchor: tile,
+      };
+      if (tool === "tileErase") {
+        this.applyTileTool(tile.x, tile.y, true);
+      } else {
+        // un clic "tamponne" toute la selection, coin haut-gauche sur la case cliquee ;
+        // en glissant, le motif se poursuit a partir de ce point
+        const sel = ctrl.tileSel;
+        for (let dy = 0; dy < sel.h; dy++) {
+          for (let dx = 0; dx < sel.w; dx++)
+            this.applyTileTool(tile.x + dx, tile.y + dy, false);
+        }
+      }
     } else if (tool === "tileRect") {
       if (!ctrl.tileSel) {
         ctrl.onMessage(
@@ -610,7 +634,11 @@ class EditorScene extends Phaser.Scene {
             tile.x,
             tile.y,
             this.ctrl.tileSel,
-            { solid: this.ctrl.tileSolid, overhead: this.ctrl.tileOverhead },
+            {
+              solid: this.ctrl.tileSolid,
+              overhead: this.ctrl.tileOverhead,
+              layer: this.ctrl.tileLayer ? 1 : 0,
+            },
           )
         ) {
           this.tileChanged = true;
@@ -634,9 +662,12 @@ class EditorScene extends Phaser.Scene {
       this.rectStart = null;
     }
     if (this.stroke || this.gridChanged || this.tileChanged) {
+      const rebuild = this.gridChanged;
       this.stroke = null;
+      this.gridChanged = false; // sinon le prochain relachement (clic droit, etc.) revalide un "avant" inexistant
+      this.tileChanged = false;
       this.strokeGfx.clear();
-      if (this.gridChanged) this.rebuildFloor(); // autotiles recalcules une fois le trait fini
+      if (rebuild) this.rebuildFloor(); // autotiles recalcules une fois le trait fini
       this.refreshOverlay();
       this.commit();
     }
@@ -654,7 +685,7 @@ class EditorScene extends Phaser.Scene {
 
   /** Fin d'une action : si le niveau a change, l'enregistre dans l'historique. */
   commit() {
-    if (JSON.stringify(this.level) !== this.before) {
+    if (this.before != null && JSON.stringify(this.level) !== this.before) {
       this.ctrl.commitUndo(this.before);
     }
     this.before = null;
@@ -915,6 +946,7 @@ export default function HandmadeEditorScreen({ onClose }) {
       tileSel: null,
       tileSolid: false,
       tileOverhead: false,
+      tileLayer: 0,
       tileset: defaultTileset,
       depth: 1,
       scene: null,
@@ -951,6 +983,7 @@ export default function HandmadeEditorScreen({ onClose }) {
   const [tileSel, setTileSelState] = useState(null);
   const [tileSolid, setTileSolidState] = useState(false);
   const [tileOverhead, setTileOverheadState] = useState(false);
+  const [tileLayer, setTileLayerState] = useState(0);
 
   const showMessage = useCallback(
     (type, text) => setMessage({ type, text }),
@@ -967,6 +1000,7 @@ export default function HandmadeEditorScreen({ onClose }) {
       hoverRef.current.textContent = `x ${tile.x}, y ${tile.y}`;
   };
   ctrl.commitUndo = (beforeJson) => {
+    if (typeof beforeJson !== "string") return; // jamais d'etat vide dans l'historique
     ctrl.undo.push(beforeJson);
     if (ctrl.undo.length > 150) ctrl.undo.shift();
     ctrl.redo = [];
@@ -1045,12 +1079,22 @@ export default function HandmadeEditorScreen({ onClose }) {
   };
 
   const handleUndo = useCallback(() => {
+    while (
+      ctrl.undo.length > 0 &&
+      typeof ctrl.undo[ctrl.undo.length - 1] !== "string"
+    )
+      ctrl.undo.pop();
     if (ctrl.undo.length === 0) return;
     ctrl.redo.push(JSON.stringify(ctrl.level));
     applySnapshot(ctrl.undo.pop());
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const handleRedo = useCallback(() => {
+    while (
+      ctrl.redo.length > 0 &&
+      typeof ctrl.redo[ctrl.redo.length - 1] !== "string"
+    )
+      ctrl.redo.pop();
     if (ctrl.redo.length === 0) return;
     ctrl.undo.push(JSON.stringify(ctrl.level));
     applySnapshot(ctrl.redo.pop());
@@ -1078,6 +1122,10 @@ export default function HandmadeEditorScreen({ onClose }) {
   const setTileOverhead = (v) => {
     ctrl.tileOverhead = v;
     setTileOverheadState(v);
+  };
+  const setTileLayer = (v) => {
+    ctrl.tileLayer = v;
+    setTileLayerState(v);
   };
   const setTileSolid = (v) => {
     ctrl.tileSolid = v;
@@ -1578,6 +1626,31 @@ export default function HandmadeEditorScreen({ onClose }) {
           <div>
             <div style={{ marginBottom: 4 }}>Palette du sol peint</div>
             <TilePalette selection={tileSel} onSelect={setTileSel} />
+            <div style={{ marginTop: 8 }}>
+              Couche :{" "}
+              <label style={{ cursor: "pointer", marginRight: 10 }}>
+                <input
+                  type="radio"
+                  checked={tileLayer === 0}
+                  onChange={() => setTileLayer(0)}
+                />{" "}
+                1 (sol)
+              </label>
+              <label style={{ cursor: "pointer" }}>
+                <input
+                  type="radio"
+                  checked={tileLayer === 1}
+                  onChange={() => setTileLayer(1)}
+                />{" "}
+                2 (par-dessus : pont…)
+              </label>
+              <div style={{ color: "#8a7050", lineHeight: 1.3 }}>
+                La couche 2 se pose sur la couche 1. Pour la traversabilité, la
+                tuile du dessus décide (un pont non bloquant sur une rivière
+                bloquante = passable). La gomme retire d'abord la tuile du
+                dessus.
+              </div>
+            </div>
             <label
               style={{ display: "block", marginTop: 8, cursor: "pointer" }}
             >

@@ -688,7 +688,7 @@ export async function loadLevel(
   }
   scene.lastPlayerTile = { x: startPosition.x, y: startPosition.y };
 
-  scene.fogDisabled = data.tileset === "town";
+  scene.fogDisabled = data.tileset === "town" || data.biome === "town";
 
   const fogTileset = scene.map.addTilesetImage(
     scene.fogTilesetKey,

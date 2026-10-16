@@ -89,7 +89,8 @@ function groupSpecialTiles(painted) {
   const flagsById = new Map();
   for (const key of Object.keys(painted)) {
     for (const [x, y, , flags = 0] of painted[key]) {
-      if (flags) flagsById.set(`${x},${y}`, flags);
+      if (flags)
+        flagsById.set(`${x},${y}`, (flagsById.get(`${x},${y}`) || 0) | flags);
     }
   }
   const groupOf = new Map();
@@ -173,6 +174,7 @@ export function createPaintedTile(
   x,
   y,
   overhead = false,
+  layer = 0,
 ) {
   const img = scene.add.image(
     x * TILE_SIZE + TILE_SIZE / 2,
@@ -181,7 +183,10 @@ export function createPaintedTile(
     frame,
   );
   img.setDisplaySize(TILE_SIZE, TILE_SIZE);
-  img.setDepth(overhead ? DEPTH_OVERHEAD : DEPTH_FLOOR);
+  // couche 1 (pont sur une riviere...) : juste au-dessus de la couche 0
+  img.setDepth(
+    overhead ? DEPTH_OVERHEAD + layer * 0.1 : DEPTH_FLOOR + layer * 0.5,
+  );
   img.tileX = x;
   img.tileY = y;
   return img;
@@ -231,9 +236,9 @@ export async function spawnPaintedFloor(scene, data) {
       );
       continue;
     }
-    for (const [x, y, frame, flags = 0] of painted[key]) {
+    for (const [x, y, frame, flags = 0, layer = 0] of painted[key]) {
       const overhead = (flags & 2) !== 0;
-      const img = createPaintedTile(scene, key, frame, x, y, overhead);
+      const img = createPaintedTile(scene, key, frame, x, y, overhead, layer);
       scene.decorationSprites.push(img);
       if (!overhead) {
         // sol / base non traversable : sous le brouillard (profondeur 5),
@@ -283,10 +288,8 @@ export function gridForRendering(grid, data) {
   const painted = data && data.paintedFloor;
   if (!painted) return grid;
   const copy = grid.map((row) => row.slice());
-  for (const key of Object.keys(painted)) {
-    for (const [x, y, , flags = 0] of painted[key]) {
-      if (flags & 1 && copy[y] && copy[y][x] !== undefined) copy[y][x] = 0;
-    }
+  for (const { x, y } of solidCellsOf(painted)) {
+    if (copy[y] && copy[y][x] !== undefined) copy[y][x] = 0;
   }
   return copy;
 }
@@ -300,18 +303,33 @@ function applySolidCollision(scene, painted) {
   const layer = scene.layer;
   if (!layer) return;
   const touched = [];
-  for (const key of Object.keys(painted)) {
-    for (const [x, y, , flags = 0] of painted[key]) {
-      if (!(flags & 1)) continue;
-      const tile = layer.getTileAt(x, y);
-      if (!tile) continue;
-      tile.setCollision(true, true, true, true);
-      touched.push([x, y]);
-    }
+  for (const cell of solidCellsOf(painted)) {
+    const tile = layer.getTileAt(cell.x, cell.y);
+    if (!tile) continue;
+    tile.setCollision(true, true, true, true);
+    touched.push([cell.x, cell.y]);
   }
   for (const [x, y] of touched) {
     for (let dy = -1; dy <= 1; dy++) {
       for (let dx = -1; dx <= 1; dx++) layer.calculateFacesAt(x + dx, y + dy);
     }
   }
+}
+
+/**
+ * Cases non traversables : pour chaque case, c'est la tuile de la couche
+ * la plus haute qui decide (un pont non bloquant pose sur une riviere
+ * bloquante laisse la case passable). Meme regle que le serveur.
+ */
+function solidCellsOf(painted) {
+  const top = new Map(); // "x,y" -> { layer, solid, x, y }
+  for (const key of Object.keys(painted)) {
+    for (const [x, y, , flags = 0, layer = 0] of painted[key]) {
+      const id = `${x},${y}`;
+      const cur = top.get(id);
+      if (!cur || layer >= cur.layer)
+        top.set(id, { layer, solid: (flags & 1) === 1, x, y });
+    }
+  }
+  return [...top.values()].filter((t) => t.solid);
 }

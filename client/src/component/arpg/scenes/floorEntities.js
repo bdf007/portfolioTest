@@ -6,6 +6,7 @@ import {
   CITY_TILES_AUTOTILE_SPRITESHEET,
   WORLD_B_AUTOTILE_SPRITESHEET,
   DARKWOODS_AUTOTILE_SPRITESHEET,
+  // ANIME_B_SPRITESHEET,
 } from "../spriteRegistry";
 
 // TILE_SIZE duplique volontairement, comme dans floorRenderer.js (meme

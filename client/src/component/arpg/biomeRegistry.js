@@ -68,6 +68,9 @@ import {
   TOWER4_AUTOTILE_SPRITESHEET,
   WINTER_FOREST_AUTOTILE_SPRITESHEET,
   WINTER_FOREST_SNOWY_AUTOTILE_SPRITESHEET,
+  ANIME_B_SPRITESHEET,
+  FAIRYTALE_VALLEY_B_V1_AUTOTILE_SPRITESHEET,
+  DMA_AUTOTILE_SPRITESHEET,
 } from "./spriteRegistry";
 
 export const BIOME_REGISTRY = [
@@ -755,6 +758,21 @@ export const BIOME_REGISTRY = [
     tilesetKey: "castleDungeonV04_0_1",
     displayName: "Castle Dungeon V 04 0 1",
     spritesheet: CASTLE_DUNGEON_V04_AUTOTILE_SPRITESHEET,
+  },
+  {
+    tilesetKey: "animeB",
+    displayName: "Anime B",
+    spritesheet: ANIME_B_SPRITESHEET,
+  },
+  {
+    tilesetKey: "fairytaleValleyBV1",
+    displayName: "Fairytale Valley B V1",
+    spritesheet: FAIRYTALE_VALLEY_B_V1_AUTOTILE_SPRITESHEET,
+  },
+  {
+    tilesetKey: "dma",
+    displayName: "DMA",
+    spritesheet: DMA_AUTOTILE_SPRITESHEET,
   },
   { tilesetKey: "cave", displayName: "Cave", spritesheet: null },
   { tilesetKey: "ruins", displayName: "Ruins", spritesheet: null },
