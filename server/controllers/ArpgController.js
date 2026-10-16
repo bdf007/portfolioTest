@@ -88,7 +88,8 @@ async function ping(req, res) {
  */
 async function getLevel(req, res) {
   try {
-    const depth = parseInt(req.query.depth, 10) || 1;
+    const parsedDepth = parseInt(req.query.depth, 10);
+    const depth = Number.isInteger(parsedDepth) && parsedDepth >= 0 ? parsedDepth : 1;
     const seed = req.query.seed || String(Date.now());
     // seed DISTINCTE pour le contenu du butin (ennemis, boss, coffres) -
     // le client en genere une nouvelle a chaque VRAIE nouvelle visite
