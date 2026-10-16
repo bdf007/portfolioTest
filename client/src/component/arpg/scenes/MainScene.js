@@ -471,7 +471,7 @@ export default class MainScene extends Phaser.Scene {
     this.harvestCooldown = createCooldown(PLAYER_HARVEST_COOLDOWN);
     this.rangedCooldown = createCooldown(PLAYER_RANGED_COOLDOWN);
     this.isDead = false;
-    this.currentDepth = 1;
+    this.currentDepth = 0; // une nouvelle partie démarre dans la ville de l'étage 0 (niveau fait main)
 
     this.hpBarGraphics = this.add.graphics();
     this.hpBarGraphics.setDepth(20);
