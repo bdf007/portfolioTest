@@ -34,6 +34,7 @@ import {
   spawnRescuedNpcs,
 } from "./quests";
 import { chainNeedsSpawnNpc } from "./questChains";
+import { createTowerGuards, destroyTowerGuards } from "./tutorialGate";
 import {
   createEnemyVisualEffect,
   getEffectivePlayerVisionRadius,
@@ -204,6 +205,7 @@ export async function loadLevel(
     scene.ambientNpcs.forEach((n) => n.sprite.destroy());
   }
   scene.ambientNpcs = [];
+  destroyTowerGuards(scene);
   scene.activeTalkingNpc = null;
   if (scene.chests) {
     scene.chests.forEach((c) => {
@@ -666,6 +668,8 @@ export async function loadLevel(
   if (ambientNpcData && ambientNpcData.length > 0) {
     createAmbientNpcs(scene, ambientNpcData);
   }
+
+  createTowerGuards(scene);
 
   spawnRescueCaptive(scene);
   spawnRescuedNpcs(scene);

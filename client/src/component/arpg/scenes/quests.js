@@ -27,7 +27,7 @@ const RESCUE_EXCLUDED_DEPTHS = new Set([]);
 const AMBIENT_NPC_GREETINGS = [
   "Bonjour, voyageur !",
   "Belle journée, n'est-ce pas ?",
-  "Fais attention à toi là-dessous.",
+  "Fais attention à toi si tu décides de gravir la tour.",
   "J'ai entendu dire qu'il y avait un trésor par ici...",
   "Content de voir un nouveau visage en ville.",
   "Les affaires sont calmes en ce moment.",

@@ -212,8 +212,9 @@ export function resizeLevel(level, width, height) {
 // ---- sol peint ----
 
 /**
- * Cle d'une tuile peinte : "x,y" pour la couche 0 (sol), "x,y,1" pour la
- * couche 1 (par-dessus, ex. un pont sur une riviere peinte).
+ * Cle d'une tuile peinte : "x,y" pour la couche 0 (sol), "x,y,1" et
+ * "x,y,2" pour les couches 1 et 2 (par-dessus, ex. un pont sur une riviere
+ * peinte, puis un objet sur le pont).
  */
 export function tileKey(x, y, layer = 0) {
   return layer ? `${x},${y},${layer}` : `${x},${y}`;
@@ -221,9 +222,11 @@ export function tileKey(x, y, layer = 0) {
 
 /** Tuile peinte la plus haute d'une case ({ id, tile }) ou null. */
 export function topTileAt(level, x, y) {
-  const upper = tileKey(x, y, 1);
-  if (level.paintedFloor[upper])
-    return { id: upper, tile: level.paintedFloor[upper] };
+  for (const layer of [2, 1]) {
+    const upper = tileKey(x, y, layer);
+    if (level.paintedFloor[upper])
+      return { id: upper, tile: level.paintedFloor[upper] };
+  }
   const base = tileKey(x, y, 0);
   if (level.paintedFloor[base])
     return { id: base, tile: level.paintedFloor[base] };
@@ -258,7 +261,11 @@ export function paintFloorTile(level, x, y, sel, options = {}) {
   const tile = { sheet: sel.sheet, frame: selectionFrame(sel, dx, dy) };
   if (solid) tile.solid = true;
   if (overhead) tile.overhead = true;
-  const id = tileKey(x, y, options.layer ? 1 : 0);
+  const id = tileKey(
+    x,
+    y,
+    options.layer === 2 ? 2 : options.layer === 1 ? 1 : 0,
+  );
   const old = level.paintedFloor[id];
   if (
     old &&

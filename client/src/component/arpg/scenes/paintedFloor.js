@@ -287,6 +287,10 @@ export async function spawnPaintedFloor(scene, data) {
 export function gridForRendering(grid, data) {
   const painted = data && data.paintedFloor;
   if (!painted) return grid;
+  // le serveur envoie la grille telle que dessinee dans l'editeur : le sol
+  // du jeu est alors rendu exactement comme dans l'editeur
+  if (data.renderGrid) return data.renderGrid;
+  // anciens serveurs : repli, les cases non traversables comptees comme du sol
   const copy = grid.map((row) => row.slice());
   for (const { x, y } of solidCellsOf(painted)) {
     if (copy[y] && copy[y][x] !== undefined) copy[y][x] = 0;

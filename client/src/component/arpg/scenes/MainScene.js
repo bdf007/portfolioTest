@@ -140,6 +140,11 @@ import {
   useFury as furyImpl,
 } from "./playerCombat";
 import {
+  isTowerGated,
+  notifyGateBlocked,
+  updateTowerGuards,
+} from "./tutorialGate";
+import {
   TILE_SIZE,
   ENEMY_ATTACK_COOLDOWN,
   ATTACK_ANIM_DURATION_MS,
@@ -1170,6 +1175,7 @@ export default class MainScene extends Phaser.Scene {
         this.applyFogChanges(changes);
       }
       updateEnemyDecisions(this, tileX, tileY);
+      updateTowerGuards(this, tileX, tileY);
 
       if (
         this.exitTile &&
@@ -1177,7 +1183,8 @@ export default class MainScene extends Phaser.Scene {
         tileY === this.exitTile.y &&
         this.bossAlive !== true
       ) {
-        this.showExitPrompt();
+        if (isTowerGated(this)) notifyGateBlocked(this);
+        else this.showExitPrompt();
       }
 
       if (

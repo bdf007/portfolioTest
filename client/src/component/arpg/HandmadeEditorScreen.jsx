@@ -261,6 +261,7 @@ class EditorScene extends Phaser.Scene {
    * traversable, cadre bleu = au-dessus du joueur (on passe derriere).
    */
   drawSolidMarks() {
+    if (!this.ctrl.showPainted) return; // tuiles masquees : pas de reperes non plus
     const g = this.gridGfx;
     for (const [id, tile] of Object.entries(this.level.paintedFloor)) {
       if (!tile.solid && !tile.overhead) continue;
@@ -406,6 +407,13 @@ class EditorScene extends Phaser.Scene {
     await ensureSheetsLoaded(this, sheets);
     if (this.dead || token !== this.syncToken) return; // scene detruite ou resynchronisation plus recente
     for (const id of Object.keys(painted)) this.placePaintedImage(id);
+    this.applyPaintedVisibility();
+  }
+
+  /** Affiche ou masque toutes les tuiles du sol peint (bouton du panneau). */
+  applyPaintedVisibility() {
+    const visible = this.ctrl.showPainted !== false;
+    this.paintedSprites.forEach((img) => img.setVisible(visible));
   }
 
   /** (Re)cree l'image d'une seule case du sol peint (ou la retire). */
@@ -418,16 +426,23 @@ class EditorScene extends Phaser.Scene {
     const tile = this.level.paintedFloor[id];
     if (!tile || !this.textures.exists(tile.sheet)) return;
     const [x, y, layer = 0] = id.split(",").map(Number);
-    this.paintedSprites.set(
-      id,
-      createPaintedTile(this, tile.sheet, tile.frame, x, y, false, layer),
+    const img = createPaintedTile(
+      this,
+      tile.sheet,
+      tile.frame,
+      x,
+      y,
+      false,
+      layer,
     );
+    img.setVisible(this.ctrl.showPainted !== false);
+    this.paintedSprites.set(id, img);
   }
 
   /** Applique l'outil de sol peint a une case (pose ou gomme). */
   applyTileTool(x, y, erase) {
-    const layer = this.ctrl.tileLayer ? 1 : 0;
-    let id = `${x},${y}${layer ? ",1" : ""}`;
+    const layer = this.ctrl.tileLayer || 0;
+    let id = layer ? `${x},${y},${layer}` : `${x},${y}`;
     let changed;
     if (erase) {
       const erasedId = eraseFloorTile(this.level, x, y); // retire la tuile la plus haute
@@ -507,6 +522,12 @@ class EditorScene extends Phaser.Scene {
           "Choisis d'abord une tuile dans la palette (panneau « Sol peint »).",
         );
         return;
+      }
+      if (!ctrl.showPainted) {
+        ctrl.onMessage(
+          "warn",
+          "Les tuiles peintes sont masquées : réaffiche-les pour voir ce que tu peins.",
+        );
       }
       this.stroke = {
         tile: true,
@@ -637,7 +658,7 @@ class EditorScene extends Phaser.Scene {
             {
               solid: this.ctrl.tileSolid,
               overhead: this.ctrl.tileOverhead,
-              layer: this.ctrl.tileLayer ? 1 : 0,
+              layer: this.ctrl.tileLayer || 0,
             },
           )
         ) {
@@ -947,6 +968,7 @@ export default function HandmadeEditorScreen({ onClose }) {
       tileSolid: false,
       tileOverhead: false,
       tileLayer: 0,
+      showPainted: true,
       tileset: defaultTileset,
       depth: 1,
       scene: null,
@@ -984,6 +1006,7 @@ export default function HandmadeEditorScreen({ onClose }) {
   const [tileSolid, setTileSolidState] = useState(false);
   const [tileOverhead, setTileOverheadState] = useState(false);
   const [tileLayer, setTileLayerState] = useState(0);
+  const [showPainted, setShowPaintedState] = useState(true);
 
   const showMessage = useCallback(
     (type, text) => setMessage({ type, text }),
@@ -1122,6 +1145,15 @@ export default function HandmadeEditorScreen({ onClose }) {
   const setTileOverhead = (v) => {
     ctrl.tileOverhead = v;
     setTileOverheadState(v);
+  };
+  const toggleShowPainted = () => {
+    const v = !ctrl.showPainted;
+    ctrl.showPainted = v;
+    setShowPaintedState(v);
+    if (ctrl.scene) {
+      ctrl.scene.applyPaintedVisibility();
+      ctrl.scene.refreshOverlay();
+    }
   };
   const setTileLayer = (v) => {
     ctrl.tileLayer = v;
@@ -1548,6 +1580,11 @@ export default function HandmadeEditorScreen({ onClose }) {
           <button style={btn(false)} onClick={handleSurround}>
             Entourer de murs
           </button>
+          <button style={btn(!showPainted)} onClick={toggleShowPainted}>
+            {showPainted
+              ? "👁 Masquer les tuiles peintes"
+              : "👁 Afficher les tuiles peintes"}
+          </button>
         </div>
 
         {groups.map((group) => (
@@ -1636,17 +1673,25 @@ export default function HandmadeEditorScreen({ onClose }) {
                 />{" "}
                 1 (sol)
               </label>
-              <label style={{ cursor: "pointer" }}>
+              <label style={{ cursor: "pointer", marginRight: 10 }}>
                 <input
                   type="radio"
                   checked={tileLayer === 1}
                   onChange={() => setTileLayer(1)}
                 />{" "}
-                2 (par-dessus : pont…)
+                2 (pont…)
+              </label>
+              <label style={{ cursor: "pointer" }}>
+                <input
+                  type="radio"
+                  checked={tileLayer === 2}
+                  onChange={() => setTileLayer(2)}
+                />{" "}
+                3 (dessus)
               </label>
               <div style={{ color: "#8a7050", lineHeight: 1.3 }}>
-                La couche 2 se pose sur la couche 1. Pour la traversabilité, la
-                tuile du dessus décide (un pont non bloquant sur une rivière
+                Chaque couche se pose sur la précédente. Pour la traversabilité,
+                la tuile du dessus décide (un pont non bloquant sur une rivière
                 bloquante = passable). La gomme retire d'abord la tuile du
                 dessus.
               </div>

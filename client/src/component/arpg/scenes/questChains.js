@@ -100,7 +100,7 @@ export const QUEST_CHAINS = {
     name: "Le forgeron en manque",
     steps: [
       {
-        at: { depth: 1, spawn: true, slot: 0 },
+        at: { depth: 0, spawn: true, slot: 0 },
         npc: "forgeron",
         questId: "obtainItem",
         targetItemId: "steelPickaxeBrenn",
@@ -111,7 +111,7 @@ export const QUEST_CHAINS = {
         itemReward: { itemId: "woodenPickaxe", quantity: 1 },
         dialogText: {
           offer:
-            "Un blob vert rôde dans les parages. Il m'a volé ma pioche. Peux-tu t'en occuper ?",
+            "Un blob vert rôde dans les parages de la tour. Il m'a volé ma pioche. Peux-tu t'en occuper ?",
           progress: "As-tu retrouvé ma pioche ?",
           ready: "Ma pioche ! Tu l'as retrouvée !",
           complete:
@@ -119,7 +119,7 @@ export const QUEST_CHAINS = {
         },
       },
       {
-        at: { depth: 1, spawn: true, slot: 0 }, // ou { depth: 1, spawn: true, slot: 0 } pour un pnj cree par la chaine
+        at: { depth: 0, spawn: true, slot: 0 }, // ou { depth: 1, spawn: true, slot: 0 } pour un pnj cree par la chaine
         npc: "forgeron",
         lead: "retourne voir le forgeron, il as une nouvelle tâche pour toi.",
         questId: "obtainItem",
@@ -131,7 +131,7 @@ export const QUEST_CHAINS = {
         recipeName: "Recette de lingot de cuivre",
         dialogText: {
           offer:
-            "Il me faudrait 6 minerais de cuivre. Equipe toi de ta pioche et rapporte-les-moi et je te montrerai comment les fondre.",
+            "Il me faudrait 6 minerais de cuivre. Equipe toi de ta pioche et rapporte-les-moi et je te montrerai comment les fondre. \n Il y a des filons au dessus de la falaise à l'est de la tour.",
           after:
             "Avec un peu de pratique et en appuyant sur 'G', tu fondras tes propres lingots.",
         },

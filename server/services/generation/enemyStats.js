@@ -3343,12 +3343,12 @@ const ENEMY_TYPES = {
  * @returns {{hp:number, damage:number, defense:number, speed:number, xpReward:number}}
  */
 function getEnemyStatsForDepth(depth, typeKey = "enemyDefault") {
-  if (depth < 1) {
-    throw new Error("getEnemyStatsForDepth: depth doit être >= 1");
-  }
+  // l'étage 0 (ville de départ, niveau fait main) n'a pas de progression propre :
+  // ses ennemis ont les stats de base de l'étage 1
+  const effectiveDepth = Math.max(1, depth);
 
   const type = ENEMY_TYPES[typeKey] || ENEMY_TYPES.enemyDefault;
-  const n = depth - 1; // pas de croissance au premier etage (stats de base pures)
+  const n = effectiveDepth - 1; // pas de croissance au premier etage (stats de base pures)
 
   return {
     hp: Math.round(type.base.hp * Math.pow(type.growthRate.hp, n)),

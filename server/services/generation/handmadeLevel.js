@@ -265,7 +265,7 @@ function normalizeHandmadeLevel(def, file) {
   // sol peint : { "<cle de feuille>": [[x, y, frame], ...] } - tuiles
   // visuelles posees par-dessus le sol autotile (cf. paintedFloor.js cote
   // client). Une tuile par case ET PAR COUCHE (5e element optionnel :
-  // couche 0 = sol, 1 = par-dessus, ex. un pont sur une riviere peinte ; la
+  // couche 0 = sol, 1 et 2 = par-dessus, ex. un pont sur une riviere peinte ; la
   // tuile de la couche la plus haute decide de la traversabilite de la case).
   // 4e element optionnel = drapeaux :
   //   1 = NON traversable : la case devient un mur dans la grille renvoyee
@@ -299,11 +299,11 @@ function normalizeHandmadeLevel(def, file) {
           inBounds({ x: c[0], y: c[1] }) &&
           c[2] >= 0 &&
           (c.length < 4 || (c[3] >= 0 && c[3] <= 3)) &&
-          (c.length < 5 || (c[4] >= 0 && c[4] <= 1));
+          (c.length < 5 || (c[4] >= 0 && c[4] <= 2));
         if (!ok) {
           fail(
             file,
-            `paintedFloor.${sheet}[${i}] : attendu [x, y, frame] ou [x, y, frame, drapeaux 0-3] ou [x, y, frame, drapeaux, couche 0-1] entiers, dans la grille (recu ${JSON.stringify(c)})`,
+            `paintedFloor.${sheet}[${i}] : attendu [x, y, frame] ou [x, y, frame, drapeaux 0-3] ou [x, y, frame, drapeaux, couche 0-2] entiers, dans la grille (recu ${JSON.stringify(c)})`,
           );
         }
         const flags = c.length >= 4 ? c[3] : 0;
@@ -359,6 +359,10 @@ function normalizeHandmadeLevel(def, file) {
 
   // tuiles peintes non traversables -> murs (apres les verifications
   // ci-dessus : rien de pose a la main ne doit se retrouver dedans)
+  // grille telle que dessinee dans l'editeur (AVANT conversion des tuiles
+  // peintes non traversables en murs) : sert uniquement au rendu du sol
+  // cote jeu, pour qu'il soit identique a l'editeur
+  const renderGrid = grid.map((row) => row.slice());
   const solidCells = [...topTileByCell.values()].filter((t) => t.solid);
   for (const t of solidCells) {
     const clash = occupiedTiles.find((o) => o.x === t.x && o.y === t.y);
@@ -388,6 +392,7 @@ function normalizeHandmadeLevel(def, file) {
     ambientNpcs,
     townBuildings,
     paintedFloor: Object.keys(paintedFloor).length > 0 ? paintedFloor : null,
+    renderGrid: Object.keys(paintedFloor).length > 0 ? renderGrid : null,
     generate,
     occupiedTiles,
   };
