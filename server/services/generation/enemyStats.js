@@ -3064,6 +3064,16 @@ const ENEMY_TYPES = {
 
   // ===== Petites familles numerotees (snake/spider/worm) - meme profil que bat1a/bee1 =====
 
+  snail1: {
+    base: { hp: 6, damage: 1, xpReward: 5 },
+    growthRate: { hp: 1.12, damage: 1.08, xpReward: 1.06 },
+    speedBase: 100,
+    speedMax: 150,
+    speedGrowthPerDepth: 3,
+    defenseGrowthEveryNDepths: 5,
+    lootTable: "snail1Drop",
+  },
+
   snake1: {
     base: { hp: 8, damage: 2, xpReward: 7 },
     growthRate: { hp: 1.13, damage: 1.1, xpReward: 1.08 },

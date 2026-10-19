@@ -66,6 +66,7 @@ const KNOWN_KEYS = new Set([
   "enemies",
   "chests",
   "miningRocks",
+  "forageNodes",
   "decorations",
   "questNpcs",
   "ambientNpcs",
@@ -204,7 +205,13 @@ function normalizeHandmadeLevel(def, file) {
     const t = floorTile(`enemies[${i}]`, e);
     if (typeof e.type !== "string" || !e.type)
       fail(file, `enemies[${i}] : "type" manquant`);
-    return { ...t, type: e.type };
+    const out = { ...t, type: e.type };
+    if (e.when != null) {
+      if (typeof e.when.chain !== "string" || !Number.isInteger(e.when.step))
+        fail(file, `enemies[${i}] : "when" doit être { chain, step }`);
+      out.when = { chain: e.when.chain, step: e.when.step };
+    }
+    return out;
   });
 
   const chests = list("chests").map((c, i) => {
@@ -235,6 +242,16 @@ function normalizeHandmadeLevel(def, file) {
       totalHits: r.totalHits ?? null,
       requiredTier: r.requiredTier ?? null,
       gemChance: r.gemChance ?? null,
+    };
+  });
+
+  const forageNodes = list("forageNodes").map((n, i) => {
+    const t = floorTile(`forageNodes[${i}]`, n);
+    return {
+      ...t,
+      resource: n.resource || null,
+      totalHits: n.totalHits ?? null,
+      requiredTier: n.requiredTier ?? null,
     };
   });
 
@@ -352,6 +369,7 @@ function normalizeHandmadeLevel(def, file) {
     ...enemies,
     ...chests,
     ...miningRocks,
+    ...forageNodes,
     ...decorations,
     ...questNpcs,
     ...ambientNpcs,
@@ -387,6 +405,7 @@ function normalizeHandmadeLevel(def, file) {
     enemies,
     chests,
     miningRocks,
+    forageNodes,
     decorations,
     questNpcs,
     ambientNpcs,
@@ -475,6 +494,42 @@ function hydrateMiningRocks(rocks, { biome, lootSeed, createRng, depth }) {
   });
 }
 
+/**
+ * Arbres / points de recolte ecrits a la main : meme forme de sortie que
+ * generateForageNodes. Champs non precises completes avec la forageConfig
+ * du biome (palier et bonus si la ressource y figure, sinon palier 1).
+ */
+function hydrateForageNodes(nodes, { biome, lootSeed, createRng }) {
+  const cfg = biome.forageConfig || {};
+  const pool = cfg.resourcePool || [];
+  const rng = createRng(`${lootSeed}-handmade-forage`);
+  const [minHits, maxHits] = Array.isArray(cfg.totalHits)
+    ? cfg.totalHits
+    : [cfg.totalHits || 4, cfg.totalHits || 4];
+
+  return nodes.map((n) => {
+    let poolEntry = n.resource
+      ? pool.find((p) => p.itemId === n.resource)
+      : null;
+    if (!n.resource && pool.length > 0) {
+      poolEntry = pool[Math.floor(rng() * pool.length)];
+    }
+    const resourceItemId =
+      n.resource || (poolEntry && poolEntry.itemId) || "oakWood";
+    return {
+      x: n.x,
+      y: n.y,
+      requiredTier:
+        n.requiredTier ?? (poolEntry && poolEntry.requiredTier) ?? 1,
+      resourceItemId,
+      totalHits:
+        n.totalHits ?? minHits + Math.floor(rng() * (maxHits - minHits + 1)),
+      bonusChance: cfg.bonusChance || 0,
+      bonusPool: cfg.bonusPool || [],
+    };
+  });
+}
+
 // ---- gestion des fichiers (utilisee par l'editeur de niveaux) ----
 
 const MAX_DEPTH = 9999;
@@ -555,4 +610,5 @@ module.exports = {
   normalizeHandmadeLevel,
   hydrateChests,
   hydrateMiningRocks,
+  hydrateForageNodes,
 };

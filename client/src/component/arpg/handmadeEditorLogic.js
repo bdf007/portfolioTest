@@ -40,6 +40,7 @@ const LIST_KEYS = [
   "questNpcs",
   "ambientNpcs",
   "miningRocks",
+  "forageNodes",
   "decorations",
   "townBuildings",
 ];
@@ -68,6 +69,7 @@ export function createEmptyLevel(width, height, tileset) {
     questNpcs: [],
     ambientNpcs: [],
     miningRocks: [],
+    forageNodes: [],
     decorations: [],
     townBuildings: [],
     // sol peint : { "x,y": { sheet, frame } } (une tuile par case)
@@ -330,6 +332,7 @@ export const PLACE_TOOLS = {
   questNpc: { kind: "list", key: "questNpcs" },
   ambientNpc: { kind: "list", key: "ambientNpcs" },
   rock: { kind: "list", key: "miningRocks" },
+  tree: { kind: "list", key: "forageNodes" },
   decor: { kind: "list", key: "decorations" },
 };
 
@@ -398,7 +401,12 @@ export function placeEntity(level, tool, x, y, options = {}) {
   if (spec.kind === "point") {
     level[spec.key] = { x, y };
   } else if (tool === "enemy") {
-    level.enemies.push({ x, y, type: options.enemyType || "enemyDefault" });
+    level.enemies.push({
+      x,
+      y,
+      type: options.enemyType || "enemyDefault",
+      ...(options.enemyWhen ? { when: options.enemyWhen } : {}),
+    });
   } else if (tool === "chest") {
     level.chests.push({ x, y, propType: "chest" });
   } else if (tool === "crate") {
@@ -416,6 +424,13 @@ export function placeEntity(level, tool, x, y, options = {}) {
     if (Number.isInteger(options.requiredTier))
       rock.requiredTier = options.requiredTier;
     level.miningRocks.push(rock);
+  } else if (tool === "tree") {
+    const tree = { x, y, resource: options.forageResource || "oakWood" };
+    if (Number.isInteger(options.forageHits) && options.forageHits > 0)
+      tree.totalHits = options.forageHits;
+    if (Number.isInteger(options.forageTier))
+      tree.requiredTier = options.forageTier;
+    level.forageNodes.push(tree);
   } else if (tool === "decor") {
     level.decorations.push({
       x,
@@ -491,6 +506,7 @@ export function validateLevel(level) {
       "questNpcs",
       "ambientNpcs",
       "miningRocks",
+      "forageNodes",
     ]) {
       for (const e of level[k])
         if (!reach.has(`${e.x},${e.y}`)) unreachable.push(k);

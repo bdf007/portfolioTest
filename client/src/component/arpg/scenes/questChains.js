@@ -30,6 +30,13 @@ import { createRng } from "../rng";
  */
 export const CHAIN_NPCS = {
   marchand: { name: "Aldric le marchand", sprite: "NPC_town1_M1" }, // remplace par une vraie cle de ton registre
+  maitreDArme: { name: "Thorin le maître d'arme", sprite: "NPC_town1_M4" },
+  bucheron: {
+    name: "Garrick le bucheron",
+    sprite: "NPC_town1_M3",
+    idle: "Salut, voyageur. Je n'ai pas de travail pour toi pour l'instant.",
+  },
+  mairesse: { name: "Isolde la mairesse", sprite: "NPC_town1_F2" },
   forgeron: { name: "Brenn le forgeron", sprite: "NPC_town1_M2" },
   soeurMarchand: { name: "Elise la sœur du marchand", sprite: "NPC_town1_F1" },
 };
@@ -95,13 +102,116 @@ export const QUEST_CHAINS = {
       },
     ],
   },
-  copperSmith: {
-    id: "copperSmith",
-    name: "Le forgeron en manque",
+  novice: {
+    id: "novice",
+    name: "Les premiers pas",
     steps: [
+      // 0 - la mairesse : nettoyer la plage
       {
-        at: { depth: 0, spawn: true, slot: 0 },
+        title: "La plage infestée",
+        at: { depth: 0, spawn: true, slot: 0, tile: { x: 16, y: 35 } },
+        npc: "mairesse",
+        questId: "killEnemies",
+        target: 5,
+        targetEnemyType: "snail1",
+        xpReward: 20,
+        goldReward: 0,
+        itemReward: { itemId: "garrickAxe", quantity: 1 },
+        dialogText: {
+          offer:
+            "Voyageur, des bestioles ont envahi la plage. Peux-tu nous en débarrasser ? 5 suffiront.",
+          progress: "Il en reste sur la plage...",
+          complete:
+            "Merci ! Pendant que tu nettoyais, tu as trouvé une hache ? C'est celle de Garrick le bûcheron, il l'a perdue. Rapporte-la-lui.",
+        },
+      },
+      // 1 - Garrick : rapporter la hache
+      {
+        title: "La hache perdue",
+        at: { depth: 0, spawn: true, slot: 1, tile: { x: 97, y: 73 } },
+        npc: "bucheron",
+        lead: "Rapporte la hache à Garrick le bûcheron.",
+        questId: "obtainItem",
+        targetItemId: "garrickAxe",
+        targetQuantity: 1,
+        xpReward: 20,
+        goldReward: 0,
+        itemReward: { itemId: "woodenAxe", quantity: 1 },
+        dialogText: {
+          offer: "Ma hache ! Tu l'aurais retrouvée ? Montre-moi ça.",
+          progress: "Tu n'as pas encore ma hache ?",
+          ready: "C'est bien elle !",
+          complete:
+            "Merci ! Tiens, prends cette hache en bois en échange : avec elle, tu pourras couper des arbres.",
+        },
+      },
+      // 2 - Garrick : du chêne, contre une recette d'arme de base
+      {
+        title: "Du bois de chêne",
+        at: { depth: 0, spawn: true, slot: 1, tile: { x: 97, y: 73 } },
+        npc: "bucheron",
+        questId: "obtainItem",
+        targetItemId: "oakWood",
+        targetQuantity: 4,
+        xpReward: 30,
+        goldReward: 0,
+        recipeRewardByArchetype: {
+          voleur: { id: "woodenDaggerRecipe", name: "Dague en bois" },
+          guerrier: { id: "woodenSwordRecipe", name: "Épée en bois" },
+          archer: { id: "woodenBowRecipe", name: "Arc en bois" },
+          mage: { id: "woodenStaffRecipe", name: "Bâton en bois" },
+        },
+        dialogText: {
+          offer:
+            "Avec cette hache, coupe-moi des arbres : il me faut 4 morceaux de bois de chêne. Je t'apprendrai en retour à fabriquer une arme digne de ce nom.",
+          progress: "Il me faut encore du bois de chêne.",
+          complete:
+            "Du beau chêne ! Voilà : je t'apprends à fabriquer l'arme de base de ta voie. Elle demande du chêne, alors garde ta hache à portée de main. Va voir Thorin, le maître d'arme, il a un entraînement pour toi.",
+        },
+      },
+      // 3 - Thorin : un ennemi échappé de la Tour
+      {
+        title: "L'entraînement de Thorin",
+        at: { depth: 0, spawn: true, slot: 2, tile: { x: 34, y: 37 } },
+        npc: "maitreDArme",
+        lead: "Va voir Thorin, le maître d'arme.",
+        questId: "killEnemies",
+        target: 3,
+        targetEnemyType: "spider2",
+        xpReward: 40,
+        goldReward: 0,
+        recipeRewardByArchetype: {
+          voleur: {
+            id: "reinforcedWoodenDaggerRecipe",
+            name: "Dague en bois renforcée",
+          },
+          guerrier: {
+            id: "reinforcedWoodenSwordRecipe",
+            name: "Épée en bois renforcée",
+          },
+          archer: {
+            id: "reinforcedWoodenBowRecipe",
+            name: "Arc en bois renforcé",
+          },
+          mage: {
+            id: "reinforcedWoodenStaffRecipe",
+            name: "Bâton en bois renforcé",
+          },
+        },
+        dialogText: {
+          offer:
+            "Des araignées se sont échappées de la Tour. Montre-moi ce que tu vaux : abats-en 3.",
+          progress: "Il y en a encore dehors.",
+          complete:
+            "Bien joué. Je t'apprends à renforcer ton arme de base. Maintenant, va voir Brenn le forgeron.",
+        },
+      },
+      // 4 - Brenn : la pioche volée (ancienne étape 0 de copperSmith)
+      {
+        title: "La pioche volée",
+        at: { depth: 0, spawn: true, slot: 3, tile: { x: 35, y: 15 } },
         npc: "forgeron",
+        lead: "Va voir Brenn le forgeron.",
         questId: "obtainItem",
         targetItemId: "steelPickaxeBrenn",
         targetQuantity: 1,
@@ -118,8 +228,10 @@ export const QUEST_CHAINS = {
             "Merci de m'avoir rapporté ma pioche. \nJe vais pouvoir commencer à miner de nouveau filon.  \nTiens prends ma pioche d'apprenti en récompense, \nelle te permettra de récupérer du minerai de cuivre et du charbon. \nReviens me voir si tu as besoin d'aide.",
         },
       },
+      // 5 - Brenn : le cuivre (ancienne étape 1 de copperSmith)
       {
-        at: { depth: 0, spawn: true, slot: 0 }, // ou { depth: 1, spawn: true, slot: 0 } pour un pnj cree par la chaine
+        title: "Le cuivre de Brenn",
+        at: { depth: 0, spawn: true, slot: 3, tile: { x: 74, y: 69 } },
         npc: "forgeron",
         lead: "retourne voir le forgeron, il as une nouvelle tâche pour toi.",
         questId: "obtainItem",
@@ -199,6 +311,8 @@ function buildChainQuest(chain, stepIndex) {
     chainName: chain.name,
     chainStep: stepIndex,
     chainStepCount: chain.steps.length,
+    chainStepTitle: step.title || null,
+    recipeRewardByArchetype: step.recipeRewardByArchetype || null,
   };
 }
 
@@ -225,8 +339,11 @@ export function chainNeedsSpawnNpc(scene) {
   for (const [chainId, chain] of Object.entries(QUEST_CHAINS)) {
     const state = chains[chainId] || { step: 0, done: false };
     if (state.done) continue;
-    const step = chain.steps[state.step];
-    if (step && step.at.spawn && step.at.depth === scene.currentDepth)
+    // tous les PNJ "spawn" de l'etage sont presents des le depart,
+    // pas seulement celui de l'etape en cours
+    if (
+      chain.steps.some((s) => s.at.spawn && s.at.depth === scene.currentDepth)
+    )
       return true;
   }
   return false;
@@ -288,10 +405,59 @@ export function installChainQuests(scene, npcIndices) {
     const built = buildChainQuest(chain, state.step);
     if (step.at.spawn) {
       // position du pnj : conservee d'une etape a l'autre, sinon tiree ici
-      built.extraPos = keptPos || pickChainNpcSpot(scene, stepNpcIndex);
+      built.extraPos = step.at.tile
+        ? { x: step.at.tile.x, y: step.at.tile.y }
+        : keptPos || pickChainNpcSpot(scene, stepNpcIndex);
       if (!built.extraPos) continue; // pas de case valable pour l'instant
     }
     scene.quests[key] = built;
+  }
+  const tileSeen = new Set(); // une seule etape par PNJ fixe sa position
+  // PNJ de chaine : presents des le depart. Ceux dont l'etape n'est pas
+  // encore arrivee ont une quete "chainIdle" (sans quete a donner), remplacee
+  // par la vraie etape quand son tour vient (meme position).
+  for (const chain of Object.values(QUEST_CHAINS)) {
+    const state = scene.questChains[chain.id];
+    if (!state || state.done) continue;
+    chain.steps.forEach((step, i) => {
+      if (!step.at.spawn || step.at.depth !== scene.currentDepth) return;
+      const idx = resolveStepNpcIndex(step);
+      const key = `${step.at.depth}-${idx}`;
+      const existing = scene.quests[key];
+      if (existing) {
+        // position fixee dans la chaine : elle prime sur une ancienne
+        // position enregistree dans la sauvegarde. Seule la premiere etape
+        // encore a venir (ou en cours) de ce PNJ compte.
+        if (i >= state.step && !tileSeen.has(key)) {
+          tileSeen.add(key);
+          if (
+            step.at.tile &&
+            existing.extraPos &&
+            (existing.extraPos.x !== step.at.tile.x ||
+              existing.extraPos.y !== step.at.tile.y)
+          ) {
+            existing.extraPos = { x: step.at.tile.x, y: step.at.tile.y };
+          }
+        }
+        return;
+      }
+      if (i <= state.step) return;
+      const castNpc = step.npc ? CHAIN_NPCS[step.npc] : null;
+      const extraPos = step.at.tile
+        ? { x: step.at.tile.x, y: step.at.tile.y }
+        : pickChainNpcSpot(scene, idx);
+      if (!extraPos) return;
+      scene.quests[key] = {
+        questId: "chainIdle",
+        npcSpriteKey: castNpc ? castNpc.sprite : null,
+        npcName: castNpc ? castNpc.name : null,
+        idleText: (castNpc && castNpc.idle) || null,
+        extraPos,
+        accepted: false,
+        completed: false,
+        failed: false,
+      };
+    });
   }
   syncChainLeads(scene);
 }
@@ -358,6 +524,7 @@ function syncChainLeads(scene) {
         chainName: chain.name,
         chainStep: state.step,
         chainStepCount: chain.steps.length,
+        chainStepTitle: next.title || null,
         leadText:
           next.lead || `Parler à un habitant de l'étage ${next.at.depth}`,
       };
@@ -384,6 +551,8 @@ export function advanceQuestChain(scene, qs) {
     (scene.questNpcs || []).map((n) => n.npcIndex),
   );
   scene.events.emit("quests-updated", { ...scene.quests });
+  // chaine terminee : tous les ennemis "quete" de l'etage reviennent
+  if (scene.spawnGatedEnemies) scene.spawnGatedEnemies();
   scene.persistProgress();
 }
 
@@ -407,4 +576,27 @@ export function getPendingChainStepFor(scene, npcIndex) {
     return { name: npcDef ? npcDef.name : null };
   }
   return null;
+}
+
+/**
+ * Un ennemi place a la main avec `when: { chain, step }` n'apparait que si :
+ * - la chaine est terminee (tout le monde revient), OU
+ * - l'etape `step` est en cours ET sa quete a ete acceptee.
+ * Sans `when`, l'ennemi est toujours la.
+ */
+export function isEnemyGateOpen(scene, when) {
+  if (!when || !when.chain) return true;
+  const state = scene.questChains && scene.questChains[when.chain];
+  if (!state) return false;
+  if (state.done) return true;
+  if (state.step !== when.step) return false;
+  return Object.values(scene.quests || {}).some(
+    (q) =>
+      q.chainId === when.chain &&
+      q.chainStep === when.step &&
+      q.questId !== "chainLead" && // la piste du journal n'est pas la quete
+      q.questId !== "chainIdle" &&
+      q.accepted &&
+      !q.completed,
+  );
 }

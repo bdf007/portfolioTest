@@ -33,7 +33,7 @@ import {
   spawnRescueCaptive,
   spawnRescuedNpcs,
 } from "./quests";
-import { chainNeedsSpawnNpc } from "./questChains";
+import { chainNeedsSpawnNpc, isEnemyGateOpen } from "./questChains";
 import { createTowerGuards, destroyTowerGuards } from "./tutorialGate";
 import {
   createEnemyVisualEffect,
@@ -48,7 +48,69 @@ import {
   FURY_KILLS_REQUIRED,
   resolveVisualEffect,
 } from "./gameConstants";
+function createLevelEnemy(scene, enemyData, spawnIndex, behavior) {
+  const spawnPos = { x: enemyData.x, y: enemyData.y };
+  const { entry: enemySprite, spriteKey } = resolveEnemySprite(enemyData.type);
 
+  const sprite = scene.enemyGroup.create(
+    spawnPos.x * TILE_SIZE + TILE_SIZE / 2,
+    spawnPos.y * TILE_SIZE + TILE_SIZE / 2,
+    enemySprite.key,
+    enemySprite.animations.idleDown,
+  );
+  sprite.setScale(enemySprite.scale);
+  const ehb = enemySprite.hitbox;
+  sprite.body
+    .setSize(ehb.width, ehb.height)
+    .setOffset(ehb.offsetX, ehb.offsetY);
+  sprite.setDepth(8);
+  sprite.anims.play(spriteKey + "-idle-down");
+  const resolvedEffect = resolveVisualEffect(enemyData);
+  const visualEmitter = resolvedEffect
+    ? createEnemyVisualEffect(scene, sprite, resolvedEffect)
+    : null;
+  scene.enemies.push({
+    sprite,
+    spriteKey,
+    spawnIndex,
+    archetype: enemyData.type,
+    type: behavior.type,
+    state: behavior.state,
+    home: behavior.home,
+    aggroRadius: behavior.aggroRadius,
+    patrolPath: behavior.patrolPath,
+    patrolIndex: 0,
+    patrolDirection: 1,
+    path: null,
+    pathIndex: 0,
+    lastDir: "down",
+    hp: enemyData.hp,
+    maxHp: enemyData.maxHp,
+    damage: enemyData.damage,
+    defense: enemyData.defense,
+    xpReward: enemyData.xpReward,
+    attackType: enemyData.attackType || "melee",
+    questLoot: enemyData.questLoot || null,
+    inflictsEffect: enemyData.inflictsEffect || null,
+    resistances: enemyData.resistances || {},
+    damageType: enemyData.damageType || "physical",
+    visualEmitter,
+    statusEffects: [],
+    drops: enemyData.drops || [],
+    attackCooldown: createCooldown(ENEMY_ATTACK_COOLDOWN),
+  });
+}
+
+/** Fait apparaitre les ennemis `when` dont la quete vient d'etre acceptee / terminee. */
+export function spawnGatedEnemies(scene) {
+  const pending = scene.pendingGatedEnemies;
+  if (!pending || pending.length === 0) return;
+  scene.pendingGatedEnemies = pending.filter((p) => {
+    if (!isEnemyGateOpen(scene, p.enemyData.when)) return true; // garde en attente
+    createLevelEnemy(scene, p.enemyData, p.spawnIndex, p.behavior);
+    return false;
+  });
+}
 export async function loadLevel(
   scene,
   depth,
@@ -473,66 +535,34 @@ export async function loadLevel(
   }
 
   const behaviorRng = createRng(data.seed + "-behaviors");
+  // ennemis lies a une quete (`when`) : crees plus tard, a l'acceptation
+  scene.pendingGatedEnemies = [];
+  scene.spawnGatedEnemies = () => spawnGatedEnemies(scene);
+  const chainDone = (chainId) => !!scene.questChains?.[chainId]?.done;
   enemies.forEach((enemyData, spawnIndex) => {
     const spawnPos = { x: enemyData.x, y: enemyData.y };
-
+    // le tirage de comportement reste fait pour TOUS (rng stable)
     const behavior = createEnemyBehavior(grid, spawnPos, behaviorRng);
 
-    if (scene.currentFloorKills.includes(spawnIndex)) return;
+    // chaine terminee : les ennemis "quete" reviennent tous, meme tues pendant le tuto
+    const ignoreKill = enemyData.when && chainDone(enemyData.when.chain);
+    if (!ignoreKill && scene.currentFloorKills.includes(spawnIndex)) return;
 
-    const { entry: enemySprite, spriteKey } = resolveEnemySprite(
-      enemyData.type,
-    );
-
-    const sprite = scene.enemyGroup.create(
-      spawnPos.x * TILE_SIZE + TILE_SIZE / 2,
-      spawnPos.y * TILE_SIZE + TILE_SIZE / 2,
-      enemySprite.key,
-      enemySprite.animations.idleDown,
-    );
-    sprite.setScale(enemySprite.scale);
-    const ehb = enemySprite.hitbox;
-    sprite.body
-      .setSize(ehb.width, ehb.height)
-      .setOffset(ehb.offsetX, ehb.offsetY);
-    sprite.setDepth(8);
-    sprite.anims.play(spriteKey + "-idle-down");
-    const resolvedEffect = resolveVisualEffect(enemyData);
-    const visualEmitter = resolvedEffect
-      ? createEnemyVisualEffect(scene, sprite, resolvedEffect)
-      : null;
-    scene.enemies.push({
-      sprite,
-      spriteKey,
-      spawnIndex,
-      archetype: enemyData.type,
-      type: behavior.type,
-      state: behavior.state,
-      home: behavior.home,
-      aggroRadius: behavior.aggroRadius,
-      patrolPath: behavior.patrolPath,
-      patrolIndex: 0,
-      patrolDirection: 1,
-      path: null,
-      pathIndex: 0,
-      lastDir: "down",
-      hp: enemyData.hp,
-      maxHp: enemyData.maxHp,
-      damage: enemyData.damage,
-      defense: enemyData.defense,
-      xpReward: enemyData.xpReward,
-      attackType: enemyData.attackType || "melee",
-      questLoot: enemyData.questLoot || null,
-      inflictsEffect: enemyData.inflictsEffect || null,
-      resistances: enemyData.resistances || {},
-      damageType: enemyData.damageType || "physical",
-      visualEmitter,
-      statusEffects: [],
-      drops: enemyData.drops || [],
-      attackCooldown: createCooldown(ENEMY_ATTACK_COOLDOWN),
-    });
+    if (enemyData.when) {
+      scene.pendingGatedEnemies.push({ enemyData, spawnIndex, behavior });
+      return;
+    }
+    createLevelEnemy(scene, enemyData, spawnIndex, behavior);
   });
-
+  console.log(
+    "[enemies] total:",
+    enemies.length,
+    "| avec when:",
+    enemies.filter((e) => e.when).length,
+    "| en attente:",
+    scene.pendingGatedEnemies.length,
+  );
+  spawnGatedEnemies(scene);
   spawnChests(scene, { chests, savedEphemeralChests });
   spawnTraps(scene, { traps });
   spawnMiningRocks(scene, { data, savedMiningRocksState });

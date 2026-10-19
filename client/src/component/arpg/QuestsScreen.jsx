@@ -90,7 +90,8 @@ export default function QuestsScreen({ quests, inventory, onClose }) {
       q.chainStepCount > 1
         ? ` - étape ${q.chainStep + 1}/${q.chainStepCount}`
         : "";
-    return `${q.chainName}${stepLabel}`;
+    const titleLabel = q.chainStepTitle ? ` : ${q.chainStepTitle}` : "";
+    return `${q.chainName}${stepLabel}${titleLabel}`;
   }
   const containerRef = useRef(null);
   const [bookSize, setBookSize] = useState({ width: 800, height: 500 });

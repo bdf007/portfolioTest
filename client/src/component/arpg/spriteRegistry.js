@@ -61,6 +61,7 @@ import fox2Spritesheet from "../../assets/ennemies/$Fox_2.png";
 import lizardSpritesheet from "../../assets/ennemies/$Lizard.png";
 import raccoon1Spritesheet from "../../assets/ennemies/$Raccoon_1.png";
 import slime1Spritesheet from "../../assets/ennemies/$Slime_1.png";
+import snail1Spritesheet from "../../assets/ennemies/$Snail_1.png";
 import snake1Spritesheet from "../../assets/ennemies/$Snake_1.png";
 import snake2Spritesheet from "../../assets/ennemies/$Snake_2.png";
 import snake3Spritesheet from "../../assets/ennemies/$Snake_3.png";
@@ -1238,7 +1239,7 @@ export const SPRITE_REGISTRY = {
     "hero9",
     archerMaleSpritesheet,
     FULL_ANIMATION_FRAMES,
-    0.4,
+    0.45,
     4,
     16,
     96,
@@ -1248,7 +1249,7 @@ export const SPRITE_REGISTRY = {
     "hero10",
     archerFemaleSpritesheet,
     FULL_ANIMATION_FRAMES,
-    0.4,
+    0.45,
     4,
     16,
     96,
@@ -1258,7 +1259,7 @@ export const SPRITE_REGISTRY = {
     "hero11",
     knightMaleSpritesheet,
     FULL_ANIMATION_FRAMES,
-    0.4,
+    0.45,
     4,
     16,
     96,
@@ -1268,7 +1269,7 @@ export const SPRITE_REGISTRY = {
     "hero12",
     knightFemaleSpritesheet,
     FULL_ANIMATION_FRAMES,
-    0.4,
+    0.45,
     4,
     16,
     96,
@@ -1288,7 +1289,7 @@ export const SPRITE_REGISTRY = {
     "hero14",
     thiefFemaleSpritesheet,
     FULL_ANIMATION_FRAMES,
-    0.4,
+    0.45,
     4,
     16,
     96,
@@ -1298,7 +1299,7 @@ export const SPRITE_REGISTRY = {
     "hero15",
     warriorMaleSpritesheet,
     FULL_ANIMATION_FRAMES,
-    0.4,
+    0.45,
     4,
     16,
     96,
@@ -1308,7 +1309,7 @@ export const SPRITE_REGISTRY = {
     "hero16",
     warriorFemaleSpritesheet,
     FULL_ANIMATION_FRAMES,
-    0.4,
+    0.45,
     4,
     16,
     96,
@@ -1318,7 +1319,7 @@ export const SPRITE_REGISTRY = {
     "hero17",
     wizardMaleSpritesheet,
     FULL_ANIMATION_FRAMES,
-    0.4,
+    0.45,
     4,
     16,
     96,
@@ -5423,6 +5424,19 @@ export const SPRITE_REGISTRY = {
     sheetRows: 4,
     hitbox: computeSafeHitbox(32, 40, 1.5),
   },
+  snail1: {
+    key: "snail1",
+    displayName: "escargot",
+    path: snail1Spritesheet,
+    frameWidth: 32,
+    frameHeight: 40,
+    scale: 1,
+    lootTable: "snail1Drop",
+    animations: STANDARD_ANIMATION_FRAMES,
+    sheetCols: 3,
+    sheetRows: 4,
+    hitbox: computeSafeHitbox(32, 40, 1),
+  },
   snake1: {
     key: "snake1",
     displayName: "serpent vert",
@@ -5494,12 +5508,12 @@ export const SPRITE_REGISTRY = {
     path: spider2Spritesheet,
     frameWidth: 32,
     frameHeight: 40,
-    scale: 1.5,
+    scale: 1,
     lootTable: "spider2Drop",
     animations: STANDARD_ANIMATION_FRAMES,
     sheetCols: 3,
     sheetRows: 4,
-    hitbox: computeSafeHitbox(32, 40, 1.5),
+    hitbox: computeSafeHitbox(32, 40, 1),
   },
   spider3: {
     key: "spider3",
@@ -6748,7 +6762,7 @@ const HERO_STATS_PROFILES = {
     meleeRange: 42,
     rangedRange: 440,
     startingItems: [
-      "woodenBow",
+      // "woodenBow",
       // "woodenPickaxe",
       // "woodenAxe",
       // "leatherArmor",
@@ -6757,7 +6771,7 @@ const HERO_STATS_PROFILES = {
       // "pants",
       // "belt",
     ],
-    startingAmmo: { itemId: "woodenArrow", quantity: 100 },
+    // startingAmmo: { itemId: "woodenArrow", quantity: 100 },
     startingAbilities: ["piercingArrow", "scoutPulse"],
     startingRecipes: [],
   },
@@ -6812,7 +6826,7 @@ const HERO_STATS_PROFILES = {
     visionRadius: 7,
     meleeRange: 40,
     rangedRange: 400,
-    startingItems: ["woodenDagger"],
+    startingItems: [],
     startingAmmo: null,
     startingAbilities: [
       "stealth",
@@ -6844,7 +6858,9 @@ const HERO_STATS_PROFILES = {
     visionRadius: 7,
     meleeRange: 50,
     rangedRange: 320,
-    startingItems: ["woodenSword", "woodenShield"],
+    startingItems: [
+      // "woodenSword", "woodenShield"
+    ],
     startingAmmo: null,
     startingAbilities: ["shieldBash"],
     startingRecipes: ["reinforcedSwordRecipe"],
@@ -6872,7 +6888,7 @@ const HERO_STATS_PROFILES = {
     meleeRange: 35,
     rangedRange: 450,
     startingItems: [
-      "woodenStaff",
+      // "woodenStaff",
       // { itemId: "waterLily", quantity: 2 },
       // "woodenPickaxe",
       // "woodenAxe",
@@ -6906,7 +6922,7 @@ const HERO_STATS_PROFILES = {
     meleeRange: 55,
     rangedRange: 300,
     startingItems: [
-      "woodenMallet",
+      // "woodenMallet",
       // "woodenPickaxe", "woodenAxe"
     ],
     startingAmmo: null,
@@ -6935,7 +6951,7 @@ const HERO_STATS_PROFILES = {
     meleeRange: 50,
     rangedRange: 320,
     startingItems: [
-      "woodenStaff",
+      // "woodenStaff",
       // "woodenPickaxe", "woodenAxe"
     ],
     startingAmmo: null,
@@ -6964,7 +6980,7 @@ const HERO_STATS_PROFILES = {
     meleeRange: 45,
     rangedRange: 350,
     startingItems: [
-      "woodenStaff",
+      // "woodenStaff",
       // "woodenPickaxe", "woodenAxe"
     ],
     startingAmmo: null,
@@ -6993,7 +7009,7 @@ const HERO_STATS_PROFILES = {
     meleeRange: 40,
     rangedRange: 400,
     startingItems: [
-      "woodenStaff",
+      // "woodenStaff",
       // "woodenPickaxe", "woodenAxe"
     ],
     startingAmmo: null,
@@ -8280,6 +8296,7 @@ export const WEAPON_TIERS_FRAMES = {
   ironAxe: 158,
   steelAxe: 159,
   silverAxe: 160,
+  garrickAxe: 160,
   goldAxe: 161,
   platiniumAxe: 162,
   cobaltAxe: 163,

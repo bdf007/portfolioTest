@@ -1,31 +1,61 @@
 /**
  * Barriere du tutoriel : tant que le tuto de l'etage 0 n'est pas termine,
- * l'escalier vers la Tour (etage 1) est ferme et 2 soldats en gardent l'entree.
+ * l'escalier vers la Tour (etage 1) est ferme et des soldats en gardent l'entree.
  *
  * - tuto termine = toutes les chaines de TUTORIAL_CHAIN_IDS sont "done"
  * - la vraie protection est isTowerGated() (teste dans MainScene.update) ;
  *   les soldats sont le decor + le message
+ * - la replique des gardes depend de l'etape en cours de la chaine du tuto
+ *   (cf. GUARD_LINES_BY_STEP) : ils renvoient toujours vers le bon PNJ
  */
 import { SPRITE_REGISTRY } from "../spriteRegistry";
 import { TILE_SIZE } from "./gameConstants";
 
 export const TUTORIAL_DEPTH = 0;
 // chaines de quetes qui composent le tuto (ajoute-en ici si besoin)
-export const TUTORIAL_CHAIN_IDS = ["copperSmith"];
+export const TUTORIAL_CHAIN_IDS = ["novice"];
 
-// Cases des 2 soldats (coordonnees de l'editeur). Laisse [] pour un
-// placement automatique pres de l'escalier - mais mieux vaut les fixer :
-// const TOWER_GUARD_TILES = [{ x: 40, y: 20 }, { x: 42, y: 20 }];
+// Cases des soldats (coordonnees de l'editeur). Laisse [] pour un
+// placement automatique pres de l'escalier (2 soldats) - mais mieux vaut les fixer.
 const TOWER_GUARD_TILES = [
   { x: 75, y: 50 },
   { x: 76, y: 50 },
   { x: 77, y: 50 },
 ];
 const GUARD_SPRITES = ["soldier1", "soldier2", "soldier3"];
-const GUARD_LINES = [
-  "Halte ! La Tour n'est pas pour les novices. Va d'abord voir le forgeron.",
+
+// Replique selon l'etape en cours de la chaine "novice" (index de l'etape).
+// 0 mairesse | 1-2 Garrick | 3 Thorin | 4-5 Brenn
+const TUTORIAL_MAIN_CHAIN = "novice";
+const GUARD_LINES_BY_STEP = {
+  0: [
+    "Halte ! La Tour n'est pas pour les novices. Va voir la mairesse, elle a besoin d'aide sur la plage.",
+    "Personne n'entre sans avoir fait ses preuves. La mairesse te dira par où commencer.",
+  ],
+  1: [
+    "Pas si vite ! Garrick le bûcheron attend quelqu'un à qui confier sa hache.",
+    "Va d'abord voir Garrick, le bûcheron.",
+  ],
+  2: [
+    "Garrick a encore besoin de toi. Va le voir avant de songer à la Tour.",
+    "Tu n'as pas fini avec le bûcheron. Retourne le voir.",
+  ],
+  3: [
+    "Tu progresses. Thorin, le maître d'arme, t'attend pour parfaire ton entraînement.",
+    "Va voir Thorin, le maître d'arme. Il n'a pas fini avec toi.",
+  ],
+  4: [
+    "Presque prêt ! Brenn le forgeron a une tâche pour toi.",
+    "Le forgeron te cherche. Va le voir avant de monter.",
+  ],
+  5: [
+    "Dernière étape : Brenn le forgeron a encore besoin de toi.",
+    "Termine ce que le forgeron t'a demandé, et la Tour sera à toi.",
+  ],
+};
+const GUARD_LINES_FALLBACK = [
+  "Halte ! La Tour n'est pas pour les novices.",
   "Personne n'entre sans avoir fait ses preuves en ville.",
-  "Seuls les aventuriers ayant prouvé leur valeur peuvent entrer.",
 ];
 const GATE_TOAST = "Les gardes te barrent la route.";
 
@@ -48,6 +78,15 @@ function toastOnce(scene, text, cooldownMs = 2500) {
 /** Appele quand le heros marche sur l'escalier et que la barriere est active. */
 export function notifyGateBlocked(scene) {
   toastOnce(scene, GATE_TOAST);
+}
+
+// replique du garde numero `i`, selon l'etape en cours (lue a chaque fois)
+function guardLine(scene, i) {
+  const state = scene.questChains?.[TUTORIAL_MAIN_CHAIN];
+  const lines =
+    (state && !state.done && GUARD_LINES_BY_STEP[state.step]) ||
+    GUARD_LINES_FALLBACK;
+  return lines[i % lines.length];
 }
 
 function pickGuardTiles(scene) {
@@ -93,11 +132,14 @@ export function createTowerGuards(scene) {
     sprite.setDepth(9);
     const animKey = `${SPRITE_REGISTRY[key] ? key : "soldier1"}-idle-down`;
     if (scene.anims.exists(animKey)) sprite.anims.play(animKey);
-    scene.levelColliders.push(scene.physics.add.collider(scene.hero, sprite));
+    const collider = scene.physics.add.collider(scene.hero, sprite);
+    scene.levelColliders.push(collider);
     scene.towerGuards.push({
       sprite,
       tile: t,
-      line: GUARD_LINES[i % GUARD_LINES.length],
+      index: i,
+      collider,
+      released: false,
     });
   });
 }
@@ -107,24 +149,33 @@ export function updateTowerGuards(scene, tileX, tileY) {
   const guards = scene.towerGuards;
   if (!guards || guards.length === 0) return;
 
-  if (isTutorialDone(scene)) {
-    scene.showLootToast("« Tu as fait tes preuves. Passe, la Tour t'attend. »");
-    scene.towerGuards = [];
-    guards.forEach((g) =>
-      scene.tweens.add({
-        targets: g.sprite,
-        alpha: 0,
-        duration: 800,
-        onComplete: () => g.sprite.destroy(),
-      }),
-    );
+  const near = guards.find(
+    (g) => Math.hypot(g.tile.x - tileX, g.tile.y - tileY) <= 3,
+  );
+  if (!near) return;
+
+  if (!isTutorialDone(scene)) {
+    toastOnce(scene, guardLine(scene, near.index), 4000);
     return;
   }
 
-  for (const g of guards) {
-    if (Math.hypot(g.tile.x - tileX, g.tile.y - tileY) <= 2) {
-      toastOnce(scene, g.line, 4000);
-      break;
+  const pending = guards.filter((g) => !g.released);
+  if (pending.length === 0) return;
+  scene.showLootToast("« Tu as fait tes preuves. Passe, la Tour t'attend. »");
+  const centerX = guards.reduce((s, g) => s + g.tile.x, 0) / guards.length;
+  for (const g of pending) {
+    g.released = true;
+    // plus d'obstacle : on desactive (sans detruire : levelLoader detruit
+    // lui-meme tous les levelColliders au prochain chargement)
+    g.collider.active = false;
+    if (g.sprite.body) g.sprite.body.enable = false;
+    const side = Math.sign(g.tile.x - centerX);
+    if (side !== 0) {
+      scene.tweens.add({
+        targets: g.sprite,
+        x: g.sprite.x + side * TILE_SIZE,
+        duration: 600,
+      });
     }
   }
 }

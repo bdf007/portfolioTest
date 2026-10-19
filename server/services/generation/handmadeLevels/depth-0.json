@@ -103,8 +103,8 @@
     "####################################################################################################"
   ],
   "playerSpawn": {
-    "x": 36,
-    "y": 14
+    "x": 19,
+    "y": 46
   },
   "exitTile": {
     "x": 76,
@@ -116,34 +116,148 @@
   },
   "enemies": [
     {
-      "x": 85,
-      "y": 42,
-      "type": "greenSlime"
+      "x": 12,
+      "y": 85,
+      "type": "snail1",
+      "when": {
+        "chain": "novice",
+        "step": 0
+      }
+    },
+    {
+      "x": 22,
+      "y": 86,
+      "type": "snail1",
+      "when": {
+        "chain": "novice",
+        "step": 0
+      }
+    },
+    {
+      "x": 32,
+      "y": 88,
+      "type": "snail1",
+      "when": {
+        "chain": "novice",
+        "step": 0
+      }
+    },
+    {
+      "x": 38,
+      "y": 87,
+      "type": "snail1",
+      "when": {
+        "chain": "novice",
+        "step": 0
+      }
+    },
+    {
+      "x": 6,
+      "y": 89,
+      "type": "snail1",
+      "when": {
+        "chain": "novice",
+        "step": 0
+      }
+    },
+    {
+      "x": 83,
+      "y": 45,
+      "type": "spider2",
+      "when": {
+        "chain": "novice",
+        "step": 3
+      }
     },
     {
       "x": 90,
-      "y": 46,
-      "type": "greenSlime"
+      "y": 47,
+      "type": "spider2",
+      "when": {
+        "chain": "novice",
+        "step": 3
+      }
     },
     {
-      "x": 84,
-      "y": 51,
-      "type": "greenSlime"
+      "x": 86,
+      "y": 53,
+      "type": "spider2",
+      "when": {
+        "chain": "novice",
+        "step": 3
+      }
     },
     {
-      "x": 67,
-      "y": 44,
-      "type": "greenSlime"
+      "x": 69,
+      "y": 53,
+      "type": "spider2",
+      "when": {
+        "chain": "novice",
+        "step": 3
+      }
     },
     {
-      "x": 70,
-      "y": 54,
-      "type": "greenSlime"
+      "x": 85,
+      "y": 43,
+      "type": "greenSlime",
+      "when": {
+        "chain": "novice",
+        "step": 4
+      }
+    },
+    {
+      "x": 85,
+      "y": 50,
+      "type": "greenSlime",
+      "when": {
+        "chain": "novice",
+        "step": 4
+      }
+    },
+    {
+      "x": 93,
+      "y": 53,
+      "type": "greenSlime",
+      "when": {
+        "chain": "novice",
+        "step": 4
+      }
+    },
+    {
+      "x": 81,
+      "y": 53,
+      "type": "greenSlime",
+      "when": {
+        "chain": "novice",
+        "step": 4
+      }
+    },
+    {
+      "x": 68,
+      "y": 43,
+      "type": "greenSlime",
+      "when": {
+        "chain": "novice",
+        "step": 4
+      }
+    },
+    {
+      "x": 89,
+      "y": 40,
+      "type": "greenSlime",
+      "when": {
+        "chain": "novice",
+        "step": 4
+      }
     },
     {
       "x": 95,
-      "y": 40,
-      "type": "greenSlime"
+      "y": 43,
+      "type": "greenSlime",
+      "when": {
+        "chain": "novice",
+        "step": 4
+      }
     }
   ],
   "chests": [
@@ -181,12 +295,16 @@
       "y": 9
     },
     {
-      "x": 16,
-      "y": 46
-    },
-    {
       "x": 21,
       "y": 52
+    },
+    {
+      "x": 14,
+      "y": 52
+    },
+    {
+      "x": 35,
+      "y": 15
     }
   ],
   "miningRocks": [
@@ -237,6 +355,50 @@
       "y": 6,
       "resource": "coalOre",
       "totalHits": 4,
+      "requiredTier": 1
+    }
+  ],
+  "forageNodes": [
+    {
+      "x": 89,
+      "y": 72,
+      "resource": "oakWood",
+      "totalHits": 4,
+      "requiredTier": 1
+    },
+    {
+      "x": 92,
+      "y": 75,
+      "resource": "oakWood",
+      "totalHits": 2,
+      "requiredTier": 1
+    },
+    {
+      "x": 93,
+      "y": 69,
+      "resource": "oakWood",
+      "totalHits": 1,
+      "requiredTier": 1
+    },
+    {
+      "x": 88,
+      "y": 77,
+      "resource": "oakWood",
+      "totalHits": 3,
+      "requiredTier": 1
+    },
+    {
+      "x": 95,
+      "y": 73,
+      "resource": "oakWood",
+      "totalHits": 3,
+      "requiredTier": 1
+    },
+    {
+      "x": 84,
+      "y": 70,
+      "resource": "oakWood",
+      "totalHits": 2,
       "requiredTier": 1
     }
   ],

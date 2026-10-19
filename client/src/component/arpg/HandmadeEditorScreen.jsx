@@ -38,6 +38,8 @@ import {
   eraseFloorTile,
 } from "./handmadeEditorLogic";
 
+import { QUEST_CHAINS } from "./scenes/questChains";
+
 // ---------------------------------------------------------------------------
 // Editeur de niveaux "faits main" (cf. handmadeLevel.js cote serveur).
 // Le niveau en cours vit dans ctrl.level (objet mutable partage entre la
@@ -46,6 +48,22 @@ import {
 // ---------------------------------------------------------------------------
 
 const TILE_IMAGES_TO_LOAD = getTileImagesToLoad();
+
+// bois disponibles pour les arbres (ids des ressources, cf. WOOD_TREE_FRAMES du jeu)
+const FORAGE_WOODS = [
+  "oakWood",
+  "ashWood",
+  "yewWood",
+  "ebonyWood",
+  "petrifiedWood",
+  "mistwood",
+  "runewood",
+  "skywood",
+  "scarletwood",
+  "sacredWood",
+  "eternalWood",
+  "starwood",
+];
 
 const TOOLS = [
   { group: "Dessin", id: "floor", label: "Sol (pinceau)" },
@@ -64,6 +82,7 @@ const TOOLS = [
   { group: "Éléments", id: "questNpc", label: "PNJ de quête" },
   { group: "Éléments", id: "ambientNpc", label: "PNJ d'ambiance" },
   { group: "Éléments", id: "rock", label: "Gisement" },
+  { group: "Éléments", id: "tree", label: "Arbre" },
   { group: "Éléments", id: "decor", label: "Décor" },
   { group: "Sol peint", id: "tilePaint", label: "Tuile (pinceau)" },
   { group: "Sol peint", id: "tileRect", label: "Tuile (rectangle)" },
@@ -81,8 +100,19 @@ const MARKERS = {
   ambientNpcs: ["a", 0xbdc3c7],
   chests: ["C", 0xe67e22],
   miningRocks: ["R", 0x7f8c8d],
+  forageNodes: ["T", 0x2e7d32],
   decorations: ["d", 0x7f8c8d],
 };
+
+const WHEN_OPTIONS = [
+  { value: "always", label: "Toujours présent" },
+  ...Object.values(QUEST_CHAINS).flatMap((c) =>
+    c.steps.map((s, i) => ({
+      value: `${c.id}:${i}`,
+      label: `${c.name} - étape ${i + 1}${s.title ? ` (${s.title})` : ""}`,
+    })),
+  ),
+];
 
 function lineCells(x0, y0, x1, y1) {
   // Bresenham : toutes les cases entre deux points (trace continu au pinceau)
@@ -354,6 +384,15 @@ class EditorScene extends Phaser.Scene {
         String(e.resource || "R").slice(0, 2),
       ),
     );
+    lv.forageNodes.forEach((e) =>
+      put(
+        e,
+        "T",
+        MARKERS.forageNodes[1],
+        "square",
+        String(e.resource || "T").slice(0, 2),
+      ),
+    );
     lv.decorations.forEach((e) =>
       put(
         e,
@@ -570,10 +609,14 @@ class EditorScene extends Phaser.Scene {
     } else if (PLACE_TOOLS[tool]) {
       const res = placeEntity(this.level, tool, tile.x, tile.y, {
         enemyType: ctrl.enemyType,
+        enemyWhen: ctrl.enemyWhen,
         resource: ctrl.resource,
         requiredTier: ctrl.resourceTier,
         totalHits: ctrl.totalHits,
         decorType: ctrl.decorType,
+        forageResource: ctrl.forageResource,
+        forageTier: ctrl.forageTier,
+        forageHits: ctrl.forageHits,
       });
       if (!res.ok) ctrl.onMessage("warn", res.message);
       this.refreshOverlay();
@@ -960,10 +1003,14 @@ export default function HandmadeEditorScreen({ onClose }) {
       level: createEmptyLevel(40, 30, defaultTileset),
       tool: "floor",
       enemyType: "enemyDefault",
+      enemyWhen: null,
       resource: null,
       resourceTier: 1,
       totalHits: 3,
       decorType: "rock_small",
+      forageResource: "oakWood",
+      forageTier: 1,
+      forageHits: 4,
       tileSel: null,
       tileSolid: false,
       tileOverhead: false,
@@ -989,6 +1036,7 @@ export default function HandmadeEditorScreen({ onClose }) {
   const [gameKey, setGameKey] = useState(0);
   const [tool, setToolState] = useState("floor");
   const [enemyType, setEnemyTypeState] = useState("enemyDefault");
+  const [enemyWhenKey, setEnemyWhenKey] = useState("always");
   const [depthInput, setDepthInput] = useState("1");
   const [sizeInput, setSizeInput] = useState({ w: 40, h: 30 });
   const [tilesetSearch, setTilesetSearch] = useState("");
@@ -1002,6 +1050,9 @@ export default function HandmadeEditorScreen({ onClose }) {
   const [resource, setResourceState] = useState(null);
   const [totalHits, setTotalHitsState] = useState(3);
   const [decorType, setDecorTypeState] = useState("rock_small");
+  const [forageResource, setForageResourceState] = useState("oakWood");
+  const [forageTier, setForageTierState] = useState(1);
+  const [forageHits, setForageHitsState] = useState(4);
   const [tileSel, setTileSelState] = useState(null);
   const [tileSolid, setTileSolidState] = useState(false);
   const [tileOverhead, setTileOverheadState] = useState(false);
@@ -1132,6 +1183,15 @@ export default function HandmadeEditorScreen({ onClose }) {
     ctrl.enemyType = t;
     setEnemyTypeState(t);
   };
+  const setEnemyWhen = (key) => {
+    setEnemyWhenKey(key);
+    if (!key || key === "always") {
+      ctrl.enemyWhen = null;
+    } else {
+      const [chain, step] = key.split(":");
+      ctrl.enemyWhen = { chain, step: Number(step) };
+    }
+  };
   const setResource = (itemId) => {
     ctrl.resource = itemId;
     const entry = resources.find((r) => r.itemId === itemId);
@@ -1170,6 +1230,18 @@ export default function HandmadeEditorScreen({ onClose }) {
   const setDecorType = (t) => {
     ctrl.decorType = t;
     setDecorTypeState(t);
+  };
+  const setForageResource = (id) => {
+    ctrl.forageResource = id;
+    setForageResourceState(id);
+  };
+  const setForageTier = (n) => {
+    ctrl.forageTier = n;
+    setForageTierState(n);
+  };
+  const setForageHits = (n) => {
+    ctrl.forageHits = n;
+    setForageHitsState(n);
   };
 
   const parsedDepth = Number(depthInput);
@@ -1612,6 +1684,12 @@ export default function HandmadeEditorScreen({ onClose }) {
               options={enemyTypes.map((t) => ({ value: t, label: t }))}
               onChange={setEnemyType}
             />
+            <div style={{ margin: "8px 0 4px" }}>Apparaît quand</div>
+            <SearchSelect
+              value={enemyWhenKey}
+              options={WHEN_OPTIONS}
+              onChange={setEnemyWhen}
+            />
           </div>
         )}
 
@@ -1641,6 +1719,43 @@ export default function HandmadeEditorScreen({ onClose }) {
                 value={totalHits}
                 onChange={(e) =>
                   setTotalHits(Math.max(1, Number(e.target.value) || 1))
+                }
+                style={{ ...inputStyle, width: 56 }}
+              />
+            </div>
+          </div>
+        )}
+
+        {tool === "tree" && (
+          <div>
+            <div style={{ marginBottom: 4 }}>Bois de l'arbre</div>
+            <SearchSelect
+              value={forageResource}
+              options={FORAGE_WOODS.map((id) => ({ value: id, label: id }))}
+              onChange={setForageResource}
+            />
+            <div style={{ marginTop: 6 }}>
+              Palier d'outil requis{" "}
+              <input
+                type="number"
+                min={1}
+                max={20}
+                value={forageTier}
+                onChange={(e) =>
+                  setForageTier(Math.max(1, Number(e.target.value) || 1))
+                }
+                style={{ ...inputStyle, width: 56 }}
+              />
+            </div>
+            <div style={{ marginTop: 6 }}>
+              Coups avant épuisement{" "}
+              <input
+                type="number"
+                min={1}
+                max={50}
+                value={forageHits}
+                onChange={(e) =>
+                  setForageHits(Math.max(1, Number(e.target.value) || 1))
                 }
                 style={{ ...inputStyle, width: 56 }}
               />
@@ -1745,7 +1860,8 @@ export default function HandmadeEditorScreen({ onClose }) {
           Légende : croix rouge = tuile non traversable · cadre bleu = tuile
           au-dessus du joueur · D départ · S sortie · E escalier · V hub · B
           boutique · Q/a PNJ · C coffre · c caisse · rond rouge = ennemi · carré
-          gris = gisement · rond gris = décor (2 premières lettres du type).
+          gris = gisement · carré vert = arbre · rond gris = décor (2 premières
+          lettres du type).
         </div>
       </div>
     </div>

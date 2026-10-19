@@ -67,6 +67,7 @@ const {
   loadHandmadeLevel,
   hydrateChests,
   hydrateMiningRocks,
+  hydrateForageNodes,
 } = require("../services/generation/handmadeLevel");
 const ArpgGame = require("../models/ArpgModel");
 const {
@@ -727,7 +728,10 @@ async function getLevel(req, res) {
               `[handmadeLevel] etage ${depth} : type d'ennemi inconnu "${e.type}"`,
             );
           }
-          return buildEnemy(e, e.type);
+          return {
+            ...buildEnemy(e, e.type),
+            ...(e.when ? { when: e.when } : {}),
+          };
         })
       : [];
     const generatedEnemies = enemySpawns.map((spawn) =>
@@ -813,15 +817,21 @@ async function getLevel(req, res) {
     ];
     for (const r of miningRocks) allowedTilesFull.delete(`${r.x},${r.y}`);
 
-    const forageNodes = gen("forageNodes")
-      ? generateForageNodes(
-          grid,
-          lootSeed,
-          playerSpawn,
-          biome.forageConfig,
-          allowedTilesFull,
-        )
+    const manualForageNodes = handmade
+      ? hydrateForageNodes(handmade.forageNodes, { biome, lootSeed, createRng })
       : [];
+    const forageNodes = [
+      ...manualForageNodes,
+      ...(gen("forageNodes")
+        ? generateForageNodes(
+            grid,
+            lootSeed,
+            playerSpawn,
+            biome.forageConfig,
+            allowedTilesFull,
+          )
+        : []),
+    ];
     for (const n of forageNodes) allowedTilesFull.delete(`${n.x},${n.y}`);
 
     const decorations = [

@@ -43,7 +43,7 @@ export const ITEM_DEFS = {
     description: "+5 dégât au corps à corps.",
     statBonus: { meleeDamage: 5 },
     stackable: false,
-    archetypes: ["voleur", "assassin"],
+    archetypes: ["voleur"],
     price: 50,
   },
   ironDagger: {
@@ -54,7 +54,7 @@ export const ITEM_DEFS = {
     description: "+7 dégât au corps à corps.",
     statBonus: { meleeDamage: 7 },
     stackable: false,
-    archetypes: ["voleur", "assassin"],
+    archetypes: ["voleur"],
     price: 70,
   },
   silverDagger: {
@@ -65,7 +65,7 @@ export const ITEM_DEFS = {
     description: "+9 dégât au corps à corps.",
     statBonus: { meleeDamage: 9 },
     stackable: false,
-    archetypes: ["voleur", "assassin"],
+    archetypes: ["voleur"],
     price: 90,
   },
   steelDagger: {
@@ -76,7 +76,7 @@ export const ITEM_DEFS = {
     description: "+11 dégât au corps à corps.",
     statBonus: { meleeDamage: 11 },
     stackable: false,
-    archetypes: ["voleur", "assassin"],
+    archetypes: ["voleur"],
     price: 110,
   },
   goldDagger: {
@@ -87,7 +87,7 @@ export const ITEM_DEFS = {
     description: "+13 dégât au corps à corps.",
     statBonus: { meleeDamage: 13 },
     stackable: false,
-    archetypes: ["voleur", "assassin"],
+    archetypes: ["voleur"],
     price: 130,
   },
   platiniumDagger: {
@@ -98,7 +98,7 @@ export const ITEM_DEFS = {
     description: "+15 dégât au corps à corps.",
     statBonus: { meleeDamage: 15 },
     stackable: false,
-    archetypes: ["voleur", "assassin"],
+    archetypes: ["voleur"],
     price: 150,
   },
   cobaltDagger: {
@@ -109,7 +109,7 @@ export const ITEM_DEFS = {
     description: "+17 dégât au corps à corps.",
     statBonus: { meleeDamage: 17 },
     stackable: false,
-    archetypes: ["voleur", "assassin"],
+    archetypes: ["voleur"],
     price: 170,
   },
   adamantineDagger: {
@@ -120,7 +120,7 @@ export const ITEM_DEFS = {
     description: "+19 dégât au corps à corps.",
     statBonus: { meleeDamage: 19 },
     stackable: false,
-    archetypes: ["voleur", "assassin"],
+    archetypes: ["voleur"],
     price: 200,
   },
   angelicDagger: {
@@ -131,7 +131,7 @@ export const ITEM_DEFS = {
     description: "+21 dégât au corps à corps.",
     statBonus: { meleeDamage: 21 },
     stackable: false,
-    archetypes: ["voleur", "assassin"],
+    archetypes: ["voleur"],
     price: 230,
   },
   fatefulDagger: {
@@ -142,7 +142,7 @@ export const ITEM_DEFS = {
     description: "+23 dégât au corps à corps.",
     statBonus: { meleeDamage: 23 },
     stackable: false,
-    archetypes: ["voleur", "assassin"],
+    archetypes: ["voleur"],
     price: 260,
   },
   novaDagger: {
@@ -153,7 +153,7 @@ export const ITEM_DEFS = {
     description: "+25 dégât au corps à corps.",
     statBonus: { meleeDamage: 25 },
     stackable: false,
-    archetypes: ["voleur", "assassin"],
+    archetypes: ["voleur"],
     price: 300,
   },
   sharpCopperDagger: {
@@ -429,7 +429,7 @@ export const ITEM_DEFS = {
     description: "+4 dégâts au corps à corps (chance d'infliger stun).",
     statBonus: { meleeDamage: 4 },
     stackable: false,
-    archetypes: ["voleur", "guerrier", "archer", "mage"],
+    archetypes: ["voleur"],
     inflictsEffect: {
       type: "stun",
       kind: "modifier", // <-- le champ qui manquait, decide TOUT le comportement
@@ -2410,7 +2410,7 @@ export const ITEM_DEFS = {
       "+1 dégât au corps à corps. +2 de distance d'attaque. Arme d'entraînement de départ.",
     statBonus: { meleeDamage: 1, meleeRange: 2 },
     stackable: false,
-    archetypes: ["guerrier", "voleur"],
+    archetypes: ["guerrier"],
     price: 2,
   },
   copperSpear: {
@@ -2424,7 +2424,7 @@ export const ITEM_DEFS = {
       "+2 dégât au corps à corps. +2 de distance d'attaque. Arme d'entraînement de départ.",
     statBonus: { meleeDamage: 2, meleeRange: 2 },
     stackable: false,
-    archetypes: ["guerrier", "voleur"],
+    archetypes: ["guerrier"],
     price: 2,
   },
   ironSpear: {
@@ -4493,7 +4493,7 @@ export const ITEM_DEFS = {
     description: "+1 dégât au corps à corps. Arme d'entraînement de départ.",
     statBonus: { meleeDamage: 1 },
     stackable: false,
-    archetypes: ["guerrier", "voleur"],
+    archetypes: ["guerrier"],
     price: 2,
   },
   copperHammer: {
@@ -4506,7 +4506,7 @@ export const ITEM_DEFS = {
     description: "+2 dégât au corps à corps.",
     statBonus: { meleeDamage: 2 },
     stackable: false,
-    archetypes: ["guerrier", "voleur"],
+    archetypes: ["guerrier"],
     price: 30,
   },
   ironHammer: {
@@ -4532,7 +4532,7 @@ export const ITEM_DEFS = {
     description: "+6 dégât au corps à corps.",
     statBonus: { meleeDamage: 6 },
     stackable: false,
-    archetypes: ["guerrier", "voleur"],
+    archetypes: ["guerrier"],
     price: 100,
   },
   silverHammer: {
@@ -4545,7 +4545,7 @@ export const ITEM_DEFS = {
     description: "+8 dégât au corps à corps.",
     statBonus: { meleeDamage: 8 },
     stackable: false,
-    archetypes: ["guerrier", "voleur"],
+    archetypes: ["guerrier"],
     price: 150,
   },
   goldHammer: {
@@ -4558,7 +4558,7 @@ export const ITEM_DEFS = {
     description: "+10 dégât au corps à corps.",
     statBonus: { meleeDamage: 10 },
     stackable: false,
-    archetypes: ["guerrier", "voleur"],
+    archetypes: ["guerrier"],
     price: 200,
   },
   platiniumHammer: {
@@ -4571,7 +4571,7 @@ export const ITEM_DEFS = {
     description: "+12 dégât au corps à corps.",
     statBonus: { meleeDamage: 12 },
     stackable: false,
-    archetypes: ["guerrier", "voleur"],
+    archetypes: ["guerrier"],
     price: 300,
   },
   cobaltHammer: {
@@ -4584,7 +4584,7 @@ export const ITEM_DEFS = {
     description: "+14 dégât au corps à corps.",
     statBonus: { meleeDamage: 14 },
     stackable: false,
-    archetypes: ["guerrier", "voleur"],
+    archetypes: ["guerrier"],
     price: 400,
   },
   adamantineHammer: {
@@ -4597,7 +4597,7 @@ export const ITEM_DEFS = {
     description: "+16 dégât au corps à corps.",
     statBonus: { meleeDamage: 16 },
     stackable: false,
-    archetypes: ["guerrier", "voleur"],
+    archetypes: ["guerrier"],
     price: 500,
   },
   crimsonHammer: {
@@ -4610,7 +4610,7 @@ export const ITEM_DEFS = {
     description: "+18 dégât au corps à corps.",
     statBonus: { meleeDamage: 18 },
     stackable: false,
-    archetypes: ["guerrier", "voleur"],
+    archetypes: ["guerrier"],
     price: 600,
   },
   angelicHammer: {
@@ -4623,7 +4623,7 @@ export const ITEM_DEFS = {
     description: "+20 dégât au corps à corps.",
     statBonus: { meleeDamage: 20 },
     stackable: false,
-    archetypes: ["guerrier", "voleur"],
+    archetypes: ["guerrier"],
     price: 700,
   },
   fatefulHammer: {
@@ -4636,7 +4636,7 @@ export const ITEM_DEFS = {
     description: "+22 dégât au corps à corps.",
     statBonus: { meleeDamage: 22 },
     stackable: false,
-    archetypes: ["guerrier", "voleur"],
+    archetypes: ["guerrier"],
     price: 800,
   },
   novaHammer: {
@@ -4649,7 +4649,7 @@ export const ITEM_DEFS = {
     description: "+24 dégât au corps à corps.",
     statBonus: { meleeDamage: 24 },
     stackable: false,
-    archetypes: ["guerrier", "voleur"],
+    archetypes: ["guerrier"],
     price: 900,
   },
   // ----- Marteau de guerre aiguisée (sharp) - branche METAL uniquement -----
@@ -4663,7 +4663,7 @@ export const ITEM_DEFS = {
     description: "+4 dégâts au corps à corps.",
     statBonus: { meleeDamage: 4 },
     stackable: false,
-    archetypes: ["guerrier", "voleur"],
+    archetypes: ["guerrier"],
     inflictsEffect: {
       type: "bleed",
       kind: "dot",
@@ -4684,7 +4684,7 @@ export const ITEM_DEFS = {
     description: "+5 dégâts au corps à corps.",
     statBonus: { meleeDamage: 5 },
     stackable: false,
-    archetypes: ["guerrier", "voleur"],
+    archetypes: ["guerrier"],
     inflictsEffect: {
       type: "bleed",
       kind: "dot",
@@ -4705,7 +4705,7 @@ export const ITEM_DEFS = {
     description: "+6 dégâts au corps à corps.",
     statBonus: { meleeDamage: 6 },
     stackable: false,
-    archetypes: ["guerrier", "voleur"],
+    archetypes: ["guerrier"],
     inflictsEffect: {
       type: "bleed",
       kind: "dot",
@@ -4726,7 +4726,7 @@ export const ITEM_DEFS = {
     description: "+7 dégâts au corps à corps.",
     statBonus: { meleeDamage: 7 },
     stackable: false,
-    archetypes: ["guerrier", "voleur"],
+    archetypes: ["guerrier"],
     inflictsEffect: {
       type: "bleed",
       kind: "dot",
@@ -4747,7 +4747,7 @@ export const ITEM_DEFS = {
     description: "+8 dégâts au corps à corps.",
     statBonus: { meleeDamage: 8 },
     stackable: false,
-    archetypes: ["guerrier", "voleur"],
+    archetypes: ["guerrier"],
     inflictsEffect: {
       type: "bleed",
       kind: "dot",
@@ -4768,7 +4768,7 @@ export const ITEM_DEFS = {
     description: "+9 dégâts au corps à corps.",
     statBonus: { meleeDamage: 9 },
     stackable: false,
-    archetypes: ["guerrier", "voleur"],
+    archetypes: ["guerrier"],
     inflictsEffect: {
       type: "bleed",
       kind: "dot",
@@ -4789,7 +4789,7 @@ export const ITEM_DEFS = {
     description: "+10 dégâts au corps à corps.",
     statBonus: { meleeDamage: 10 },
     stackable: false,
-    archetypes: ["guerrier", "voleur"],
+    archetypes: ["guerrier"],
     inflictsEffect: {
       type: "bleed",
       kind: "dot",
@@ -4810,7 +4810,7 @@ export const ITEM_DEFS = {
     description: "+11 dégâts au corps à corps.",
     statBonus: { meleeDamage: 11 },
     stackable: false,
-    archetypes: ["guerrier", "voleur"],
+    archetypes: ["guerrier"],
     inflictsEffect: {
       type: "bleed",
       kind: "dot",
@@ -4831,7 +4831,7 @@ export const ITEM_DEFS = {
     description: "+12 dégâts au corps à corps.",
     statBonus: { meleeDamage: 12 },
     stackable: false,
-    archetypes: ["guerrier", "voleur"],
+    archetypes: ["guerrier"],
     inflictsEffect: {
       type: "bleed",
       kind: "dot",
@@ -4852,7 +4852,7 @@ export const ITEM_DEFS = {
     description: "+13 dégâts au corps à corps.",
     statBonus: { meleeDamage: 13 },
     stackable: false,
-    archetypes: ["guerrier", "voleur"],
+    archetypes: ["guerrier"],
     inflictsEffect: {
       type: "bleed",
       kind: "dot",
@@ -4873,7 +4873,7 @@ export const ITEM_DEFS = {
     description: "+14 dégâts au corps à corps.",
     statBonus: { meleeDamage: 14 },
     stackable: false,
-    archetypes: ["guerrier", "voleur"],
+    archetypes: ["guerrier"],
     inflictsEffect: {
       type: "bleed",
       kind: "dot",
@@ -4894,7 +4894,7 @@ export const ITEM_DEFS = {
     description: "+15 dégâts au corps à corps.",
     statBonus: { meleeDamage: 15 },
     stackable: false,
-    archetypes: ["guerrier", "voleur"],
+    archetypes: ["guerrier"],
     inflictsEffect: {
       type: "bleed",
       kind: "dot",
@@ -4917,7 +4917,7 @@ export const ITEM_DEFS = {
     description: "+4 dégât au corps à corps (chance d'infliger stun).",
     statBonus: { meleeDamage: 4 },
     stackable: false,
-    archetypes: ["guerrier", "voleur"],
+    archetypes: ["guerrier"],
     inflictsEffect: {
       type: "stun",
       kind: "modifier",
@@ -4937,7 +4937,7 @@ export const ITEM_DEFS = {
     description: "+5 dégâts au corps à corps (chance d'infliger stun).",
     statBonus: { meleeDamage: 5 },
     stackable: false,
-    archetypes: ["guerrier", "voleur"],
+    archetypes: ["guerrier"],
     inflictsEffect: {
       type: "stun",
       kind: "modifier",
@@ -4957,7 +4957,7 @@ export const ITEM_DEFS = {
     description: "+6 dégâts au corps à corps (chance d'infliger stun).",
     statBonus: { meleeDamage: 6 },
     stackable: false,
-    archetypes: ["guerrier", "voleur"],
+    archetypes: ["guerrier"],
     inflictsEffect: {
       type: "stun",
       kind: "modifier",
@@ -4977,7 +4977,7 @@ export const ITEM_DEFS = {
     description: "+8 dégâts au corps à corps (chance d'infliger stun).",
     statBonus: { meleeDamage: 8 },
     stackable: false,
-    archetypes: ["guerrier", "voleur"],
+    archetypes: ["guerrier"],
     inflictsEffect: {
       type: "stun",
       kind: "modifier",
@@ -4997,7 +4997,7 @@ export const ITEM_DEFS = {
     description: "+10 dégâts au corps à corps (chance d'infliger stun).",
     statBonus: { meleeDamage: 10 },
     stackable: false,
-    archetypes: ["guerrier", "voleur"],
+    archetypes: ["guerrier"],
     inflictsEffect: {
       type: "stun",
       kind: "modifier",
@@ -5017,7 +5017,7 @@ export const ITEM_DEFS = {
     description: "+12 dégâts au corps à corps (chance d'infliger stun).",
     statBonus: { meleeDamage: 12 },
     stackable: false,
-    archetypes: ["guerrier", "voleur"],
+    archetypes: ["guerrier"],
     inflictsEffect: {
       type: "stun",
       kind: "modifier",
@@ -5037,7 +5037,7 @@ export const ITEM_DEFS = {
     description: "+14 dégâts au corps à corps (chance d'infliger stun).",
     statBonus: { meleeDamage: 14 },
     stackable: false,
-    archetypes: ["guerrier", "voleur"],
+    archetypes: ["guerrier"],
     inflictsEffect: {
       type: "stun",
       kind: "modifier",
@@ -5057,7 +5057,7 @@ export const ITEM_DEFS = {
     description: "+16 dégâts au corps à corps (chance d'infliger stun).",
     statBonus: { meleeDamage: 16 },
     stackable: false,
-    archetypes: ["guerrier", "voleur"],
+    archetypes: ["guerrier"],
     inflictsEffect: {
       type: "stun",
       kind: "modifier",
@@ -5077,7 +5077,7 @@ export const ITEM_DEFS = {
     description: "+18 dégâts au corps à corps (chance d'infliger stun).",
     statBonus: { meleeDamage: 18 },
     stackable: false,
-    archetypes: ["guerrier", "voleur"],
+    archetypes: ["guerrier"],
     inflictsEffect: {
       type: "stun",
       kind: "modifier",
@@ -5097,7 +5097,7 @@ export const ITEM_DEFS = {
     description: "+20 dégâts au corps à corps (chance d'infliger stun).",
     statBonus: { meleeDamage: 20 },
     stackable: false,
-    archetypes: ["guerrier", "voleur"],
+    archetypes: ["guerrier"],
     inflictsEffect: {
       type: "stun",
       kind: "modifier",
@@ -5117,7 +5117,7 @@ export const ITEM_DEFS = {
     description: "+22 dégâts au corps à corps (chance d'infliger stun).",
     statBonus: { meleeDamage: 22 },
     stackable: false,
-    archetypes: ["guerrier", "voleur"],
+    archetypes: ["guerrier"],
     inflictsEffect: {
       type: "stun",
       kind: "modifier",
@@ -5137,7 +5137,7 @@ export const ITEM_DEFS = {
     description: "+25 dégâts au corps à corps (chance d'infliger stun).",
     statBonus: { meleeDamage: 25 },
     stackable: false,
-    archetypes: ["guerrier", "voleur"],
+    archetypes: ["guerrier"],
     inflictsEffect: {
       type: "stun",
       kind: "modifier",
@@ -5157,7 +5157,7 @@ export const ITEM_DEFS = {
     description: "+28 dégâts au corps à corps (chance d'infliger stun).",
     statBonus: { meleeDamage: 28 },
     stackable: false,
-    archetypes: ["guerrier", "voleur"],
+    archetypes: ["guerrier"],
     inflictsEffect: {
       type: "stun",
       kind: "modifier",
@@ -5179,7 +5179,7 @@ export const ITEM_DEFS = {
       "+1 dégât au corps à corps. +1 de distance d'attaque  Arme d'entraînement de départ.",
     statBonus: { meleeDamage: 1, meleeRange: 1 },
     stackable: false,
-    archetypes: ["guerrier", "voleur"],
+    archetypes: ["guerrier", "mage"],
     price: 2,
   },
   copperSickle: {
@@ -5192,7 +5192,7 @@ export const ITEM_DEFS = {
     description: "+3 dégât au corps à corps. +2 de distance d'attaque.",
     statBonus: { meleeDamage: 3, meleeRange: 2 },
     stackable: false,
-    archetypes: ["guerrier", "voleur"],
+    archetypes: ["guerrier", "mage"],
     price: 30,
   },
   ironSickle: {
@@ -5205,7 +5205,7 @@ export const ITEM_DEFS = {
     description: "+5 dégât au corps à corps. +2 de distance d'attaque.",
     statBonus: { meleeDamage: 5, meleeRange: 2 },
     stackable: false,
-    archetypes: ["guerrier"],
+    archetypes: ["guerrier", "mage"],
     price: 60,
   },
   steelSickle: {
@@ -5218,7 +5218,7 @@ export const ITEM_DEFS = {
     description: "+7 dégât au corps à corps. +2 de distance d'attaque.",
     statBonus: { meleeDamage: 7, meleeRange: 2 },
     stackable: false,
-    archetypes: ["guerrier", "voleur"],
+    archetypes: ["guerrier", "mage"],
     price: 100,
   },
   silverSickle: {
@@ -5231,7 +5231,7 @@ export const ITEM_DEFS = {
     description: "+9 dégât au corps à corps. +2 de distance d'attaque.",
     statBonus: { meleeDamage: 9, meleeRange: 2 },
     stackable: false,
-    archetypes: ["guerrier", "voleur"],
+    archetypes: ["guerrier", "mage"],
     price: 150,
   },
   goldSickle: {
@@ -5244,7 +5244,7 @@ export const ITEM_DEFS = {
     description: "+11 dégât au corps à corps. +2 de distance d'attaque.",
     statBonus: { meleeDamage: 11, meleeRange: 2 },
     stackable: false,
-    archetypes: ["guerrier", "voleur"],
+    archetypes: ["guerrier", "mage"],
     price: 200,
   },
   platiniumSickle: {
@@ -5257,7 +5257,7 @@ export const ITEM_DEFS = {
     description: "+13 dégât au corps à corps. +2 de distance d'attaque.",
     statBonus: { meleeDamage: 13, meleeRange: 2 },
     stackable: false,
-    archetypes: ["guerrier", "voleur"],
+    archetypes: ["guerrier", "mage"],
     price: 300,
   },
   cobaltSickle: {
@@ -5270,7 +5270,7 @@ export const ITEM_DEFS = {
     description: "+15 dégât au corps à corps. +2 de distance d'attaque.",
     statBonus: { meleeDamage: 15, meleeRange: 2 },
     stackable: false,
-    archetypes: ["guerrier", "voleur"],
+    archetypes: ["guerrier", "mage"],
     price: 400,
   },
   adamantineSickle: {
@@ -5283,7 +5283,7 @@ export const ITEM_DEFS = {
     description: "+17 dégât au corps à corps. +2 de distance d'attaque.",
     statBonus: { meleeDamage: 17, meleeRange: 2 },
     stackable: false,
-    archetypes: ["guerrier", "voleur"],
+    archetypes: ["guerrier", "mage"],
     price: 500,
   },
   crimsonSickle: {
@@ -5296,7 +5296,7 @@ export const ITEM_DEFS = {
     description: "+19 dégât au corps à corps. +2 de distance d'attaque.",
     statBonus: { meleeDamage: 19, meleeRange: 2 },
     stackable: false,
-    archetypes: ["guerrier", "voleur"],
+    archetypes: ["guerrier", "mage"],
     price: 600,
   },
   angelicSickle: {
@@ -5309,7 +5309,7 @@ export const ITEM_DEFS = {
     description: "+21 dégât au corps à corps. +2 de distance d'attaque.",
     statBonus: { meleeDamage: 21, meleeRange: 2 },
     stackable: false,
-    archetypes: ["guerrier", "voleur"],
+    archetypes: ["guerrier", "mage"],
     price: 700,
   },
   fatefulSickle: {
@@ -5322,7 +5322,7 @@ export const ITEM_DEFS = {
     description: "+23 dégât au corps à corps. +2 de distance d'attaque.",
     statBonus: { meleeDamage: 23, meleeRange: 2 },
     stackable: false,
-    archetypes: ["guerrier", "voleur"],
+    archetypes: ["guerrier", "mage"],
     price: 800,
   },
   novaSickle: {
@@ -5335,7 +5335,7 @@ export const ITEM_DEFS = {
     description: "+25 dégât au corps à corps. +2 de distance d'attaque.",
     statBonus: { meleeDamage: 25, meleeRange: 2 },
     stackable: false,
-    archetypes: ["guerrier", "voleur"],
+    archetypes: ["guerrier", "mage"],
     price: 900,
   },
   // ----- Faucille aiguisée (sharp) - branche METAL uniquement -----
@@ -5349,7 +5349,7 @@ export const ITEM_DEFS = {
     description: "+4 dégâts au corps à corps. +2 de distance d'attaque.",
     statBonus: { meleeDamage: 4, meleeRange: 2 },
     stackable: false,
-    archetypes: ["guerrier", "voleur"],
+    archetypes: ["guerrier", "mage"],
     inflictsEffect: {
       type: "bleed",
       kind: "dot",
@@ -5370,7 +5370,7 @@ export const ITEM_DEFS = {
     description: "+5 dégâts au corps à corps. +2 de distance d'attaque.",
     statBonus: { meleeDamage: 5, meleeRange: 2 },
     stackable: false,
-    archetypes: ["guerrier", "voleur"],
+    archetypes: ["guerrier", "mage"],
     inflictsEffect: {
       type: "bleed",
       kind: "dot",
@@ -5391,7 +5391,7 @@ export const ITEM_DEFS = {
     description: "+6 dégâts au corps à corps. +2 de distance d'attaque.",
     statBonus: { meleeDamage: 6, meleeRange: 2 },
     stackable: false,
-    archetypes: ["guerrier", "voleur"],
+    archetypes: ["guerrier", "mage"],
     inflictsEffect: {
       type: "bleed",
       kind: "dot",
@@ -5412,7 +5412,7 @@ export const ITEM_DEFS = {
     description: "+7 dégâts au corps à corps. +2 de distance d'attaque.",
     statBonus: { meleeDamage: 7, meleeRange: 2 },
     stackable: false,
-    archetypes: ["guerrier", "voleur"],
+    archetypes: ["guerrier", "mage"],
     inflictsEffect: {
       type: "bleed",
       kind: "dot",
@@ -5433,7 +5433,7 @@ export const ITEM_DEFS = {
     description: "+8 dégâts au corps à corps. +2 de distance d'attaque.",
     statBonus: { meleeDamage: 8, meleeRange: 2 },
     stackable: false,
-    archetypes: ["guerrier", "voleur"],
+    archetypes: ["guerrier", "mage"],
     inflictsEffect: {
       type: "bleed",
       kind: "dot",
@@ -5454,7 +5454,7 @@ export const ITEM_DEFS = {
     description: "+9 dégâts au corps à corps. +2 de distance d'attaque.",
     statBonus: { meleeDamage: 9, meleeRange: 2 },
     stackable: false,
-    archetypes: ["guerrier", "voleur"],
+    archetypes: ["guerrier", "mage"],
     inflictsEffect: {
       type: "bleed",
       kind: "dot",
@@ -5475,7 +5475,7 @@ export const ITEM_DEFS = {
     description: "+10 dégâts au corps à corps. +2 de distance d'attaque.",
     statBonus: { meleeDamage: 10, meleeRange: 2 },
     stackable: false,
-    archetypes: ["guerrier", "voleur"],
+    archetypes: ["guerrier", "mage"],
     inflictsEffect: {
       type: "bleed",
       kind: "dot",
@@ -5496,7 +5496,7 @@ export const ITEM_DEFS = {
     description: "+11 dégâts au corps à corps. +2 de distance d'attaque.",
     statBonus: { meleeDamage: 11, meleeRange: 2 },
     stackable: false,
-    archetypes: ["guerrier", "voleur"],
+    archetypes: ["guerrier", "mage"],
     inflictsEffect: {
       type: "bleed",
       kind: "dot",
@@ -5517,7 +5517,7 @@ export const ITEM_DEFS = {
     description: "+12 dégâts au corps à corps. +2 de distance d'attaque.",
     statBonus: { meleeDamage: 12, meleeRange: 2 },
     stackable: false,
-    archetypes: ["guerrier", "voleur"],
+    archetypes: ["guerrier", "mage"],
     inflictsEffect: {
       type: "bleed",
       kind: "dot",
@@ -5538,7 +5538,7 @@ export const ITEM_DEFS = {
     description: "+13 dégâts au corps à corps. +2 de distance d'attaque.",
     statBonus: { meleeDamage: 13, meleeRange: 2 },
     stackable: false,
-    archetypes: ["guerrier", "voleur"],
+    archetypes: ["guerrier", "mage"],
     inflictsEffect: {
       type: "bleed",
       kind: "dot",
@@ -5559,7 +5559,7 @@ export const ITEM_DEFS = {
     description: "+14 dégâts au corps à corps. +2 de distance d'attaque.",
     statBonus: { meleeDamage: 14, meleeRange: 2 },
     stackable: false,
-    archetypes: ["guerrier", "voleur"],
+    archetypes: ["guerrier", "mage"],
     inflictsEffect: {
       type: "bleed",
       kind: "dot",
@@ -5580,7 +5580,7 @@ export const ITEM_DEFS = {
     description: "+15 dégâts au corps à corps. +2 de distance d'attaque.",
     statBonus: { meleeDamage: 15, meleeRange: 2 },
     stackable: false,
-    archetypes: ["guerrier", "voleur"],
+    archetypes: ["guerrier", "mage"],
     inflictsEffect: {
       type: "bleed",
       kind: "dot",
@@ -5604,7 +5604,7 @@ export const ITEM_DEFS = {
       "+4 dégât au corps à corps (chance d'infliger stun). +1 de distance d'attaque.",
     statBonus: { meleeDamage: 4, meleeRange: 1 },
     stackable: false,
-    archetypes: ["guerrier", "voleur"],
+    archetypes: ["guerrier", "mage"],
     inflictsEffect: {
       type: "stun",
       kind: "modifier",
@@ -5625,7 +5625,7 @@ export const ITEM_DEFS = {
       "+5 dégâts au corps à corps (chance d'infliger stun). +2 de distance d'attaque.",
     statBonus: { meleeDamage: 5, meleeRange: 2 },
     stackable: false,
-    archetypes: ["guerrier", "voleur"],
+    archetypes: ["guerrier", "mage"],
     inflictsEffect: {
       type: "stun",
       kind: "modifier",
@@ -5646,7 +5646,7 @@ export const ITEM_DEFS = {
       "+6 dégâts au corps à corps (chance d'infliger stun). +2 de distance d'attaque.",
     statBonus: { meleeDamage: 6, meleeRange: 2 },
     stackable: false,
-    archetypes: ["guerrier", "voleur"],
+    archetypes: ["guerrier", "mage"],
     inflictsEffect: {
       type: "stun",
       kind: "modifier",
@@ -5667,7 +5667,7 @@ export const ITEM_DEFS = {
       "+8 dégâts au corps à corps (chance d'infliger stun). +2 de distance d'attaque.",
     statBonus: { meleeDamage: 8, meleeRange: 2 },
     stackable: false,
-    archetypes: ["guerrier", "voleur"],
+    archetypes: ["guerrier", "mage"],
     inflictsEffect: {
       type: "stun",
       kind: "modifier",
@@ -5688,7 +5688,7 @@ export const ITEM_DEFS = {
       "+10 dégâts au corps à corps (chance d'infliger stun). +2 de distance d'attaque.",
     statBonus: { meleeDamage: 10, meleeRange: 2 },
     stackable: false,
-    archetypes: ["guerrier", "voleur"],
+    archetypes: ["guerrier", "mage"],
     inflictsEffect: {
       type: "stun",
       kind: "modifier",
@@ -5709,7 +5709,7 @@ export const ITEM_DEFS = {
       "+12 dégâts au corps à corps (chance d'infliger stun). +2 de distance d'attaque.",
     statBonus: { meleeDamage: 12, meleeRange: 2 },
     stackable: false,
-    archetypes: ["guerrier", "voleur"],
+    archetypes: ["guerrier", "mage"],
     inflictsEffect: {
       type: "stun",
       kind: "modifier",
@@ -5730,7 +5730,7 @@ export const ITEM_DEFS = {
       "+14 dégâts au corps à corps (chance d'infliger stun). +2 de distance d'attaque.",
     statBonus: { meleeDamage: 14, meleeRange: 2 },
     stackable: false,
-    archetypes: ["guerrier", "voleur"],
+    archetypes: ["guerrier", "mage"],
     inflictsEffect: {
       type: "stun",
       kind: "modifier",
@@ -5751,7 +5751,7 @@ export const ITEM_DEFS = {
       "+16 dégâts au corps à corps (chance d'infliger stun). +2 de distance d'attaque.",
     statBonus: { meleeDamage: 16, meleeRange: 2 },
     stackable: false,
-    archetypes: ["guerrier", "voleur"],
+    archetypes: ["guerrier", "mage"],
     inflictsEffect: {
       type: "stun",
       kind: "modifier",
@@ -5772,7 +5772,7 @@ export const ITEM_DEFS = {
       "+18 dégâts au corps à corps (chance d'infliger stun). +2 de distance d'attaque.",
     statBonus: { meleeDamage: 18, meleeRange: 2 },
     stackable: false,
-    archetypes: ["guerrier", "voleur"],
+    archetypes: ["guerrier", "mage"],
     inflictsEffect: {
       type: "stun",
       kind: "modifier",
@@ -5793,7 +5793,7 @@ export const ITEM_DEFS = {
       "+20 dégâts au corps à corps (chance d'infliger stun). +2 de distance d'attaque.",
     statBonus: { meleeDamage: 20, meleeRange: 2 },
     stackable: false,
-    archetypes: ["guerrier", "voleur"],
+    archetypes: ["guerrier", "mage"],
     inflictsEffect: {
       type: "stun",
       kind: "modifier",
@@ -5814,7 +5814,7 @@ export const ITEM_DEFS = {
       "+22 dégâts au corps à corps (chance d'infliger stun). +2 de distance d'attaque.",
     statBonus: { meleeDamage: 22, meleeRange: 2 },
     stackable: false,
-    archetypes: ["guerrier", "voleur"],
+    archetypes: ["guerrier", "mage"],
     inflictsEffect: {
       type: "stun",
       kind: "modifier",
@@ -5835,7 +5835,7 @@ export const ITEM_DEFS = {
       "+25 dégâts au corps à corps (chance d'infliger stun). +2 de distance d'attaque.",
     statBonus: { meleeDamage: 25, meleeRange: 2 },
     stackable: false,
-    archetypes: ["guerrier", "voleur"],
+    archetypes: ["guerrier", "mage"],
     inflictsEffect: {
       type: "stun",
       kind: "modifier",
@@ -5856,7 +5856,7 @@ export const ITEM_DEFS = {
       "+28 dégâts au corps à corps (chance d'infliger stun). +2 de distance d'attaque.",
     statBonus: { meleeDamage: 28, meleeRange: 2 },
     stackable: false,
-    archetypes: ["guerrier", "voleur"],
+    archetypes: ["guerrier", "mage"],
     inflictsEffect: {
       type: "stun",
       kind: "modifier",
@@ -17301,7 +17301,7 @@ export const ITEM_DEFS = {
 
   //scroll
   blanckScroll: {
-    id: "blankScroll",
+    id: "blanckScroll",
     category: "craftingMaterial",
     name: "Parchemin vierge",
     description:
@@ -18127,6 +18127,15 @@ export const ITEM_DEFS = {
     description: "Un champignon rare.",
     stackable: true,
     price: 5,
+  },
+  garrickAxe: {
+    id: "garrickAxe",
+    category: "questItem",
+    name: "Hache de Garrick",
+    description:
+      "La vieille hache de Garrick le bûcheron, retrouvée sur la plage.",
+    stackable: false,
+    unique: true,
   },
   steelPickaxeBrenn: {
     id: "steelPickaxeBrenn",

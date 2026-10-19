@@ -76,6 +76,8 @@ const REINFORCED_WOODEN_TIER_WEAPONS = [
   { base: "woodenShield", result: "reinforcedWoodenShield" },
   { base: "woodenStaff", result: "reinforcedWoodenStaff" },
   { base: "woodenGreatShield", result: "reinforcedWoodenGreatShield" },
+  { base: "woodenCrossbow", result: "reinforcedWoodenCrossbow" },
+  { base: "woodenBow", result: "reinforcedWoodenBow" },
   // ajoute toutes les autres paires bois -> bois renforcé ici
 ];
 
@@ -2474,18 +2476,41 @@ export const CRAFTING_RECIPES = {
   ...REINFORCED_GHOST_ECTOPLASM_TIER_ARMOR_RECIPES,
   ...REINFORCED_MONSTER_CORE_TIER_ARMOR_RECIPES,
 
-  // recette d'évolution des dagues avec un seul ingot
+  // armes de base (recompense de la quete du bucheron, selon l'archetype)
   woodenDaggerRecipe: {
     id: "woodenDaggerRecipe",
-    name: "Recette d'évolution : Dague en bois",
+    name: "Recette : Dague en bois",
     resultItemId: "woodenDagger",
     resultQuantity: 1,
-    ingredients: [
-      { itemId: "wood", quantity: 1 },
-      { itemId: "gnomeClaw", quantity: 1 },
-    ],
+    ingredients: [{ itemId: "oakWood", quantity: 2 }],
     discoveryOnly: true,
   },
+  woodenSwordRecipe: {
+    id: "woodenSwordRecipe",
+    name: "Recette : Épée en bois",
+    resultItemId: "woodenSword",
+    resultQuantity: 1,
+    ingredients: [{ itemId: "oakWood", quantity: 3 }],
+    discoveryOnly: true,
+  },
+  woodenBowRecipe: {
+    id: "woodenBowRecipe",
+    name: "Recette : Arc en bois",
+    resultItemId: "woodenBow",
+    resultQuantity: 1,
+    ingredients: [{ itemId: "oakWood", quantity: 3 }],
+    discoveryOnly: true,
+  },
+  woodenStaffRecipe: {
+    id: "woodenStaffRecipe",
+    name: "Recette : Bâton en bois",
+    resultItemId: "woodenStaff",
+    resultQuantity: 1,
+    ingredients: [{ itemId: "oakWood", quantity: 3 }],
+    discoveryOnly: true,
+  },
+
+  // recette d'évolution des dagues avec un seul ingot
 
   copperDaggerRecipe: {
     id: "copperDaggerRecipe",
@@ -3197,7 +3222,7 @@ export const CRAFTING_RECIPES = {
     name: "Recette de Flèche en bois",
     resultItemId: "woodenArrow", // doit exister dans itemDefs.js
     resultQuantity: 5,
-    ingredients: [{ itemId: "deerAntler", quantity: 2 }],
+    ingredients: [{ itemId: "oakWood", quantity: 1 }],
     // unlockLevel: 1,
     discoveryOnly: true,
   },

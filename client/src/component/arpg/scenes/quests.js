@@ -5,6 +5,7 @@ import {
   SPRITE_REGISTRY,
   resolveEnemyDisplayName,
   resolveEnemyTargetName,
+  resolveHeroStatsOverride,
 } from "../spriteRegistry";
 import { resolveItemDef } from "../itemDefs";
 import { findPath } from "../pathfinding";
@@ -228,6 +229,7 @@ export function createQuestNpcs(scene, npcDataArray) {
       patrolIndex: 0,
       patrolDirection: 1,
       talking: false,
+      homeTile: { x: npcData.x, y: npcData.y },
     });
 
     if (!scene.quests[questKey]) {
@@ -638,6 +640,17 @@ export function openQuestDialog(scene, npc) {
   );
   const qs = scene.quests[questKey];
   if (!qs) return;
+  // pnj de chaine dont l'etape n'est pas encore arrivee : simple phrase
+  if (qs.questId === "chainIdle") {
+    scene.events.emit("npc-dialog", {
+      text:
+        (qs.npcName ? `${qs.npcName} : ` : "") +
+        (qs.idleText || "Reviens me voir un peu plus tard."),
+      canAccept: false,
+      canTurnIn: false,
+    });
+    return;
+  }
   // une etape de chaine DEJA rendue : on affiche son texte "after" (ou un
   // remerciement generique), pas le texte "complete" qui annonce la suite
   const custom =
@@ -987,6 +1000,8 @@ export function acceptQuest(scene) {
   releaseTalkingNpc(scene);
   scene.events.emit("npc-dialog", null);
   scene.events.emit("quests-updated", { ...scene.quests });
+  // fait apparaitre les ennemis lies a cette quete (cf. levelLoader)
+  if (scene.spawnGatedEnemies) scene.spawnGatedEnemies();
   scene.persistProgress();
 }
 
@@ -1100,19 +1115,30 @@ export function turnInQuest(scene) {
       const itemDef = resolveItemDef(qs.itemReward.itemId);
       rewardLines.push(`${itemDef.name} x${qs.itemReward.quantity}`);
     }
-    if (qs.recipeReward) {
-      if (!scene.unlockedRecipes.includes(qs.recipeReward)) {
-        scene.unlockedRecipes.push(qs.recipeReward);
+    // recette fixe, ou recette choisie selon l'archetype du heros
+    let recipeId = qs.recipeReward;
+    let recipeLabel = qs.recipeName;
+    if (qs.recipeRewardByArchetype) {
+      const archetype = resolveHeroStatsOverride(
+        scene.heroSpriteKey,
+      )?.archetype;
+      const byArch = qs.recipeRewardByArchetype[archetype];
+      recipeId = byArch ? byArch.id : null;
+      recipeLabel = byArch ? byArch.name : null;
+    }
+    if (recipeId) {
+      if (!scene.unlockedRecipes.includes(recipeId)) {
+        scene.unlockedRecipes.push(recipeId);
       }
       // la recette n'est plus "decouverte mais verrouillee"
       scene.discoveredLockedRecipes = (
         scene.discoveredLockedRecipes || []
-      ).filter((id) => id !== qs.recipeReward);
+      ).filter((id) => id !== recipeId);
       scene.events.emit("recipes-updated", [...scene.unlockedRecipes]);
       scene.events.emit("locked-recipes-updated", [
         ...scene.discoveredLockedRecipes,
       ]);
-      rewardLines.push(`Recette : ${qs.recipeName || qs.recipeReward}`);
+      rewardLines.push(`Recette : ${recipeLabel || recipeId}`);
     }
   } else if (qs.questId === "killEnemies") {
     if (qs.itemReward) {
@@ -1126,7 +1152,10 @@ export function turnInQuest(scene) {
   }
 
   // la chaine avance APRES l'ajout des recompenses (pose l'etape suivante)
-  if (qs.chainId && !qs.role) advanceQuestChain(scene, qs);
+  if (qs.chainId && !qs.role) {
+    advanceQuestChain(scene, qs);
+    relocateChainNpcs(scene);
+  }
 
   scene.events.emit("quests-updated", { ...scene.quests });
 
@@ -1273,6 +1302,9 @@ function getNpcQuestStatus(scene, npc) {
         status = "ready";
       else status = "progress";
       break;
+    case "chainIdle":
+      status = null; // pnj en attente : pas de "!" tant que son etape n'est pas la
+      break;
     default:
       // killEnemies et autres
       if (!qs.accepted) status = "offer";
@@ -1381,6 +1413,45 @@ function updateEscortMarkers(scene) {
   }
 }
 
+/**
+ * Apres l'avancee d'une chaine : un pnj de chaine dont la case a change
+ * (step.at.tile differente d'une etape a l'autre) marche jusqu'a sa nouvelle
+ * case au lieu de rester a l'ancienne.
+ */
+export function relocateChainNpcs(scene) {
+  for (const npc of scene.questNpcs || []) {
+    const qs = scene.quests[npc.questKey];
+    if (!qs || !qs.extraPos || !npc.homeTile || !npc.sprite?.active) continue;
+    const dest = qs.extraPos;
+    if (npc.homeTile.x === dest.x && npc.homeTile.y === dest.y) continue;
+    npc.homeTile = { x: dest.x, y: dest.y };
+    npc.patrolPath = null;
+    const from = {
+      x: Math.floor(npc.sprite.x / TILE_SIZE),
+      y: Math.floor(npc.sprite.y / TILE_SIZE),
+    };
+    const path = findPath(scene.fogGrid, from, dest, 4000);
+    if (path && path.length > 0) {
+      npc.relocatePath = path;
+      npc.relocateIndex = 0;
+    } else {
+      // pas de chemin : on le place directement
+      npc.sprite.setPosition(
+        dest.x * TILE_SIZE + TILE_SIZE / 2,
+        dest.y * TILE_SIZE + TILE_SIZE / 2,
+      );
+      const route = pickPatrolRoute(
+        scene.fogGrid,
+        dest,
+        createRng(`${scene.currentSeed}-relocate-${npc.npcIndex}`),
+      );
+      npc.patrolPath = route ? route.path : null;
+      npc.patrolIndex = 0;
+      npc.patrolDirection = 1;
+    }
+  }
+}
+
 export function updateNpcMovement(scene, npcList) {
   // marqueurs des escortes (invocations) : une seule fois par frame, cette
   // fonction etant appelee pour les pnj de quete ET les pnj ambiants
@@ -1408,7 +1479,25 @@ export function updateNpcMovement(scene, npcList) {
       npc.sprite.anims.play(`${npc.spriteKey}-idle-${npc.lastDir}`, true);
       continue;
     }
-
+    if (npc.relocatePath) {
+      const wp = npc.relocatePath[npc.relocateIndex];
+      scene.moveEnemyToward(npc, wp, ENEMY_SPEED * 0.8, () => {
+        npc.relocateIndex += 1;
+        if (npc.relocateIndex >= npc.relocatePath.length) {
+          npc.relocatePath = null;
+          // arrive : reprend une patrouille autour de la nouvelle case
+          const route = pickPatrolRoute(
+            scene.fogGrid,
+            npc.homeTile,
+            createRng(`${scene.currentSeed}-relocate-${npc.npcIndex}`),
+          );
+          npc.patrolPath = route ? route.path : null;
+          npc.patrolIndex = 0;
+          npc.patrolDirection = 1;
+        }
+      });
+      continue;
+    }
     if (npc.patrolPath && npc.patrolPath.length > 1) {
       const waypoint = npc.patrolPath[npc.patrolIndex];
       scene.moveEnemyToward(npc, waypoint, ENEMY_SPEED * 0.5, () => {

@@ -784,13 +784,13 @@ const ITEM_TYPES = {
 
   //scroll
   blanckScroll: {
-    id: "blankScroll",
+    id: "blanckScroll",
     category: "craftingMaterial",
     name: "Parchemin vierge",
     description:
       "Un parchemin vierge, utilisé pour créer de nouveaux sorts. Il peut également permettre de créer des grimoires.",
     stackable: true,
-    price: 10,
+    // price: 10,
   },
 
   grimoire: {
@@ -1155,6 +1155,15 @@ const ITEM_TYPES = {
     description: "Un champignon rare.",
     stackable: true,
     // price: 5,
+  },
+  garrickAxe: {
+    id: "garrickAxe",
+    category: "questItem",
+    name: "Hache de Garrick",
+    description:
+      "La vieille hache de Garrick le bûcheron, retrouvée sur la plage.",
+    stackable: false,
+    unique: true,
   },
   steelPickaxeBrenn: {
     id: "steelPickaxeBrenn",
@@ -3792,6 +3801,7 @@ const LOOT_TABLES = {
   greenSlimeDrop: [
     { itemId: null, weight: 50 },
     { itemId: "gold", weight: 50, quantityRange: [1, 3] },
+    { itemId: "slimeBlob", weight: 50 },
     { itemId: "greenSlimeCore", weight: 50 },
   ],
   spiderDrop: [
@@ -3808,11 +3818,13 @@ const LOOT_TABLES = {
   blueSlimeDrop: [
     { itemId: null, weight: 50 },
     { itemId: "gold", weight: 50, quantityRange: [1, 3] },
+    { itemId: "slimeBlob", weight: 50 },
     { itemId: "blueSlimeCore", weight: 50 },
   ],
   purpleSlimeDrop: [
     { itemId: null, weight: 50 },
     { itemId: "gold", weight: 50, quantityRange: [1, 3] },
+    { itemId: "slimeBlob", weight: 50 },
     { itemId: "purpleSlimeCore", weight: 50 },
   ],
   yellowWarriorMushroomDrop: [
@@ -4277,16 +4289,19 @@ const LOOT_TABLES = {
   redSlimeDrop: [
     { itemId: null, weight: 50 },
     { itemId: "gold", weight: 50, quantityRange: [1, 3] },
+    { itemId: "slimeBlob", weight: 50 },
     { itemId: "redSlimeCore", weight: 50 },
   ],
   orangeSlimeDrop: [
     { itemId: null, weight: 50 },
     { itemId: "gold", weight: 50, quantityRange: [1, 3] },
+    { itemId: "slimeBlob", weight: 50 },
     { itemId: "orangeSlimeCore", weight: 50 },
   ],
   skyBlueSlimeDrop: [
     { itemId: null, weight: 50 },
     { itemId: "gold", weight: 50, quantityRange: [1, 3] },
+    { itemId: "slimeBlob", weight: 50 },
     { itemId: "skyBlueSlimeCore", weight: 50 },
   ],
 };
