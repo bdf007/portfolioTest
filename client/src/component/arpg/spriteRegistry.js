@@ -358,6 +358,7 @@ import standardFields2AutotileImg from "../../assets/tilesets/Set_A_StandardFiel
 import greyCoastA51AutotileImg from "../../assets/tilesets/Set_A5_GreyCoast1.png";
 import cityTilesetAutotileImg from "../../assets/tilesets/city_tileset.png";
 import cityTilesetV2AutotileImg from "../../assets/tilesets/city_tileset_v2.png";
+import cityTilesetV3AutotileImg from "../../assets/tilesets/city_tileset_v3.png";
 import beigeCoastAAutotileImg from "../../assets/tilesets/Set_A_Beige_Coast.png";
 import beigeFieldsA1AutotileImg from "../../assets/tilesets/Set_A_Beige_Fields1.png";
 import greyCoastAAutotileImg from "../../assets/tilesets/Set_A_Grey_Coast.png";
@@ -441,6 +442,11 @@ import town3NPCm2Spritesheet from "../../assets/npc/town3_M2_walk.png";
 import town3NPCm3Spritesheet from "../../assets/npc/town3_M3_walk.png";
 import town3NPCm4Spritesheet from "../../assets/npc/town3_M4_walk.png";
 import town3NPCm5Spritesheet from "../../assets/npc/town3_M5_walk.png";
+import npcMarchandSpritesheet from "../../assets/npc/npc_marchand.png";
+import npcMayorSpritesheet from "../../assets/npc/npc_mayor.png";
+import npcguardCaptainSpritesheet from "../../assets/npc/npc_guard_captain.png";
+import npcWoodmanSpritesheet from "../../assets/npc/npc_woodMan.png";
+import npcWarriorMasterSpritesheet from "../../assets/npc/npc_warriorMaster.png";
 import dungeonAutotileImg from "../../assets/tilesets/dungeon1_splittiler.png"; // ajuste ce chemin relatif si spriteRegistry.js n'est pas directement dans client/src/arpg/
 import fortressAutotileImg from "../../assets/tilesets/fortress1_splitiler.png"; // ajuste ce chemin relatif si spriteRegistry.js n'est pas directement dans client/src/arpg/
 const SAFE_WORLD_WIDTH = 18;
@@ -741,6 +747,12 @@ export const CITY_TILES_AUTOTILE_SPRITESHEET = {
 export const CITY_TILES_V2_AUTOTILE_SPRITESHEET = {
   key: "cityTilesV2Autotile",
   path: cityTilesetV2AutotileImg,
+  frameWidth: 16,
+  frameHeight: 16,
+};
+export const CITY_TILES_V3_AUTOTILE_SPRITESHEET = {
+  key: "cityTilesV3Autotile",
+  path: cityTilesetV3AutotileImg,
   frameWidth: 16,
   frameHeight: 16,
 };
@@ -6186,6 +6198,57 @@ export const SPRITE_REGISTRY = {
     hitbox: computeSafeHitbox(96, 96, 2),
   },
   // NPCs de ville
+  npcMarchand: {
+    key: "npcMarchand",
+    displayName: "Marchand",
+    path: npcMarchandSpritesheet,
+    frameWidth: 96,
+    frameHeight: 96,
+    scale: 0.45,
+    animations: FULL_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(96, 96, 0.45),
+  },
+  npcMayor: {
+    key: "npcMayor",
+    displayName: "Mairesse",
+    path: npcMayorSpritesheet,
+    frameWidth: 96,
+    frameHeight: 96,
+    scale: 0.45,
+    animations: FULL_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(96, 96, 0.45),
+  },
+  npcguardCaptain: {
+    key: "npcguardCaptain",
+    displayName: "Capitaine de garde",
+    path: npcguardCaptainSpritesheet,
+    frameWidth: 96,
+    frameHeight: 96,
+    scale: 0.45,
+    animations: FULL_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(96, 96, 0.45),
+  },
+  npcWoodman: {
+    key: "npcWoodman",
+    displayName: "Bûcheron",
+    path: npcWoodmanSpritesheet,
+    frameWidth: 96,
+    frameHeight: 96,
+    scale: 0.45,
+    animations: FULL_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(96, 96, 0.45),
+  },
+  npcWarriorMaster: {
+    key: "npcWarriorMaster",
+    displayName: "Maître d'armes",
+    path: npcWarriorMasterSpritesheet,
+    frameWidth: 96,
+    frameHeight: 96,
+    scale: 0.45,
+    animations: FULL_ANIMATION_FRAMES,
+    hitbox: computeSafeHitbox(96, 96, 0.45),
+  },
+
   NPC_town1_F1: {
     key: "NPC_town1_F1",
     displayName: "PNJ ville 1 femme 1",
@@ -7391,7 +7454,7 @@ export const STAFF_ALL_TIERS_SPRITESHEET = {
   path: staffAllTiersSpritesheet,
   frameWidth: 32,
   frameHeight: 32,
-  columns: 10,
+  columns: 13,
   rows: 5,
 };
 

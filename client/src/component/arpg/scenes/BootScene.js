@@ -56,6 +56,7 @@ import {
   GREY_COASTA51_AUTOTILE_SPRITESHEET,
   CITY_TILES_AUTOTILE_SPRITESHEET,
   CITY_TILES_V2_AUTOTILE_SPRITESHEET,
+  CITY_TILES_V3_AUTOTILE_SPRITESHEET,
   WORLD_B_AUTOTILE_SPRITESHEET,
   BEIGE_COAST_A_AUTOTILE_SPRITESHEET,
   BEIGE_FIELDS1_A_AUTOTILE_SPRITESHEET,
@@ -504,6 +505,14 @@ export default class BootScene extends Phaser.Scene {
       {
         frameWidth: CITY_TILES_V2_AUTOTILE_SPRITESHEET.frameWidth,
         frameHeight: CITY_TILES_V2_AUTOTILE_SPRITESHEET.frameHeight,
+      },
+    );
+    this.load.spritesheet(
+      CITY_TILES_V3_AUTOTILE_SPRITESHEET.key,
+      CITY_TILES_V3_AUTOTILE_SPRITESHEET.path,
+      {
+        frameWidth: CITY_TILES_V3_AUTOTILE_SPRITESHEET.frameWidth,
+        frameHeight: CITY_TILES_V3_AUTOTILE_SPRITESHEET.frameHeight,
       },
     );
     this.load.spritesheet(

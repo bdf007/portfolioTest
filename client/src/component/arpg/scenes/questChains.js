@@ -29,14 +29,14 @@ import { createRng } from "../rng";
  * Une etape s'y refere avec `npc: "marchand"`.
  */
 export const CHAIN_NPCS = {
-  marchand: { name: "Aldric le marchand", sprite: "NPC_town1_M1" }, // remplace par une vraie cle de ton registre
-  maitreDArme: { name: "Thorin le maître d'arme", sprite: "NPC_town1_M4" },
+  marchand: { name: "Aldric le marchand", sprite: "npcMarchand" }, // remplace par une vraie cle de ton registre
+  maitreDArme: { name: "Thorin le maître d'arme", sprite: "npcWarriorMaster" },
   bucheron: {
     name: "Garrick le bucheron",
-    sprite: "NPC_town1_M3",
+    sprite: "npcWoodman",
     idle: "Salut, voyageur. Je n'ai pas de travail pour toi pour l'instant.",
   },
-  mairesse: { name: "Isolde la mairesse", sprite: "NPC_town1_F2" },
+  mairesse: { name: "Isolde la mairesse", sprite: "npcMayor" },
   forgeron: { name: "Brenn le forgeron", sprite: "NPC_town1_M2" },
   soeurMarchand: { name: "Elise la sœur du marchand", sprite: "NPC_town1_F1" },
 };
