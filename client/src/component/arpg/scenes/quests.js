@@ -625,6 +625,14 @@ export function createAmbientNpcs(scene, npcDataArray) {
   }
 }
 
+// recettes proposees au choix pour l'archetype du heros (tableau, peut etre vide)
+function getRecipeChoices(scene, qs) {
+  if (!qs || !qs.recipeChoiceByArchetype) return [];
+  const archetype = resolveHeroStatsOverride(scene.heroSpriteKey)?.archetype;
+  const list = qs.recipeChoiceByArchetype[archetype];
+  return Array.isArray(list) ? list : [];
+}
+
 export function openQuestDialog(scene, npc) {
   const questKey = npc.questKey;
   scene.dialogOpen = true;
@@ -871,10 +879,23 @@ export function openQuestDialog(scene, npc) {
     text = custom.offer || `Peux-tu tuer ${qs.target} ${enemyName} pour toi ?`;
     canAccept = true;
   }
+  // plusieurs recettes possibles : un bouton par recette a la place de "Rendre"
+  const recipeChoices = canTurnIn ? getRecipeChoices(scene, qs) : [];
+  const rewardChoices =
+    recipeChoices.length > 1
+      ? recipeChoices.map((c) => ({ id: c.id, label: c.name }))
+      : [];
   scene.events.emit("npc-dialog", {
-    text: (qs.npcName ? `${qs.npcName} : ` : "") + text + secretHintSuffix,
+    text:
+      (qs.npcName ? `${qs.npcName} : ` : "") +
+      text +
+      secretHintSuffix +
+      (rewardChoices.length > 0
+        ? "\n\nChoisis la recette que tu veux apprendre."
+        : ""),
     canAccept,
     canTurnIn,
+    rewardChoices,
   });
 }
 
@@ -1005,9 +1026,17 @@ export function acceptQuest(scene) {
   scene.persistProgress();
 }
 
-export function turnInQuest(scene) {
+export function turnInQuest(scene, chosenRecipeId) {
   const qs = scene.quests[scene.activeDialogQuestKey];
   if (!qs || qs.completed) return;
+  // plusieurs recettes au choix : la remise exige un choix valide
+  // (verifie AVANT de retirer quoi que ce soit de l'inventaire)
+  const recipeChoices = getRecipeChoices(scene, qs);
+  if (
+    recipeChoices.length > 1 &&
+    !recipeChoices.some((c) => c.id === chosenRecipeId)
+  )
+    return;
   if (
     qs.questId !== "obtainItem" &&
     qs.questId !== "defeatBoss" &&
@@ -1054,7 +1083,10 @@ export function turnInQuest(scene) {
     );
 
     const giverQs = scene.quests[qs.linkedKey];
-    if (giverQs) giverQs.completed = true;
+    if (giverQs) {
+      giverQs.completed = true;
+      giverQs.completedAt = Date.now();
+    }
   } else if (qs.questId === "rescue" && qs.role === "giver") {
     const rescued = scene.summons.filter(
       (s) => s.isEscort && s.escortQuestKey === scene.activeDialogQuestKey,
@@ -1093,10 +1125,14 @@ export function turnInQuest(scene) {
     if (item.quantity <= 0) scene.inventory.splice(itemIndex, 1);
 
     const giverQs = scene.quests[qs.linkedKey];
-    if (giverQs) giverQs.completed = true;
+    if (giverQs) {
+      giverQs.completed = true;
+      giverQs.completedAt = Date.now();
+    }
   }
 
   qs.completed = true;
+  qs.completedAt = Date.now();
   scene.xp += qs.xpReward;
   scene.events.emit("xp-changed", { xp: scene.xp });
 
@@ -1115,30 +1151,39 @@ export function turnInQuest(scene) {
       const itemDef = resolveItemDef(qs.itemReward.itemId);
       rewardLines.push(`${itemDef.name} x${qs.itemReward.quantity}`);
     }
-    // recette fixe, ou recette choisie selon l'archetype du heros
-    let recipeId = qs.recipeReward;
-    let recipeLabel = qs.recipeName;
+    // recettes : fixes (recipeReward / recipeRewards) + selon l'archetype
+    const recipeGrants = [];
+    if (qs.recipeReward)
+      recipeGrants.push({ id: qs.recipeReward, name: qs.recipeName });
+    if (Array.isArray(qs.recipeRewards)) recipeGrants.push(...qs.recipeRewards);
     if (qs.recipeRewardByArchetype) {
       const archetype = resolveHeroStatsOverride(
         scene.heroSpriteKey,
       )?.archetype;
       const byArch = qs.recipeRewardByArchetype[archetype];
-      recipeId = byArch ? byArch.id : null;
-      recipeLabel = byArch ? byArch.name : null;
+      if (byArch)
+        recipeGrants.push(...(Array.isArray(byArch) ? byArch : [byArch]));
     }
-    if (recipeId) {
-      if (!scene.unlockedRecipes.includes(recipeId)) {
-        scene.unlockedRecipes.push(recipeId);
+    if (recipeChoices.length === 1) {
+      recipeGrants.push(recipeChoices[0]);
+    } else if (recipeChoices.length > 1) {
+      recipeGrants.push(recipeChoices.find((c) => c.id === chosenRecipeId));
+    }
+    for (const r of recipeGrants) {
+      if (!scene.unlockedRecipes.includes(r.id)) {
+        scene.unlockedRecipes.push(r.id);
       }
       // la recette n'est plus "decouverte mais verrouillee"
       scene.discoveredLockedRecipes = (
         scene.discoveredLockedRecipes || []
-      ).filter((id) => id !== recipeId);
+      ).filter((id) => id !== r.id);
+      rewardLines.push(`Recette : ${r.name || r.id}`);
+    }
+    if (recipeGrants.length > 0) {
       scene.events.emit("recipes-updated", [...scene.unlockedRecipes]);
       scene.events.emit("locked-recipes-updated", [
         ...scene.discoveredLockedRecipes,
       ]);
-      rewardLines.push(`Recette : ${recipeLabel || recipeId}`);
     }
   } else if (qs.questId === "killEnemies") {
     if (qs.itemReward) {

@@ -1,5 +1,9 @@
 import { SPRITE_REGISTRY } from "../spriteRegistry";
-import { computeDamage, applyElementalResistance, createCooldown } from "../combat";
+import {
+  computeDamage,
+  applyElementalResistance,
+  createCooldown,
+} from "../combat";
 import { WALL } from "./floorRenderer";
 import {
   getEffectivePlayerMeleeDamage,
@@ -62,8 +66,7 @@ export function performSummonAbility(scene, def) {
     oldest.sprite.destroy();
   }
 
-  const summonHp =
-    def.hp ?? Math.round(scene.playerMaxHp * (def.hpScale || 0));
+  const summonHp = def.hp ?? Math.round(scene.playerMaxHp * (def.hpScale || 0));
   const summonDamageSource =
     def.attackType === "ranged"
       ? getEffectivePlayerRangedDamage(scene)
@@ -76,7 +79,8 @@ export function performSummonAbility(scene, def) {
   const spawnX = scene.hero.x + (Math.random() - 0.5) * 40;
   const spawnY = scene.hero.y + (Math.random() - 0.5) * 40;
   const growthScale = computeFamiliarGrowthScale(scene, def.growthConfig);
-  const sprite = spawnSummonSprite(scene,
+  const sprite = spawnSummonSprite(
+    scene,
     def.summonType,
     spawnX,
     spawnY,
@@ -133,8 +137,7 @@ export function confirmResummon(scene) {
     return;
   }
 
-  const summonHp =
-    def.hp ?? Math.round(scene.playerMaxHp * (def.hpScale || 0));
+  const summonHp = def.hp ?? Math.round(scene.playerMaxHp * (def.hpScale || 0));
   const summonDamageSource =
     def.attackType === "ranged"
       ? getEffectivePlayerRangedDamage(scene)
@@ -320,6 +323,7 @@ export function updateSummons(scene, now) {
         const qs = scene.quests[summon.escortQuestKey];
         if (qs) {
           qs.failed = true;
+          qs.failedAt = Date.now();
           scene.events.emit("quests-updated", { ...scene.quests });
         }
         scene.showLootToast(
@@ -370,10 +374,8 @@ export function updateSummons(scene, now) {
           summon.sprite.y - nearestEnemy.sprite.y,
           summon.sprite.x - nearestEnemy.sprite.x,
         );
-        destX =
-          nearestEnemy.sprite.x + Math.cos(awayAngle) * summonOrbitRadius;
-        destY =
-          nearestEnemy.sprite.y + Math.sin(awayAngle) * summonOrbitRadius;
+        destX = nearestEnemy.sprite.x + Math.cos(awayAngle) * summonOrbitRadius;
+        destY = nearestEnemy.sprite.y + Math.sin(awayAngle) * summonOrbitRadius;
       } else {
         // repartit les invocations visant le meme ennemi en cercle autour
         // de lui (une "place" par invocation) au lieu de toutes converger
@@ -543,10 +545,7 @@ export function updateSummons(scene, now) {
         nearestEnemy.sprite.x - summon.sprite.x,
         nearestEnemy.sprite.y - summon.sprite.y,
       );
-      if (
-        realDist <= summonAttackRange &&
-        summon.attackCooldown.isReady(now)
-      ) {
+      if (realDist <= summonAttackRange && summon.attackCooldown.isReady(now)) {
         summon.attackCooldown.trigger(now);
 
         const hasAttackAnim = scene.anims.exists(
@@ -637,10 +636,7 @@ export function updateSummonProjectiles(scene) {
     const tileX = Math.floor(proj.sprite.x / TILE_SIZE);
     const tileY = Math.floor(proj.sprite.y / TILE_SIZE);
     const outOfBounds =
-      tileX < 0 ||
-      tileY < 0 ||
-      tileY >= grid.length ||
-      tileX >= grid[0].length;
+      tileX < 0 || tileY < 0 || tileY >= grid.length || tileX >= grid[0].length;
     const hitWall = !outOfBounds && grid[tileY][tileX] === WALL;
 
     const fogState = scene.fogState.state;

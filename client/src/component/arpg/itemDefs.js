@@ -17574,8 +17574,8 @@ export const ITEM_DEFS = {
   branch: {
     id: "branch",
     category: "craftingMaterial",
-    name: "Branche",
-    description: "Une branche solide, utilisée en artisanat.",
+    name: "Branche commune",
+    description: "Une branche commune, utilisée en artisanat.",
     stackable: true,
     price: 5,
   },
@@ -17609,6 +17609,33 @@ export const ITEM_DEFS = {
     category: "craftingMaterial",
     name: "Fibre végétale",
     description: "Une fibre végétale, utilisée en artisanat.",
+    stackable: true,
+    price: 5,
+  },
+
+  snail1Shell: {
+    id: "snail1Shell",
+    category: "craftingMaterial",
+    name: "Coquille d'escargot",
+    description: "Une coquille d'escargot, utilisée pour l'artisanat.",
+    stackable: true,
+    price: 5,
+  },
+
+  spiderFur: {
+    id: "spiderFur",
+    category: "craftingMaterial",
+    name: "Fourrure d'araignée",
+    description:
+      "De la fourrure provenant d'une araignée, utilisée pour l'artisanat.",
+    stackable: true,
+    price: 5,
+  },
+  feather: {
+    id: "feather",
+    category: "craftingMaterial",
+    name: "Plume",
+    description: "Une plume légère, utilisée en artisanat.",
     stackable: true,
     price: 5,
   },
@@ -17875,89 +17902,91 @@ export const ITEM_DEFS = {
   oakWood: {
     id: "oakWood",
     category: "craftingMaterial",
-    name: "Bois de chêne",
+    name: "Branche de chêne",
     description:
-      "Un bois robuste et commun, utilisé pour les arcs les plus simples.",
+      "Une branche robuste de chêne, utilisée entre autres pour les arcs les plus simples.",
     stackable: true,
   },
   ashWood: {
     id: "ashWood",
     category: "craftingMaterial",
-    name: "Bois de frêne",
-    description: "Souple et résistant, prisé pour les hampes de flèches.",
+    name: "Branche de frêne",
+    description:
+      "Une branche souple et résistante, utilisée pour les arcs et autres créations en bois.",
     stackable: true,
   },
   yewWood: {
     id: "yewWood",
     category: "craftingMaterial",
-    name: "Bois d'if",
-    description: "Le bois traditionnel des grands arcs de chasse.",
+    name: "Branche d'if",
+    description: "Une branche traditionnelle des grands arcs de chasse.",
     stackable: true,
   },
   ebonyWood: {
     id: "ebonyWood",
     category: "craftingMaterial",
-    name: "Bois d'ébène",
-    description: "Dense et sombre, presque aussi solide que du métal léger.",
+    name: "Branche d'ébène",
+    description:
+      "Une branche dense et sombre, presque aussi solide que du métal léger.",
     stackable: true,
   },
   petrifiedWood: {
     id: "petrifiedWood",
     category: "craftingMaterial",
-    name: "Bois pétrifié",
+    name: "Branche pétrifiée",
     description:
-      "Un bois ancien, durci par le temps jusqu'à la dureté de la pierre.",
+      "Une branche ancienne, durcie par le temps jusqu'à la dureté de la pierre.",
     stackable: true,
   },
   mistwood: {
     id: "mistwood",
     category: "craftingMaterial",
-    name: "Bois de brume",
+    name: "Branche de brume",
     description:
-      "Un bois étrangement léger, presque translucide dans la pénombre.",
+      "Une branche étrangement légère, presque translucide dans la pénombre.",
     stackable: true,
   },
   runewood: {
     id: "runewood",
     category: "craftingMaterial",
-    name: "Bois runique",
+    name: "Branche runique",
     description: "Des motifs anciens courent naturellement dans son grain.",
     stackable: true,
   },
   skywood: {
     id: "skywood",
     category: "craftingMaterial",
-    name: "Bois céleste",
-    description: "Un bois rare qui semble capter la lumière du ciel.",
+    name: "Branche céleste",
+    description: "Une branche rare qui semble capter la lumière du ciel.",
     stackable: true,
   },
   scarletwood: {
     id: "scarletwood",
     category: "craftingMaterial",
-    name: "Bois écarlate",
+    name: "Branche écarlate",
     description: "Une teinte rouge profonde traverse toute sa fibre.",
     stackable: true,
   },
   sacredWood: {
     id: "sacredWood",
     category: "craftingMaterial",
-    name: "Bois sacré",
-    description: "Un bois vénéré, réputé pour ne jamais pourrir.",
+    name: "Branche sacrée",
+    description: "Une branche vénérée, réputée pour ne jamais pourrir.",
     stackable: true,
   },
   eternalWood: {
     id: "eternalWood",
     category: "craftingMaterial",
-    name: "Bois éternel",
+    name: "Branche éternelle",
     description: "On dit qu'il ne cesse jamais vraiment de croître.",
     stackable: true,
   },
   starwood: {
     id: "starwood",
     category: "craftingMaterial",
-    name: "Bois stellaire",
+    name: "Branche stellaire",
     description:
-      "Un bois d'une origine incertaine, parcouru de reflets scintillants.",
+      "Une branche d'une origine incertaine, parcourue de reflets scintillants.",
     stackable: true,
   },
   resin: {
@@ -19981,46 +20010,6 @@ export const ITEM_DEFS = {
     stackable: true,
   },
 
-  // --- Bois tardifs manquants (les objets finaux comme mistwoodBow
-  //     existent déjà, seul le matériau manquait).
-  mistWood: {
-    id: "mistWood",
-    category: "craftingMaterial",
-    name: "Bois de brume",
-    description:
-      "Un bois léger et vaporeux, presque translucide dans la brume.",
-    stackable: true,
-  },
-  runeWood: {
-    id: "runeWood",
-    category: "craftingMaterial",
-    name: "Bois runique",
-    description: "Un bois gravé de runes anciennes, empli de magie latente.",
-    stackable: true,
-  },
-  skyWood: {
-    id: "skyWood",
-    category: "craftingMaterial",
-    name: "Bois du ciel",
-    description: "Un bois extrêmement léger, comme porté par le vent.",
-    stackable: true,
-  },
-  scarletWood: {
-    id: "scarletWood",
-    category: "craftingMaterial",
-    name: "Bois écarlate",
-    description: "Un bois teinté d'un rouge profond, réputé pour sa dureté.",
-    stackable: true,
-  },
-  starWood: {
-    id: "starWood",
-    category: "craftingMaterial",
-    name: "Bois d'étoile",
-    description:
-      "Un bois rarissime, scintillant comme de la poussière d'étoile.",
-    stackable: true,
-  },
-
   // --- Matériaux de craft de base manquants (utilisés par 24 recettes
   //     manuelles de scrolls/potions/bombes/enchantements).
   wood: {
@@ -21094,6 +21083,38 @@ export const ITEM_DEFS = {
     name: "Parchemin : Invocation : Blob bleu ciel",
     description: "Apprend la compétence Invocation : Blob bleu ciel.",
     grantsAbility: "summonSkyBlueSlime",
+    stackable: false,
+  },
+  snail1Core: {
+    id: "snail1Core",
+    category: "craftingMaterial",
+    name: "Noyau de escargot géant",
+    description: "Le cœur d'un escargot géant, utilisé pour l'artisanat.",
+    stackable: false,
+    unique: true,
+  },
+  summonSnail1Scroll: {
+    id: "summonSnail1Scroll",
+    category: "abilityScroll",
+    name: "Parchemin : Invocation : Escargot géant",
+    description: "Apprend la compétence Invocation : Escargot géant.",
+    grantsAbility: "summonSnail1",
+    stackable: false,
+  },
+  spider2Core: {
+    id: "spider2Core",
+    category: "craftingMaterial",
+    name: "Noyau de araignée noire",
+    description: "Le cœur d'une araignée noire, utilisé pour l'artisanat.",
+    stackable: false,
+    unique: true,
+  },
+  summonSpider2Scroll: {
+    id: "summonSpider2Scroll",
+    category: "abilityScroll",
+    name: "Parchemin : Invocation : Araignée noire",
+    description: "Apprend la compétence Invocation : Araignée noire.",
+    grantsAbility: "summonSpider2",
     stackable: false,
   },
 };

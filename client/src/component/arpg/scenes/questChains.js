@@ -151,15 +151,29 @@ export const QUEST_CHAINS = {
         at: { depth: 0, spawn: true, slot: 1, tile: { x: 97, y: 73 } },
         npc: "bucheron",
         questId: "obtainItem",
-        targetItemId: "oakWood",
+        targetItemId: "wood",
         targetQuantity: 4,
         xpReward: 30,
         goldReward: 0,
+        // toujours donnees
+        recipeRewards: [{ id: "branchRecipe", name: "Branche" }],
         recipeRewardByArchetype: {
-          voleur: { id: "woodenDaggerRecipe", name: "Dague en bois" },
-          guerrier: { id: "woodenSwordRecipe", name: "Épée en bois" },
-          archer: { id: "woodenBowRecipe", name: "Arc en bois" },
-          mage: { id: "woodenStaffRecipe", name: "Bâton en bois" },
+          archer: [{ id: "woodenArrowRecipe", name: "Flèche en bois" }],
+        },
+        // une seule au choix (s'il n'y en a qu'une pour l'archetype, donnee directement)
+        recipeChoiceByArchetype: {
+          voleur: [{ id: "woodenDaggerRecipe", name: "Dague en bois" }],
+          guerrier: [
+            { id: "woodenSwordRecipe", name: "Épée en bois" },
+            { id: "woodenSpearRecipe", name: "Lance en bois" },
+            { id: "woodenMalletRecipe", name: "Maillet en bois" },
+            { id: "woodenHammerRecipe", name: "Marteau en bois" },
+          ],
+          archer: [{ id: "woodenBowRecipe", name: "Arc en bois" }],
+          mage: [
+            { id: "woodenStaffRecipe", name: "Bâton en bois" },
+            { id: "woodenSickleRecipe", name: "Faucille en bois" },
+          ],
         },
         dialogText: {
           offer:
@@ -312,7 +326,9 @@ function buildChainQuest(chain, stepIndex) {
     chainStep: stepIndex,
     chainStepCount: chain.steps.length,
     chainStepTitle: step.title || null,
+    recipeRewards: step.recipeRewards || null,
     recipeRewardByArchetype: step.recipeRewardByArchetype || null,
+    recipeChoiceByArchetype: step.recipeChoiceByArchetype || null,
   };
 }
 

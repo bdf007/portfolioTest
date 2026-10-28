@@ -336,6 +336,96 @@ export const PLACE_TOOLS = {
   decor: { kind: "list", key: "decorations" },
 };
 
+/**
+ * MATERIAUX BONUS des gisements et des arbres poses a la main (equivalent des
+ * gemChance/gemPool et bonusChance/bonusPool des niveaux generes).
+ * COMPLETE CES LISTES A VOLONTE : chaque entree apparait dans le panneau de
+ * l'editeur (outils Gisement et Arbre).
+ *   id     : identifiant unique (jamais deux fois le meme dans une liste)
+ *   label  : nom affiche
+ *   chance : chance PAR COUP d'obtenir un bonus (0.15 = 15 %), modifiable
+ *            ensuite dans le panneau
+ *   pool   : [{ itemId, weight }] - plus le poids est grand, plus l'objet
+ *            tombe souvent (tirage pondere, comme dans biomeConfig.js)
+ * En plus de ces entrees, le panneau propose toujours « Selon le biome »
+ * (comportement par defaut) et « Aucun bonus ».
+ */
+export const ROCK_BONUS_PRESETS = [
+  {
+    id: "commonStones",
+    label: "Pierres communes",
+    chance: 0.05,
+    pool: [
+      { itemId: "whetstone", weight: 5 },
+      { itemId: "ruby", weight: 0.5 },
+    ],
+  },
+  {
+    id: "gems",
+    label: "Gemmes (smoky, rubis, aigue-marine, peridot)",
+    chance: 0.15,
+    pool: [
+      { itemId: "smokyQuartz", weight: 5 },
+      { itemId: "ruby", weight: 2 },
+      { itemId: "aquaMarine", weight: 1 },
+      { itemId: "peridot", weight: 0.5 },
+    ],
+  },
+  {
+    id: "oresAndGems",
+    label: "Minerais et gemmes",
+    chance: 0.15,
+    pool: [
+      { itemId: "smokyQuartz", weight: 5 },
+      { itemId: "ruby", weight: 2 },
+      { itemId: "aquaMarine", weight: 1 },
+      { itemId: "peridot", weight: 0.5 },
+      { itemId: "ironOre", weight: 0.5 },
+    ],
+  },
+  // ajoute tes propres entrees ici
+];
+
+export const TREE_BONUS_PRESETS = [
+  {
+    id: "berriesResin",
+    label: "Baies et résine",
+    chance: 0.15,
+    pool: [
+      { itemId: "berries", weight: 3 },
+      { itemId: "resin", weight: 1 },
+    ],
+  },
+  {
+    id: "feathersResin",
+    label: "Plumes et résine",
+    chance: 0.15,
+    pool: [
+      { itemId: "feather", weight: 3 },
+      { itemId: "resin", weight: 1 },
+    ],
+  },
+  // ajoute tes propres entrees ici
+];
+
+/**
+ * Transforme le choix du panneau en bonus a ecrire dans le niveau.
+ * key : "biome" (rien d'ecrit, le serveur prend celui du biome), "none"
+ * (aucun bonus) ou l'id d'une entree de `presets`. `chance` : chance choisie
+ * dans le panneau (sinon celle de l'entree). Renvoie null (= ne rien ecrire)
+ * ou { chance, pool }.
+ */
+export function resolveBonus(key, chance, presets) {
+  if (!key || key === "biome") return null;
+  if (key === "none") return { chance: 0, pool: [] };
+  const preset = presets.find((p) => p.id === key);
+  if (!preset) return null;
+  return {
+    chance: Number.isFinite(chance) ? chance : preset.chance,
+    pool: preset.pool.map((e) => ({ ...e })),
+  };
+}
+
 // types de decor connus du rendu (floorRenderer.js, DECOR_ENTRIES) - le
 // serveur y ajoute ceux qu'utilisent les biomes (cf. collectBiomeMeta)
 export const KNOWN_DECOR_TYPES = [
@@ -423,6 +513,10 @@ export function placeEntity(level, tool, x, y, options = {}) {
     // de l'etage retomberait sur le palier 1
     if (Number.isInteger(options.requiredTier))
       rock.requiredTier = options.requiredTier;
+    if (options.gemBonus) {
+      rock.gemChance = options.gemBonus.chance;
+      rock.gemPool = options.gemBonus.pool;
+    }
     level.miningRocks.push(rock);
   } else if (tool === "tree") {
     const tree = { x, y, resource: options.forageResource || "oakWood" };
@@ -430,6 +524,10 @@ export function placeEntity(level, tool, x, y, options = {}) {
       tree.totalHits = options.forageHits;
     if (Number.isInteger(options.forageTier))
       tree.requiredTier = options.forageTier;
+    if (options.forageBonus) {
+      tree.bonusChance = options.forageBonus.chance;
+      tree.bonusPool = options.forageBonus.pool;
+    }
     level.forageNodes.push(tree);
   } else if (tool === "decor") {
     level.decorations.push({

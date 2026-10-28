@@ -277,6 +277,7 @@ export function spawnMiningRocks(scene, { data, savedMiningRocksState }) {
  */
 export function spawnForageNodes(scene, { data, savedForageNodesState }) {
   const WOOD_TREE_FRAMES = {
+    wood: [136], // arbre commun : meme sprite que le chene
     oakWood: [136],
     ashWood: [137],
     yewWood: [138],

@@ -234,6 +234,22 @@ function normalizeHandmadeLevel(def, file) {
     return out;
   });
 
+  // pool de bonus ecrit a la main : [{ itemId, weight }, ...] (ou absent = null)
+  const bonusPool = (label, pool) => {
+    if (pool === undefined || pool === null) return null;
+    if (!Array.isArray(pool)) fail(file, `${label} : tableau attendu`);
+    return pool.map((p, j) => {
+      if (!p || typeof p.itemId !== "string" || !p.itemId) {
+        fail(file, `${label}[${j}] : "itemId" manquant`);
+      }
+      const weight = p.weight ?? 1;
+      if (typeof weight !== "number" || !(weight > 0)) {
+        fail(file, `${label}[${j}] : "weight" doit etre un nombre > 0`);
+      }
+      return { itemId: p.itemId, weight };
+    });
+  };
+
   const miningRocks = list("miningRocks").map((r, i) => {
     const t = floorTile(`miningRocks[${i}]`, r);
     return {
@@ -242,6 +258,7 @@ function normalizeHandmadeLevel(def, file) {
       totalHits: r.totalHits ?? null,
       requiredTier: r.requiredTier ?? null,
       gemChance: r.gemChance ?? null,
+      gemPool: bonusPool(`miningRocks[${i}].gemPool`, r.gemPool),
     };
   });
 
@@ -252,6 +269,8 @@ function normalizeHandmadeLevel(def, file) {
       resource: n.resource || null,
       totalHits: n.totalHits ?? null,
       requiredTier: n.requiredTier ?? null,
+      bonusChance: n.bonusChance ?? null,
+      bonusPool: bonusPool(`forageNodes[${i}].bonusPool`, n.bonusPool),
     };
   });
 
@@ -439,7 +458,7 @@ function hydrateChests(
         c.lootTable ||
         (c.propType === "crate"
           ? (biome.crateConfig && biome.crateConfig.lootTable) ||
-            "crateStandard"
+            "crateStandard0"
           : biome.chestLootTable || "chestStandard");
       loot = rollLoot(table, lootRng, Infinity, obtainedUniqueItems);
     }
@@ -489,15 +508,19 @@ function hydrateMiningRocks(rocks, { biome, lootSeed, createRng, depth }) {
       resourceItemId,
       totalHits,
       gemChance: rock.gemChance ?? cfg.gemChance ?? 0,
-      gemPool: cfg.gemPool || [],
+      gemPool: rock.gemPool ?? cfg.gemPool ?? [],
     };
   });
 }
+
+// arbre commun : donne du bois de base ("wood"), palier 1, sans trouvaille
+const COMMON_TREE_RESOURCE = "wood";
 
 /**
  * Arbres / points de recolte ecrits a la main : meme forme de sortie que
  * generateForageNodes. Champs non precises completes avec la forageConfig
  * du biome (palier et bonus si la ressource y figure, sinon palier 1).
+ * L'arbre commun ("wood") n'a jamais de bonus de gemmes.
  */
 function hydrateForageNodes(nodes, { biome, lootSeed, createRng }) {
   const cfg = biome.forageConfig || {};
@@ -516,6 +539,7 @@ function hydrateForageNodes(nodes, { biome, lootSeed, createRng }) {
     }
     const resourceItemId =
       n.resource || (poolEntry && poolEntry.itemId) || "oakWood";
+    const common = resourceItemId === COMMON_TREE_RESOURCE;
     return {
       x: n.x,
       y: n.y,
@@ -524,12 +548,13 @@ function hydrateForageNodes(nodes, { biome, lootSeed, createRng }) {
       resourceItemId,
       totalHits:
         n.totalHits ?? minHits + Math.floor(rng() * (maxHits - minHits + 1)),
-      bonusChance: cfg.bonusChance || 0,
-      bonusPool: cfg.bonusPool || [],
+      // bonus ecrit dans le niveau (editeur) prioritaire ; sinon celui du
+      // biome, sauf pour l'arbre commun (jamais de bonus par defaut)
+      bonusChance: n.bonusChance ?? (common ? 0 : cfg.bonusChance || 0),
+      bonusPool: n.bonusPool ?? (common ? [] : cfg.bonusPool || []),
     };
   });
 }
-
 // ---- gestion des fichiers (utilisee par l'editeur de niveaux) ----
 
 const MAX_DEPTH = 9999;

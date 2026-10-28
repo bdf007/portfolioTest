@@ -325,6 +325,7 @@ function TintedItemIcon({
 
 const ICON_TINTS = {
   // teintes pour les différentes essences de bois
+  branch: "#8b4513",
   oakWood: null,
   ashWood: "#c9b896",
   yewWood: "#8a6d3b",
@@ -651,6 +652,11 @@ const ICON_TINTS = {
   summonSpiderBrownIceScroll: "#cccccc",
   spiderGreenFireCore: "#cccccc",
   summonSpiderGreenFireScroll: "#cccccc",
+  snail1Core: "#cccccc",
+  summonSnail1Scroll: "#cccccc",
+  spider2Core: "#1f1e1e7d",
+  summonSpider2Scroll: "#1f1e1e7d",
+  spiderFur: "#1f1e1e7d",
 };
 
 /**

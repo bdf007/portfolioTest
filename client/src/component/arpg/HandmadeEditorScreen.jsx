@@ -21,6 +21,9 @@ import {
   GENERATE_LABELS,
   KNOWN_DECOR_TYPES,
   PLACE_TOOLS,
+  ROCK_BONUS_PRESETS,
+  TREE_BONUS_PRESETS,
+  resolveBonus,
   createEmptyLevel,
   levelFromDef,
   levelToDef,
@@ -51,6 +54,7 @@ const TILE_IMAGES_TO_LOAD = getTileImagesToLoad();
 
 // bois disponibles pour les arbres (ids des ressources, cf. WOOD_TREE_FRAMES du jeu)
 const FORAGE_WOODS = [
+  "wood", // arbre commun (meme sprite que le chene)
   "oakWood",
   "ashWood",
   "yewWood",
@@ -617,6 +621,16 @@ class EditorScene extends Phaser.Scene {
         forageResource: ctrl.forageResource,
         forageTier: ctrl.forageTier,
         forageHits: ctrl.forageHits,
+        gemBonus: resolveBonus(
+          ctrl.rockBonusKey,
+          ctrl.rockBonusChance,
+          ROCK_BONUS_PRESETS,
+        ),
+        forageBonus: resolveBonus(
+          ctrl.treeBonusKey,
+          ctrl.treeBonusChance,
+          TREE_BONUS_PRESETS,
+        ),
       });
       if (!res.ok) ctrl.onMessage("warn", res.message);
       this.refreshOverlay();
@@ -830,6 +844,56 @@ function SearchSelect({
 }
 
 /**
+ * Choix des materiaux bonus d'un gisement ou d'un arbre : « Selon le biome »
+ * (defaut), « Aucun bonus », ou une entree de `presets` (cf.
+ * ROCK_BONUS_PRESETS / TREE_BONUS_PRESETS dans handmadeEditorLogic.js) avec
+ * une chance reglable en %.
+ */
+function BonusPicker({ label, presets, valueKey, chance, onKey, onChance }) {
+  const preset = presets.find((p) => p.id === valueKey);
+  return (
+    <div style={{ marginTop: 8 }}>
+      <div style={{ marginBottom: 4 }}>{label}</div>
+      <select
+        value={valueKey}
+        onChange={(e) => onKey(e.target.value)}
+        style={{ ...inputStyle, width: "100%" }}
+      >
+        <option value="biome">Selon le biome (défaut)</option>
+        <option value="none">Aucun bonus</option>
+        {presets.map((p) => (
+          <option key={p.id} value={p.id}>
+            {p.label}
+          </option>
+        ))}
+      </select>
+      {preset && (
+        <div style={{ marginTop: 4 }}>
+          Chance par coup{" "}
+          <input
+            type="number"
+            min={0}
+            max={100}
+            step={1}
+            value={Math.round((chance ?? preset.chance) * 100)}
+            onChange={(e) =>
+              onChance(
+                Math.min(100, Math.max(0, Number(e.target.value) || 0)) / 100,
+              )
+            }
+            style={{ ...inputStyle, width: 56 }}
+          />{" "}
+          %
+          <div style={{ color: "#8a7050", lineHeight: 1.3 }}>
+            {preset.pool.map((e) => `${e.itemId} (${e.weight})`).join(", ")}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/**
  * Palette du sol peint : choix d'une feuille, puis clic (ou glisser pour un
  * rectangle) sur l'image pour selectionner une tuile ou un motif. Un motif
  * de plusieurs tuiles se repete sur la carte quand on remplit une zone.
@@ -1008,9 +1072,13 @@ export default function HandmadeEditorScreen({ onClose }) {
       resourceTier: 1,
       totalHits: 3,
       decorType: "rock_small",
-      forageResource: "oakWood",
+      forageResource: "wood",
       forageTier: 1,
       forageHits: 4,
+      rockBonusKey: "biome",
+      rockBonusChance: null,
+      treeBonusKey: "biome",
+      treeBonusChance: null,
       tileSel: null,
       tileSolid: false,
       tileOverhead: false,
@@ -1050,9 +1118,13 @@ export default function HandmadeEditorScreen({ onClose }) {
   const [resource, setResourceState] = useState(null);
   const [totalHits, setTotalHitsState] = useState(3);
   const [decorType, setDecorTypeState] = useState("rock_small");
-  const [forageResource, setForageResourceState] = useState("oakWood");
+  const [forageResource, setForageResourceState] = useState("wood");
   const [forageTier, setForageTierState] = useState(1);
   const [forageHits, setForageHitsState] = useState(4);
+  const [rockBonusKey, setRockBonusKeyState] = useState("biome");
+  const [rockBonusChance, setRockBonusChanceState] = useState(null);
+  const [treeBonusKey, setTreeBonusKeyState] = useState("biome");
+  const [treeBonusChance, setTreeBonusChanceState] = useState(null);
   const [tileSel, setTileSelState] = useState(null);
   const [tileSolid, setTileSolidState] = useState(false);
   const [tileOverhead, setTileOverheadState] = useState(false);
@@ -1242,6 +1314,30 @@ export default function HandmadeEditorScreen({ onClose }) {
   const setForageHits = (n) => {
     ctrl.forageHits = n;
     setForageHitsState(n);
+  };
+
+  // changer d'entree remet la chance par defaut de cette entree
+  const setRockBonusKey = (key) => {
+    const p = ROCK_BONUS_PRESETS.find((x) => x.id === key);
+    ctrl.rockBonusKey = key;
+    ctrl.rockBonusChance = p ? p.chance : null;
+    setRockBonusKeyState(key);
+    setRockBonusChanceState(ctrl.rockBonusChance);
+  };
+  const setRockBonusChance = (v) => {
+    ctrl.rockBonusChance = v;
+    setRockBonusChanceState(v);
+  };
+  const setTreeBonusKey = (key) => {
+    const p = TREE_BONUS_PRESETS.find((x) => x.id === key);
+    ctrl.treeBonusKey = key;
+    ctrl.treeBonusChance = p ? p.chance : null;
+    setTreeBonusKeyState(key);
+    setTreeBonusChanceState(ctrl.treeBonusChance);
+  };
+  const setTreeBonusChance = (v) => {
+    ctrl.treeBonusChance = v;
+    setTreeBonusChanceState(v);
   };
 
   const parsedDepth = Number(depthInput);
@@ -1723,6 +1819,14 @@ export default function HandmadeEditorScreen({ onClose }) {
                 style={{ ...inputStyle, width: 56 }}
               />
             </div>
+            <BonusPicker
+              label="Matériaux bonus (gemmes…)"
+              presets={ROCK_BONUS_PRESETS}
+              valueKey={rockBonusKey}
+              chance={rockBonusChance}
+              onKey={setRockBonusKey}
+              onChance={setRockBonusChance}
+            />
           </div>
         )}
 
@@ -1731,7 +1835,10 @@ export default function HandmadeEditorScreen({ onClose }) {
             <div style={{ marginBottom: 4 }}>Bois de l'arbre</div>
             <SearchSelect
               value={forageResource}
-              options={FORAGE_WOODS.map((id) => ({ value: id, label: id }))}
+              options={FORAGE_WOODS.map((id) => ({
+                value: id,
+                label: id === "wood" ? "wood (arbre commun)" : id,
+              }))}
               onChange={setForageResource}
             />
             <div style={{ marginTop: 6 }}>
@@ -1760,6 +1867,14 @@ export default function HandmadeEditorScreen({ onClose }) {
                 style={{ ...inputStyle, width: 56 }}
               />
             </div>
+            <BonusPicker
+              label="Matériaux bonus (baies, résine…)"
+              presets={TREE_BONUS_PRESETS}
+              valueKey={treeBonusKey}
+              chance={treeBonusChance}
+              onKey={setTreeBonusKey}
+              onChance={setTreeBonusChance}
+            />
           </div>
         )}
 

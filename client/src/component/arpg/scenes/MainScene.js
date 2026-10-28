@@ -1054,8 +1054,8 @@ export default class MainScene extends Phaser.Scene {
     acceptQuestImpl(this);
   }
 
-  turnInQuest() {
-    turnInQuestImpl(this);
+  turnInQuest(chosenRecipeId) {
+    turnInQuestImpl(this, chosenRecipeId);
   }
 
   closeDialog() {

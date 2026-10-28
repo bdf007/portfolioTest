@@ -959,8 +959,8 @@ const ITEM_TYPES = {
   branch: {
     id: "branch",
     category: "craftingMaterial",
-    name: "Branche",
-    description: "Une branche solide, utilisée en artisanat.",
+    name: "Branche commune",
+    description: "Une branche commune, utilisée en artisanat.",
     stackable: true,
     // price: 5,
   },
@@ -995,6 +995,21 @@ const ITEM_TYPES = {
     name: "Blob de slime",
     description:
       "Une masse gélatineuse provenant d'un slime, utilisée pour l'artisanat.",
+    stackable: true,
+  },
+  snail1Shell: {
+    id: "snail1Shell",
+    category: "craftingMaterial",
+    name: "Coquille d'escargot",
+    description: "Une coquille d'escargot, utilisée pour l'artisanat.",
+    stackable: true,
+  },
+  spiderFur: {
+    id: "spiderFur",
+    category: "craftingMaterial",
+    name: "Fourrure d'araignée",
+    description:
+      "De la fourrure provenant d'une araignée, utilisée pour l'artisanat.",
     stackable: true,
   },
   // unique monster cores
@@ -3490,6 +3505,38 @@ const ITEM_TYPES = {
     grantsAbility: "summonSkyBlueSlime",
     stackable: false,
   },
+  snail1Core: {
+    id: "snail1Core",
+    category: "craftingMaterial",
+    name: "Noyau de escargot géant",
+    description: "Le cœur d'un escargot géant, utilisé pour l'artisanat.",
+    stackable: false,
+    unique: true,
+  },
+  summonSnail1Scroll: {
+    id: "summonSnail1Scroll",
+    category: "abilityScroll",
+    name: "Parchemin : Invocation : Escargot géant",
+    description: "Apprend la compétence Invocation : Escargot géant.",
+    grantsAbility: "summonSnail1",
+    stackable: false,
+  },
+  spider2Core: {
+    id: "spider2Core",
+    category: "craftingMaterial",
+    name: "Noyau de araignée noire",
+    description: "Le cœur d'une araignée noire, utilisé pour l'artisanat.",
+    stackable: false,
+    unique: true,
+  },
+  summonSpider2Scroll: {
+    id: "summonSpider2Scroll",
+    category: "abilityScroll",
+    name: "Parchemin : Invocation : Araignée noire",
+    description: "Apprend la compétence Invocation : Araignée noire.",
+    grantsAbility: "summonSpider2",
+    stackable: false,
+  },
 };
 
 /**
@@ -3514,6 +3561,10 @@ const LOOT_TABLES = {
     { itemId: "gold", weight: 40, quantityRange: [2, 10] },
   ],
   crateStandard: [
+    { itemId: null, weight: 50 },
+    { itemId: "gold", weight: 30, quantityRange: [1, 2] },
+  ],
+  crateStandard0: [
     { itemId: null, weight: 50 },
     { itemId: "gold", weight: 30, quantityRange: [1, 2] },
   ],
@@ -4303,6 +4354,18 @@ const LOOT_TABLES = {
     { itemId: "gold", weight: 50, quantityRange: [1, 3] },
     { itemId: "slimeBlob", weight: 50 },
     { itemId: "skyBlueSlimeCore", weight: 50 },
+  ],
+  snail1Drop: [
+    { itemId: null, weight: 50 },
+    { itemId: "gold", weight: 50, quantityRange: [1, 3] },
+    { itemId: "snail1Core", weight: 5 },
+    { itemId: "snail1Shell", weight: 50 },
+  ],
+  spider2Drop: [
+    { itemId: null, weight: 50 },
+    { itemId: "gold", weight: 50, quantityRange: [1, 3] },
+    { itemId: "spider2Core", weight: 2 },
+    { itemId: "spiderFur", weight: 50 },
   ],
 };
 

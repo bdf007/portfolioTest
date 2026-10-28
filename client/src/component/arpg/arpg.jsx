@@ -486,9 +486,11 @@ export default function Arpg() {
     if (scene) scene.acceptQuest();
   }, []);
 
-  const handleTurnInQuest = useCallback(() => {
+  const handleTurnInQuest = useCallback((recipeId) => {
     const scene = gameRef.current?.scene.getScene("MainScene");
-    if (scene) scene.turnInQuest();
+    // onClick={handleTurnInQuest} passe l'evenement : seule une chaine est un choix
+    if (scene)
+      scene.turnInQuest(typeof recipeId === "string" ? recipeId : undefined);
   }, []);
 
   const handleCloseDialog = useCallback(() => {
@@ -806,7 +808,13 @@ export default function Arpg() {
       });
       if (npcDialog.canAccept)
         actions.push({ label: "Accepter", onClick: handleAcceptQuest });
-      if (npcDialog.canTurnIn)
+      (npcDialog.rewardChoices || []).forEach((c) => {
+        actions.push({
+          label: `reward-${c.id}`,
+          onClick: () => handleTurnInQuest(c.id),
+        });
+      });
+      if (npcDialog.canTurnIn && !(npcDialog.rewardChoices || []).length)
         actions.push({ label: "Rendre", onClick: handleTurnInQuest });
       actions.push({ label: "Fermer", onClick: handleCloseDialog });
       return actions;
@@ -1752,9 +1760,10 @@ export default function Arpg() {
                   Accepter
                 </button>
               )}
-              {npcDialog.canTurnIn && (
+              {(npcDialog.rewardChoices || []).map((c) => (
                 <button
-                  onClick={handleTurnInQuest}
+                  key={c.id}
+                  onClick={() => handleTurnInQuest(c.id)}
                   style={{
                     padding: "6px 14px",
                     fontSize: 13,
@@ -1765,14 +1774,36 @@ export default function Arpg() {
                     cursor: "pointer",
                     outline:
                       getCurrentDialogActions()[focusedButtonIndex]?.label ===
-                      "Rendre"
+                      `reward-${c.id}`
                         ? "3px solid #fff"
                         : "none",
                   }}
                 >
-                  Rendre
+                  Apprendre : {c.label}
                 </button>
-              )}
+              ))}
+              {npcDialog.canTurnIn &&
+                !(npcDialog.rewardChoices || []).length && (
+                  <button
+                    onClick={handleTurnInQuest}
+                    style={{
+                      padding: "6px 14px",
+                      fontSize: 13,
+                      borderRadius: 6,
+                      border: "1px solid #8a7050",
+                      background: "#3a2f20",
+                      color: "#f0e6d0",
+                      cursor: "pointer",
+                      outline:
+                        getCurrentDialogActions()[focusedButtonIndex]?.label ===
+                        "Rendre"
+                          ? "3px solid #fff"
+                          : "none",
+                    }}
+                  >
+                    Rendre
+                  </button>
+                )}
               <button
                 onClick={handleCloseDialog}
                 style={{

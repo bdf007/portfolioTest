@@ -28,7 +28,11 @@ export default function QuestsScreen({ quests, inventory, onClose }) {
   // regroupe reussites ET echecs (ex. escorte tuee en route, cf.
   // summons.js) sur la page de droite - une quete en echec ne doit
   // jamais rester coincee indefiniment sur la page "en cours"
-  const completed = entries.filter(([, q]) => q.completed || q.failed);
+  // les plus recemment terminees (ou echouees) en premier
+  const endedAt = (q) => q.completedAt || q.failedAt || 0;
+  const completed = entries
+    .filter(([, q]) => q.completed || q.failed)
+    .sort((a, b) => endedAt(b[1]) - endedAt(a[1]));
 
   function describeAction(q) {
     if (q.questId === "obtainItem") return "Rapporter : ";

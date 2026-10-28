@@ -302,7 +302,7 @@ const BIOMES = [
       gemChance: 0.01, // 1% de chance PAR COUP d'obtenir une gemme a la place du metal
       gemPool: [
         { itemId: "whetstone", weight: 5 },
-        { itemId: "aquamarine", weight: 0.5 },
+        { itemId: "aquaMarine", weight: 0.5 },
       ],
     },
     // forageConfig: {
@@ -386,7 +386,7 @@ const BIOMES = [
       gemChance: 0.01, // 1% de chance PAR COUP d'obtenir une gemme a la place du metal
       gemPool: [
         { itemId: "whetstone", weight: 5 },
-        { itemId: "aquamarine", weight: 0.5 },
+        { itemId: "aquaMarine", weight: 0.5 },
       ],
     },
     // forageConfig: {

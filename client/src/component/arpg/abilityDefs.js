@@ -3986,6 +3986,42 @@ export const ABILITY_DEFS = {
     resistances: { physical: 1 },
     unlockLevel: null,
   },
+  summonSnail1: {
+    id: "summonSnail1",
+    name: "Invocation : Escargot géant",
+    archetypes: [],
+    description:
+      "Invoque un escargot géant temporaire qui combat à tes côtés, jusqu'à sa mort ou expiration. 30 mana.",
+    staminaCost: 1,
+    cooldownMs: 15000,
+    effectType: "summon",
+    summonType: "snail1",
+    durationMs: null,
+    hpScale: 0.5,
+    damageScale: 0.5,
+    defenseScale: 0.8,
+    damageType: "physical",
+    resistances: { physical: 0 },
+    unlockLevel: null,
+  },
+  summonSpider2: {
+    id: "summonSpider2",
+    name: "Invocation : Araignée noire",
+    archetypes: [],
+    description:
+      "Invoque une araignée noire temporaire qui combat à tes côtés, jusqu'à sa mort ou expiration. 30 mana.",
+    staminaCost: 1,
+    cooldownMs: 15000,
+    effectType: "summon",
+    summonType: "spider2",
+    durationMs: null,
+    hpScale: 0.5,
+    damageScale: 0.5,
+    defenseScale: 0.8,
+    damageType: "physical",
+    resistances: { physical: 0 },
+    unlockLevel: null,
+  },
 };
 
 /**
